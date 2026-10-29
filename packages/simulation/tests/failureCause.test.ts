@@ -16,6 +16,13 @@ import { createDataRuntime } from "../src/model2/data/run";
 import { cacheAside } from "../src/model2/data/aside";
 import { dataFixture } from "./dataFixture";
 import { networkFixture, verticalFixture } from "./networkFixture";
+import { runRetryStudy } from "./retryStudy";
+import { DEFAULT_CIRCUIT_BREAKER_SETTINGS } from "@infraforge/domain/resource";
+
+/** Cause fields are additive evidence: removing them from an event leaves exactly what the run did without causes. */
+const causeFree = <T extends { detail: object }>(events: T[]) => events.map(e => { const { rootReason: _r, rootResource: _s, depth: _d, ...detail } = e.detail as Record<string, unknown>; return { ...e, detail }; });
+const pathShape = (evidence: { network: { paths: Array<Record<string, any>> } }) => evidence.network.paths.map(p => ({ source: p.source, target: p.target, offered: p.offered, completed: p.completed, failed: p.failed, reasons: p.reasons, breaker: p.circuitBreaker ?? null }));
+const behaviour = (s: ReturnType<typeof runRetryStudy>["summary"]) => ({ originalRequests: s.originalRequests, attempts: s.attempts, retries: s.retries, suppressed: s.suppressed, caller: s.caller, databaseCalls: s.databaseCalls, databaseAdmitted: s.databaseAdmitted, databaseCommitted: s.databaseCommitted, sessionRefusals: s.sessionRefusals, responseTimeouts: s.responseTimeouts, poolOverflow: s.poolOverflow, ambiguousWrites: s.ambiguousWrites, ambiguousWriteRetries: s.ambiguousWriteRetries, drainAfterLoadFallUs: s.drainAfterLoadFallUs });
 
 const finished: Receipt = { admitted: true, state: () => "finished", cancel: () => "already-finished" };
 const work = (id: string, operation = "light"): Invocation => ({ rootId: id, callId: JSON.stringify([id]), operation, attempt: 0, offeredAt: 0 });
@@ -66,17 +73,36 @@ function nested(cause = true) {
   run.advanceTo(run.horizon);
   return { evidence: run.evidence(), events };
 }
-test("nested LB -> app -> inner LB open breaker vetoes outer retry with unchanged immediate reason", () => {
-  const { events } = nested();
-  const secondRoot = rootOf(events.filter(e => e.kind === "caller-offered").at(-1)!);
-  const terminal = events.find(e => rootOf(e) === secondRoot && e.kind === "attempt-terminal" && e.detail.rootReason === "circuit-open" && JSON.parse(String(e.detail.id)).at(-4) === "lb")!;
+test("nested LB -> app -> inner LB open breaker: the outer retry follows its authored policy exactly as without causes; the root stays visible", () => {
+  const on = nested(), off = nested(false);
+  const secondRoot = rootOf(on.events.filter(e => e.kind === "caller-offered").at(-1)!);
+  const terminal = on.events.find(e => rootOf(e) === secondRoot && e.kind === "attempt-terminal" && e.detail.rootReason === "circuit-open" && JSON.parse(String(e.detail.id)).at(-4) === "lb")!;
   expect(terminal).toBeDefined(); expect(terminal.detail.detail).toBe("backend-rejected");
-  const root = rootOf(terminal), chain = events.filter(e => rootOf(e) === root);
-  expect(chain.filter(e => e.kind === "lb-selected" && JSON.parse(String(e.detail.id)).at(-4) === "lb").length).toBe(1);
-  expect(chain.some(e => e.kind === "retry-scheduled")).toBe(false);
-  expect(chain.some(e => e.kind === "retry-suppressed" && e.detail.detail === "non-retryable")).toBe(true);
-  expect(nested(false).events.some(e => e.kind === "retry-scheduled")).toBe(true);
+  // Same attempts, retries and suppressions in the same order: the root cause is evidence, never a decision input.
+  expect(causeFree(on.events)).toEqual(causeFree(off.events));
+  expect(on.events.filter(e => e.kind === "retry-scheduled").length).toBe(off.events.filter(e => e.kind === "retry-scheduled").length);
+  expect(on.events.filter(e => e.kind === "retry-suppressed").length).toBe(off.events.filter(e => e.kind === "retry-suppressed").length);
 });
+
+test("compatibility proof: the same input, seed and policies with causes disabled versus enabled behave identically; only cause evidence differs", () => {
+  // The data/network study: retries and a breaker over real database session refusals.
+  const on = runCauseSessionStudy(true), off = runCauseSessionStudy(false);
+  expect(causeFree(on.events)).toEqual(causeFree(off.events));
+  expect(pathShape(on.evidence)).toEqual(pathShape(off.evidence));
+  expect(on.events.some(e => e.detail.rootReason === "session-limit")).toBe(true);
+  expect(off.events.some(e => e.detail.rootReason !== undefined)).toBe(false);
+});
+
+for (const [name, run] of [
+  ["canvas overload with aggressive retries and the breaker", (profiles: [] | ["failure-cause/1"]) => runRetryStudy("overload", "aggressive", 1, { circuitBreaker: DEFAULT_CIRCUIT_BREAKER_SETTINGS, adapterProfiles: profiles })],
+  ["canvas overload with bounded retries and no breaker", (profiles: [] | ["failure-cause/1"]) => runRetryStudy("overload", "bounded", 1, { adapterProfiles: profiles })],
+  ["canvas transient failure with bounded retries", (profiles: [] | ["failure-cause/1"]) => runRetryStudy("transient", "bounded", 1, { adapterProfiles: profiles })],
+] as const) test(`compatibility proof (${name}): requests, completions, rejections, retries, breaker transitions and database work are unchanged by causes`, () => {
+  const off = run([]), on = run(["failure-cause/1"]);
+  expect(behaviour(on.summary)).toEqual(behaviour(off.summary));
+  expect(pathShape(on.evidence)).toEqual(pathShape(off.evidence));
+  expect(on.summary.caller).toEqual(off.summary.caller);
+}, 180000);
 
 test("bounded summaries saturate depth; oversize identities and unknown roots remain Unknown", () => {
   let cause = seedCause("session-limit", "db"); for (let i = 0; i < 300; i++) cause = carryCause(cause);

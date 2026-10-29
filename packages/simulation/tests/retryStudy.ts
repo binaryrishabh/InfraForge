@@ -45,12 +45,12 @@ type Balancer = ReturnType<ReturnType<typeof createProductModel2>["evidence"]>["
 type Database = { queued: number; serving: number; waiting: number; sessions: number; orphaned: number };
 const rootOf = (event: CausalEvent) => event.work?.rootId ?? (typeof event.detail.root === "string" ? event.detail.root : undefined);
 
-export function runRetryStudy(failure: StudyFailure, policy: StudyPolicy, readFraction = 1, options?: { circuitBreaker?: CircuitBreakerSettings }) {
+export function runRetryStudy(failure: StudyFailure, policy: StudyPolicy, readFraction = 1, options?: { circuitBreaker?: CircuitBreakerSettings; adapterProfiles?: Parameters<typeof buildModel2Contract>[3] }) {
   const design = retryStudyDesign(policy, readFraction), slow = isSlowStudy(failure);
   if (options?.circuitBreaker) design.resources.find((r) => r.id === "lb")!.circuitBreaker = options.circuitBreaker;
   if (slow) configureSlowDesign(design, failure);
   const horizonSeconds = slow ? 12 : HORIZON_SECONDS;
-  const built = buildModel2Contract(design, horizonSeconds, RETRY_STUDY_SEED);
+  const built = buildModel2Contract(design, horizonSeconds, RETRY_STUDY_SEED, options?.adapterProfiles);
   if ("refused" in built) throw Error(built.refused.join("; "));
   const contract = withTimeline({ ...built.contract, arrival: { ...built.contract.arrival, generated: true } }, retryStudyActions(failure));
   if (slow) authorSlowQueries(contract, failure);

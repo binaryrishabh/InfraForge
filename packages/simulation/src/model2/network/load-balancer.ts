@@ -58,7 +58,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
       const safe = !result.ambiguous || ["read-only", "idempotent"].includes(op.idempotency) || policy?.allowAmbiguousNonIdempotent;
       if (!policy) { finish(r, "rejected", r.cause); return; }
       if (!safe) { suppress(r, "ambiguous-write", work.callId); return; }
-      if (result.reason === "circuit-open" || (failureCauseProfile && result.cause?.rootReason === "circuit-open") || (policy.operations && !policy.operations.includes(op.id)) || !policy.retryOn.includes(result.reason!)) { suppress(r, "non-retryable", work.callId); return; }
+      if (result.reason === "circuit-open" || (policy.operations && !policy.operations.includes(op.id)) || !policy.retryOn.includes(result.reason!)) { suppress(r, "non-retryable", work.callId); return; }
       if (r.attempt >= requireKnown(policy.maxAttempts, "count")) { suppress(r, "max-attempts", work.callId); return; }
       const jitter = 1 + requireKnown(policy.jitter, "ratio") * (2 * keyedUniform(seed, config.id, work.callId, "retry-backoff") - 1);
       const delay = Math.ceil(requireKnown(policy.backoff, "us") * 2 ** (r.attempt - 1) * jitter);
