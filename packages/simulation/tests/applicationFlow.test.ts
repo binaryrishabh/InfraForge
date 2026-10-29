@@ -231,6 +231,26 @@ test("flow evidence retains bounded rows with explicit truncation and no mutable
   e.events[0]!.detail.step="mutated";expect(store.measure().events[0]!.detail.step).toBe("cpu");
   const bytes=applicationFlowEvidence(10,1);bytes.observe(event);expect(bytes.measure()).toMatchObject({retained:0,omitted:1});
 });
+
+test("flow byte accounting includes UTF-8, JSON envelope, commas and growing omission counts", () => {
+  const event = { atUs: 0, kind: "flow-step-start", resource: "app", detail: { step: "多字节😀\"\\" } };
+  const size = (value: unknown) => new TextEncoder().encode(JSON.stringify(value)).length;
+  const reference = applicationFlowEvidence(2);
+  reference.observe(event); reference.observe(event);
+  const ceiling = size(reference.measure()), store = applicationFlowEvidence(2, ceiling);
+  store.observe(event); store.observe(event);
+  expect(store.measure()).toEqual(reference.measure()); // Exact fit includes comma.
+  for (let i = 0; i < 100; i++) {
+    store.observe(event);
+    expect(size(store.measure())).toBeLessThanOrEqual(ceiling);
+  }
+  const evidence = store.measure();
+  expect(evidence.retained).toBeLessThan(2); // Growing counters evict a row.
+  expect(evidence.retained + evidence.omitted).toBe(102);
+  const rowOnly = applicationFlowEvidence(10, size(event));
+  rowOnly.observe(event);
+  expect(rowOnly.measure()).toMatchObject({ retained: 0, omitted: 1 });
+});
 test("a failed optional branch remains visible while a viable quorum completes",()=>{
   const clock=new EventKernel(100),callbacks:RemoteCompletion[]=[],outcomes:string[]=[],store=applicationFlowEvidence(100);
   const runner=applicationFlow("app",{rootId:"r",callId:JSON.stringify(["r"]),operation:"read",attempt:0,offeredAt:0},{steps:[{id:"p",kind:"parallel",wait:2,branches:["a","b","c"].map(id=>({id,kind:"call",target:id}))}]},clock,(_target,_work,done)=>{

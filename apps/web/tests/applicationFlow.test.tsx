@@ -65,3 +65,35 @@ for (const degraded of [false, true]) test(`worker carries bounded flow joins an
   expect(html).toContain("3 omitted");expect(html).toContain("truncated");expect(html).toContain("flow-join");expect(html).toContain(degraded ? "rejected" : "cancelled-after-join");
   useSimulationStore.getState().reset();
 });
+
+test("production worker flow evidence omits bytes before 1,000 rows for long nested call identities", () => {
+  const ids = Array.from({ length: 6 }, (_, i) => `service${i}_`.padEnd(64, "x"));
+  const resources: Resource[] = ids.map((id, i) => ({ id, type: "Virtual Machine", x: 0, y: 0,
+    applicationFlow: { schema: "application-flow/1", operations: { read: { steps: [
+      ...(i < ids.length - 1
+        ? [{ id: "call".padEnd(64, "s"), kind: "call" as const, edge: `edge-${i}` }]
+        : [{ id: "cpu".padEnd(64, "c"), kind: "compute" as const }]),
+    ] } } },
+  }));
+  const messages: FromWorker[] = [], queue: Array<() => void> = [];
+  const host = createRunHost(message => messages.push(structuredClone(message)), {
+    set: run => { queue.push(run); return run; }, clear: () => { queue.length = 0; },
+  });
+  host.handle({ type: "start", start: { input: { resources,
+    connectionLines: ids.slice(1).map((id, i) => ({ id: `edge-${i}`, sourceId: ids[i]!, targetId: id, sourceType: "Virtual Machine", targetType: "Virtual Machine", port: 80 })),
+    workloadProfile: resolveWorkload({ targetThroughput: 6000, throughputUnit: "per-minute", trafficShape: "steady", readWriteRatio: 1, payloadSize: "light" }), seed: "nested-byte-budget",
+  }, horizonSeconds: 3, stopAtSecond: 3, speed: 1 } });
+  while (queue.length) queue.shift()!();
+  expect(messages.filter(m => m.type === "error")).toEqual([]);
+  const seconds = messages.filter(m => m.type === "second");
+  expect(seconds).toHaveLength(3);
+  for (const message of seconds) {
+    const evidence = message.applicationFlow!;
+    expect(evidence.retained).toBeGreaterThan(0);
+    expect(evidence.retained).toBeLessThan(1000);
+    expect(evidence.omitted).toBeGreaterThan(0);
+    expect(Object.values(evidence.totals).reduce((a, b) => a + b, 0)).toBe(evidence.retained + evidence.omitted);
+    expect(new TextEncoder().encode(JSON.stringify(evidence)).length).toBeLessThanOrEqual(1024 * 1024);
+    expect(evidence.events.some(row => row.work && JSON.parse(row.work.callId).filter((v: unknown) => v === "flow").length >= 3)).toBe(true);
+  }
+});

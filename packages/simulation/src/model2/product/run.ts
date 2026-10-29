@@ -1,4 +1,4 @@
-import { applicationFlowEvidence } from "../compute/flowEvidence";
+import { APPLICATION_FLOW_MAX_BYTES, applicationFlowEvidence } from "../compute/flowEvidence";
 import { requireKnown } from "../../reality/quantity";
 import { createSystemsModel2 } from "../systems/run";
 import { replicaController } from "./controller";
@@ -9,7 +9,7 @@ import type { NetworkContext } from "../network/run";
 export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUsageObserver, causal?: CausalObserver) {
   if (compiled.schema !== "infraforge-compiled-product/1" || compiled.semantic.versions.compiler !== "infraforge-product-compiler/1") throw Error("Unsupported historical compiler version; no silent reinterpretation");
   const flow = compiled.input.resources.some(r => r.kind === "compute" && r.applicationFlow)
-    ? applicationFlowEvidence(Math.min(compiled.input.limits.maxRawResults, compiled.input.limits.maxTraceRows), compiled.input.limits.maxTraceBytes) : undefined;
+    ? applicationFlowEvidence(Math.min(compiled.input.limits.maxRawResults, compiled.input.limits.maxTraceRows), Math.min(APPLICATION_FLOW_MAX_BYTES, compiled.input.limits.maxTraceBytes ?? APPLICATION_FLOW_MAX_BYTES)) : undefined;
   const observe: CausalObserver | undefined = flow ? event => { flow.observe(event); causal?.(event); } : causal;
   const controllers: ReturnType<typeof replicaController>[] = [];
   let network: NetworkContext | undefined;

@@ -88,3 +88,33 @@ test("a degraded quorum explanation survives official terminal capture", () => {
   expect(record.applicationFlow!.events.some(row=>row.kind==="flow-branch-terminal" && row.detail.branch==="tax" && row.detail.outcome==="rejected")).toBe(true);
   expect(record.traffic!.completedRps).toBe(1);
 });
+
+test("production terminal and checkpoint flow records omit bytes for long nested child identities", () => {
+  const ids = Array.from({ length: 6 }, (_, i) => `service${i}_`.padEnd(64, "x"));
+  const resources: Resource[] = ids.map((id, i) => ({ id, type: "Virtual Machine", x: 0, y: 0,
+    applicationFlow: { schema: "application-flow/1", operations: { read: { steps: [
+      ...(i < ids.length - 1
+        ? [{ id: "call".padEnd(64, "s"), kind: "call" as const, edge: `edge-${i}` }]
+        : [{ id: "cpu".padEnd(64, "c"), kind: "compute" as const }]),
+    ] } } },
+  }));
+  const d = { resources, connectionLines: ids.slice(1).map((id, i) => ({ id: `edge-${i}`, sourceId: ids[i]!, targetId: id, sourceType: "Virtual Machine", targetType: "Virtual Machine", port: 80 })) };
+  const input = readRunInputs(captureRunInputs(d, { ...workload, targetThroughput: 6000 }, "nested-byte-budget"));
+  const server = createModel2Engine(input, 3, buildModel2Contract);
+  const instance: SimulationInstance = { model2: server, tickCount: 0, pendingLogs: [], speed: 1, lastCheckpointAt: 0,
+    accumulatedCostUsd: 0, topology: d, topologyRevision: 0, actions: new Map(), acknowledge: null, metricsComputedAt: null, metricsTopologyRevision: 0 };
+  for (let second = 1; second <= 3; second++) {
+    server.advance(); instance.tickCount = second;
+    for (const kind of ["terminal", "checkpoint"] as const) {
+      const record = JSON.parse(JSON.stringify(captureSnapshot("nested-bytes", instance, kind))) as ReturnType<typeof captureSnapshot>;
+      const evidence = record.applicationFlow!;
+      expect(record.kind).toBe(kind);
+      expect(evidence.retained).toBeGreaterThan(0);
+      expect(evidence.retained).toBeLessThan(1000);
+      expect(evidence.omitted).toBeGreaterThan(0);
+      expect(Object.values(evidence.totals).reduce((a, b) => a + b, 0)).toBe(evidence.retained + evidence.omitted);
+      expect(new TextEncoder().encode(JSON.stringify(evidence)).length).toBeLessThanOrEqual(1024 * 1024);
+      expect(evidence.events.some(row => row.work && JSON.parse(row.work.callId).filter((v: unknown) => v === "flow").length >= 3)).toBe(true);
+    }
+  }
+});
