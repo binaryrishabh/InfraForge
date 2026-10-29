@@ -25,4 +25,3 @@ test("deleting a scoped service keeps saves valid and restores rules with one un
   expect(saved().connectionLines).toEqual([line]);expect(useCanvasStore.getState().currentLayoutSaved).toBe(true);
   redo();expect(LayoutSchema.safeParse(saved()).success).toBe(true);
 });
-
