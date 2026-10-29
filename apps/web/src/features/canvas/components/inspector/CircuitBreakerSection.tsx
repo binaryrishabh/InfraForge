@@ -22,7 +22,7 @@ export function CircuitBreakerSection({ resource, disabled }: { resource: Resour
           onChange={(e) => commit({ cooldownMs: e.target.value === "" ? undefined : Number(e.target.value) })} />
       }</Field>
       {error && <p role="alert">{error}</p>}
-      <p className="text-xs text-ink-3">The circuit breaker does not repair the server. Requests rejected by an open circuit are never retried.</p>
+      <p className="text-xs text-ink-3">The circuit breaker does not repair the server. This load balancer does not retry a request that an open circuit rejected; a load balancer further upstream may still retry the resulting error.</p>
     </div>}
   </InspectorSection>;
 }
