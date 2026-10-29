@@ -91,7 +91,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         }
         const ids = (members.get(node) ?? []).filter((id) => runtime.inspect(id) !== undefined);
         if (!ids.length) { metrics[node] = { cpu: null, memory: null, connections: null, rps: null, errorRate: null, health: "unknown" }; continue; }
-        let used = 0, available = 0, knownCpu = false, completed = 0, received = 0, failed = 0, queued = 0, serving = 0;
+        let used = 0, available = 0, knownCpu = false, completed = 0, received = 0, failed = 0, queued = 0, serving = 0, sessions: number | null = null;
         for (const id of ids) {
           const r = runtime.inspect(id) as Station, cpu = r.compute?.cpu, p = previous.get(id);
           const c: Counters = { received: r.received, completed: r.completed, failed: (caches.has(id) ? 0 : r.failed) + r.rejected, queued: r.queued, serving: r.serving,
@@ -102,6 +102,9 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
             else if (cores.has(id)) { knownCpu = true; used += c.consumed - (p?.consumed ?? 0); available += cores.get(id)! * (now - previousAt); }
           }
           queued += c.queued; serving += c.serving;
+          // A database's connections are its open sessions (each app server's pooled connections), not its queue.
+          const open = (r as { sessions?: number }).sessions;
+          if (typeof open === "number") sessions = (sessions ?? 0) + open;
           // Throughput counts only the node's own entry resources, not its helper processes.
           if (!id.includes("/")) { completed += c.completed - (p?.completed ?? 0); received += c.received - (p?.received ?? 0); failed += c.failed - (p?.failed ?? 0); }
           previous.set(id, c);
@@ -110,7 +113,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         const errorRate = ratio(failed, received), pool = ready.get(node);
         // A pool is down with no ready replica; any other node when its own resource is down (crashed).
         const down = pool ? pool.ready === 0 : !runtime.up(node);
-        metrics[node] = { cpu, memory: null, connections: queued + serving, rps: completed, errorRate,
+        metrics[node] = { cpu, memory: null, connections: sessions ?? queued + serving, rps: completed, errorRate,
           health: down ? "failed" : (cpu ?? 0) >= 95 || (errorRate ?? 0) > 0.05 ? "saturated" : (cpu ?? 0) >= 80 || (errorRate ?? 0) > 0.01 ? "degraded" : "healthy",
           ...(pool ? { replicas: pool } : {}) };
       }

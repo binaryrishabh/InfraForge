@@ -32,16 +32,21 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
       const external = extension?.connection?.(path, kernel, send, context);
       const config = input.resources.find(r => r.id === path.target);
       if (config?.kind !== "relational" || config.semantics !== "postgresql-keyed/1") return external;
-      if (external) throw Error("PostgreSQL session owner cannot be combined with another connection gate");
+      const database = databases.get(path.target)!;
+      // A connection first passes the other gate (for example the TLS handshake), then asks the database for a session,
+      // as a real client does. The database refuses it when its session limit is full.
       return {
         holdLeaseUntilRemoteTerminal: true,
         open(id, done) {
-          const opened = databases.get(path.target)!.openSession(id);
-          done(undefined, opened ? undefined : "backend-rejected");
-          return () => false;
+          if (!external) { done(undefined, database.openSession(id) ? undefined : "backend-rejected"); return () => false; }
+          return external.open(id, (route, failure) => {
+            if (failure) return done(route, failure);
+            if (database.openSession(id)) return done(route);
+            external.close(id); done(route, "backend-rejected");
+          });
         },
-        close(id) { databases.get(path.target)!.closeSession(id); },
-        returnTraffic(id) { return databases.get(path.target)!.sessionAlive(id); },
+        close(id) { database.closeSession(id); external?.close(id); },
+        returnTraffic(id) { return database.sessionAlive(id) && (external?.returnTraffic?.(id) ?? true); },
       };
     },
     install(kernel, trace, context) {
