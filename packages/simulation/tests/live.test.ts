@@ -163,3 +163,21 @@ test("a crashed cache shows failed; cache misses and refused stale fills are not
   expect(seconds[15]!.metrics.cache!.health).toBe("healthy");
 });
 
+
+test("versioned same-second actions replay the normalized timeline, exact quantities and all evidence", () => {
+  const f = fixture(8, 50), nodes = f.design.resources.map(r => r.id);
+  const a = createActionableLiveModel2(f.design, f.contract, nodes);
+  a.advanceSecond(); a.advanceSecond();
+  const request = {interventionId: "cpu-capacity", revision: 1, target: {resourceId: "db"}, parameters: {cores: 0, duration: 1}};
+  a.apply({id: "first", kind: "intervention", request});
+  a.apply({id: "second", kind: "load", fraction: 0.5});
+  const c = compileProduct(f.design, withTimeline(f.contract, [...a.actions]));
+  if (!c.ok) throw Error(JSON.stringify(c.diagnostics));
+  const b = createLiveModel2(c.value, nodes); b.catchUp(2, 2); a.catchUp(2);
+  for (let second = 2; second < 8; second++) { a.advanceSecond(); b.advanceSecond(); expect(a.project()).toEqual(b.project()); }
+  expect(a.actions.map(a => a.id)).toEqual(["first", "second"]);
+  expect(a.evidence()).toEqual(b.evidence());
+  const q = c.value.input.dataInterventions.find(i => i.kind === "cpu-capacity")!;
+  expect(q.at).toMatchObject({value: 2_000_001, unit: "us"});
+  expect("duration" in q && q.duration).toMatchObject({value: 1_000_000, unit: "us"});
+});

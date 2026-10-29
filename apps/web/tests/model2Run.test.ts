@@ -92,3 +92,48 @@ for (const historical of [true, false]) test(`worker startup and server replay p
   }
   expect(h.messages.at(-1)!.type).toBe("done");
 });
+
+test("versioned worker actions replay in same-second order with identical quantities, every second and final evidence", () => {
+  const setup = start({horizonSeconds: 10, stopAtSecond: 10});
+  setup.input.resources.push(at("cache", T.Cache, 2));
+  setup.input.connectionLines.push(line("app-1", "cache", T.VirtualMachine, T.Cache), line("app-2", "cache", T.VirtualMachine, T.Cache));
+  const h = harness(setup), server = createModel2Run(JSON.parse(JSON.stringify(setup.input)), 10);
+  const action = (interventionId: string, parameters: Record<string, number>, target: {resourceId: string} | {edgeId: string; direction: "request" | "response" | "both"} = {resourceId: "db"}) => ({kind: "intervention" as const, parameters: {interventionId, revision: 1, target, parameters}});
+  const schedule = new Map<number, Array<Parameters<typeof server.apply>[0]>>([
+    [0, [action("session-capacity", {sessions: 0, duration: 1}), {kind: "load", parameters: {targetLoadFraction: 1.2}}]],
+    [2, [action("cpu-capacity", {cores: 0, duration: 1}), action("flush", {}, {resourceId: "cache"})]],
+    [4, [action("delay", {delay: 1000, duration: 1}, {edgeId: "app-1-db", direction: "response"})]],
+    [6, [action("partition", {duration: 1}, {edgeId: "app-2-db", direction: "request"})]],
+  ]);
+  const submitted: Array<{atSecond: number; request: Parameters<typeof server.apply>[0]}> = [];
+  for (let second = 0; second < 10; second++) {
+    for (const request of schedule.get(second) ?? []) {
+      h.host.handle({type: "action", id: String(submitted.length), request});
+      server.apply(request); submitted.push({atSecond: second, request});
+    }
+    h.tick(); server.advance();
+    expect(h.seconds().at(-1)!.view).toEqual(server.view());
+    expect(h.host.actions()).toEqual(server.actions);
+  }
+  const done = h.messages.at(-1) as Extract<FromWorker, {type: "done"}>;
+  expect(done).toEqual({type: "done", submission: {stopAtSecond: 10, actions: submitted}});
+  expect(h.host.evidence()).toEqual(server.evidence());
+  // Reconstruct from the serialized submission, as a later server worker does.
+  const replay = createModel2Run(setup.input, 10), wire = JSON.parse(JSON.stringify(done.submission)) as typeof done.submission;
+  let cursor = 0;
+  for (let second = 0; second < 10; second++) {
+    while (wire.actions[cursor]?.atSecond === second) replay.apply(wire.actions[cursor++]!.request);
+    replay.advance(); expect(replay.view()).toEqual(h.seconds()[second]!.view);
+  }
+  expect(replay.actions).toEqual(server.actions);
+  expect(replay.evidence()).toEqual(h.host.evidence());
+  expect(replay.evidence().product.interventions).toHaveLength(5);
+});
+
+test("a challenge worker refuses a free intervention before recording or changing its run", () => {
+  const h = harness({experiment: {fault: DeploymentChaosNames.Crash, resourceId: "app-1", atSimulatedSecond: 2}});
+  const before = h.host.evidence();
+  h.host.handle({type: "action", id: "spoof", request: {kind: "intervention", parameters: {interventionId: "session-capacity", revision: 1, target: {resourceId: "db"}, parameters: {sessions: 0, duration: 1}}}});
+  expect(h.messages.at(-1)).toMatchObject({type: "action", id: "spoof", ok: false});
+  expect(h.host.actions()).toEqual([]); expect(h.host.evidence()).toEqual(before);
+});

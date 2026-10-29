@@ -22,12 +22,12 @@ test("a challenge attempt explains its fixed conditions and offers no load, faul
   expect(html).toContain("Your prediction is locked");
   expect(html).toContain("Saturated");
   expect(html).toContain("Judged at second 150");
-  for (const control of ["Inject a fault", "Target share of the workload", "Resize", "Pools"]) expect(html).not.toContain(control);
+  for (const control of ["Apply an intervention", "Target share of the workload", "Resize", "Pools"]) expect(html).not.toContain(control);
 });
 
 test("a freeform live run keeps its full durable controls", () => {
   const html = panel(run);
-  for (const control of ["Load", "Target share of the workload", "Inject a fault", "Resize", "Pools"]) expect(html).toContain(control);
+  for (const control of ["Load", "Target share of the workload", "Apply an intervention", "Resize", "Pools"]) expect(html).toContain(control);
   expect(panel(run, false)).toContain("Controls are available while the run is live.");
 });
 
@@ -43,6 +43,6 @@ test("run phase and the automatic stop come from recorded run state", () => {
 });
 
 test("fault descriptions state the model's actual effect", () => {
-  expect(FAULTS.find((f) => f.id === "cpu-spike")?.effect).toBe("Adds 45 points of CPU.");
-  expect(FAULTS.find((f) => f.id === "disk-failure")?.effect).toBe("Pins CPU at 100%.");
+  expect(FAULTS.find((f) => f.id === "cpu-spike")?.effect).toBe("A competing process holds 45% of the target's modeled cores.");
+  expect(FAULTS.some((f) => f.id === "disk-failure" || f.id === "memory-leak")).toBe(false);
 });

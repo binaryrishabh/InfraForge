@@ -1,3 +1,4 @@
+import type { InterventionOption } from "@infraforge/simulation/model2-run";
 import type { ActionOutcome, ActionRequest } from "@infraforge/contracts/actions";
 import type { RunTopology, RunProfileSelection } from "@infraforge/contracts/run-inputs";
 import type { ApplicationFlowEvidence, LiveView, SimulationLog } from "@infraforge/contracts/telemetry";
@@ -22,7 +23,7 @@ export type ToWorker =
   | { type: "action"; id: string; request: ActionRequest }
   | { type: "stop" };
 export type FromWorker =
-  | { type: "second"; applicationFlow?: ApplicationFlowEvidence; view: LiveView; logs: SimulationLog[]; burnRatePerHourUsd: number }
+  | { type: "second"; applicationFlow?: ApplicationFlowEvidence; view: LiveView; interventions: {options: InterventionOption[]; remainingSeconds: number}; logs: SimulationLog[]; burnRatePerHourUsd: number }
   | { type: "action"; id: string; ok: true; outcome: ActionOutcome }
   | { type: "action"; id: string; ok: false; message: string }
   | { type: "done"; submission: RunSubmission }

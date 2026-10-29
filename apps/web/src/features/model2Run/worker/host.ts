@@ -29,7 +29,7 @@ export function createRunHost(post: (message: FromWorker) => void, timers: Timer
         run.apply({ kind: "chaos", parameters: { type: plan.fault, resourceId: plan.resourceId, trigger: "challenge-experiment" } });
       }
       const applicationFlow = run.applicationFlowEvidence();
-      post({ type: "second", ...(applicationFlow ? { applicationFlow } : {}), view: run.view(), logs, burnRatePerHourUsd: run.burnRatePerHourUsd() });
+      post({ type: "second", ...(applicationFlow ? { applicationFlow } : {}), view: run.view(), interventions: {options: run.interventionOptions(), remainingSeconds: Math.max(0, Math.floor(run.horizonSeconds - second - 0.000001))}, logs, burnRatePerHourUsd: run.burnRatePerHourUsd() });
       if (second >= start.stopAtSecond) { finish(); return; }
     } catch (error) {
       finished = true;
@@ -52,6 +52,8 @@ export function createRunHost(post: (message: FromWorker) => void, timers: Timer
   };
 
   return {
+    evidence: () => run?.evidence(),
+    actions: () => run?.actions,
     handle(message: ToWorker) {
       if (message.type === "start") {
         if (run) return post({ type: "error", message: "This worker already runs a simulation." });

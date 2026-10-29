@@ -1,3 +1,4 @@
+import type { InterventionOption } from "@infraforge/simulation/model2-run";
 import type { ActionRequest, RunAction } from "@infraforge/contracts/actions";
 import type { SimulationSnapshot } from "@infraforge/contracts/telemetry";
 import { http, API_URL } from "@/client/httpClient";
@@ -10,7 +11,7 @@ same store the server's snapshots used, and the run controls go to the worker. W
 what it did and the server replays it; only that replay becomes the record. */
 
 type Controls = ReturnType<typeof startModel2Run>;
-const active = new Map<string, { controls: Controls; speed: number }>();
+const active = new Map<string, { controls: Controls; speed: number; interventions: {options: InterventionOption[]; remainingSeconds: number} | null }>();
 
 export const browserRunFor = (deploymentId: string) => active.get(deploymentId);
 
@@ -28,9 +29,10 @@ export function startBrowserRun(deploymentId: string, onEnd?: (error?: string) =
 async function launch(deploymentId: string, onEnd?: (error?: string) => void) {
   const start: Omit<RunStart, "speed"> = (await http.get(`${API_URL}/deployments/${deploymentId}/browser-run`)).data.browserRun;
   let costUsd = 0;
-  const entry = { speed: 1, controls: null as unknown as Controls };
+  const entry: NonNullable<ReturnType<typeof browserRunFor>> = { speed: 1, controls: null as unknown as Controls, interventions: null };
   entry.controls = startModel2Run({ ...start, speed: 1 }, {
-    onSecond: ({ view, logs, burnRatePerHourUsd, applicationFlow }) => {
+    onSecond: ({ view, logs, burnRatePerHourUsd, applicationFlow, interventions }) => {
+      entry.interventions = interventions;
       costUsd += burnRatePerHourUsd / 3600;
       const snapshot: SimulationSnapshot = { ...(applicationFlow ? { applicationFlow } : {}), deploymentId, timestamp: new Date().toISOString(), simulatedSeconds: view.simulatedSeconds,
         loadFraction: view.loadFraction, metrics: view.metrics, logs, health: view.overallHealth, pools: view.pools, spawnedVms: [], restarting: [],

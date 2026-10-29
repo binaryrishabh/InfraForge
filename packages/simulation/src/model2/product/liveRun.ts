@@ -112,8 +112,8 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
           const applied = compileProduct(design, withTimeline(contract, [...run.actions]));
           if (!applied.ok) throw new Error("Accepted intervention failed recompilation");
           const receipt = applied.value.interventionReceipts!.find(r => r.actionId === actionId)!;
-          return {outcome: {intervention: receipt, ...(receipt.endUs === null ? {interventionEnded: true} : {durationSimulatedSeconds: Number(request.parameters.parameters.duration)})},
-            ...(receipt.endUs === null ? {} : {endSecond: Math.ceil(receipt.endUs / SECOND)})};
+          return {outcome: {intervention: receipt, ...(receipt.endUs === null ? {} : {durationSimulatedSeconds: Number(request.parameters.parameters.duration)})},
+            endSecond: Math.ceil((receipt.endUs ?? receipt.atUs) / SECOND)};
         }
         case "load": {
           const previous = target;

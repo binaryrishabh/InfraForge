@@ -2,11 +2,17 @@ import type { RunAction } from "@infraforge/contracts/actions";
 import { formatDate, plural } from "@/lib/format";
 import { StatusMark } from "@/ui/StatusMark";
 import type { StatusKind } from "@/ui/status";
+import { INTERVENTIONS } from "@infraforge/domain/resource";
 import { FAULTS } from "@/features/live/faults";
 import { isChallengeExperiment } from "../labels";
 
 function describe(action: RunAction) {
   const p = action.parameters;
+  if ("interventionId" in p) {
+    const d = INTERVENTIONS.find(d => d.id === p.interventionId && d.revision === p.revision);
+    const target = "resourceId" in p.target ? p.target.resourceId : `${p.target.edgeId} (${p.target.direction})`;
+    return `${d?.label ?? p.interventionId} v${p.revision} on ${target}: ${Object.entries(p.parameters).map(([name, value]) => `${name} ${value} ${d?.parameters.find(p => p.name === name)?.unit ?? ""}`).join(", ") || "one-shot"}`;
+  }
   if ("targetLoadFraction" in p) return `Load target requested: ${Math.round(p.targetLoadFraction * 100)}% of the declared workload`;
   if ("speed" in p) return `Speed requested: ${p.speed}×`;
   if ("type" in p) return `${FAULTS.find((f) => f.id === p.type)?.label ?? p.type} on ${p.resourceId}`;
@@ -20,7 +26,7 @@ function describe(action: RunAction) {
 const KIND: Record<RunAction["status"], StatusKind> = { requested: "pending", applying: "pending", running: "in-progress", completed: "finished", failed: "failed", cancelled: "unavailable" };
 const STATUS_LABEL: Record<RunAction["status"], string> = { requested: "Requested", applying: "Applying", running: "Running", completed: "Completed", failed: "Failed", cancelled: "Cancelled" };
 const ACTION_LABEL: Record<RunAction["kind"], string> = {
-  load: "Load change", speed: "Speed change", chaos: "Fault", "vertical-scale": "Resize", "pool-scale": "Pool change", topology: "Live edit", teardown: "Stop",
+  intervention: "Intervention", load: "Load change", speed: "Speed change", chaos: "Fault", "vertical-scale": "Resize", "pool-scale": "Pool change", topology: "Live edit", teardown: "Stop",
 };
 
 /* Durable actions in accepted order. A request, its application and its
@@ -49,6 +55,7 @@ export function ActionTimeline({ actions }: { actions: RunAction[] }) {
                 {o?.durationSimulatedSeconds !== undefined && <p className="mt-1">Injected duration: {o.durationSimulatedSeconds} simulated seconds.</p>}
                 {o?.baselineOverallHealth && <p className="mt-1">Overall health when the fault was applied: {o.baselineOverallHealth}.</p>}
                 {o?.faultEnded && <p className="mt-1">Injected fault ended. Overall health recorded at its end: {o.observedOverallHealth}. This does not establish full system recovery.</p>}
+                {o?.intervention && <p className="mt-1">Resolved targets: {o.intervention.resolvedTargets.join(", ")}. Applies at {o.intervention.atUs} us{ o.intervention.endUs === null ? "; one-shot" : `; baseline restore at ${o.intervention.endUs} us`}. {o.interventionEnded ? "Control completed; downstream effects may remain." : "Completion has not been recorded."}</p>}
                 {o?.installedSkuId && <p className="mt-1">Observed online on {o.installedSkuId}.</p>}
                 {o?.previousReplicaCount !== undefined && <p className="mt-1">Pool replicas at application: {o.previousReplicaCount}.</p>}
                 {o?.finalReplicaCount !== undefined && <p className="mt-1">Pool replicas when provisioning or draining completed: {o.finalReplicaCount}.</p>}
