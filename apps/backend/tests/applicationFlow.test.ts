@@ -38,3 +38,17 @@ test("flow browser worker entry and server replay produce identical logs, views 
   expect(browser.applicationFlowEvidence()!.events.some(e=>e.kind==="flow-join")).toBe(true);
   expect(browser.view().metrics.app!.health).toBe(ResourceHealth.HEALTHY);
 });
+
+
+import { validateChallengeVersions } from "../challenges/validate";
+import { CHALLENGE_VERSIONS } from "../challenges/definitions";
+test("no-flow starter service edges keep the historical connection-rule error class", () => {
+  for (const type of ["Virtual Machine", "Load Balancer"] as const) {
+    const challenge = structuredClone(CHALLENGE_VERSIONS[0]!);
+    challenge.starter = { resources: [{ id: "app", type: "Virtual Machine", x: 0, y: 0 }, { id: "target", type, x: 1, y: 0 }],
+      connectionLines: [{ id: "edge", sourceId: "app", targetId: "target", sourceType: "Virtual Machine", targetType: type, port: 80 }] };
+    expect(validateChallengeVersions([challenge], {})).toContain(`${challenge.id}@${challenge.version}: starter connection edge breaks the connection rules`);
+    challenge.starter.resources[0]!.applicationFlow = { schema: "application-flow/1", operations: { read: { steps: [{ id: "c", kind: "call", edge: "edge" }] } } };
+    expect(validateChallengeVersions([challenge], {})).not.toContain(`${challenge.id}@${challenge.version}: starter connection edge breaks the connection rules`);
+  }
+});

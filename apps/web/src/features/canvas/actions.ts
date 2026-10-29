@@ -72,7 +72,7 @@ export function connectResources(sourceId: string, targetId: string) {
   const source = store.resources.find((r) => r.id === sourceId), target = store.resources.find((r) => r.id === targetId);
   if (!source || !target || sourceId === targetId) return false;
   if (store.connectionLines.some((l) => l.sourceId === sourceId && l.targetId === targetId)) { toast.warning("These resources are already connected."); return false; }
-  const verdict = validateConnection(source.type, target.type);
+  const verdict = validateConnection(source.type, target.type, "draw");
   if (!verdict.valid) { toast.warning(verdict.message); return false; }
   const connectionLine = { id: `connection-${Date.now().toString(36)}`, sourceId, targetId, sourceType: source.type, targetType: target.type, port: RESOURCE_PORTS[target.type] || 80 };
   store.setConnectionLines((prev) => [...prev, connectionLine]);

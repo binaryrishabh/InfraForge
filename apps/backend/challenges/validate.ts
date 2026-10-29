@@ -65,7 +65,7 @@ function checkDefinition(d: ChallengeDefinition): string[] {
       const source = d.starter.resources.find((r) => r.id === l.sourceId), target = d.starter.resources.find((r) => r.id === l.targetId);
       if (!source || !target) { problems.push(`${where}: starter connection ${l.id} references a missing resource`); continue; }
       if (source.type !== l.sourceType || target.type !== l.targetType) problems.push(`${where}: starter connection ${l.id} has stale types`);
-      if (!validateConnection(source.type, target.type).valid) problems.push(`${where}: starter connection ${l.id} breaks the connection rules`);
+      if (!validateConnection(source.type, target.type, { source, connectionId: l.id }).valid) problems.push(`${where}: starter connection ${l.id} breaks the connection rules`);
     }
     const readiness = validateDeploymentReadiness(d.starter.resources, d.starter.connectionLines);
     if (!readiness.valid) problems.push(`${where}: the starter must be runnable: ${readiness.errors.join("; ")}`);

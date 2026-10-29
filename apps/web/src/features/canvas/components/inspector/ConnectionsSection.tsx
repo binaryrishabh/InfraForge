@@ -25,7 +25,7 @@ export function ConnectionsSection({ resource, disabled }: { resource: Resource;
   const name = (id: string) => { const r = resources.find((x) => x.id === id); return r ? r.name || r.id : id; };
   const outgoing = lines.filter((l) => l.sourceId === resource.id);
   const incoming = lines.filter((l) => l.targetId === resource.id);
-  const candidates = resources.filter((r) => r.id !== resource.id && !outgoing.some((l) => l.targetId === r.id) && validateConnection(resource.type, r.type).valid);
+  const candidates = resources.filter((r) => r.id !== resource.id && !outgoing.some((l) => l.targetId === r.id) && validateConnection(resource.type, r.type, "draw").valid);
   const chosen = candidates.some((c) => c.id === target) ? target : "";
   const row = (id: string, label: string, other: string, direction: "to" | "from", port: number) => (
     <li key={id} className="flex items-center gap-2 py-1">

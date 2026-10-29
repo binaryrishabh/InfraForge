@@ -2,12 +2,12 @@ import { RESOURCE_TYPES, type ResourceType } from "../resource/RESOURCE_TYPES.co
 
 /* A rule specifing between which resources connections could be done and which one will be the source and which 
 one will be the target */
-export const CONNECTION_RULES: Record<ResourceType, Array<ResourceType>> = {
+export const CONNECTION_RULES: Record<ResourceType, Array<ResourceType | { target: ResourceType; requires: "application-flow" }>> = {
   [RESOURCE_TYPES.DNS]: [RESOURCE_TYPES.CDN, RESOURCE_TYPES.LoadBalancer],
   [RESOURCE_TYPES.CDN]: [RESOURCE_TYPES.LoadBalancer],
   [RESOURCE_TYPES.Firewall]: [RESOURCE_TYPES.LoadBalancer, RESOURCE_TYPES.VirtualMachine, RESOURCE_TYPES.Database],
   [RESOURCE_TYPES.LoadBalancer]: [RESOURCE_TYPES.VirtualMachine],
-  [RESOURCE_TYPES.VirtualMachine]: [RESOURCE_TYPES.VirtualMachine, RESOURCE_TYPES.LoadBalancer, RESOURCE_TYPES.Database, RESOURCE_TYPES.Cache, RESOURCE_TYPES.MessageQueue, RESOURCE_TYPES.ContainerRegistry, RESOURCE_TYPES.ObjectStorage],
+  [RESOURCE_TYPES.VirtualMachine]: [{ target: RESOURCE_TYPES.VirtualMachine, requires: "application-flow" }, { target: RESOURCE_TYPES.LoadBalancer, requires: "application-flow" }, RESOURCE_TYPES.Database, RESOURCE_TYPES.Cache, RESOURCE_TYPES.MessageQueue, RESOURCE_TYPES.ContainerRegistry, RESOURCE_TYPES.ObjectStorage],
   [RESOURCE_TYPES.ContainerRegistry]: [],
   [RESOURCE_TYPES.Cache]: [RESOURCE_TYPES.Database],
   [RESOURCE_TYPES.Database]: [RESOURCE_TYPES.ObjectStorage],

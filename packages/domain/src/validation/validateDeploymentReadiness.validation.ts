@@ -5,7 +5,7 @@ import { CONNECTION_RULES } from "../topology/CONNECTION_RULES.constants";
 import { computeTopology } from "../topology/computeTopology";
 
 // Function to validete the above defined rules
-export function validateConnection(sourceType: ResourceType, targetType: ResourceType): { valid: boolean, message: string } {
+export function validateConnection(sourceType: ResourceType, targetType: ResourceType, context?: "draw" | { source: Resource; connectionId: string }): { valid: boolean, message: string } {
     const allowed = CONNECTION_RULES[sourceType];
     if (!allowed) { // if the defined source type doesn't even exists.
         return { valid: false, message: "Unknown source type: " + sourceType };
@@ -13,8 +13,15 @@ export function validateConnection(sourceType: ResourceType, targetType: Resourc
     if (allowed.length === 0) { // If defined source type couldn't make connection with any of the target like Object Storage
         return { valid: false, message: sourceType + " cannot connect to any resource" };
     }
-    if (!allowed.includes(targetType)) { // If the sepcified sourceType can't make connection with the defined targetType
-        return { valid: false, message: `${sourceType} cannot connect to ${targetType}. Allowed: ${allowed.join(", ")}` };
+    const rule = allowed.find(rule => (typeof rule === "string" ? rule : rule.target) === targetType);
+    if (!rule) { // If the sepcified sourceType can't make connection with the defined targetType
+        return { valid: false, message: `${sourceType} cannot connect to ${targetType}. Allowed: ${allowed.map(rule => typeof rule === "string" ? rule : rule.target).join(", ")}` };
+    }
+    if (typeof rule !== "string" && context !== "draw") {
+        const usesConnection = context && Object.values(context.source.applicationFlow?.operations ?? {}).some(flow =>
+            flow.steps.some(step => step.kind === "call" ? step.edge === context.connectionId :
+                step.kind === "parallel" && step.branches.some(branch => branch.edge === context.connectionId)));
+        if (!usesConnection) return { valid: false, message: "This connection is used only by an Application Flow: author a flow on the source VM that calls it" };
     }
     return { valid: true, message: "Connection valid" };
 }
@@ -25,6 +32,14 @@ unreachable resources and dead-end VMs are warnings. */
 export function validateDeploymentReadiness(resources: Array<Resource>, connections: Array<ConnectionLine>): { valid: boolean, errors: string[], warnings: string[] } {
     const errors: string[] = [];
     const warnings: string[] = [];
+    for (const line of connections) {
+        const source = resources.find(resource => resource.id === line.sourceId);
+        const target = resources.find(resource => resource.id === line.targetId);
+        if (source && target) {
+            const verdict = validateConnection(source.type, target.type, { source, connectionId: line.id });
+            if (!verdict.valid) errors.push(`${line.id}: ${verdict.message}`);
+        }
+    }
     const types = resources.map(resource => resource.type); // Here type is resource name
     /* ------------------HARD ERRORS block deployment-------------------- */
     if (types.includes(RESOURCE_TYPES.LoadBalancer) && !types.includes(RESOURCE_TYPES.VirtualMachine)) {
