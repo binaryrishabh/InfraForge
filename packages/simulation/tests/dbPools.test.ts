@@ -1,4 +1,9 @@
 import { expect, test } from "bun:test";
+import { dbPoolCascade } from "./dbPoolCascadeFixture";
+import { createProductModel2 } from "../src/model2/product/run";
+import { createLiveModel2 } from "../src/model2/product/live";
+import { networkLink } from "../src/model2/network/link";
+import { pathTransport } from "../src/model2/network/transport";
 import { relationalDatabase } from "../src/model2/data/database";
 import type { Invocation } from "../src/model2/workload/contracts";
 import { dataFixture } from "./dataFixture";
@@ -71,4 +76,69 @@ test("PG2 close after entering commit preserves the committed effect and eventua
 test("PG2 cancel before commit preserves the session and rolls back writes", () => {
   const f = database2(); f.db.openSession("a"); const receipt = f.db.accept(f.work("a"), () => {}); f.clock.advanceTo(100);
   expect(receipt.cancel()).toBe("cancelled"); expect(f.db.evidence().rows[0]!.version).toBe(1); expect(f.db.sessionAlive("a")).toBe(true);
+});
+
+function transport2() {
+  const f = database2(), path = structuredClone(f.input.paths.find(p => p.target === "db")!);
+  const links = new Map(f.input.links.map(l => [l.id, networkLink(l, f.clock)]));
+  let alive = true; const events: Array<{ kind: string; detail: string }> = [];
+  const transport = pathTransport(path, f.clock, links, (_target, work, done) => f.db.accept(work, done), () => alive,
+    (kind, _id, detail) => events.push({ kind, detail }), id => f.db.closeSession(id),
+    { holdLeaseUntilRemoteTerminal: true, open(id, done) { done(undefined, f.db.openSession(id) ? undefined : "session-limit"); return () => false; }, close: id => f.db.closeSession(id), returnTraffic: id => f.db.sessionAlive(id) });
+  return { ...f, path, links, transport, events, crash: () => { alive = false; f.db.pause(true); } };
+}
+
+test("leases balance after success, DB error, pre-delivery cancel and DB crash before remote delivery", () => {
+  for (const mode of ["success", "error", "cancel", "crash"] as const) {
+    const f = transport2();
+    if (mode === "error") f.config.plans.light!.statementTimeout = f.q.q("short.statement", 1, "us");
+    const receipt = f.transport.exchange(f.work("a", "light"), () => {});
+    if (mode === "cancel" || mode === "crash") {
+      // The connection is established before the request's first hop completes.
+      f.clock.advanceTo(11); if (mode === "crash") { f.crash(); f.clock.advanceTo(30); }
+      receipt.cancel();
+    }
+    f.clock.advanceTo(5000); const pool = f.transport.measure().pool;
+    expect(pool.acquired).toBe(1); expect(pool.released).toBe(pool.acquired); expect(pool.activeStreams).toBe(0); expect(pool.pending).toBe(0);
+  }
+});
+
+test("caller deadline during protected commit does not undo its row or relabel the remote outcome", () => {
+  const f = transport2(), plan = f.config.plans.heavy!; plan.commitWait = f.q.q("commit.wait", 2000, "us"); plan.durability = "authored-log-ack";
+  const receipt = f.transport.exchange(f.work("a"), () => {});
+  let caller = "in-flight";
+  f.clock.schedule(1500, 1, "caller-deadline", () => { caller = "deadline-exceeded"; receipt.cancel(); });
+  f.clock.advanceTo(5000); expect(caller).toBe("deadline-exceeded"); expect(f.db.evidence().rows[0]!.version).toBe(2);
+  expect(f.events).toContainEqual({ kind: "remote-after-transport-stop", detail: "completed" });
+  expect(f.transport.measure().pool.released).toBe(1);
+});
+
+test("cache outage fills per-replica pools, autoscaling exceeds ten sessions, recovery drains state deterministically", () => {
+  const f = dbPoolCascade(), run = createProductModel2(f.compiled), live = createLiveModel2(f.compiled, ["lb", "app", "cache", "db"]);
+  const phases: ReturnType<typeof run.evidence>[] = [];
+  for (const second of [4, 14, 24, 25, 27, 40, 45]) { run.advanceTo(second * 1e6); phases.push(run.evidence()); }
+  const [before, full, outage, back, drained, idle, end] = phases;
+  const db = (e: typeof before) => e!.data.databases[0]!;
+  expect(db(before).transactions.admitted).toBe(1);
+  expect((db(full).transactions.admitted - db(before).transactions.admitted) / 10).toBeGreaterThanOrEqual(db(before).transactions.admitted / 4 * 10);
+  expect(db(full).sessions.total).toBeGreaterThan(10); expect(db(full).sessions.limit).toBe(12);
+  expect(full!.product.controllers[0]!.replicas.filter(r => r.state === "ready")).toHaveLength(3);
+  expect(db(outage).sessionEvents!.refused).toBeGreaterThan(0);
+  const pending = back!.network.paths.filter(p => p.target === "db").reduce((n, p) => n + p.pool.pending, 0);
+  expect(pending + db(back).transactions.live + (db(back).sessions.orphaned ?? 0)).toBeGreaterThan(0);
+  expect(db(back).sessions.total).toBeGreaterThan(db(before).sessions.total);
+  expect(db(drained).transactions.live).toBe(0); expect(db(idle).sessions.total).toBe(0);
+  const again = createProductModel2(f.compiled);
+  for (const second of [4, 14, 24, 25, 27, 40, 45]) again.advanceTo(second * 1e6);
+  expect(JSON.stringify(again.evidence())).toBe(JSON.stringify(end));
+  let refusalVisible = false;
+  for (let i = 0; i < 27; i++) { live.advanceSecond(); const p = live.project(); if ((p.metrics.db!.errorRate ?? 0) > 0) { refusalVisible = true; expect(p.metrics.db!.health).not.toBe("healthy"); } }
+  expect(refusalVisible).toBe(true);
+});
+
+test("normal sequential load reuses one connection without filling a ten-connection pool", () => {
+  const input = pgInput(), q = quantities("normal pool"), config = input.paths.find(p => p.target === "db")!.pool;
+  config.maxConnections = q.q("ten", 10, "count"); const clock = new EventKernel(10000), pool = connectionPool("normal", config, clock, () => true);
+  for (let i = 0; i < 20; i++) { pool.acquire(String(i), lease => lease.release(), () => { throw Error("unexpected refusal"); }); clock.advanceTo((i + 1) * 100); expect(pool.measure().connections).toBeLessThan(10); expect(pool.measure().pending).toBe(0); }
+  expect(pool.measure()).toMatchObject({ created: 1, acquired: 20, released: 20 });
 });
