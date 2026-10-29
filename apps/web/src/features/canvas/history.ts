@@ -25,7 +25,10 @@ export function undo() {
         store.setUndoStack((prev) => prev.slice(0, -1));
         return;
       }
-      store.setResources((prev) => [...prev, last.resource]);
+      store.setResources((prev) => [...prev.map(r => {
+        const original = last.scopedPolicies?.find(p => p.id === r.id);
+        return original ? { ...r, firewallSettings: original.firewallSettings } : r;
+      }), last.resource]);
       store.setConnectionLines((prev) => [...prev, ...last.connectionLines]);
       break;
     case "move":
@@ -56,7 +59,9 @@ export function redo() {
       store.setConnectionLines((prev) => [...prev, ...last.connectionLines]);
       break;
     case "delete":
-      store.setResources((prev) => prev.filter((r) => r.id !== last.resource.id));
+      store.setResources((prev) => prev.filter((r) => r.id !== last.resource.id).map(r => r.firewallSettings ? {
+        ...r, firewallSettings: { ...r.firewallSettings, rules: r.firewallSettings.rules.filter(rule => rule.source !== last.resource.id && rule.destination !== last.resource.id) },
+      } : r));
       store.setConnectionLines((prev) => prev.filter((l) => l.sourceId !== last.resource.id && l.targetId !== last.resource.id));
       break;
     case "move":

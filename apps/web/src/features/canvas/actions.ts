@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { validateConnection } from "@infraforge/domain/validation";
-import { RESOURCE_PORTS, type Resource, type ResourceType } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, securitySettingsError, type Resource, type ResourceType } from "@infraforge/domain/resource";
 import { useCanvasStore } from "./store/canvasStore";
 import { positionIsOccupied } from "./utils/cardFootprint";
 import { NODE_CARD_WIDTH, DESIGN_CARD_HEIGHT, GRID_SIZE } from "./utils/nodeGeometry";
@@ -88,9 +88,12 @@ export function deleteResource(resourceId: string) {
   const resource = store.resources.find((r) => r.id === resourceId);
   if (!resource) return;
   const touching = store.connectionLines.filter((line) => line.sourceId === resourceId || line.targetId === resourceId);
-  store.setUndoStack((prev) => [...prev, { type: "delete", resource, connectionLines: touching, savedState: store.currentLayoutSaved }]);
+  const scopedPolicies = store.resources.filter(r => r.id !== resourceId && r.firewallSettings?.rules.some(rule => rule.source === resourceId || rule.destination === resourceId));
+  store.setUndoStack((prev) => [...prev, { type: "delete", resource, connectionLines: touching, scopedPolicies, savedState: store.currentLayoutSaved }]);
   store.setRedoStack([]);
-  store.setResources((prev) => prev.filter((r) => r.id !== resourceId));
+  store.setResources((prev) => prev.filter((r) => r.id !== resourceId).map(r => r.firewallSettings ? {
+    ...r, firewallSettings: { ...r.firewallSettings, rules: r.firewallSettings.rules.filter(rule => rule.source !== resourceId && rule.destination !== resourceId) },
+  } : r));
   store.setConnectionLines((prev) => prev.filter((line) => line.sourceId !== resourceId && line.targetId !== resourceId));
   if (store.selectedResourceId === resourceId) store.setSelectedResourceId(null);
   if (store.selectedResourceForConfigId === resourceId) store.setSelectedResourceForConfigId(null);
@@ -117,6 +120,8 @@ export function updateResource(resourceId: string, patch: Partial<Resource>) {
   if (!editable(store)) return;
   const resource = store.resources.find((r) => r.id === resourceId);
   if (!resource) return;
+  const candidate = { ...resource, ...patch };
+  if (securitySettingsError(candidate.type, candidate.listenerSettings, candidate.firewallSettings, store.resources)) return;
   const before: Partial<Resource> = {}, after: Partial<Resource> = {};
   for (const key of TRACKED) if (key in patch) { Object.assign(before, { [key]: resource[key] }); Object.assign(after, { [key]: patch[key] }); }
   const last = store.undoStack[store.undoStack.length - 1];

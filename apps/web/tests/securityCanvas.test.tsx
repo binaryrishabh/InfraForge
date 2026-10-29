@@ -3,13 +3,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { SecuritySection, SecurityReadings } from "../src/features/canvas/components/inspector/SecuritySection";
 import { useCanvasStore } from "../src/features/canvas/store/canvasStore";
 import { useSimulationStore } from "../src/features/monitoring/store/simulationStore";
-import { updateResource } from "../src/features/canvas/actions";
+import { deleteResource, deleteConnection, updateResource } from "../src/features/canvas/actions";
 import { undo, redo } from "../src/features/canvas/history";
 import { ResourceHealth, type Resource } from "@infraforge/domain/resource";
 import { createRunHost } from "../src/features/model2Run/worker/host";
 import type { FromWorker } from "../src/features/model2Run/protocol";
 import { createModel2Run } from "@infraforge/simulation/model2-run";
 import { resolveWorkload } from "@infraforge/domain/workload";
+import { LayoutSchema } from "../../backend/zod_schemas/layout.schema";
 import { RailConnection } from "../src/features/canvas/components/RailConnection";
 
 afterEach(()=>{useCanvasStore.getState().clearCanvas();useCanvasStore.setState({liveLocked:false,isDeploying:false});useSimulationStore.getState().reset();});
@@ -73,4 +74,33 @@ for(const denied of [false,true])test(`production browser host matches serialize
     expect(server.evidence()).toEqual(host.evidence()!);
     expect(server.view().metrics.db!.security!.edges[0]!.backendDeliveries === 0).toBe(denied);
   }
+});
+
+
+test("deleting a scoped service keeps saves valid and restores rules with one undo",()=>{
+  const app:Resource={id:"app",type:"Virtual Machine",x:500,y:0,listenerSettings:{version:1,ports:[80]}};
+  const firewall:Resource={...fw,x:1000,firewallSettings:{...fw.firewallSettings!,rules:[...fw.firewallSettings!.rules,{...fw.firewallSettings!.rules[0]!,id:"source-db",source:"db",destination:"app"},{...fw.firewallSettings!.rules[0]!,id:"keep-app",destination:"app"}]}};
+  const line={id:"app-db",sourceId:"app",targetId:"db",sourceType:"Virtual Machine",targetType:"Database",port:5432};
+  useCanvasStore.setState({resources:[db,app,firewall],connectionLines:[line],currentLayoutSaved:true});
+  deleteConnection(line.id);
+  expect(useCanvasStore.getState().resources).toEqual([db,app,firewall]);
+  undo();
+  deleteResource("db");
+  const saved=()=>({resources:useCanvasStore.getState().resources,connectionLines:useCanvasStore.getState().connectionLines});
+  expect(LayoutSchema.safeParse(saved()).success).toBe(true);
+  expect(saved().resources.find(r=>r.id === "fw")!.firewallSettings!.rules.map(r=>r.id)).toEqual(["keep-app"]);
+  undo();expect(saved().resources.find(r=>r.id === "fw")!.firewallSettings).toEqual(firewall.firewallSettings);
+  expect(saved().connectionLines).toEqual([line]);expect(useCanvasStore.getState().currentLayoutSaved).toBe(true);
+  redo();expect(LayoutSchema.safeParse(saved()).success).toBe(true);
+});
+
+test("invalid security commits never enter the design or undo history",()=>{
+  useCanvasStore.setState({resources:[db,fw]});
+  for(const patch of [{priority:70000},{fromPort:NaN},{fromPort:6000,toPort:5000}]){
+    updateResource("fw",{firewallSettings:{...fw.firewallSettings!,rules:[{...fw.firewallSettings!.rules[0]!,...patch}]}});
+    expect(useCanvasStore.getState().resources).toEqual([db,fw]);
+    expect(useCanvasStore.getState().undoStack).toHaveLength(0);
+  }
+  updateResource("db",{listenerSettings:{version:1,ports:[0]}});
+  expect(useCanvasStore.getState().resources).toEqual([db,fw]);
 });

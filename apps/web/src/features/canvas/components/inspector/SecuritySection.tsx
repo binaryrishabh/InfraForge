@@ -26,9 +26,9 @@ export function SecurityReadings({ metrics }: { metrics?: SecurityMetrics }) {
     {!metrics && <p>Security measurements: Unknown</p>}
     {metrics?.evidence === "omitted" && <p>Security evidence omitted ({metrics.omitted ?? "Unknown"} rows); connection details: Unknown</p>}
     {metrics?.edges.map(e => <div key={e.path}>
-      <p>{e.source} â†’ {e.target}: denied opens {text(e.denied)}; no listener {text(e.noListener)}; backend deliveries {text(e.backendDeliveries)}.</p>
+      <p>{e.source} Ã¢â€ â€™ {e.target}: denied opens {text(e.denied)}; no listener {text(e.noListener)}; backend deliveries {text(e.backendDeliveries)}.</p>
       {e.policyDenied && Object.entries(e.policyDenied).map(([rule,count])=><p key={rule}>Denied by {rule}: {count}</p>)}
-      {e.lastDenial && <p>Connection {e.lastDenial.connectionId}: {e.lastDenial.source} â†’ {e.lastDenial.target}:{e.lastDenial.port}, {e.lastDenial.reason}{e.lastDenial.generation ? ` (policy generation ${e.lastDenial.generation})` : ""}.</p>}
+      {e.lastDenial && <p>Connection {e.lastDenial.connectionId}: {e.lastDenial.source} Ã¢â€ â€™ {e.lastDenial.target}:{e.lastDenial.port}, {e.lastDenial.reason}{e.lastDenial.generation ? ` (policy generation ${e.lastDenial.generation})` : ""}.</p>}
     </div>)}
   </div>;
 }
@@ -36,9 +36,16 @@ export function SecurityReadings({ metrics }: { metrics?: SecurityMetrics }) {
 export function SecuritySection({ resource, disabled }: { resource: Resource; disabled: boolean }) {
   const resources = useCanvasStore(s=>s.resources);
   const metrics = useSimulationStore(s=>s.metrics[resource.id]?.security);
-  const firewall = resource.type === "Firewall", p = resource.firewallSettings;
+  // Invalid edits stay in the form so the person can correct them; only valid settings enter history.
+  const [draft, setDraft] = useState({ saved: resource.firewallSettings, value: resource.firewallSettings });
+  const firewall = resource.type === "Firewall", p = draft.saved === resource.firewallSettings ? draft.value : resource.firewallSettings;
   const error = securitySettingsError(resource.type, resource.listenerSettings, p, resources);
-  const commit = (patch: Partial<FirewallSettings>) => updateResource(resource.id, {firewallSettings:{...p!,...patch}});
+  const commit = (patch: Partial<FirewallSettings>) => {
+    if (disabled) return;
+    const next = { ...p!, ...patch };
+    setDraft({ saved: resource.firewallSettings, value: next });
+    if (!securitySettingsError(resource.type, resource.listenerSettings, next, resources)) updateResource(resource.id, { firewallSettings: next });
+  };
   const change = (id: string, patch: Partial<FirewallSettings["rules"][number]>) => commit({rules:p!.rules.map(r=>r.id === id ? {...r,...patch} : r)});
   const add = () => { let n = 1; while (p!.rules.some(r=>r.id === `rule-${n}`)) n++; commit({rules:[...p!.rules,{id:`rule-${n}`,priority:100,direction:"ingress",source:"any",destination:"any",fromPort:1,toPort:65535,action:"deny"}]}); };
   return <InspectorSection title={firewall ? "Firewall policy" : "TCP listeners"}>
@@ -50,10 +57,10 @@ export function SecuritySection({ resource, disabled }: { resource: Resource; di
         <label>Default action<select value={p.default} onChange={e=>commit({default:e.target.value as "allow" | "deny"})}><option>allow</option><option>deny</option></select></label>
         <p>First matching rule per direction, ordered by priority then rule ID. Both egress and ingress must allow. Existing admitted connections survive rule changes.</p>
         {p.rules.map(r=><fieldset key={r.id}><legend>{r.id}</legend>
-          <label>Priority<input type="number" min={0} max={65535} value={r.priority} onChange={e=>change(r.id,{priority:Number(e.target.value)})} /></label>
+          <label>Priority<input type="number" min={0} max={65535} value={Number.isNaN(r.priority) ? "" : r.priority} onChange={e=>change(r.id,{priority:e.target.value === "" ? NaN : Number(e.target.value)})} /></label>
           <label>Direction<select value={r.direction} onChange={e=>change(r.id,{direction:e.target.value as "ingress" | "egress"})}><option>ingress</option><option>egress</option></select></label>
           {(["source","destination"] as const).map(k=><label key={k}>{k}<select value={r[k]} onChange={e=>change(r.id,{[k]:e.target.value})}><option value="any">any</option>{resources.filter(n=>n.type !== "Firewall").map(n=><option key={n.id} value={n.id}>{n.name || n.id} ({n.id})</option>)}</select></label>)}
-          {(["fromPort","toPort"] as const).map(k=><label key={k}>{k === "fromPort" ? "First TCP port" : "Last TCP port"}<input type="number" min={1} max={65535} value={r[k]} onChange={e=>change(r.id,{[k]:Number(e.target.value)})} /></label>)}
+          {(["fromPort","toPort"] as const).map(k=><label key={k}>{k === "fromPort" ? "First TCP port" : "Last TCP port"}<input type="number" min={1} max={65535} placeholder="Unknown" value={Number.isNaN(r[k]) ? "" : r[k]} onChange={e=>change(r.id,{[k]:e.target.value === "" ? NaN : Number(e.target.value)})} /></label>)}
           <label>Action<select value={r.action} onChange={e=>change(r.id,{action:e.target.value as "allow" | "deny"})}><option>allow</option><option>deny</option></select></label>
           <button type="button" onClick={()=>commit({rules:p.rules.filter(row=>row.id !== r.id)})}>Remove {r.id}</button>
         </fieldset>)}
