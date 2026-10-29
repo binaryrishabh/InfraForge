@@ -1,5 +1,6 @@
+import { RESOURCE_PORTS, DEFAULT_ASYNC_QUEUE_SETTINGS, DEFAULT_ASYNC_WORKER_SETTINGS, type Resource } from "@infraforge/domain/resource";
+import type { ExperimentEvidencePayload } from "@infraforge/contracts/reports";
 import { test, expect } from 'bun:test';
-import { design } from '../../../packages/simulation/tests/asyncCanvas.fixture';
 import { LayoutSchema, LiveTopologySchema } from '../zod_schemas/layout.schema';
 import { captureRunInputs, readRunInputs } from '../deployments/runInputs';
 import { createModel2Run } from '@infraforge/simulation/model2-run';
@@ -8,10 +9,19 @@ import { buildModel2Contract } from '../simulator/contractBuilder';
 import { designDifference } from '../comparison/design';
 import { evidencePayload, sampleHash } from '../evidence/contract';
 
+// Keep replay fixtures inside the backend workspace; only public packages cross boundaries.
+function design(enabled = true) {
+ const types: Record<string, Resource["type"]> = enabled ? {app:"Virtual Machine",queue:"Message Queue",worker:"Virtual Machine",store:"Object Storage"} : {app:"Virtual Machine",queue:"Message Queue"};
+ const links = enabled ? [["app","queue"],["app","store"],["queue","worker"],["worker","store"]] : [["app","queue"]];
+ const resources: Resource[] = Object.entries(types).map(([id,type])=>({id,type,x:0,y:0}));
+ if(enabled) {resources.find(r=>r.id==="queue")!.asyncQueue={...DEFAULT_ASYNC_QUEUE_SETTINGS};resources.find(r=>r.id==="worker")!.asyncWorker={...DEFAULT_ASYNC_WORKER_SETTINGS};}
+ return {resources,connections:links.map(([sourceId,targetId],i)=>({id:`e${i}`,sourceId:sourceId!,targetId:targetId!,sourceType:types[sourceId!]!,targetType:types[targetId!]!,port:RESOURCE_PORTS[types[targetId!]!]})),workload:{targetThroughput:480,throughputUnit:"per-minute" as const,trafficShape:"steady" as const,readWriteRatio:0.8,payloadSize:"light" as const}};
+}
+
 test('async intent survives saving, capture and comparison without defaults',()=>{
  const d=design();const layout={resources:d.resources,connectionLines:d.connections};
  for(const schema of [LayoutSchema,LiveTopologySchema]) {
-  expect(schema.parse(layout).resources).toEqual(d.resources);
+  expect<Resource[]>(schema.parse(layout).resources).toEqual(d.resources);
   for(const patch of [{concurrency:0},{prefetch:65},{cpuMsPerJob:0},{concurrency:2,prefetch:1},{cpuMsPerJob:1.5},{unknown:1}]) {
    const bad=structuredClone(layout);bad.resources.find(r=>r.id==='worker')!.asyncWorker={...bad.resources.find(r=>r.id==='worker')!.asyncWorker!,...patch};expect(schema.safeParse(bad).success).toBe(false);
   }
@@ -37,7 +47,7 @@ test('queue journey browser/server parity includes load reduction and real drain
  expect(browser.view().metrics.queue!.asyncQueue!.oldestReadyAgeSeconds).toBeNull();
 });
 test('evidence v3 alone accepts queue counters and keeps historical hashes stable',()=>{
- const base={version:2,topologyRevision:0,overallHealth:'healthy',loadFraction:1,targetLoadFraction:1,resources:[{id:'queue',health:'healthy',cpu:null,memory:null}],pools:[]};
+ const base: ExperimentEvidencePayload={version:2,topologyRevision:0,overallHealth:'healthy',loadFraction:1,targetLoadFraction:1,resources:[{id:'queue',health:'healthy',cpu:null,memory:null}],pools:[]};
  const old=sampleHash(base);expect(evidencePayload.parse(base)).toEqual(base);
  const metrics={version:1,published:10,completed:5,readyDepth:4,oldestReadyAgeSeconds:2,inFlight:1,redeliveries:0,deadLettered:0};
  const next={...base,version:3,resources:[{...base.resources[0],asyncQueue:metrics}]};
