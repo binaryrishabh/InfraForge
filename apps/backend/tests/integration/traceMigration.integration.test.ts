@@ -80,11 +80,29 @@ integration("migration 15 preserves history and enforces bounded immutable sampl
     await rejects(insert(resilience, 32, { ...unknown, resources: [{ id: "vm-a", cpu: 101, memory: null, health: "unknown" }] }), /Malformed/);
     await rejects(insert(resilience, 32, { ...unknown, resources: [{ id: "vm-a", cpu: "0", memory: null, health: "unknown" }] }), /Malformed/);
     await insert(resilience, 32);
+    // Revision 3 (real queue metrics) is accepted only after its own forward migration, which leaves existing rows untouched.
+    const queue = { version: 1, published: 40, completed: 12, readyDepth: 28, oldestReadyAgeSeconds: 7.5, inFlight: 1, redeliveries: 0, deadLettered: 0 };
+    const queued = { ...payload, version: 3, resources: [{ id: "queue", cpu: null, memory: null, health: "degraded", asyncQueue: queue }] };
+    const withQueue = (asyncQueue: unknown, base: Record<string, unknown> = queued) => ({ ...base, resources: [{ ...(base.resources as Record<string, unknown>[])[0], asyncQueue }] });
+    await rejects(insert(resilience, 33, queued), /Malformed/);
+    const rowsBefore = (await db.query('SELECT * FROM "RunEvidenceSample" ORDER BY "simulatedSeconds"')).rows;
+    await db.query(await Bun.file(new URL("20261029000000_async_queue_evidence/migration.sql", directory)).text());
+    expect((await db.query('SELECT * FROM "RunEvidenceSample" ORDER BY "simulatedSeconds"')).rows).toEqual(rowsBefore);
+    await insert(resilience, 33, queued);
+    await insert(resilience, 34, withQueue({ ...queue, readyDepth: 0, oldestReadyAgeSeconds: null }));
+    await rejects(insert(resilience, 35, withQueue({ ...queue, readyDepth: -1 })), /Malformed/);
+    await rejects(insert(resilience, 35, withQueue({ ...queue, inFlight: "1" })), /Malformed/);
+    await rejects(insert(resilience, 35, withQueue({ ...queue, version: 2 })), /Malformed/);
+    await rejects(insert(resilience, 35, withQueue({ ...queue, surprise: 1 })), /Malformed/);
+    await rejects(insert(resilience, 35, withQueue({ version: 1, published: 1 })), /Malformed/);
+    await rejects(insert(resilience, 35, withQueue(queue, unknown)), /Malformed/);
+    await rejects(insert(resilience, 35, { ...queued, version: 4 }), /Malformed/);
+    await insert(resilience, 35, unknown);
     await db.query('UPDATE "Deployment" SET status=\'failed\',"runtimeActive"=false WHERE id=$1', [resilience]);
     await rejects(insert(resilience, 31), /owned live resilience attempt/);
     await db.query('DELETE FROM "Infrastructure" WHERE id=$1', [workspace]);
     expect((await db.query('SELECT "infrastructureId" FROM "Deployment" WHERE id=$1', [resilience])).rows[0].infrastructureId).toBeNull();
-    expect((await db.query('SELECT count(*)::int AS count FROM "RunEvidenceSample"')).rows[0].count).toBe(3);
+    expect((await db.query('SELECT count(*)::int AS count FROM "RunEvidenceSample"')).rows[0].count).toBe(6);
     await db.query('DELETE FROM "Deployment" WHERE id=$1', [resilience]);
     expect((await db.query('SELECT count(*)::int AS count FROM "RunEvidenceSample"')).rows[0].count).toBe(0);
   } finally {
