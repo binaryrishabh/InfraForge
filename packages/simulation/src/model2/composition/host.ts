@@ -1,6 +1,6 @@
 import type { RemoteCompletion } from "../workload/contracts";
 import type { EventClock, EventKernel } from "../time";
-import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
+import type { Invocation, Receipt } from "../workload/contracts";
 import type { CausalObserver } from "../workload/causal";
 import type { cpuScheduler } from "../compute/scheduler";
 

@@ -11,7 +11,7 @@ import { COMPUTE_POLICY_LEDGER } from "./policy";
 import { validateWorkload } from "../workload/validate";
 import { lexical } from "../time";
 import type { EventKernel } from "../time";
-import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
+import type { Invocation, Receipt } from "../workload/contracts";
 import type { WorkEndpoint } from "../workload/run";
 import type { CausalObserver } from "../workload/causal";
 import type { CpuOwners, ClockOwners } from "../composition/host";

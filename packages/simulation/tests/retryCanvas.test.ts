@@ -66,5 +66,6 @@ test("canvas selects causes only for enabled retry or breaker intent", () => {
   for (const value of [output(DEFAULT_RETRY_SETTINGS), output(undefined, { enabled: true, failureThreshold: 1, cooldownMs: 1000 })]) {
     expect(value.contract.failureCauseProfile).toBe("failure-cause/1");
     expect(value.compiled.input.failureCauseProfile).toBe("failure-cause/1");
+    expect(value.compiled.semantic.versions.contract).toBe("canvas-assumptions/2/failure-cause/1");
   }
 });

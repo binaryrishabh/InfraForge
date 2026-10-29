@@ -1,3 +1,4 @@
+import type { Cause } from "./cause";
 import type { Quantity } from "../../reality/quantity";
 import type { RealityEntry } from "../../reality/ledger";
 import type { FaultPlan } from "../contracts";
@@ -48,7 +49,6 @@ export interface Invocation extends WorkIdentity {
   message?: { request: unknown; response?: unknown; bodyBytes?: { request?: number; response?: number } };
   sessionId?: string;
 }
-import type { Cause } from "./cause";
 export type RemoteCompletion = (outcome: RemoteOutcome, cause?: Cause) => void;
 export type RemoteOutcome = "completed" | "rejected" | "cancelled";
 export type CallerOutcome = "completed" | "rejected" | "deadline-exceeded" | "abandoned";

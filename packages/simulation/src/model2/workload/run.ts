@@ -8,7 +8,7 @@ import { ResultBook } from "./evidence";
 import { validateWorkload } from "./validate";
 import { workloadStation } from "./station";
 import { WORKLOAD_POLICY_LEDGER } from "./policy";
-import type { CallerOutcome, Invocation, Receipt, RemoteOutcome, TraceRow, WorkloadInput, WorkStation, StationState } from "./contracts";
+import type { CallerOutcome, Invocation, Receipt, TraceRow, WorkloadInput, WorkStation, StationState } from "./contracts";
 import type { CausalObserver } from "./causal";
 
 export interface WorkEndpoint<M extends StationState> {

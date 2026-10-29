@@ -13,7 +13,7 @@ import { NETWORK_POLICY_LEDGER } from "./policy";
 import type { ResourceFactory } from "../compute/run";
 import type { EventKernel } from "../time";
 import type { Trace } from "./contracts";
-import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
+import type { Invocation, Receipt } from "../workload/contracts";
 import type { RuntimeUsageObserver } from "../../reality/metering/contracts";
 import type { CausalObserver } from "../workload/causal";
 import type { CpuOwners, ClockOwners } from "../composition/host";
