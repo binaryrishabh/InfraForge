@@ -57,6 +57,11 @@ export function validateNetwork(input: NetworkInput) {
         }
       }
     }
+    if (p.circuitBreaker) {
+      const b = p.circuitBreaker;
+      if (b.profile !== "caller-circuit-breaker/1" || number(b.failureThreshold, "count", 1) > 100 || number(b.cooldown, "us", 1) > 60000000 || number(b.maxProbes, "count", 1) !== 1 || number(b.successfulProbesToClose, "count", 1) !== 1) throw Error("Invalid circuit breaker policy");
+      micros(horizon + requireKnown(b.cooldown, "us"));
+    }
     if (p.pool.evidenceProfile !== undefined && p.pool.evidenceProfile !== "postgresql-pools/2") throw new Error("Invalid pool evidence profile");
     const c = p.pool, max = number(c.maxConnections, "count", 1), streams = number(c.streams, "count", 1);
     if (max > caps.connectionsPerPool || streams > caps.streamsPerConnection || number(c.pending, "count") > caps.pendingPerPool || !["serial", "multiplexed"].includes(c.mode) || typeof c.reuse !== "boolean" || (c.mode === "serial" && streams !== 1) || (!c.reuse && streams !== 1) || !["detach", "request-cancellation"].includes(c.remoteCancellation)) throw new Error("Invalid connection policy/budget");

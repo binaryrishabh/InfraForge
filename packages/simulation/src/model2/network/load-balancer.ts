@@ -10,6 +10,8 @@ import type { CausalObserver } from "../workload/causal";
 interface Request { work: Invocation; done(outcome: RemoteOutcome): void; receipt?: Receipt; timer?: () => boolean; retryTimer?: () => boolean; attempt: number; backend?: string; retrying: boolean; waiting?: boolean; terminal: boolean }
 export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Map<string, ReturnType<typeof pathTransport>>, operations: Map<string, OperationClass>, seed: string, horizon: number, trace: Trace, causal?: CausalObserver) {
   const members = [...config.backends].sort().map((id) => ({ id, health: config.health.initial === "eligible", draining: false, successes: 0, failures: 0, outstanding: 0, selected: 0, probes: 0, epoch: 0, cancelCheck: undefined as (() => boolean) | undefined }));
+  let disposed = false;
+  const healthCancels = new Map<string, () => void>();
   const active = new Map<string, Request>(), pending = new Map<string, Request>();
   const membersById = new Map(members.map((m) => [m.id, m]));
   let received = 0, completed = 0, rejected = 0, cancelled = 0, attempts = 0, retries = 0, retryLimited = 0, activeRetries = 0, cursor = 0, pumping = false;
@@ -53,7 +55,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
       const safe = !result.ambiguous || ["read-only", "idempotent"].includes(op.idempotency) || policy?.allowAmbiguousNonIdempotent;
       if (!policy) { finish(r, "rejected"); return; }
       if (!safe) { suppress(r, "ambiguous-write", work.callId); return; }
-      if ((policy.operations && !policy.operations.includes(op.id)) || !policy.retryOn.includes(result.reason!)) { suppress(r, "non-retryable", work.callId); return; }
+      if (result.reason === "circuit-open" || (policy.operations && !policy.operations.includes(op.id)) || !policy.retryOn.includes(result.reason!)) { suppress(r, "non-retryable", work.callId); return; }
       if (r.attempt >= requireKnown(policy.maxAttempts, "count")) { suppress(r, "max-attempts", work.callId); return; }
       const jitter = 1 + requireKnown(policy.jitter, "ratio") * (2 * keyedUniform(seed, config.id, work.callId, "retry-backoff") - 1);
       const delay = Math.ceil(requireKnown(policy.backoff, "us") * 2 ** (r.attempt - 1) * jitter);
@@ -67,7 +69,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
     });
   };
   const pump = () => {
-    if (pumping) return; pumping = true;
+    if (pumping || disposed) return; pumping = true;
     while (pending.size && active.size < requireKnown(config.maxOutstanding, "count")) {
       const r = pending.values().next().value!; pending.delete(r.work.callId); r.timer?.(); active.set(r.work.callId, r); attempt(r);
     }
@@ -76,29 +78,37 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
   for (const member of members) {
     let probe = 0;
     const check = () => {
-      if (member.draining) return;
+      if (member.draining || disposed) return;
       const epoch = member.epoch;
       const number = probe++, key = JSON.stringify(["health", config.id, member.id, number]); member.probes++;
       let terminal = false, receipt: Receipt | undefined;
       const observe = (ok: boolean, reason: string) => {
-        if (terminal) return; terminal = true; timeout();
+        if (terminal) return; terminal = true; timeout(); healthCancels.delete(member.id);
         if (epoch !== member.epoch) return;
         if (ok) { member.successes++; member.failures = 0; if (member.successes >= requireKnown(config.health.healthy, "count")) member.health = true; }
         else { member.failures++; member.successes = 0; if (member.failures >= requireKnown(config.health.unhealthy, "count")) member.health = false; }
         trace("health-observation", key, `${reason}:eligible=${member.health}`);
       };
       const timeout = kernel.schedule(kernel.now + requireKnown(config.health.timeout, "us"), 1, JSON.stringify(["health-timeout", key]), () => { observe(false, "health-timeout"); receipt?.cancel(); });
-      receipt = path(member.id).exchange({ rootId: key, callId: key, attempt: 0, operation: config.health.operation, offeredAt: kernel.now }, (result) => observe(result.ok, result.ok ? "passed" : result.reason!));
+      healthCancels.set(member.id, () => { terminal = true; timeout(); receipt?.cancel(); });
+      receipt = path(member.id).exchange({ rootId: key, callId: key, attempt: 0, operation: config.health.operation, offeredAt: kernel.now }, (result) => observe(result.ok, result.ok ? "passed" : result.reason!), { healthCheck: true });
       trace("health-probe", key, member.id);
       const next = kernel.now + requireKnown(config.health.interval, "us");
-      if (next <= horizon) member.cancelCheck = kernel.schedule(next, 3, JSON.stringify(["health-check", config.id, member.id]), check);
+      if (!disposed && next <= horizon) member.cancelCheck = kernel.schedule(next, 3, JSON.stringify(["health-check", config.id, member.id]), check);
     };
     member.cancelCheck = kernel.schedule(0, 3, JSON.stringify(["health-check", config.id, member.id]), check);
   }
   return {
+    dispose() {
+      disposed = true;
+      for (const member of members) member.cancelCheck?.();
+      for (const cancel of healthCancels.values()) cancel(); healthCancels.clear();
+      for (const r of [...active.values(), ...pending.values()]) { finish(r, "cancelled"); r.receipt?.cancel(); }
+    },
     invalidate(id: string) { const m = membersById.get(id); if (!m) throw Error("Unknown backend"); m.epoch++; m.health = false; m.successes = 0; m.failures = 0; },
     backend(id: string) { const member = membersById.get(id); if (!member) throw Error("Unknown backend"); return { health: member.health, draining: member.draining, outstanding: member.outstanding }; },
     accept(work: Invocation, done: Request["done"]): Receipt {
+      if (disposed) { done("cancelled"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" }; }
       received++;
       causal?.({ atUs: kernel.now, kind: "lb-received", resource: config.id, work, detail: { active: active.size, pending: pending.size } });
       if (active.size >= requireKnown(config.maxOutstanding, "count") && pending.size >= requireKnown(config.maxPending, "count")) { rejected++; trace("lb-failure", work.callId, "pending-overflow", work.rootId, work.attempt); done("rejected"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" }; }

@@ -13,7 +13,14 @@ export interface PoolConfig {
   responseTimeout: Quantity<"us">; idleTimeout?: Quantity<"us">;
   remoteCancellation: "detach" | "request-cancellation";
 }
+export interface CircuitBreakerPolicy {
+  profile: "caller-circuit-breaker/1";
+  failureThreshold: Quantity<"count">; cooldown: Quantity<"us">;
+  maxProbes: Quantity<"count">; successfulProbesToClose: Quantity<"count">;
+  authored?: Record<string, { value: boolean; sources: string[] }>;
+}
 export interface PathConfig {
+  circuitBreaker?: CircuitBreakerPolicy;
   id: string; source: string; target: string; request: string[]; response: string[]; pool: PoolConfig;
   bytes: Record<string, { request: Quantity<"bytes">; response: Quantity<"bytes"> }>;
 }
@@ -49,7 +56,7 @@ export interface NetworkInput extends Omit<ComputeInput, "workloadVersion" | "re
   endpoints: Record<string, { alive: boolean; ready: boolean }>;
 }
 export const RETRYABLE_FAILURES = ["acquire-timeout", "connect-timeout", "response-timeout", "reset", "drained", "pool-overflow", "link-overflow", "backend-rejected"] as const;
-export type FailureReason = typeof RETRYABLE_FAILURES[number] | "session-limit";
+export type FailureReason = typeof RETRYABLE_FAILURES[number] | "session-limit" | "circuit-open";
 export interface TraceEvent { at: number; kind: string; id: string; root?: string; attempt?: number; detail: string }
 export type Trace = (kind: string, id: string, detail: string, root?: string, attempt?: number, poolEvidence?: boolean) => void;
 export interface TransportResult { ok: boolean; reason?: FailureReason; ambiguous: boolean }

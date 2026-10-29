@@ -22,7 +22,7 @@ export function replicaController(pool: CompiledPool, kernel: EventKernel, conte
       if (r.stopped) return;
       if (!ok) { r.state = "failed"; event("artifact-failed", r.id, "actual registry/manifest/blob acquisition failed"); if (r.attempts < n(p.attempts, "count")) schedule(n(p.retry, "us"), r.id, () => acquire(r)); return; }
       r.state = "starting"; event("artifacts-acquired", r.id, "M2G client owns all manifest layers; authored process-start work remains");
-      schedule(n(p.startup, "us"), r.id, () => { if (r.stopped) return; context.setAvailable(r.id, true); context.setReady(r.id, true); r.state = "ready"; r.readyAt = kernel.now; event("readiness", r.id, "artifacts and authored startup complete; listener gate open; LB still requires its own health observations"); });
+      schedule(n(p.startup, "us"), r.id, () => { if (r.stopped) return; context.startOwner?.(r.id); context.setAvailable(r.id, true); context.setReady(r.id, true); r.state = "ready"; r.readyAt = kernel.now; event("readiness", r.id, "artifacts and authored startup complete; listener gate open; LB still requires its own health observations"); });
     });
   };
   const create = (r: typeof replicas[number]) => {
