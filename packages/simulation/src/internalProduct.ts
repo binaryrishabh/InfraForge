@@ -1,5 +1,7 @@
 // Explicit internal bridge; the published Model-1 engine entry point is unchanged.
 export { compileProduct } from "./model2/product/compiler";
+export { createProductModel2 } from "./model2/product/run";
+export { withTimeline } from "./model2/product/timeline";
 export { createActionableLiveModel2 } from "./model2/product/live";
 export { createModel2Run, ActionRefused, FAULT_DURATIONS, MAX_RUN_ACTIONS } from "./model2/product/liveRun";
 export { buildModel2Contract, withRunLength } from "./model2/product/runContract";

@@ -74,15 +74,20 @@ the runtime. Initial cache candidates settle; the selected `after-the-cache-retu
 second lesson: delayed scale-out changes later database connection pressure. Its starter fails,
 its hidden one-change reference passes, and its 106 samples fit the existing bound.
 
-`after-the-cache-returns@2` restores the two retired cache lessons as one Model 2 exercise.
-It uses independent app pools, real database session admission and a cache crash, with a DB-tier-only
-reference change. At second 42 the starter's cache is Healthy but its database is Saturated at 85/85
-sessions (4.2% CPU); the reference is Healthy at 63/1,360 sessions. Actions apply one microsecond
-after a sampled second, so a crash applied at 10 ends at 40 plus one microsecond and restarts
-at 41 plus one microsecond; 42 is the first sampled cache return. The short retained tail is deliberate:
-canvas database deadlines remain authored 1s/2s, cache deadlines are authored 10ms, and the load
-generator permits 512 concurrent serial connections. These are not PostgreSQL, Redis or browser
-defaults. No retry policy is enabled. `cache-failure@1` stays retired and historical versions stay pinned.
+`after-the-cache-returns@2` combines cache recovery and per-instance pool pressure in Model 2.
+Its authored workload is 600 requests/s (80% reads, 20% writes), with a fourfold burst at seconds
+120–140. The cache crashes at 100, ends its crash at 130 plus one microsecond and restarts at
+131 plus one microsecond; 132 is its first available sample. Evaluation at 137 deliberately
+observes the ongoing burst after the cache returns, rather than scoring an already idle database.
+Writes invalidate the cached key, so cache availability does not remove all database demand.
+The burst crosses the app's 20% CPU target: eight replicas can grow to 24, taking possible pool
+sessions from 80 to beyond the database's unchanged 85-session limit. The DB-tier-only reference
+adds both CPU capacity and session headroom; capping replicas alone does not fix database CPU.
+Health samples use interval CPU and recent errors (including session refusals); idle sessions
+alone do not imply saturation. Excess work naturally settles after the burst ends. The unchanged
+statement/transaction deadlines are authored 1s/2s, statement CPU costs 1ms/read and 2ms/write,
+cache deadlines 10ms, and caller concurrency 512. These are educational assumptions, not provider
+defaults or performance guarantees. No retry policy is enabled. `cache-failure@1` stays retired.
 
 Research applied to model 1 (not imported as real-cloud guarantees):
 
