@@ -2,11 +2,11 @@ import type { ApplicationFlowEvidence } from "@infraforge/contracts/telemetry";
 
 export function ApplicationFlowLog({ evidence }: { evidence: ApplicationFlowEvidence }) {
   return <details className="border-b border-line py-2">
-    <summary>Application Flow · {evidence.retained} retained · {evidence.omitted} omitted</summary>
+    <summary>Application Flow Â· {evidence.retained} retained Â· {evidence.omitted} omitted</summary>
     {evidence.omitted > 0 && <p>Flow evidence is truncated. Totals include omitted rows.</p>}
-    <p>{Object.entries(evidence.totals).map(([kind, count]) => `${kind}: ${count}`).join(" · ")}</p>
+    <p>{Object.entries(evidence.totals).map(([kind, count]) => `${kind}: ${count}`).join(" Â· ")}</p>
     {evidence.events.map((event, index) => <p key={index} className="break-words py-1">
-      {event.atUs} µs · {event.resource} · {event.kind} · {event.work?.rootId} · {Object.entries(event.detail).map(([key, value]) => `${key}: ${value}`).join(" · ")}
+      {event.atUs} Âµs Â· {event.resource} Â· {event.kind} Â· {event.work?.rootId} Â· {Object.entries(event.detail).map(([key, value]) => `${key}: ${value}`).join(" Â· ")}
     </p>)}
   </details>;
 }
