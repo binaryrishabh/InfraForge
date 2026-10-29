@@ -143,7 +143,7 @@ challengeRouter.post("/:id/workspace", async (req, res) => {
   res.status(201).json({ success: true, designId: design.id, created: true });
 });
 
-const previewBody = z.object({ layout: LayoutSchema.extend({
+const previewBody = z.object({ layout: LayoutSchema.safeExtend({
   resources: LayoutSchema.shape.resources.unwrap().max(500),
   connectionLines: LayoutSchema.shape.connectionLines.unwrap().max(1000),
 }) }).strict();

@@ -22,14 +22,16 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({ resourc
         const source = byId.get(line.sourceId), target = byId.get(line.targetId);
         if (!source || !target) return null;
         const selected = selectedConnectionId === line.id;
-        // Qualitative only: a line takes the health recorded for the resource it feeds. Live views carry no
-        // per-connection traffic, so nothing moves along the rails.
+        // Legacy rails use target health. Opt-in security names actual denied connection opens.
         const health = metrics?.[target.id]?.health;
-        const tone = health === "failed" || health === "saturated" ? "fail" : health === "degraded" ? "warn" : null;
+        const security = metrics?.[target.id]?.security;
+        const denial = security?.evidence === "complete" ? security.edges.find(e => e.path.startsWith(`${line.id}:`) && e.lastDenial)?.lastDenial : undefined;
+        const securityLabel = denial ? denial.reason === "no-listener" ? "no listener" : denial.reason : undefined;
+        const tone = denial ? "fail" : health === "failed" || health === "saturated" ? "fail" : health === "degraded" ? "warn" : null;
         return (
           <RailConnection key={line.id} source={source} target={target} port={line.port} isSelected={selected} scale={scale}
             nodeWidth={NODE_CARD_WIDTH} sourceHeight={cardHeights[source.id] ?? nodeHeight} targetHeight={cardHeights[target.id] ?? nodeHeight}
-            tone={tone} label={`${source.name || source.id} to ${target.name || target.id}`}
+            tone={tone} securityLabel={securityLabel} label={`${source.name || source.id} to ${target.name || target.id}${denial ? `: ${denial.reason}, connection ${denial.connectionId}, selected ${denial.target}:${denial.port}` : ""}`}
             onSelect={() => { const store = useCanvasStore.getState(); store.setSelectedConnectionId(selected ? null : line.id); store.setSelectedResourceId(null); }}
             onRemove={locked ? undefined : () => deleteConnection(line.id)} />
         );

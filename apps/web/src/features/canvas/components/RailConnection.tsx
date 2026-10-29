@@ -14,6 +14,7 @@ interface RailConnectionProps {
   // The recorded health of the resource this line feeds; never a per-line measurement.
   tone?: "warn" | "fail" | null;
   label?: string;
+  securityLabel?: string;
 }
 
 type Point = { x: number; y: number };
@@ -54,12 +55,12 @@ function along(points: Point[], f: number) {
   return { x: points[0]!.x, y: points[0]!.y, angle: 0 };
 }
 
-export function RailConnection({ source, target, port, isSelected = false, onSelect, onRemove, scale = 1, nodeWidth, sourceHeight, targetHeight, tone = null, label }: RailConnectionProps) {
+export function RailConnection({ source, target, port, isSelected = false, onSelect, onRemove, scale = 1, nodeWidth, sourceHeight, targetHeight, tone = null, label, securityLabel }: RailConnectionProps) {
   const points = railPoints(source, target, nodeWidth, sourceHeight, targetHeight);
   const path = points.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
   const length = points.slice(1).reduce((s, p, i) => s + Math.hypot(p.x - points[i]!.x, p.y - points[i]!.y), 0);
   const color = isSelected ? "var(--if-accent)" : tone === "fail" ? "var(--if-fail)" : tone === "warn" ? "var(--if-warn)" : "var(--if-ink-3)";
-  const mid = along(points, 0.5), badge = scale >= 0.6, text = `:${port}`, width = text.length * 7.4 + 12;
+  const mid = along(points, 0.5), badge = scale >= 0.6, text = `:${port}${securityLabel ? ` ${securityLabel}` : ""}`, width = text.length * 7.4 + 12;
   return (
     <g>
       <path d={path} fill="none" stroke={color} strokeWidth={isSelected ? 2.4 : 1.75} strokeLinejoin="round" strokeLinecap="square" />

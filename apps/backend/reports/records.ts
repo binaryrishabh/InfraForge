@@ -54,7 +54,7 @@ export function readRecords(value: unknown, limits: string[]) {
     try { input = readRunInputs(row.runInputs); }
     catch { limits.push("The original run input is malformed or unsupported; it was not reconstructed from the saved design."); }
   }
-  const topology = LayoutSchema.extend({ resources: LayoutSchema.shape.resources.unwrap(), connectionLines: LayoutSchema.shape.connectionLines.unwrap() });
+  const topology = LayoutSchema.safeExtend({ resources: LayoutSchema.shape.resources.unwrap(), connectionLines: LayoutSchema.shape.connectionLines.unwrap() });
   const live = row.liveTopology == null ? null : topology.safeParse(row.liveTopology);
   if (live && !live.success) limits.push("The accepted live topology is malformed and is not shown.");
   const workload = row.workloadProfile == null ? null : WorkloadProfileSchema.safeParse(row.workloadProfile);

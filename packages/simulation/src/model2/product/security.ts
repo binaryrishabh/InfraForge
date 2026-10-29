@@ -16,6 +16,7 @@ export function validateSecurityBinding(r: Resource, n: NodeContract) {
   }
   if (r.firewallSettings) {
     const p = r.firewallSettings;
+    if (n.firewall?.rules.some(v => [v.source, v.destination].some(scope => scope.kind === "any" ? scope.value !== undefined : scope.kind !== "identity" || !scope.value?.startsWith("$")))) throw Error(`Firewall scopes must match saved resource IDs for ${r.id}`);
     const rules = n.firewall?.rules.map(v => ({ id: v.id, priority: requireKnown(v.priority, "count"), direction: v.direction, source: v.source.kind === "any" ? "any" : v.source.kind === "identity" ? v.source.value?.slice(1) : null, destination: v.destination.kind === "any" ? "any" : v.destination.kind === "identity" ? v.destination.value?.slice(1) : null, fromPort: requireKnown(v.fromPort, "count"), toPort: requireKnown(v.toPort, "count"), action: v.action }));
     const sorted = [...p.rules].sort((a,b) => a.priority-b.priority || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     if (n.firewall?.default !== p.default || !same(rules, sorted) || n.firewall?.rules.some(v => v.protocol !== "tcp")) throw Error(`Firewall policy must match saved rules for ${r.id}`);

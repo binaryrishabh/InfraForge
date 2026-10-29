@@ -5,11 +5,12 @@ import { useCanvasStore } from "../src/features/canvas/store/canvasStore";
 import { useSimulationStore } from "../src/features/monitoring/store/simulationStore";
 import { updateResource } from "../src/features/canvas/actions";
 import { undo, redo } from "../src/features/canvas/history";
-import type { Resource } from "@infraforge/domain/resource";
+import { ResourceHealth, type Resource } from "@infraforge/domain/resource";
 import { createRunHost } from "../src/features/model2Run/worker/host";
 import type { FromWorker } from "../src/features/model2Run/protocol";
 import { createModel2Run } from "@infraforge/simulation/model2-run";
 import { resolveWorkload } from "@infraforge/domain/workload";
+import { RailConnection } from "../src/features/canvas/components/RailConnection";
 
 afterEach(()=>{useCanvasStore.getState().clearCanvas();useCanvasStore.setState({liveLocked:false,isDeploying:false});useSimulationStore.getState().reset();});
 const db: Resource={id:"db",type:"Database",x:0,y:0};
@@ -44,11 +45,16 @@ test("connection inspector names actual denial and observed zero; omitted readin
   const edge={path:"app-db:app:db",source:"app",target:"db",admitted:0,denied:3,noListener:0,policyDenied:{"fw:ingress:block-db":3},backendDeliveries:0,lastDenial:{connectionId:"connection-7",source:"app",target:"db",port:5432,reason:"policy-denied:fw:ingress:block-db",generation:1}};
   const security={version:1 as const,evidence:"complete" as const,edges:[edge]};
   useCanvasStore.setState({resources:[db,{id:"app",type:"Virtual Machine",x:0,y:0}],connectionLines:[{id:"app-db",sourceId:"app",targetId:"db",sourceType:"Virtual Machine",targetType:"Database",port:5432}]});
-  useSimulationStore.setState({metrics:{db:{cpu:null,memory:null,health:"failed",security}}});
+  useSimulationStore.setState({metrics:{db:{cpu:null,memory:null,health:ResourceHealth.FAILED,security}}});
   const html=renderToStaticMarkup(<SecurityReadings metrics={security} />);
   for(const text of ["connection-7","db:5432","policy-denied:fw:ingress:block-db","backend deliveries 0"])expect(html).toContain(text);
   const omitted=renderToStaticMarkup(<SecurityReadings metrics={{...security,evidence:"omitted",edges:[{...edge,lastDenial:undefined,admitted:null,denied:null,noListener:null,policyDenied:null,backendDeliveries:null}]}} />);
   expect(omitted).toContain("backend deliveries Unknown");expect(omitted).not.toContain("connection-7");
+});
+
+test("canvas rail labels the observed denial on its connection",()=>{
+  const html=renderToStaticMarkup(<svg><RailConnection source={{x:0,y:0}} target={{x:500,y:0}} port={5432} nodeWidth={100} sourceHeight={100} targetHeight={100} securityLabel="policy-denied:fw:ingress:block-db" label="Connection c7 denied" onSelect={()=>{}} /></svg>);
+  expect(html).toContain(":5432 policy-denied:fw:ingress:block-db");expect(html).toContain("Connection c7 denied");
 });
 
 for(const denied of [false,true])test(`production browser host matches serialized server replay twice with security settings; denied=${denied}`,()=>{
@@ -64,7 +70,7 @@ for(const denied of [false,true])test(`production browser host matches serialize
   for(let replay=0;replay<2;replay++){
     const server=createModel2Run(JSON.parse(JSON.stringify(input)),3);
     for(let i=0;i<3;i++){server.advance();expect(server.view()).toEqual(seconds[i]!.view);}
-    expect(server.evidence()).toEqual(host.evidence());
+    expect(server.evidence()).toEqual(host.evidence()!);
     expect(server.view().metrics.db!.security!.edges[0]!.backendDeliveries === 0).toBe(denied);
   }
 });

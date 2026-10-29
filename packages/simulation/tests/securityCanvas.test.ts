@@ -76,6 +76,23 @@ test("default deny permits only when both directions match allow rules", () => {
   }
 });
 
+test("a rule named default stays distinguishable from the default action",()=>{
+  const d=securityDesign();d.resources.find(r=>r.id === "firewall")!.firewallSettings={version:1,default:"allow",rules:[rule("default",0,"deny")]};
+  const p=prepareSecurity(d),r=createProductModel2(p.compiled);r.advanceTo(1000000);
+  const denied=r.evidence().systems.security.admission!.rows.find(r=>!r.allowed)!;
+  expect(denied.rule).toBe("default");expect(denied.defaultAction).toBeUndefined();
+});
+
+test("invalid firewall input is refused by domain, adapter and direct compiler",()=>{
+  const d=securityDesign(),p=prepareSecurity(d),good=rule("block",0,"deny");
+  for(const rules of [[good,good],[{...good,priority:-1}],[{...good,direction:"both"}],[{...good,source:"missing"}],[{...good,destination:"firewall"}],[{...good,source:{kind:"any"}}],[{...good,fromPort:0}],[{...good,fromPort:6000,toPort:5000}],[{...good,action:"drop"}],[{...good,id:""}],[{...good,extra:true}],Array.from({length:33},(_,i)=>({...good,id:`rule-${i}`}))]){
+    const settings={version:1,default:"deny",rules};
+    expect(securitySettingsError("Firewall",undefined,settings,d.resources)).toBeDefined();
+    const invalid=structuredClone(d);Object.assign(invalid.resources.find(r=>r.id === "firewall")!,{firewallSettings:settings});
+    expect("refused" in contractFromDesign(invalid)).toBe(true);expect(compileProduct(invalid,p.contract).ok).toBe(false);
+  }
+});
+
 test("resource scopes expand through every replica/helper with original rule tie ordering", () => {
   const q=quantities(), rules=["a","a_"].map((id,i)=>({...rule(id,0,i === 0 ? "deny" : "allow"),protocol:"tcp" as const,source:{kind:"identity" as const,value:"$app"},destination:{kind:"identity" as const,value:"$db"},priority:q.q(`${id}.priority`,0,"count"),fromPort:q.q(`${id}.from`,5432,"count"),toPort:q.q(`${id}.to`,5432,"count")}));
   const expanded=expandFirewallRules(rules,new Map([["app#0/main","app#0"],["app#1/main","app#1"],["app#1/aside","app#1/aside"],["db/main","db"]]));

@@ -22,7 +22,7 @@ rerunRouter.get("/:id/rerun-options", async (req, res) => {
   }, { isolationLevel: "RepeatableRead" });
   res.json({ success: true, options });
 });
-const previewBody = z.object({ layout: LayoutSchema.extend({
+const previewBody = z.object({ layout: LayoutSchema.safeExtend({
   resources: LayoutSchema.shape.resources.unwrap().min(1).max(500),
   connectionLines: LayoutSchema.shape.connectionLines.unwrap().max(1000),
 }) }).strict();

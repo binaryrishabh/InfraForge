@@ -20,7 +20,7 @@ const outcomeSchema = z.object({ intervention: receipt.optional(), interventionE
   delta: z.union([z.literal(1), z.literal(-1)]).optional(), previousReplicaCount: amount.optional(), finalReplicaCount: amount.optional(),
   replicaId: id.optional(), acceptedRevision: amount.optional(), appliedRevision: amount.optional(),
   capturedAt: z.iso.datetime({ offset: true }).optional() }).strict();
-const topology = LiveTopologySchema.extend({
+const topology = LiveTopologySchema.safeExtend({
   resources: LiveTopologySchema.shape.resources.max(500),
   connectionLines: LiveTopologySchema.shape.connectionLines.max(1000),
   expectedRevision: z.number().int().nonnegative(), acceptedRevision: z.number().int().positive().optional(),

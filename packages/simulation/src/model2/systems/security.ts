@@ -37,12 +37,12 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
   };
   const ruleDecision = (policy: NonNullable<ReturnType<typeof policies.get>>, source: string, target: string, port: number, count: boolean) => {
     for (const direction of ["egress", "ingress"] as const) {
-      let action = policy.config.default, matched = "default";
+      let action = policy.config.default, matched = "default", matchedRule: string | undefined;
       for (const rule of policy.rules) {
         if (count) policy.examined++;
-        if (rule.direction === direction && rule.protocol === "tcp" && port >= requireKnown(rule.fromPort, "count") && port <= requireKnown(rule.toPort, "count") && matches(rule.source, source) && matches(rule.destination, target)) { action = rule.action; matched = opted ? rule.authoredId ?? rule.id : rule.id; break; }
+        if (rule.direction === direction && rule.protocol === "tcp" && port >= requireKnown(rule.fromPort, "count") && port <= requireKnown(rule.toPort, "count") && matches(rule.source, source) && matches(rule.destination, target)) { action = rule.action; matched = opted ? rule.authoredId ?? rule.id : rule.id; matchedRule = matched; break; }
       }
-      if (action === "deny") return { allowed: false, rule: `${direction}:${matched}`, direction, matched };
+      if (action === "deny") return { allowed: false, rule: `${direction}:${matched}`, direction, matchedRule };
     }
     return { allowed: true, rule: "both-directions-permitted" };
   };
@@ -51,7 +51,7 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
     for (const id of dial.firewalls) {
       const p = policies.get(id)!, decision = ruleDecision(p, path.source, path.target, port, count);
       if (count) { p.evaluated++; if (decision.allowed) p.allowed++; else p.denied++; }
-      if (!decision.allowed) return { ok: false, reason: `policy-denied:${id}:${decision.rule}`, firewall: id, direction: decision.direction, rule: decision.matched === "default" ? undefined : decision.matched, generation: p.generation, ...(decision.matched === "default" ? { defaultAction: p.config.default } : {}) };
+      if (!decision.allowed) return { ok: false, reason: `policy-denied:${id}:${decision.rule}`, firewall: id, direction: decision.direction, rule: decision.matchedRule, generation: p.generation, ...(decision.matchedRule === undefined ? { defaultAction: p.config.default } : {}) };
       if (count && p.flows.size >= requireKnown(p.config.maxFlows, "count")) return { ok: false, reason: `flow-capacity:${id}` };
     }
     const listener = listeners.get(JSON.stringify([path.target, dial.protocol, port]));

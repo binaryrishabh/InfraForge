@@ -12,6 +12,8 @@ test("layout and live topology validate security ownership, versions, ports and 
     expect(schema.safeParse({...base,resources:[{...db,firewallSettings:firewall.firewallSettings}]}).success).toBe(false);
     const bad = structuredClone(firewall); bad.firewallSettings.rules[0]!.destination = "missing";
     expect(schema.safeParse({...base,resources:[db,bad]}).success).toBe(false);
+    const good=firewall.firewallSettings.rules[0]!;
+    for(const rules of [[good,good],[{...good,priority:-1}],[{...good,direction:"both"}],[{...good,source:"fw"}],[{...good,fromPort:0}],[{...good,fromPort:6000,toPort:5000}],[{...good,action:"drop"}],[{...good,id:""}],[{...good,extra:true}],Array.from({length:33},(_,i)=>({...good,id:`rule-${i}`}))])expect(schema.safeParse({...base,resources:[db,{...firewall,firewallSettings:{...firewall.firewallSettings,rules}}]}).success).toBe(false);
   }
 });
 

@@ -43,7 +43,7 @@ export const SpeedControlBodySchema = z.object({
   speed: z.union([z.literal(0), z.literal(1), z.literal(10), z.literal(60)], "Speed must be 0, 1, 10, or 60")
 });
 
-export const SyncTopologyBodySchema = LiveTopologySchema.extend({
+export const SyncTopologyBodySchema = LiveTopologySchema.safeExtend({
   expectedRevision: z.number().int().min(0),
 });
 

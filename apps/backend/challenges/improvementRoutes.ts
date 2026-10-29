@@ -11,7 +11,7 @@ import { reviewDesignChanges } from "./designChanges";
 
 export const improvementRouter = Router();
 const sourceBody = z.object({ sourceRunId: z.uuid() }).strict();
-const previewBody = sourceBody.extend({ infrastructureId: z.uuid(), layout: LayoutSchema.extend({
+const previewBody = sourceBody.extend({ infrastructureId: z.uuid(), layout: LayoutSchema.safeExtend({
   resources: LayoutSchema.shape.resources.unwrap().max(500), connectionLines: LayoutSchema.shape.connectionLines.unwrap().max(1000),
 }) }).strict();
 
