@@ -1,3 +1,4 @@
+export { INTERVENTIONS, interventionError, interventionMaximum, type InterventionDescriptor, type InterventionParameter, type InterventionTarget, type InterventionRequest, type InterventionBounds } from "./interventions";
 export { RESOURCE_TYPES, type ResourceType } from "./RESOURCE_TYPES.constants";
 export { RESOURCE_PORTS, type ResourcePortsType } from "./RESOURCE_PORTS.constants";
 export { DeploymentChaosNames, type DeploymentChaosNamesType } from "./DeploymentChaosNames.enum";
