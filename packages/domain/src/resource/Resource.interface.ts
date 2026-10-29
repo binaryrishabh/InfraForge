@@ -1,3 +1,4 @@
+import type { ApplicationFlow } from "./ApplicationFlow.interface";
 import type { CircuitBreakerSettings } from "./CircuitBreakerSettings.interface";
 import type { ResourceType } from "./RESOURCE_TYPES.constants";
 import type { AutoscalingPolicy } from "./AutoscalingPolicy.interface";
@@ -6,6 +7,7 @@ import type { RetrySettings } from "./RetrySettings.interface";
 import type { AsyncQueueSettings, AsyncWorkerSettings } from "./AsyncSettings.interface";
 
 export interface Resource {
+  applicationFlow?: ApplicationFlow;
   asyncQueue?: AsyncQueueSettings;
   asyncWorker?: AsyncWorkerSettings;
   id: string;
