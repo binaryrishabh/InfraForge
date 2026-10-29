@@ -132,10 +132,9 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
       const security = runtime.inspectSecurity();
       if (security) for (const node of nodeIds) {
         const policy = security.policies.find(p => p.id === node), unknown = security.omitted > 0;
-        const edges = security.edges.filter(e => owner(e.source) === node || owner(e.target) === node).map(e => ({ ...e, admitted: unknown ? null : e.admitted, denied: unknown ? null : e.denied, noListener: unknown ? null : e.noListener, policyDenied: unknown ? null : e.policyDenied, lastDenial: unknown ? undefined : e.lastDenial, backendDeliveries: unknown ? null : e.backendDeliveries }));
-        metrics[node]!.security = { version: 1, evidence: unknown ? "omitted" : "complete", edges, ...(policy ? { firewall: { occupancy: policy.occupancy, limit: policy.limit, admissions: policy.admissions, generation: policy.generation } } : {}) };
-        if (unknown && edges.length) metrics[node]!.health = "unknown";
-        else if (edges.some(e => (e.denied ?? 0) > 0 && owner(e.target) === node) && metrics[node]!.rps === 0) metrics[node]!.health = "failed";
+        const edges = security.edges.filter(e => owner(e.source) === node || owner(e.target) === node).map(e => ({ ...e, lastDenial: unknown ? undefined : e.lastDenial }));
+        metrics[node]!.security = { version: 1, evidence: unknown ? "omitted" : "complete", omitted: security.omitted, edges, ...(policy ? { firewall: { occupancy: policy.occupancy, limit: policy.limit, admissions: policy.admissions, generation: policy.generation } } : {}) };
+        if (edges.some(e => (e.denied ?? 0) > 0 && owner(e.target) === node) && metrics[node]!.rps === 0) metrics[node]!.health = "failed";
       }
       const offered = caller.offered - previousCaller.offered, completedRps = caller.completed - previousCaller.completed, failedRps = caller.failed - previousCaller.failed;
       const sorted = responses.sort((a, b) => a - b), latencyMs = { p50: percentile(sorted, 0.5), p95: percentile(sorted, 0.95) };

@@ -126,8 +126,13 @@ test("security evidence has row and byte bounds; omitted details project Unknown
     const causal:CausalEvent[]=[], r=createProductModel2(compiled.value,undefined,e=>causal.push(e));r.advanceTo(1000000);
     const e=r.evidence(); expect(e.systems.security.admission!.rows.length).toBeLessThanOrEqual(bytes ? 0 : 1); expect(e.systems.security.admission!.omitted).toBeGreaterThan(0);
     expect(causal.filter(e=>e.kind === "security-denied" || e.kind === "security-admitted").length).toBeLessThanOrEqual(1);
-    const live=createLiveModel2(compiled.value,d.resources.map(r=>r.id));live.advanceSecond();const m=live.project().metrics.db!;
-    expect(m.security!.edges[0]!.backendDeliveries).toBeNull();expect(m.health).toBe("unknown");
+    const live=createLiveModel2(compiled.value,d.resources.map(r=>r.id));live.advanceSecond();const metrics=live.project().metrics, m=metrics.db!;
+    const exact=e.systems.security.edges!.filter(edge=>edge.target === "db" || edge.source === "db");
+    expect(m.security!.edges).toEqual(exact.map(edge=>({...edge,lastDenial:undefined})));
+    expect(m.security!.evidence).toBe("omitted");expect(m.security!.omitted).toBe(e.systems.security.admission!.omitted);
+    expect(m.security!.edges.some(edge=>(edge.denied ?? 0)>0)).toBe(true);
+    expect(m.health).toBe("failed");expect(metrics.app!.health).not.toBe("unknown");
+    expect(metrics.lb!.health).not.toBe("unknown");expect(metrics.firewall!.health).toBe("unknown");
   }
 });
 

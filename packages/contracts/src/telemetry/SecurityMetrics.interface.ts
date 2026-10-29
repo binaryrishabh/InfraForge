@@ -8,6 +8,8 @@ export interface SecurityEdgeMetrics {
 }
 export interface SecurityMetrics {
   version: 1; evidence: "complete" | "omitted";
+  /** Number of admission detail rows omitted by the evidence budget; counters remain exact. */
+  omitted?: number;
   edges: SecurityEdgeMetrics[];
   firewall?: { occupancy: number; limit: number; admissions: number; generation: number };
 }

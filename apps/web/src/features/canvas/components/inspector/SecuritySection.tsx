@@ -24,11 +24,11 @@ export function SecurityReadings({ metrics }: { metrics?: SecurityMetrics }) {
   return <div>
     {metrics?.firewall && <p>Firewall flows: {metrics.firewall.occupancy} / {metrics.firewall.limit}; new admissions: {metrics.firewall.admissions}; generation {metrics.firewall.generation}. Flow limit is an educational assumption.</p>}
     {!metrics && <p>Security measurements: Unknown</p>}
-    {metrics?.evidence === "omitted" && <p>Security evidence omitted; connection details: Unknown</p>}
+    {metrics?.evidence === "omitted" && <p>Security evidence omitted ({metrics.omitted ?? "Unknown"} rows); connection details: Unknown</p>}
     {metrics?.edges.map(e => <div key={e.path}>
-      <p>{e.source} → {e.target}: denied opens {text(e.denied)}; no listener {text(e.noListener)}; backend deliveries {text(e.backendDeliveries)}.</p>
+      <p>{e.source} â†’ {e.target}: denied opens {text(e.denied)}; no listener {text(e.noListener)}; backend deliveries {text(e.backendDeliveries)}.</p>
       {e.policyDenied && Object.entries(e.policyDenied).map(([rule,count])=><p key={rule}>Denied by {rule}: {count}</p>)}
-      {e.lastDenial && <p>Connection {e.lastDenial.connectionId}: {e.lastDenial.source} → {e.lastDenial.target}:{e.lastDenial.port}, {e.lastDenial.reason}{e.lastDenial.generation ? ` (policy generation ${e.lastDenial.generation})` : ""}.</p>}
+      {e.lastDenial && <p>Connection {e.lastDenial.connectionId}: {e.lastDenial.source} â†’ {e.lastDenial.target}:{e.lastDenial.port}, {e.lastDenial.reason}{e.lastDenial.generation ? ` (policy generation ${e.lastDenial.generation})` : ""}.</p>}
     </div>)}
   </div>;
 }

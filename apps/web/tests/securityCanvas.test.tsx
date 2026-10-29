@@ -48,8 +48,8 @@ test("connection inspector names actual denial and observed zero; omitted readin
   useSimulationStore.setState({metrics:{db:{cpu:null,memory:null,health:ResourceHealth.FAILED,security}}});
   const html=renderToStaticMarkup(<SecurityReadings metrics={security} />);
   for(const text of ["connection-7","db:5432","policy-denied:fw:ingress:block-db","backend deliveries 0"])expect(html).toContain(text);
-  const omitted=renderToStaticMarkup(<SecurityReadings metrics={{...security,evidence:"omitted",edges:[{...edge,lastDenial:undefined,admitted:null,denied:null,noListener:null,policyDenied:null,backendDeliveries:null}]}} />);
-  expect(omitted).toContain("backend deliveries Unknown");expect(omitted).not.toContain("connection-7");
+  const omitted=renderToStaticMarkup(<SecurityReadings metrics={{...security,evidence:"omitted",omitted:7,edges:[{...edge,lastDenial:undefined}]}} />);
+  expect(omitted).toContain("backend deliveries 0");expect(omitted).toContain("denied opens 3");expect(omitted).toContain("7 rows");expect(omitted).toContain("connection details: Unknown");expect(omitted).not.toContain("connection-7");
 });
 
 test("canvas rail labels the observed denial on its connection",()=>{
