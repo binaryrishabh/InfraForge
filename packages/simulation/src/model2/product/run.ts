@@ -16,6 +16,8 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
   return { horizon: runtime.horizon, advanceTo: runtime.advanceTo,
     // Cheap current reads for live views: one resource's counters now, and replica counts. No history is copied.
     inspect: (id: string) => network?.inspect?.(id) ?? network?.observe(id),
+    inspectQueue: runtime.inspectQueue,
+    inspectWorker: runtime.inspectWorker,
     pools: () => controllers.map((c) => c.status()),
     // Whether a resource is up and taking work right now (a crash makes it neither).
     up: (id: string) => { const e = network?.endpoint(id); return !!e && e.alive && e.ready; },

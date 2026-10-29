@@ -15,11 +15,11 @@ export function captureEvidenceTick(instance: SimulationInstance) {
   try {
     if (!instance.metricsComputedAt) throw new Error("Experiment evidence requires a completed tick");
     const view = liveView(instance), pools = view.pools;
-    const payload = evidencePayload.parse({ version: 2, topologyRevision: instance.metricsTopologyRevision,
+    const payload = evidencePayload.parse({ version: Object.values(view.metrics).some((m) => m.asyncQueue) ? 3 : 2, topologyRevision: instance.metricsTopologyRevision,
       overallHealth: view.overallHealth, loadFraction: view.loadFraction, targetLoadFraction: view.targetLoadFraction,
       // Evidence keeps the measured fields only; replica counts are retained in pools.
-      resources: Object.entries(view.metrics).map(([id, { cpu, memory, rps, connections, health }]) => ({ id, health, cpu, memory,
-        ...(rps === undefined ? {} : { rps }), ...(connections === undefined ? {} : { connections }) })),
+      resources: Object.entries(view.metrics).map(([id, { cpu, memory, rps, connections, health, asyncQueue }]) => ({ id, health, cpu, memory,
+        ...(asyncQueue === undefined ? {} : { asyncQueue }), ...(rps === undefined ? {} : { rps }), ...(connections === undefined ? {} : { connections }) })),
       pools: Object.entries(pools).map(([id, pool]) => ({ id, currentReplicas: pool.currentReplicas, baseReplicas: pool.baseVmIds.length, pending: pool.pending })),
     });
     buffer.pending.push({ simulatedSeconds: second, sampledAt: new Date(instance.metricsComputedAt), payload, hash: sampleHash(payload) });

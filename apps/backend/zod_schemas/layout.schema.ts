@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -18,6 +18,8 @@ const ResourceSchema = z.object({
     maxReplicas: z.number().int().positive().optional(),
     targetCpu: z.number().min(0).max(100).optional(),
   }).optional(),
+  asyncQueue: z.object({ enabled: z.boolean(), visibilityTimeoutSeconds: z.number().optional(), maxReceives: z.number().optional(), retentionSeconds: z.number().optional() }).strict().optional(),
+  asyncWorker: z.object({ enabled: z.boolean(), concurrency: z.number().optional(), prefetch: z.number().optional(), cpuMsPerJob: z.number().optional() }).strict().optional(),
   circuitBreaker: z.object({ enabled: z.boolean(), failureThreshold: z.number().optional(), cooldownMs: z.number().optional() }).strict().optional(),
   retry: z.object({
     enabled: z.boolean(),
@@ -34,6 +36,8 @@ const ResourceSchema = z.object({
   region: z.string().optional(),
   name: z.string().optional(),
 }).catchall(z.json()).superRefine((resource, ctx) => {
+  const asyncMessage = asyncSettingsError(resource.type, resource.asyncQueue, resource.asyncWorker);
+  if (asyncMessage) ctx.addIssue({ code: "custom", path: ["async"], message: asyncMessage });
   const breakerMessage = circuitBreakerSettingsError(resource.type, resource.circuitBreaker);
   if (breakerMessage) ctx.addIssue({ code: "custom", path: ["circuitBreaker"], message: breakerMessage });
   const message = retrySettingsError(resource.type, resource.retry);

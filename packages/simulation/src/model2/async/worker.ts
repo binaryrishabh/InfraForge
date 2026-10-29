@@ -70,6 +70,7 @@ export function asyncWorker(config: WorkerConfig, kernel: EventKernel, send: Del
       cpu.pause(value); if (!value) schedulePoll(0);
     },
     measure: () => ({ id: config.id, paused: !available, received: rejectedInbound, admitted: 0, rejected: rejectedInbound, completed: 0, failed: 0, cancelled: 0, queued: 0, serving: 0, waiting: 0, consumedCoreUs: cpu.measure().appCoreUs, busySlotUs: area + active.size * (kernel.now - anchor) }),
+    inspectWorker: () => ({ processed, active: active.size, creditOwnedLocally: local.size }),
     evidence: () => ({ id: config.id, available, deliveries, processed, failed, lostOnCrash, acknowledged: acked, ackFailed, deduplicated, effects, reads, databaseWrites, pendingReceive, active: active.size, creditOwnedLocally: local.size, buffered: [...local.values()].filter((p) => p.phase === "buffered").length, local: [...local.values()].map((p) => ({ receipt: p.delivery.receipt, message: p.delivery.id, attempt: p.delivery.attempt, phase: p.phase })), cpu: cpu.measure(), events: [...events], omitted }),
   };
 }

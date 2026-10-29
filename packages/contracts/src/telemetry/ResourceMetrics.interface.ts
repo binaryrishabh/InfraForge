@@ -1,6 +1,9 @@
 import type { ResourceHealthType } from "@infraforge/domain/resource";
 
+import type { AsyncQueueMetrics } from "./AsyncQueueMetrics.interface";
+
 export interface ResourceMetrics {
+  asyncQueue?: AsyncQueueMetrics;
   cpu: number | null;
   memory: number | null;
   connections?: number;

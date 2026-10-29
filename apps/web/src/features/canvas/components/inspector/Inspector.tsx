@@ -1,3 +1,4 @@
+import { AsyncSection } from "./AsyncSection";
 import { CircuitBreakerSection } from "./CircuitBreakerSection";
 import { Trash2 } from "lucide-react";
 import { RESOURCE_PORTS, RESOURCE_TYPES, type Resource } from "@infraforge/domain/resource";
@@ -49,6 +50,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
       {resource.type === RESOURCE_TYPES.LoadBalancer && <AutoscalingSection key={`pool-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <RetrySection key={`retry-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <CircuitBreakerSection key={`breaker-${resource.id}`} resource={resource} disabled={locked} />}
+      {(resource.type === "Message Queue" || resource.type === "Virtual Machine") && <AsyncSection key={`async-${resource.id}`} resource={resource} disabled={locked} />}
       <ExposureSection key={`exposure-${resource.id}`} resource={resource} disabled={locked} />
       <ConnectionsSection resource={resource} disabled={locked} />
       {!locked && (

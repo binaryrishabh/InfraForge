@@ -1,4 +1,4 @@
-import { asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -60,6 +60,14 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (spec.controller && (r.type !== "Virtual Machine" || !r.autoscaling?.enabled)) error("CONTROLLER_BINDING", `nodes.${r.id}.controller`, "A controller requires an enabled VM pool intent");
       if (spec.controller && (r.autoscaling?.minReplicas !== requireKnown(spec.controller.min, "count") || r.autoscaling?.maxReplicas !== requireKnown(spec.controller.max, "count") || r.autoscaling?.targetCpu === undefined || r.autoscaling.targetCpu / 100 !== requireKnown(spec.controller.target, "ratio"))) error("AUTOSCALING_MISMATCH", `resources.${r.id}.autoscaling`, "Reviewed controller min/max/target must match explicit product intent; no auto defaults");
       if (r.type === "Firewall" ? !spec.firewall || spec.resources.length !== 0 : !spec.resources.some((c) => c.role === spec.primary && ownerAccepts(r.type, c.config))) error("RESOURCE_OWNER", `nodes.${r.id}`, "Primary mechanism must match the resource translation owner");
+      if (r.asyncWorker?.enabled) {
+        const worker = spec.resources.find((v) => v.role === spec.primary)?.config;
+        if (worker?.kind !== "async-worker" || requireKnown(worker.concurrency, "count") !== r.asyncWorker.concurrency || requireKnown(worker.prefetch, "count") !== r.asyncWorker.prefetch || requireKnown(worker.cpu, "cpu-us") !== r.asyncWorker.cpuMsPerJob! * 1000) error("ASYNC_MISMATCH", `nodes.${r.id}`, "Worker profile must match saved parallelism, credit and CPU demand.");
+      }
+      if (r.asyncQueue?.enabled) {
+        const queue = spec.resources.find((v) => v.role === spec.primary)?.config;
+        if (queue?.kind !== "delivery-queue" || requireKnown(queue.lease, "us") !== r.asyncQueue.visibilityTimeoutSeconds! * 1000000 || requireKnown(queue.retention, "us") !== r.asyncQueue.retentionSeconds! * 1000000 || requireKnown(queue.maxAttempts, "count") !== r.asyncQueue.maxReceives) error("ASYNC_MISMATCH", `nodes.${r.id}`, "Queue profile must match saved visibility, retention and delivery limit.");
+      }
       if (r.skuId && !contract.capabilities.some((c) => c.resource === r.id && c.sku === r.skuId && c.catalogVersion === contract.catalogVersion)) error("PROVIDER_CAPABILITY_UNKNOWN", `resources.${r.id}.skuId`, "Approximate legacy catalog cannot establish sourced capabilities or application throughput");
     }
     for (const key of Object.keys(contract.nodes)) if (!nodes.has(key)) error("ORPHAN_PROFILE", `nodes.${key}`, "Profile has no saved product resource");
@@ -133,7 +141,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     for (const e of [...design.connections].sort((a, b) => a.id < b.id ? -1 : 1)) {
       const intent = contract.edges[e.id]!; semanticEdges.push({ id: e.id, source: e.sourceId, target: e.targetId, purpose: intent.purpose });
       if (intent.purpose === "policy-attachment") { if (nodes.get(e.sourceId)!.type !== "Firewall") throw Error("Policy attachment source must be Firewall"); continue; }
-      if (!intent.security || requireKnown(intent.security.port, "count") !== (intent.purpose === "queue-poll" ? 5672 : e.port)) throw Error(`Connection ${e.id} port disagrees with reviewed listener contract`);
+      if (!intent.security || requireKnown(intent.security.port, "count") !== (intent.purpose === "queue-poll" ? RESOURCE_PORTS["Message Queue"] : e.port)) throw Error(`Connection ${e.id} port disagrees with reviewed listener contract`);
       for (const s of expansion.get(e.sourceId)!) for (const t of expansion.get(e.targetId)!) {
         const source = ref(`$self/${intent.sourceRole}`, s), target = ref(`$self/${intent.targetRole}`, t);
         path(`${e.id}:${s}:${t}`, intent.purpose === "queue-poll" ? target : source, intent.purpose === "queue-poll" ? source : target, intent);

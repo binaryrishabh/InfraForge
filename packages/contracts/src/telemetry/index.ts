@@ -5,3 +5,5 @@ export type * from "./ResourceMetrics.interface";
 export type * from "./SimulationLog.interface";
 export type * from "./SimulationSnapshot.interface";
 export type * from "./SpawnedVmInfo.interface";
+
+export type { AsyncQueueMetrics } from "./AsyncQueueMetrics.interface";

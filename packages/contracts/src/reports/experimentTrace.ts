@@ -15,13 +15,13 @@ export function experimentWindow(plan: RecordedExperiment, evaluationSecond: num
 
 // Version 2 may record a measurement the engine does not model as null ("unknown"), never as zero.
 export interface ExperimentEvidencePayload {
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   topologyRevision: number;
   overallHealth: "healthy" | "degraded" | "saturated" | "critical";
   loadFraction: number;
   targetLoadFraction: number;
   resources: Array<{ id: string; health: "healthy" | "degraded" | "saturated" | "failed" | "unknown";
-    cpu: number | null; memory: number | null; rps?: number; connections?: number }>;
+    cpu: number | null; memory: number | null; rps?: number; connections?: number; asyncQueue?: import("../telemetry").AsyncQueueMetrics }>;
   pools: Array<{ id: string; currentReplicas: number; baseReplicas: number;
     pending: { action: "up" | "down"; secondsRemaining: number } | null }>;
 }

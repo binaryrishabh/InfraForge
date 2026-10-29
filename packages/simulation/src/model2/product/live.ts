@@ -9,6 +9,7 @@ import type { CausalObserver } from "../workload/causal";
 export type LiveValue = number | null;
 export type LiveHealth = "healthy" | "degraded" | "saturated" | "failed" | "unknown";
 export interface LiveNodeMetrics {
+  asyncQueue?: import("@infraforge/contracts/telemetry").AsyncQueueMetrics;
   cpu: LiveValue; memory: LiveValue; connections: LiveValue; rps: LiveValue; errorRate: LiveValue; health: LiveHealth;
   replicas?: { ready: number; total: number };
 }
@@ -117,6 +118,13 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         metrics[node] = { cpu, memory: null, connections: sessions ?? queued + serving, rps: completed, errorRate,
           health: down ? "failed" : (cpu ?? 0) >= 95 || (errorRate ?? 0) > 0.05 ? "saturated" : (cpu ?? 0) >= 80 || (errorRate ?? 0) > 0.01 ? "degraded" : "healthy",
           ...(pool ? { replicas: pool } : {}) };
+      }
+      for (const resource of compiled.input.resources) {
+        if (resource.kind !== "delivery-queue" || !compiled.semantic.nodes.find((n) => n.id === resource.id)?.profile.includes("canvas-async/1")) continue;
+        const queue = runtime.inspectQueue(resource.id);
+        const workers = compiled.input.resources.filter((r) => r.kind === "async-worker" && r.broker === resource.id).map((r) => runtime.inspectWorker(r.id));
+        if (metrics[resource.id] && queue && queue.ready > 0) metrics[resource.id]!.health = "degraded";
+        if (metrics[resource.id]) metrics[resource.id]!.asyncQueue = { version: 1, published: queue?.accepted ?? null, completed: workers.length && workers.every(Boolean) ? workers.reduce((n, w) => n + w!.processed, 0) : null, readyDepth: queue?.ready ?? null, oldestReadyAgeSeconds: queue?.oldestReadyAgeUs == null ? null : queue.oldestReadyAgeUs / SECOND, inFlight: queue?.inFlight ?? null, redeliveries: queue?.redelivered ?? null, deadLettered: queue?.deadLettered ?? null };
       }
       const offered = caller.offered - previousCaller.offered, completedRps = caller.completed - previousCaller.completed, failedRps = caller.failed - previousCaller.failed;
       const sorted = responses.sort((a, b) => a - b), latencyMs = { p50: percentile(sorted, 0.5), p95: percentile(sorted, 0.95) };

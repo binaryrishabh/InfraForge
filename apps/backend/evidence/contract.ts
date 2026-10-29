@@ -10,14 +10,15 @@ const amount = z.number().finite().min(0).max(1e12);
 const count = z.number().int().min(0).max(EXPERIMENT_MAX_RESOURCES);
 const percent = amount.max(100);
 export const evidencePayload = z.object({
-  version: z.union([z.literal(1), z.literal(2)]), topologyRevision: z.number().int().min(0).max(1_000_000),
+  version: z.union([z.literal(1), z.literal(2), z.literal(3)]), topologyRevision: z.number().int().min(0).max(1_000_000),
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]),
   loadFraction: amount.max(10), targetLoadFraction: amount.max(10),
   resources: z.array(z.object({ id, health: z.enum(["healthy", "degraded", "saturated", "failed", "unknown"]),
-    cpu: percent.nullable(), memory: percent.nullable(), rps: amount.optional(), connections: amount.optional() }).strict()).min(1).max(EXPERIMENT_MAX_RESOURCES),
+    cpu: percent.nullable(), memory: percent.nullable(), rps: amount.optional(), connections: amount.optional(), asyncQueue: z.object({ version: z.literal(1), published: amount.nullable(), completed: amount.nullable(), readyDepth: amount.nullable(), oldestReadyAgeSeconds: amount.nullable(), inFlight: amount.nullable(), redeliveries: amount.nullable(), deadLettered: amount.nullable() }).strict().optional() }).strict()).min(1).max(EXPERIMENT_MAX_RESOURCES),
   pools: z.array(z.object({ id, currentReplicas: count, baseReplicas: count,
     pending: z.object({ action: z.enum(["up", "down"]), secondsRemaining: z.number().int().min(0).max(3600) }).strict().nullable() }).strict()).max(EXPERIMENT_MAX_RESOURCES),
 }).strict().superRefine((value, ctx) => {
+  if (value.version !== 3 && value.resources.some((r) => r.asyncQueue !== undefined)) ctx.addIssue({ code: "custom", message: "Queue metrics require evidence version 3" });
   // Only version 2 can say a measurement is unknown; version 1 rows always carried numbers.
   if (value.version === 1 && value.resources.some((r) => r.cpu === null || r.memory === null || r.health === "unknown")) {
     ctx.addIssue({ code: "custom", message: "Version 1 evidence cannot record unknown measurements" });
