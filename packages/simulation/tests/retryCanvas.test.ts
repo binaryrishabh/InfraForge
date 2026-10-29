@@ -2,6 +2,7 @@ import { test, expect } from "bun:test";
 import { DEFAULT_RETRY_SETTINGS, type CircuitBreakerSettings, type RetrySettings } from "@infraforge/domain/resource";
 import type { SavedProductDesign } from "../src/model2/product/contracts";
 import { contractFromDesign } from '../src/model2/product/fromDesign';
+import { withTimeline } from '../src/model2/product/timeline';
 import { compileProduct } from '../src/model2/product/compiler';
 import { createProductModel2 } from '../src/model2/product/run';
 import { createHash } from 'node:crypto';
@@ -143,4 +144,19 @@ test("recorded implicit profiles select exactly the captured semantics", () => {
   const selected = buildContractFromRunInputs({...input, adapterProfiles: ["failure-cause/1"]}, 5);
   if ("refused" in selected) throw Error(JSON.stringify(selected));
   expect(selected.contract.failureCauseProfile).toBe("failure-cause/1");
+});
+
+test("historical failing retry evidence stays byte-identical to executable shipped main; new captures emit causes", () => {
+  for (const enabled of [false, true]) {
+    const input = enabled ? {...historicalInput, adapterProfiles: ["failure-cause/1" as const]} : historicalInput;
+    const built = buildContractFromRunInputs(input, 5); if ("refused" in built) throw Error(JSON.stringify(built));
+    const contract = withTimeline(built.contract, [{id: "crash", kind: "crash", node: "app", atUs: 1, durationUs: 5_000_000, restartUs: 1_000_000}]);
+    const design: SavedProductDesign = {schema: "infraforge-saved-design/1", resources: input.resources, connections: input.connectionLines, workload: input.workloadProfile};
+    const compiled = compileProduct(design, contract); if (!compiled.ok) throw Error(JSON.stringify(compiled));
+    const run = createProductModel2(compiled.value); run.advanceTo(5_000_000);
+    const evidence = run.evidence(), terminals = evidence.network.trace.events.filter(e => e.kind === "attempt-terminal");
+    expect(terminals.length).toBeGreaterThan(0);
+    expect(terminals.some(e => Object.hasOwn(e, "rootReason"))).toBe(enabled);
+    if (!enabled) expect(hash(evidence)).toBe("cce17d67b257b82f0cd5d08e47f7cbd92471e18052811d584bb4ab0e2fd15992");
+  }
 });

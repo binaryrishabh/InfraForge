@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test";
-import { captureRunInputs } from "../deployments/runInputs";
+import { DEFAULT_RETRY_SETTINGS } from "@infraforge/domain/resource";
+import { buildContractFromRunInputs } from "@infraforge/simulation/internal-product";
+import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
 import { buildRerunOptions, currentDesignInput, rerunInputHash } from "../reruns/options";
 import type { StoredRun } from "../reports/report";
 import { layout, workload } from "./integration/scenario";
@@ -56,4 +58,21 @@ test("matched stop is bounded and uses only validated exact terminal duration", 
   }
   expect(buildRerunOptions(source({ terminalSnapshot: null, simulationState: { simulatedSeconds: 620 } }), layout).matchedStop.available).toBe(false);
   expect(buildRerunOptions(source({ terminalSnapshot: { ...final, kind: "checkpoint" } }), layout).matchedStop.available).toBe(false);
+});
+
+test("exact reruns copy historical profile absence and new profile selection without changing hashes", () => {
+  const design = structuredClone(layout); design.resources.find(r => r.type === "Load Balancer")!.retry = DEFAULT_RETRY_SETTINGS;
+  for (const historical of [true, false]) {
+    const captured = captureRunInputs(design, workload, "exact-profiles");
+    if (historical) delete captured.adapterProfiles;
+    const stored = JSON.parse(JSON.stringify(captured));
+    expect(buildRerunOptions(source({runInputs: stored}), null).exact.available).toBe(true);
+    // This is the exact route's production read/copy operation, including its absence semantics.
+    const rerun = readRunInputs(stored);
+    expect(JSON.stringify(rerun)).toBe(JSON.stringify(captured));
+    expect(rerunInputHash(rerun)).toBe(rerunInputHash(captured));
+    const built = buildContractFromRunInputs(rerun, 5); if ("refused" in built) throw Error(JSON.stringify(built));
+    expect(built.contract.failureCauseProfile).toBe(historical ? undefined : "failure-cause/1");
+    expect(currentDesignInput(rerun, design).adapterProfiles).toEqual(["failure-cause/1"]);
+  }
 });

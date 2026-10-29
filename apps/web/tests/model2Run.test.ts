@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test";
-import { RESOURCE_TYPES as T, DeploymentChaosNames, type Resource } from "@infraforge/domain/resource";
+import { DEFAULT_RETRY_SETTINGS, RESOURCE_TYPES as T, DeploymentChaosNames, type Resource } from "@infraforge/domain/resource";
 import { resolveWorkload } from "@infraforge/domain/workload";
+import { createModel2Run } from "@infraforge/simulation/model2-run";
+import { buildModel2Contract, buildContractFromRunInputs } from "@infraforge/simulation/internal-product";
 import { createRunHost } from "../src/features/model2Run/worker/host";
 import type { FromWorker, RunStart } from "../src/features/model2Run/protocol";
 
@@ -63,4 +65,29 @@ test("a challenge's scheduled fault is applied right after its second; speed 0 p
   h.tick(20);
   expect(h.messages.at(-1)!.type).toBe("done"); // the scheduled fault is not a user action: the server inserts it itself
   expect((h.messages.at(-1) as Extract<FromWorker, { type: "done" }>).submission.actions).toEqual([]);
+});
+
+for (const historical of [true, false]) test(`worker startup and server replay preserve captured profiles, historical=${historical}`, () => {
+  const input = start().input;
+  input.resources[0]!.retry = {...DEFAULT_RETRY_SETTINGS, retryOn: ["connectionFailure", "timeout", "backendFailure"]};
+  if (!historical) input.adapterProfiles = ["failure-cause/1"];
+  const wireInput = JSON.parse(JSON.stringify(input)) as RunStart["input"];
+  const h = harness({input: wireInput, horizonSeconds: 5, stopAtSecond: 5});
+  const built = buildContractFromRunInputs(wireInput, 5);
+  if ("refused" in built) throw Error(JSON.stringify(built));
+  expect(built.contract.failureCauseProfile).toBe(historical ? undefined : "failure-cause/1");
+  const server = createModel2Run(wireInput, 5, (...args) => {
+    const result = buildModel2Contract(...args); expect(result).toEqual(built); return result;
+  });
+  for (let second = 1; second <= 5; second++) {
+    if (second === 3) {
+      const request = {kind: "chaos" as const, parameters: {type: DeploymentChaosNames.Crash, resourceId: "app-1"}};
+      h.host.handle({type: "action", id: "crash", request}); server.apply(request);
+    }
+    h.tick(); const logs = server.advance();
+    expect(h.seconds().at(-1)!.view).toEqual(server.view());
+    const stable = (rows: typeof logs) => rows.map(({timestamp: _clock, ...row}) => row);
+    expect(stable(h.seconds().at(-1)!.logs)).toEqual(stable(logs));
+  }
+  expect(h.messages.at(-1)!.type).toBe("done");
 });
