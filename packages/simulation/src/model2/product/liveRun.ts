@@ -2,11 +2,10 @@ import { findSku } from "@infraforge/catalog";
 import { GENERIC_MONTHLY_USD } from "../../cost";
 import { SIMULATION_CONSTANTS } from "../../tuning";
 import { createActionableLiveModel2, type LiveProjection } from "./live";
-import { buildModel2Contract, type ContractBuilder } from "./runContract";
+import { buildModel2Contract, buildContractFromRunInputs, type CapturedModel2Input, type ContractBuilder } from "./runContract";
 export type { ContractBuilder };
 import type { ProductContract, SavedProductDesign } from "./contracts";
 import { RESOURCE_TYPES, ResourceHealth, type ChaosType, type ResourceHealthType } from "@infraforge/domain/resource";
-import type { ResolvedWorkloadProfile } from "@infraforge/domain/workload";
 import type { ActionOutcome, ActionRequest } from "@infraforge/contracts/actions";
 import type { RunTopology } from "@infraforge/contracts/run-inputs";
 import type { LiveView, PoolSnapshot, ResourceMetrics, SimulationLog } from "@infraforge/contracts/telemetry";
@@ -34,9 +33,9 @@ const HOURS_PER_MONTH = 730;
 export const MAX_RUN_ACTIONS = 20;
 const SECOND = 1_000_000;
 
-export function createModel2Run(input: RunTopology & { workloadProfile: ResolvedWorkloadProfile; seed: string }, horizonSeconds: number, build: ContractBuilder = buildModel2Contract) {
+export function createModel2Run(input: CapturedModel2Input, horizonSeconds: number, build: ContractBuilder = buildModel2Contract) {
   const design: SavedProductDesign = { schema: "infraforge-saved-design/1", resources: input.resources, connections: input.connectionLines, workload: input.workloadProfile };
-  const built = build(design, horizonSeconds, input.seed);
+  const built = buildContractFromRunInputs(input, horizonSeconds, build);
   if ("refused" in built) throw new ActionRefused(`Model 2 cannot run this design yet: ${built.refused.join(" ")}`);
   // Live runs generate arrivals as they advance, so long runs and rebuilds after actions stay small and fast.
   const contract: ProductContract = { ...built.contract, arrival: { ...built.contract.arrival, generated: true } }, nodeIds = input.resources.map((r) => r.id);

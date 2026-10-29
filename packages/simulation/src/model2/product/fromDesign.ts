@@ -1,3 +1,4 @@
+import type { AdapterProfile } from "@infraforge/contracts/run-inputs";
 import { findSku, CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog";
 import { RESOURCE_PORTS, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
 import type { Quantity, Unit } from "../../reality/quantity";
@@ -13,16 +14,23 @@ const SOURCE = "packages/simulation/src/model2/product/fromDesign.ts";
 const SCOPE = "Assumed educational workload; no measured application or provider performance";
 const operations = ["read", "write", "health"] as const;
 
+// Only new captures select current implicit profiles. Historical builds use their recorded list.
+export function currentAdapterProfiles(resources: SavedProductDesign["resources"]): AdapterProfile[] {
+  return resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1"] : [];
+}
+
 /** Canvas intent is preserved; missing application and service settings are visible assumptions.
  * Historical reconstruction may explicitly select the absent cause profile; compilation never upgrades it. */
-export function contractFromDesign(saved: SavedProductDesign, history?: { failureCause: false }): { contract: ProductContract; assumptions: Assumption[] } | { refused: Diagnostic[] } {
+export function contractFromDesign(saved: SavedProductDesign, history?: { failureCause: false } | { adapterProfiles: readonly AdapterProfile[] }): { contract: ProductContract; assumptions: Assumption[] } | { refused: Diagnostic[] } {
   const refused: Diagnostic[] = [];
   const error = (path: string, message: string) => refused.push({ code: "DESIGN_NOT_RUNNABLE", path, message, severity: "error" });
   try {
     boundedProduct(saved);
     const design = savedPoolPolicies(saved), resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
     // New canvas runs with retry/breaker intent need root-aware consumers; no learner control.
-    const failureCause = history?.failureCause !== false && resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled);
+    const profiles = history && "adapterProfiles" in history ? history.adapterProfiles : history ? [] : currentAdapterProfiles(resources);
+    if (profiles.some(p => p !== "failure-cause/1") || profiles.length > 1) error("adapterProfiles", "Unsupported adapter profile selection.");
+    const failureCause = profiles.includes("failure-cause/1");
     const byId = new Map(resources.map((r) => [r.id, r]));
     const connections = [...design.connections].sort((a, b) => a.id < b.id ? -1 : 1);
     const outgoing = (id: string) => connections.filter((e) => e.sourceId === id).map((e) => byId.get(e.targetId)!);

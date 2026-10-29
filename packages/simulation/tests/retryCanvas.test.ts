@@ -5,6 +5,7 @@ import { contractFromDesign } from '../src/model2/product/fromDesign';
 import { compileProduct } from '../src/model2/product/compiler';
 import { createProductModel2 } from '../src/model2/product/run';
 import { createHash } from 'node:crypto';
+import { buildContractFromRunInputs, type CapturedModel2Input } from '../src/model2/product/runContract';
 const d = {schema:'infraforge-saved-design/1',resources:[{id:'lb',type:'Load Balancer',x:0,y:0},{id:'app',type:'Virtual Machine',x:0,y:0}],connections:[{id:'e',sourceId:'lb',targetId:'app',sourceType:'Load Balancer',targetType:'Virtual Machine',port:80}],workload:{targetThroughput:60,throughputUnit:'per-minute',trafficShape:'steady',readWriteRatio:0.8,payloadSize:'light'}} as const;
 function output(retry?: RetrySettings, circuitBreaker?: CircuitBreakerSettings, legacy = false) {
   const saved = structuredClone(d) as unknown as SavedProductDesign;
@@ -68,4 +69,78 @@ test("canvas selects causes only for enabled retry or breaker intent", () => {
     expect(value.compiled.input.failureCauseProfile).toBe("failure-cause/1");
     expect(value.compiled.semantic.versions.contract).toBe("canvas-assumptions/2/failure-cause/1");
   }
+});
+
+// Captured before this fix; hashes computed from executable shipped main (2f10e1c), before edits.
+const historicalInput: CapturedModel2Input = {
+  "resources": [
+    {
+      "id": "lb",
+      "type": "Load Balancer",
+      "x": 0,
+      "y": 0,
+      "retry": {
+        "enabled": true,
+        "maxAttempts": 2,
+        "backoffMs": 100,
+        "jitterRatio": 0.2,
+        "maxConcurrentRetries": 4,
+        "retryOn": [
+          "connectionFailure",
+          "timeout",
+          "backendFailure"
+        ]
+      }
+    },
+    {
+      "id": "app",
+      "type": "Virtual Machine",
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "connectionLines": [
+    {
+      "id": "edge",
+      "sourceId": "lb",
+      "targetId": "app",
+      "sourceType": "Load Balancer",
+      "targetType": "Virtual Machine",
+      "port": 80
+    }
+  ],
+  "workloadProfile": {
+    "targetThroughput": 120,
+    "throughputUnit": "per-minute",
+    "trafficShape": "steady",
+    "readWriteRatio": 0.8,
+    "payloadSize": "light",
+    "peakMultiplier": 3
+  },
+  "seed": "historical-profile-proof"
+};
+test("production historical input builder preserves shipped-main contract, compiled input and evidence bytes", () => {
+  const built = buildContractFromRunInputs(historicalInput, 5);
+  if ("refused" in built) throw Error(JSON.stringify(built));
+  const design: SavedProductDesign = { schema: "infraforge-saved-design/1", resources: historicalInput.resources, connections: historicalInput.connectionLines, workload: historicalInput.workloadProfile };
+  const compiled = compileProduct(design, built.contract); if (!compiled.ok) throw Error(JSON.stringify(compiled));
+  const run = createProductModel2(compiled.value); run.advanceTo(5_000_000);
+  expect({contract: hash(built.contract), compiled: hash(compiled.value), evidence: hash(run.evidence())}).toEqual({
+    "contract": "1c54177277a854fe678918ea7435875c5098e8cfd31afa68c6b5c35d851fe50a",
+    "compiled": "230ae02de45892fdbc98f5a6a5888aea71b64d1ed8e5fc0cc313f01f256216e5",
+    "evidence": "5f8b9b40e89d0c9569f62f28c5259ade841e630127b4700d648108e4a54efdcd"
+});
+  expect(built.contract).not.toHaveProperty("failureCauseProfile");
+  expect(buildContractFromRunInputs({...historicalInput, adapterProfiles: []}, 5)).toEqual(built);
+});
+
+test("recorded implicit profiles select exactly the captured semantics", () => {
+  const built = buildContractFromRunInputs({...historicalInput, adapterProfiles: ["failure-cause/1"]}, 5);
+  if ("refused" in built) throw Error(JSON.stringify(built));
+  expect(built.contract.failureCauseProfile).toBe("failure-cause/1");
+  // A recorded profile stays selected even when its original trigger is no longer present.
+  const input = structuredClone(historicalInput); delete input.resources[0]!.retry;
+  const selected = buildContractFromRunInputs({...input, adapterProfiles: ["failure-cause/1"]}, 5);
+  if ("refused" in selected) throw Error(JSON.stringify(selected));
+  expect(selected.contract.failureCauseProfile).toBe("failure-cause/1");
 });

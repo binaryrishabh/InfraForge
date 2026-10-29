@@ -1,17 +1,27 @@
+import type { AdapterProfile, RunProfileSelection, RunTopology } from "@infraforge/contracts/run-inputs";
+import type { ResolvedWorkloadProfile } from "@infraforge/domain/workload";
 import { contractFromDesign } from "./fromDesign";
 import { WORKLOAD_LIMITS } from "../workload/policy";
 import type { Quantity } from "../../reality/quantity";
 import type { ProductContract, SavedProductDesign } from "./contracts";
 
-export type ContractBuilder = (design: SavedProductDesign, horizonSeconds: number, seed: string) => { contract: ProductContract } | { refused: string[] };
+export type ContractBuilder = (design: SavedProductDesign, horizonSeconds: number, seed: string, adapterProfiles?: readonly AdapterProfile[]) => { contract: ProductContract } | { refused: string[] };
 
 // A run's design as a Model 2 contract: the adapter's listed assumptions, with the run's own length and seed.
 // Limits are the engine's ceilings; a run that reaches one ends there and says so.
-export const buildModel2Contract: ContractBuilder = (design, horizonSeconds, seed) => {
-  const result = contractFromDesign(design);
+export const buildModel2Contract: ContractBuilder = (design, horizonSeconds, seed, adapterProfiles = []) => {
+  const result = contractFromDesign(design, { adapterProfiles });
   if ("refused" in result) return { refused: result.refused.map((d) => d.message) };
   return { contract: withRunLength(result.contract, horizonSeconds, seed) };
 };
+
+export type CapturedModel2Input = RunTopology & RunProfileSelection & { workloadProfile: ResolvedWorkloadProfile; seed: string };
+
+// Every replay, worker and action rebuild starts with the captured selection; absence means no implicit profiles.
+export function buildContractFromRunInputs(input: CapturedModel2Input, horizonSeconds: number, build: ContractBuilder = buildModel2Contract) {
+  const design: SavedProductDesign = { schema: "infraforge-saved-design/1", resources: input.resources, connections: input.connectionLines, workload: input.workloadProfile };
+  return build(design, horizonSeconds, input.seed, input.adapterProfiles ?? []);
+}
 
 export function withRunLength(base: ProductContract, horizonSeconds: number, seed: string): ProductContract {
   const contract = JSON.parse(JSON.stringify(base)) as ProductContract, horizonUs = horizonSeconds * 1_000_000;

@@ -1,3 +1,4 @@
+import { currentAdapterProfiles } from "@infraforge/simulation/internal-product";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { resolveWorkload } from "@infraforge/domain/workload";
@@ -17,6 +18,7 @@ const RunInputsV1Schema = z.object({
     readWriteRatio: z.number().min(0).max(1),
   }),
   seed: z.string().min(1),
+  adapterProfiles: z.array(z.literal("failure-cause/1")).max(1).optional(),
 });
 const RunInputsV2Schema = RunInputsV1Schema.extend({ version: z.literal(2),
   simulationModelVersion: z.string().min(1).max(64), catalogSnapshot: z.string().min(1).max(64) });
@@ -33,6 +35,7 @@ export function captureRunInputs(layout: unknown, workload?: WorkloadProfile, se
     connectionLines: parsed.data.connectionLines,
     workloadProfile: resolveWorkload(workload),
     seed,
+    adapterProfiles: currentAdapterProfiles(parsed.data.resources),
   });
 }
 

@@ -4,6 +4,7 @@ import { LayoutSchema, LiveTopologySchema } from "../zod_schemas/layout.schema";
 import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
 import { createModel2Run } from "@infraforge/simulation/model2-run";
 import { createModel2Engine } from "../simulator/model2Engine";
+import { buildContractFromRunInputs } from "@infraforge/simulation/internal-product";
 import { buildModel2Contract } from "../simulator/contractBuilder";
 import { layout, workload } from "./integration/scenario";
 import { configuration, designDifference } from "../comparison/design";
@@ -29,16 +30,21 @@ test("retry-only edits remain visible in design improvement lineage", () => {
   expect(designDifference(before,after).reconfigured).toEqual([{id:"lb",fields:[{field:"retry",earlier:null,later:DEFAULT_RETRY_SETTINGS}]}]);
 });
 
-for (const breaker of [undefined, {enabled:true, failureThreshold:1, cooldownMs:1000}]) test(`browser/server cause-enabled parity with retries and breaker=${!!breaker}`, () => {
+for (const historical of [false, true]) for (const breaker of [undefined, {enabled:true, failureThreshold:1, cooldownMs:1000}]) test(`browser/server cause-enabled parity with retries and breaker=${!!breaker}, historical=${historical}`, () => {
   const saved=structuredClone(layout);
   saved.resources.find((r)=>r.type === "Load Balancer")!.retry={...DEFAULT_RETRY_SETTINGS,retryOn:["connectionFailure","timeout","backendFailure"]};
   saved.resources.find((r)=>r.type === "Load Balancer")!.circuitBreaker = breaker;
-  const built = buildModel2Contract({ schema: "infraforge-saved-design/1", resources: saved.resources, connections: saved.connectionLines, workload }, 5, "retry-parity");
-  if ("refused" in built) throw Error(JSON.stringify(built));
-  expect(built.contract.failureCauseProfile).toBe("failure-cause/1");
   const captured=captureRunInputs(saved,workload,"retry-parity");
+  if (historical) delete captured.adapterProfiles;
   const input=readRunInputs(JSON.parse(JSON.stringify(captured)));
-  const browser=createModel2Run(input,5), server=createModel2Engine(input,5,buildModel2Contract);
+  const contracts: unknown[] = [];
+  const build: typeof buildModel2Contract = (...args) => {
+    const result = buildModel2Contract(...args); contracts.push(result); return result;
+  };
+  const built = buildContractFromRunInputs(input, 5);
+  if ("refused" in built) throw Error(JSON.stringify(built));
+  expect(built.contract.failureCauseProfile).toBe(historical ? undefined : "failure-cause/1");
+  const browser=createModel2Run(input,5,build), server=createModel2Engine(input,5,build);
   for(let s=0;s<5;s++) {
     if(s===2) {
       const action={kind:"chaos" as const,parameters:{type:DeploymentChaosNames.Crash,resourceId:"vm-a"}};
@@ -49,4 +55,5 @@ for (const breaker of [undefined, {enabled:true, failureThreshold:1, cooldownMs:
     expect(browser.view()).toEqual(server.view());
   }
   expect(browser.actions).toEqual(server.actions);
+  expect(contracts).toEqual([built, built]);
 });

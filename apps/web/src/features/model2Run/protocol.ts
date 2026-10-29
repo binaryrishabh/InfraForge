@@ -1,11 +1,11 @@
 import type { ActionOutcome, ActionRequest } from "@infraforge/contracts/actions";
-import type { RunTopology } from "@infraforge/contracts/run-inputs";
+import type { RunTopology, RunProfileSelection } from "@infraforge/contracts/run-inputs";
 import type { LiveView, SimulationLog } from "@infraforge/contracts/telemetry";
 import type { ResolvedWorkloadProfile } from "@infraforge/domain/workload";
 
 // Messages between the page and the Model 2 run worker.
 export interface RunStart {
-  input: RunTopology & { workloadProfile: ResolvedWorkloadProfile; seed: string };
+  input: RunTopology & RunProfileSelection & { workloadProfile: ResolvedWorkloadProfile; seed: string };
   horizonSeconds: number;
   // The run stops by itself here (a challenge's evaluation second, or the horizon).
   stopAtSecond: number;

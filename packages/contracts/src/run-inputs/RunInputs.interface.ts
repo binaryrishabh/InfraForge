@@ -6,7 +6,12 @@ export interface RunTopology {
   connectionLines: ConnectionLine[];
 }
 
-export interface RunInputsV1 extends RunTopology {
+export type AdapterProfile = "failure-cause/1";
+
+// Missing profiles identify inputs captured before implicit adapter profiles were recorded.
+export interface RunProfileSelection { adapterProfiles?: AdapterProfile[] }
+
+export interface RunInputsV1 extends RunTopology, RunProfileSelection {
   version: 1;
   workloadProfile: ResolvedWorkloadProfile;
   seed: string;
