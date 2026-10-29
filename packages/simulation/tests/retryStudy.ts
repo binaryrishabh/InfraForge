@@ -1,3 +1,4 @@
+import { authorSlowQueries, configureSlowDesign, installSlowFault, isSlowStudy, isResponseStudy, type SlowStudyFailure } from "./retrySlowStudy";
 import { createHash } from "node:crypto";
 import type { Resource, RetrySettings } from "@infraforge/domain/resource";
 import type { SavedProductDesign } from "../src/model2/product/contracts";
@@ -15,7 +16,7 @@ export const RETRY_STUDY_POLICIES: Record<"disabled" | "aggressive" | "bounded" 
   deadline: { enabled: true, maxAttempts: 5, backoffMs: 2000, jitterRatio: 0, maxConcurrentRetries: 64, retryOn: ["backendFailure", "timeout", "connectionFailure"] },
 };
 export type StudyPolicy = keyof typeof RETRY_STUDY_POLICIES;
-export type StudyFailure = "overload" | "transient" | "control";
+export type StudyFailure = "overload" | "transient" | "control" | SlowStudyFailure;
 const SECOND = 1_000_000, LOAD_FALL_US = 5 * SECOND, HORIZON_SECONDS = 8;
 
 /** Only saved canvas fields; no hand-authored engine resources or altered demand/pool quantities. */
@@ -45,13 +46,21 @@ type Database = { queued: number; serving: number; waiting: number; sessions: nu
 const rootOf = (event: CausalEvent) => event.work?.rootId ?? (typeof event.detail.root === "string" ? event.detail.root : undefined);
 
 export function runRetryStudy(failure: StudyFailure, policy: StudyPolicy, readFraction = 1) {
-  const design = retryStudyDesign(policy, readFraction), built = buildModel2Contract(design, HORIZON_SECONDS, RETRY_STUDY_SEED);
+  const design = retryStudyDesign(policy, readFraction), slow = isSlowStudy(failure);
+  if (slow) configureSlowDesign(design, failure);
+  const horizonSeconds = slow ? 12 : HORIZON_SECONDS;
+  const built = buildModel2Contract(design, horizonSeconds, RETRY_STUDY_SEED);
   if ("refused" in built) throw Error(built.refused.join("; "));
   const contract = withTimeline({ ...built.contract, arrival: { ...built.contract.arrival, generated: true } }, retryStudyActions(failure));
+  if (slow) authorSlowQueries(contract, failure);
   const compiled = compileProduct(design, contract);
   if (!compiled.ok) throw Error(JSON.stringify(compiled.diagnostics));
+  if (slow) installSlowFault(compiled.value, contract, failure);
   const callers = new Map<string, { offeredAt: number; operation: string }>();
   const retriesByRoot = new Map<string, number>(), ambiguousWrites = new Set<string>();
+  const dbAdmissionsByRoot = new Map<string, number>(), dbLiveByRoot = new Map<string, number>(), callerStopped = new Set<string>();
+  let maxConcurrentDbCopies = 0, overlappingDbAdmissions = 0, lateDbTerminals = 0, lateDbCommits = 0;
+  let lastNonemptyQueueSampleUs: number | null = null;
   const chains = new Map<string, CausalEvent[]>();
   let chainRoot: string | undefined, chain: CausalEvent[] = [], run: ReturnType<typeof createProductModel2> | undefined;
   let peakWaiting = 0, peakExecuting = 0, peakBudget = 0, peakSessions = 0, peakOrphans = 0, peakDbQueued = 0;
@@ -65,6 +74,22 @@ export function runRetryStudy(failure: StudyFailure, policy: StudyPolicy, readFr
   const observe = (event: CausalEvent) => {
     const root = rootOf(event);
     if (event.kind === "caller-offered" && root) callers.set(root, { offeredAt: event.atUs, operation: event.work!.operation });
+    if (root && event.kind === "caller-terminal") {
+      callerStopped.add(root);
+      if (slow && isResponseStudy(failure) && event.detail.outcome === "rejected" && chainRoot === undefined) {
+        chainRoot = root; chain = chains.get(root) ?? []; retainedChainEvents = chain.length; chains.clear();
+      }
+    }
+    if (root && callers.has(root) && event.kind === "db-admitted") {
+      const live = (dbLiveByRoot.get(root) ?? 0) + 1;
+      if (live > 1) overlappingDbAdmissions++;
+      maxConcurrentDbCopies = Math.max(maxConcurrentDbCopies, live); dbLiveByRoot.set(root, live);
+      dbAdmissionsByRoot.set(root, (dbAdmissionsByRoot.get(root) ?? 0) + 1);
+    }
+    if (root && callers.has(root) && event.kind === "db-terminal") {
+      dbLiveByRoot.set(root, (dbLiveByRoot.get(root) ?? 0) - 1);
+      if (callerStopped.has(root)) { lateDbTerminals++; if (event.detail.outcome === "committed") lateDbCommits++; }
+    }
     if (event.kind === "db-terminal" && event.work?.operation !== "health") lastForegroundDbTerminalUs = event.atUs;
     if (["lb-selected", "retry-scheduled", "retry-suppressed", "db-admitted", "db-terminal", "db-session-open"].includes(event.kind)) sample();
     if (event.kind === "retry-scheduled" && root) {
@@ -93,8 +118,14 @@ export function runRetryStudy(failure: StudyFailure, policy: StudyPolicy, readFr
   };
   run = createProductModel2(compiled.value, undefined, observe);
   const samples = [];
-  for (let second = 1; second <= HORIZON_SECONDS; second++) {
-    run.advanceTo(second * SECOND); sample();
+  for (let second = 1; second <= horizonSeconds; second++) {
+    if (slow && second >= 5) {
+      // Last nonempty queue on a 1 ms grid, including any retry-driven refill after offered load falls.
+      for (let atUs = Math.max(LOAD_FALL_US, (second - 1) * SECOND + 1000); atUs <= second * SECOND; atUs += 1000) {
+        run.advanceTo(atUs); sample();
+        if ((run.inspect("db") as Database).queued > 0) lastNonemptyQueueSampleUs = atUs;
+      }
+    } else { run.advanceTo(second * SECOND); sample(); }
     const db = run.inspect("db") as Database, lb = run.inspect("lb") as Balancer;
     samples.push({ second, dbQueued: db.queued, dbServing: db.serving, dbWaiting: db.waiting, sessions: db.sessions, orphans: db.orphaned,
       retriesWaiting: lb.retriesWaiting ?? null, activeRetries: lb.activeRetries });
@@ -106,6 +137,17 @@ export function runRetryStudy(failure: StudyFailure, policy: StudyPolicy, readFr
     retriesWaiting: lb.retriesWaiting ?? null, peakRetriesWaiting: policy === "disabled" ? null : peakWaiting, peakExecuting, peakBudget,
     suppressed: lb.suppressedByReason ?? null, caller: evidence.counts,
     databaseCalls: dbPaths.reduce((sum, p) => sum + p.offered, 0), databaseAdmitted: db.transactions.admitted, databaseCommitted: db.transactions.committed,
+    databaseCpuUs: db.cpu.appCoreUs, databaseAborted: db.transactions.aborted, databaseCancelled: db.transactions.cancelled, databaseReasons: db.reasons,
+    maxConcurrentDbCopies, overlappingDbAdmissions, repeatedDbAdmissions: [...dbAdmissionsByRoot.values()].reduce((sum, count) => sum + Math.max(0, count - 1), 0),
+    lateDbTerminals, lateDbCommits,
+    queueDrainAfterLoadFallUs: slow ? (lastNonemptyQueueSampleUs === null ? 0 : lastNonemptyQueueSampleUs + 1000 - LOAD_FALL_US) : null,
+    queueDrainResolutionUs: slow ? 1000 : null,
+    remoteAfterStop: evidence.network.paths.reduce((sum, p) => sum + p.remoteOutcomesAfterStop, 0),
+    dbRemoteAfterStop: dbPaths.reduce((sum, p) => sum + p.remoteOutcomesAfterStop, 0),
+    lbRemoteAfterStop: evidence.network.paths.filter((p) => p.source === "lb").reduce((sum, p) => sum + p.remoteOutcomesAfterStop, 0),
+    responseTimeouts: evidence.network.paths.reduce((sum, p) => sum + (p.reasons["response-timeout"] ?? 0), 0),
+    callerResponseTimeouts: evidence.network.paths.filter((p) => p.source === "$caller").reduce((sum, p) => sum + (p.reasons["response-timeout"] ?? 0), 0),
+    lbResponseTimeouts: evidence.network.paths.filter((p) => p.source === "lb").reduce((sum, p) => sum + (p.reasons["response-timeout"] ?? 0), 0),
     databaseLive: db.transactions.live, databaseQueued: db.queued, peakDbQueued, databaseClasses: db.queryClasses,
     sessions: db.sessions, peakSessions, peakOrphans, sessionRefusals: db.sessionEvents!.refused,
     poolPending: dbPaths.reduce((sum, p) => sum + p.pool.pending, 0), poolWaitUs: dbPaths.reduce((sum, p) => sum + p.completedPhaseDurationsUs.connectionWaitUs, 0),
