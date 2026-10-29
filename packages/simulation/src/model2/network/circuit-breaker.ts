@@ -8,7 +8,7 @@ interface Admission { generation: number; epoch: number; probe: boolean; health:
 const counted = new Set(["connect-timeout", "response-timeout", "reset", "backend-rejected"]);
 
 /** One path owns one machine. Tokens prevent stale in-flight completions from changing a newer epoch. */
-export function circuitBreaker(path: string, policy: CircuitBreakerPolicy, kernel: EventKernel, trace: Trace, caller?: string, failureCauseProfile?: "failure-cause/1") {
+export function circuitBreaker(path: string, policy: CircuitBreakerPolicy, kernel: EventKernel, trace: Trace, caller?: string) {
   let state: State = "closed", generation = 0, epoch = 0, consecutiveFailures = 0, openUntil: number | null = null;
   let cooldownTimer: (() => boolean) | undefined, probe: Admission | undefined, disposed = false;
   const transitions: Record<string, number> = {}, rejected = { open: 0, "half-open": 0, disposed: 0 };
@@ -32,8 +32,7 @@ export function circuitBreaker(path: string, policy: CircuitBreakerPolicy, kerne
   const complete = (token: Admission, result: TransportResult, cancelled = false, localReset = false) => {
     if (token.completed) return; token.completed = true;
     if (disposed || token.generation !== generation || token.epoch !== epoch) return;
-    const countedReason = failureCauseProfile && result.reason === "backend-rejected" && result.cause?.rootReason ? result.cause.rootReason : result.reason;
-    const failure = !result.ok && !cancelled && !localReset && counted.has(countedReason!);
+    const failure = !result.ok && !cancelled && !localReset && counted.has(result.reason!);
     if (token.probe) {
       probe = undefined;
       const outcome = cancelled ? "cancelled" : result.ok ? "succeeded" : failure ? "failed" : "ignored";

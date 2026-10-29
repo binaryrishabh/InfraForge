@@ -20,22 +20,28 @@ import { networkFixture, verticalFixture } from "./networkFixture";
 const finished: Receipt = { admitted: true, state: () => "finished", cancel: () => "already-finished" };
 const work = (id: string, operation = "light"): Invocation => ({ rootId: id, callId: JSON.stringify([id]), operation, attempt: 0, offeredAt: 0 });
 
-test("real DB session refusal survives app hop; outer breaker ignores it; retry chain stays readable", () => {
+test("real DB session refusal survives app hop; the outer breaker still counts the app failure exactly as without causes; retry chain stays readable", () => {
   const { evidence, events } = runCauseSessionStudy();
   const terminal = events.find(e => e.kind === "attempt-terminal" && e.detail.rootReason === "session-limit")!;
   expect(terminal).toBeDefined();
   expect(terminal.detail).toMatchObject({ detail: "backend-rejected", rootResource: "db" });
   const outer = evidence.network.paths.find(p => p.source === "lb")!;
-  expect(outer.circuitBreaker).toMatchObject({ state: "closed", consecutiveFailures: 0 });
   expect(outer.reasons["backend-rejected"]).toBeGreaterThan(0);
   const root = rootOf(terminal), chain = events.filter(e => rootOf(e) === root);
   const kinds = chain.map(e => e.kind);
   for (const kind of ["caller-offered", "lb-selected", "app-dependency", "app-terminal", "transport-terminal", "attempt-terminal", "retry-scheduled"]) expect(kinds).toContain(kind);
   expect(chain.some(e => e.kind === "transport-terminal" && e.detail.detail === "session-limit")).toBe(true);
-  expect(chain.filter(e => e.kind === "lb-selected").length).toBe(3);
+  const selections = chain.filter(e => e.kind === "lb-selected").length;
+  expect(selections).toBeGreaterThanOrEqual(2);
   expect(chain.find(e => e.kind === "app-terminal")!.detail.rootReason).toBe("session-limit");
+  // Causes are explanation only: the breaker behaves exactly as it does without them.
   const without = runCauseSessionStudy(false);
-  expect(without.evidence.network.paths.find(p => p.source === "lb")!.circuitBreaker!.state).toBe("open");
+  // The same request makes exactly the same attempts with and without causes.
+  expect(without.events.filter(e => rootOf(e) === root && e.kind === "lb-selected").length).toBe(selections);
+  const off = without.evidence.network.paths.find(p => p.source === "lb")!.circuitBreaker!;
+  expect(off.state).toBe("open");
+  expect(outer.circuitBreaker!.state).toBe(off.state);
+  expect(outer.circuitBreaker!.transitions).toEqual(off.transitions);
 });
 
 test("legacy DB refusal seeds exactly the reason it reports, including backend-rejected", () => {
@@ -99,18 +105,17 @@ for (const local of ["timeout", "reset"] as const) test(`local ${local} wins ove
   expect(f.path.measure().remoteOutcomesAfterStop).toBe(1);
 });
 
-test("breaker uses roots only on wrappers, unknown keeps legacy counting and local reason wins", () => {
+test("breaker counts the immediate reason whatever the known root; unknown root and local reasons are unchanged", () => {
   const p = policies();
-  const run = (reason: TransportResult["reason"], cause: Cause | undefined, enabled = true) => {
+  const run = (reason: TransportResult["reason"], cause: Cause | undefined) => {
     const kernel = new EventKernel(10000), trace = networkTrace(kernel, 1000);
-    const breaker = circuitBreaker("outer", p.breaker, kernel, trace.emit, "lb", enabled ? "failure-cause/1" : undefined);
+    const breaker = circuitBreaker("outer", p.breaker, kernel, trace.emit, "lb");
     breaker.complete(breaker.admit(work("failure"))!, { ok: false, ambiguous: true, reason, ...(cause ? { cause } : {}) }); return breaker.measure().state;
   };
-  expect(run("backend-rejected", seedCause("session-limit", "db"))).toBe("closed");
-  expect(run("backend-rejected", seedCause("circuit-open", "inner"))).toBe("closed");
+  expect(run("backend-rejected", seedCause("session-limit", "db"))).toBe("open");
+  expect(run("backend-rejected", seedCause("circuit-open", "inner"))).toBe("open");
   expect(run("backend-rejected", seedCause(null, null))).toBe("open");
   expect(run("response-timeout", seedCause("session-limit", "db"))).toBe("open");
-  expect(run("backend-rejected", seedCause("session-limit", "db"), false)).toBe("open");
 });
 
 function asideFixture(mode: "fail" | "fallback" | "fill" | "invalidate") {

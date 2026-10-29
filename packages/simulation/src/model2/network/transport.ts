@@ -9,7 +9,7 @@ import type { networkLink } from "./link";
 import { connectionPool, type Lease } from "./pool";
 
 export function pathTransport(config: PathConfig, kernel: EventKernel, links: Map<string, ReturnType<typeof networkLink>>, deliver: Deliver, alive: (id: string) => boolean, trace: Trace, disconnected?: (session: string, target: string) => void, hook?: ConnectionHook, callBudget?: { enter(): () => void }, failureCauseProfile?: "failure-cause/1") {
-  const breaker = config.circuitBreaker ? circuitBreaker(config.id, config.circuitBreaker, kernel, trace, config.source, failureCauseProfile) : undefined;
+  const breaker = config.circuitBreaker ? circuitBreaker(config.id, config.circuitBreaker, kernel, trace, config.source) : undefined;
   const liveReceipts = new Map<string, () => void>();
   let localReset = false;
   const targets = new Map<string, string>();
