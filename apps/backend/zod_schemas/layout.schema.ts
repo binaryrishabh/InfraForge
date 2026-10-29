@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -18,6 +18,7 @@ const ResourceSchema = z.object({
     maxReplicas: z.number().int().positive().optional(),
     targetCpu: z.number().min(0).max(100).optional(),
   }).optional(),
+  circuitBreaker: z.object({ enabled: z.boolean(), failureThreshold: z.number().optional(), cooldownMs: z.number().optional() }).strict().optional(),
   retry: z.object({
     enabled: z.boolean(),
     maxAttempts: z.number().optional(),
@@ -33,6 +34,8 @@ const ResourceSchema = z.object({
   region: z.string().optional(),
   name: z.string().optional(),
 }).catchall(z.json()).superRefine((resource, ctx) => {
+  const breakerMessage = circuitBreakerSettingsError(resource.type, resource.circuitBreaker);
+  if (breakerMessage) ctx.addIssue({ code: "custom", path: ["circuitBreaker"], message: breakerMessage });
   const message = retrySettingsError(resource.type, resource.retry);
   if (message) ctx.addIssue({ code: "custom", path: ["retry"], message });
 });

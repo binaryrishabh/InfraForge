@@ -83,3 +83,14 @@ test("retry inspector explains total attempts, failure groups and ambiguous writ
   const vm=renderToStaticMarkup(<Inspector resource={{id:"app",type:"Virtual Machine",x:0,y:0}} />);
   expect(vm).not.toContain("Retry failed requests");
 });
+
+test("circuit breaker edits undo/redo, lock during live runs and describe the two learner settings", () => {
+  const lb=addResource("Load Balancer",{x:0,y:0})!;
+  const circuitBreaker={enabled:true,failureThreshold:3,cooldownMs:1000};
+  updateResource(lb.id,{circuitBreaker}); expect(state().resources[0]!.circuitBreaker).toEqual(circuitBreaker);
+  undo(); expect(state().resources[0]!.circuitBreaker).toBeUndefined(); redo(); expect(state().resources[0]!.circuitBreaker).toEqual(circuitBreaker);
+  useCanvasStore.setState({liveLocked:true}); updateResource(lb.id,{circuitBreaker:{enabled:false}});
+  expect(state().resources[0]!.circuitBreaker).toEqual(circuitBreaker); useCanvasStore.setState({liveLocked:false});
+  const html=renderToStaticMarkup(<Inspector resource={{...lb,circuitBreaker}} />);
+  for(const text of ["Circuit breaker","Open after N failures","Wait before testing again","one test request"]) expect(html).toContain(text);
+});

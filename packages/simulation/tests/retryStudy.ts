@@ -1,6 +1,6 @@
 import { authorSlowQueries, configureSlowDesign, installSlowFault, isSlowStudy, isResponseStudy, type SlowStudyFailure } from "./retrySlowStudy";
 import { createHash } from "node:crypto";
-import type { Resource, RetrySettings } from "@infraforge/domain/resource";
+import type { CircuitBreakerSettings, Resource, RetrySettings } from "@infraforge/domain/resource";
 import type { SavedProductDesign } from "../src/model2/product/contracts";
 import type { CausalEvent } from "../src/model2/workload/causal";
 import { buildModel2Contract } from "../src/model2/product/runContract";
@@ -45,8 +45,9 @@ type Balancer = ReturnType<ReturnType<typeof createProductModel2>["evidence"]>["
 type Database = { queued: number; serving: number; waiting: number; sessions: number; orphaned: number };
 const rootOf = (event: CausalEvent) => event.work?.rootId ?? (typeof event.detail.root === "string" ? event.detail.root : undefined);
 
-export function runRetryStudy(failure: StudyFailure, policy: StudyPolicy, readFraction = 1) {
+export function runRetryStudy(failure: StudyFailure, policy: StudyPolicy, readFraction = 1, options?: { circuitBreaker?: CircuitBreakerSettings }) {
   const design = retryStudyDesign(policy, readFraction), slow = isSlowStudy(failure);
+  if (options?.circuitBreaker) design.resources.find((r) => r.id === "lb")!.circuitBreaker = options.circuitBreaker;
   if (slow) configureSlowDesign(design, failure);
   const horizonSeconds = slow ? 12 : HORIZON_SECONDS;
   const built = buildModel2Contract(design, horizonSeconds, RETRY_STUDY_SEED);
@@ -172,6 +173,7 @@ export function pairRetryRoots(off: ReturnType<typeof runRetryStudy>, on: Return
   for (const root of on.roots) {
     const before = baseline.get(root.root);
     if (!before || before.offeredAt !== root.offeredAt || before.operation !== root.operation) throw Error("Pairing requires identical request identity, time and operation");
+    if (before.outcome === "in-flight" || root.outcome === "in-flight") throw Error("Pairing requires terminal outcomes; unfinished work is unknown");
     if (before.outcome !== "completed" && root.outcome === "completed") (root.attempts > 1 ? directRescues : firstAttemptGains).push(root.root);
     if (before.outcome === "completed" && root.outcome !== "completed") losses.push(root.root);
     if (before.outcome === "completed" && root.outcome === "completed" && root.attempts > 1) alreadySuccessfulRetries.push(root.root);

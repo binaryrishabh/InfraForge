@@ -1,7 +1,7 @@
 import type { DesignChangeReview } from "@infraforge/contracts/reports";
 
 const FIELDS: Record<string, string> = { skuId: "catalog size", size: "generic size", type: "resource type", region: "region", public: "public access",
-  retry: "retry policy", encryption: "encryption", openPorts: "open ports", "autoscaling.enabled": "autoscaling", "autoscaling.minReplicas": "minimum replicas",
+  circuitBreaker: "circuit breaker", retry: "retry policy", encryption: "encryption", openPorts: "open ports", "autoscaling.enabled": "autoscaling", "autoscaling.minReplicas": "minimum replicas",
   "autoscaling.maxReplicas": "maximum replicas", "autoscaling.targetCpu": "target CPU" };
 const value = (v: unknown, field?: string): string => {
   if (v == null) return "not set";
@@ -9,6 +9,7 @@ const value = (v: unknown, field?: string): string => {
   if (Array.isArray(v)) return v.join(", ") || "none";
   if (typeof v === "object") {
     const p = v as Record<string, unknown>;
+    if (field === "circuitBreaker") return `${value(p.enabled)}; open after ${value(p.failureThreshold)} failures; wait ${value(p.cooldownMs)} ms before testing again`;
     if (field === "retry") return `${value(p.enabled)}; ${value(p.maxAttempts)} total attempts; backoff ${value(p.backoffMs)} ms; jitter ${value(p.jitterRatio)}; concurrent retry limit ${value(p.maxConcurrentRetries)}; failures ${value(p.retryOn)}`;
     return JSON.stringify(v);
   }

@@ -29,9 +29,10 @@ test("retry-only edits remain visible in design improvement lineage", () => {
   expect(designDifference(before,after).reconfigured).toEqual([{id:"lb",fields:[{field:"retry",earlier:null,later:DEFAULT_RETRY_SETTINGS}]}]);
 });
 
-test("browser entry and server replay have identical retry-enabled views after saved input roundtrip", () => {
+for (const breaker of [undefined, {enabled:true, failureThreshold:1, cooldownMs:1000}]) test(`browser/server parity with retries and breaker=${!!breaker}`, () => {
   const saved=structuredClone(layout);
   saved.resources.find((r)=>r.type === "Load Balancer")!.retry={...DEFAULT_RETRY_SETTINGS,retryOn:["connectionFailure","timeout","backendFailure"]};
+  saved.resources.find((r)=>r.type === "Load Balancer")!.circuitBreaker = breaker;
   const captured=captureRunInputs(saved,workload,"retry-parity");
   const input=readRunInputs(JSON.parse(JSON.stringify(captured)));
   const browser=createModel2Run(input,5), server=createModel2Engine(input,5,buildModel2Contract);

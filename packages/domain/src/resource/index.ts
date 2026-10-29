@@ -7,3 +7,5 @@ export { RETRY_GROUPS, DEFAULT_RETRY_SETTINGS, retrySettingsError, type RetrySet
 export type { ConnectionLine } from "./ConnectionLine.interface";
 export type { AutoscalingPolicy } from "./AutoscalingPolicy.interface";
 export type { ChaosType } from "./ChaosType.types";
+
+export { DEFAULT_CIRCUIT_BREAKER_SETTINGS, circuitBreakerSettingsError, type CircuitBreakerSettings } from "./CircuitBreakerSettings.interface";

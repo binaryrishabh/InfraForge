@@ -4,7 +4,7 @@ import type { Quantity } from "../../reality/quantity";
 import type { RealityEntry } from "../../reality/ledger";
 import type { ComputeProfile, ComputeResource } from "../compute/contracts";
 import type { SystemsInput, Listener, FirewallConfig, DialConfig, StartupConfig } from "../systems/contracts";
-import type { LinkConfig, PathConfig } from "../network/contracts";
+import type { CircuitBreakerPolicy, LinkConfig, PathConfig } from "../network/contracts";
 import type { OperationClass } from "../workload/contracts";
 export const COMPILER_VERSION = "infraforge-product-compiler/1";
 export interface SavedProductDesign { schema: "infraforge-saved-design/1"; resources: Resource[]; connections: ConnectionLine[]; workload: WorkloadProfile }
@@ -29,6 +29,7 @@ export interface NodeContract {
   firewall?: Omit<FirewallConfig, "id">;
   internalEdges: Array<EdgeContract & { id: string }>;
   controller?: ControllerProfile;
+  circuitBreaker?: CircuitBreakerPolicy;
 }
 export type EdgePurpose = "dependency" | "routing" | "origin" | "dns-query" | "artifact" | "monitor-target" | "telemetry-export" | "consumer" | "policy-attachment";
 export interface TransportProfile {

@@ -8,12 +8,12 @@ interface Admission { generation: number; epoch: number; probe: boolean; health:
 const counted = new Set(["connect-timeout", "response-timeout", "reset", "backend-rejected"]);
 
 /** One path owns one machine. Tokens prevent stale in-flight completions from changing a newer epoch. */
-export function circuitBreaker(path: string, policy: CircuitBreakerPolicy, kernel: EventKernel, trace: Trace) {
+export function circuitBreaker(path: string, policy: CircuitBreakerPolicy, kernel: EventKernel, trace: Trace, caller?: string) {
   let state: State = "closed", generation = 0, epoch = 0, consecutiveFailures = 0, openUntil: number | null = null;
   let cooldownTimer: (() => boolean) | undefined, probe: Admission | undefined, disposed = false;
   const transitions: Record<string, number> = {}, rejected = { open: 0, "half-open": 0, disposed: 0 };
   const probes = { started: 0, succeeded: 0, failed: 0, cancelled: 0, ignored: 0 };
-  const emit = (kind: string, detail: Record<string, unknown>, work?: Invocation) => trace(kind, path, JSON.stringify({ path, generation, epoch, ...detail }), work?.rootId, work?.attempt, true);
+  const emit = (kind: string, detail: Record<string, unknown>, work?: Invocation) => trace(kind, path, JSON.stringify({ path, caller, generation, epoch, ...(work ? { callId: work.callId, parentCallId: work.parentCallId } : {}), ...detail }), work?.rootId, work?.attempt, true);
   const transition = (next: State, reason: string, work?: Invocation) => {
     const from = state; state = next; epoch++;
     const edge = `${from}->${next}`; transitions[edge] = (transitions[edge] ?? 0) + 1;
@@ -63,6 +63,7 @@ export function circuitBreaker(path: string, policy: CircuitBreakerPolicy, kerne
       disposed = true; cooldownTimer?.(); cooldownTimer = undefined; openUntil = null; probe = undefined; epoch++;
     },
     startGeneration() {
+      if (probe) complete(probe, { ok: false, reason: "reset", ambiguous: false }, true);
       cooldownTimer?.(); cooldownTimer = undefined; openUntil = null; probe = undefined;
       generation++; disposed = false; consecutiveFailures = 0; transition("closed", "new-generation");
     },

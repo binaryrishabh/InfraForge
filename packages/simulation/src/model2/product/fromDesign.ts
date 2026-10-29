@@ -1,5 +1,5 @@
 import { findSku, CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog";
-import { RESOURCE_PORTS, retrySettingsError, type Resource } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
 import type { Quantity, Unit } from "../../reality/quantity";
 import type { ComputeResource } from "../compute/contracts";
 import type { CommandConfig } from "../async/contracts";
@@ -29,6 +29,8 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
     for (const e of connections) if (!byId.has(e.sourceId) || !byId.has(e.targetId) || e.sourceId === e.targetId) error(`connections.${e.id}`, "Connect two different resources that both exist on the canvas.");
     if (refused.length) return { refused };
     for (const r of resources) {
+      const breakerError = circuitBreakerSettingsError(r.type, r.circuitBreaker);
+      if (breakerError) error(`resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error(`resources.${r.id}.retry`, retryError);
       if (!(r.type in RESOURCE_PORTS)) error(`resources.${r.id}`, "This resource type has no Model 2 profile.");
@@ -136,6 +138,22 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
       enqueue(`${id}.manifest`, source, target, 100000, { kind: "manifest", digest: manifest, bytes: 128, layers: [{ digest, bytes: 1024 }] }, 128);
       enqueue(`${id}.tag`, source, target, 200000, { kind: "tag", tag: "release", digest: manifest });
     };
+    for (const r of resources.filter((r) => r.circuitBreaker?.enabled)) {
+      const p = r.circuitBreaker!, id = `${r.id}.circuitBreaker`, node = nodes[r.id]!;
+      const fixed = (name: string, sentence: string) => {
+        const value = q(`${id}.${name}`, 1, "count", sentence, true), fact = ledger.at(-1)!;
+        Object.assign(fact, { classification: "implementation-policy", provenance: [{ source: "caller-circuit-breaker/1", supports: "implementation", detail: sentence }], assumptions: [sentence] });
+        return value;
+      };
+      node.profileVersion += "/caller-circuit-breaker/1";
+      node.circuitBreaker = { profile: "caller-circuit-breaker/1",
+        failureThreshold: q(`${id}.failureThreshold`, p.failureThreshold!, "count", "Saved consecutive failure threshold.", true),
+        cooldown: q(`${id}.cooldownMs`, p.cooldownMs! * 1000, "us", "Saved cooldown in milliseconds converted to microseconds.", true),
+        maxProbes: fixed("maxProbes", "Version one permits exactly one simultaneous half-open probe."),
+        successfulProbesToClose: fixed("successfulProbesToClose", "Version one closes after one successful reserved probe."),
+        authored: { enabled: { value: true, sources: [`saved-design:${id}.enabled`] } },
+      };
+    }
     for (const r of resources.filter((r) => r.retry?.enabled)) {
       const p = r.retry!, id = `${r.id}.retry`, node = nodes[r.id]!;
       const config = node.resources.find((r) => r.config.kind === "load-balancer")!.config;
@@ -222,6 +240,7 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
     for (const r of saved.resources.filter((r) => r.type === "Load Balancer" && r.autoscaling?.enabled)) note(`${r.id}.poolMapping`, resources.filter((x) => x.autoscaling?.enabled).map((x) => x.id), "policy", "The first app by ID owns the adjustable replicas while its drawn siblings stay fixed, preserving the load balancer's total replica bounds.");
     // Non-numeric policy choices are also reviewable; quantity leaves are already listed above.
     const inspect = (value: unknown, path: string): void => {
+      if (path.includes(".circuitBreaker")) return; // Authored settings and fixed v1 policy quantities have explicit provenance.
       if (path.includes(".config.retry")) return; // Authored quantities and enum/list origins are retained by the retry profile.
       if (/^contract\.nodes\.[^.]+\.type$/.test(path)) return; // The user chose the resource type.
       if (value && typeof value === "object" && "kind" in value && "unit" in value && "provenance" in value) return;

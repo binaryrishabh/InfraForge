@@ -8,7 +8,7 @@ import type { networkLink } from "./link";
 import { connectionPool, type Lease } from "./pool";
 
 export function pathTransport(config: PathConfig, kernel: EventKernel, links: Map<string, ReturnType<typeof networkLink>>, deliver: Deliver, alive: (id: string) => boolean, trace: Trace, disconnected?: (session: string, target: string) => void, hook?: ConnectionHook, callBudget?: { enter(): () => void }) {
-  const breaker = config.circuitBreaker ? circuitBreaker(config.id, config.circuitBreaker, kernel, trace) : undefined;
+  const breaker = config.circuitBreaker ? circuitBreaker(config.id, config.circuitBreaker, kernel, trace, config.source) : undefined;
   const liveReceipts = new Map<string, () => void>();
   let localReset = false;
   const targets = new Map<string, string>();
@@ -36,7 +36,7 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
         heldAfterStop = !!hook?.holdLeaseUntilRemoteTerminal && isCancellation && (hook?.leaseHeldOnlyWithRemote ? !!remote : delivered) && !remoteFinished;
         if (!result.ok && !isCancellation && ["response-timeout", "reset", "drained"].includes(result.reason!)) lease?.fail(result.reason!); else if (!heldAfterStop) lease?.release();
         if (!result.ok && delivered && config.pool.remoteCancellation === "request-cancellation") remote?.cancel();
-        if (token) breaker!.complete(token, result, isCancellation, localReset);
+        if (token) breaker!.complete(token, result, isCancellation, localReset && result.reason === "reset");
         done(result);
       };
       if (breaker) liveReceipts.set(key, () => finish({ ok: false, reason: "reset", ambiguous: delivered }, true));
@@ -90,7 +90,7 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
         finish({ ok: false, reason: "reset", ambiguous: delivered }, true); return "cancelled";
       } };
     },
-    reset(local = false) { localReset = local; try { pool.reset(); } finally { localReset = false; } },
+    reset(local = false) { const previous = localReset; localReset = local; try { pool.reset(); } finally { localReset = previous; } },
     dispose() { breaker?.dispose(); for (const cancel of [...liveReceipts.values()]) cancel(); localReset = true; try { pool.reset(); } finally { localReset = false; } },
     startGeneration() { breaker?.startGeneration(); },
     drain: (grace: number) => pool.drain(grace),

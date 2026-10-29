@@ -1,3 +1,4 @@
+import { loadBalancer } from "../src/model2/network/load-balancer";
 import { expect, test } from "bun:test";
 import { circuitBreaker } from "../src/model2/network/circuit-breaker";
 import { pathTransport } from "../src/model2/network/transport";
@@ -7,13 +8,14 @@ import { EventKernel } from "../src/model2/time";
 import type { Invocation, Receipt } from "../src/model2/workload/contracts";
 import type { CircuitBreakerPolicy, TransportResult, FailureReason } from "../src/model2/network/contracts";
 import { quantities } from "./workloadFixture";
-import { networkFixture } from "./networkFixture";
+import { createNetworkRuntime, type NetworkContext } from "../src/model2/network/run";
+import { networkFixture, verticalFixture } from "./networkFixture";
 
 const work = (id: string): Invocation => ({ callId: JSON.stringify([id]), rootId: id, attempt: 0, operation: "light", offeredAt: 0 });
 function machine(threshold = 2) {
   const kernel = new EventKernel(10000), q = quantities(), causal: unknown[] = [], trace = networkTrace(kernel, 1000, (e) => causal.push(e));
   const policy: CircuitBreakerPolicy = { profile: "caller-circuit-breaker/1", failureThreshold: q.q("threshold", threshold, "count"), cooldown: q.q("cooldown", 100, "us"), maxProbes: q.q("probes", 1, "count"), successfulProbesToClose: q.q("successes", 1, "count") };
-  return { kernel, policy, trace, causal, breaker: circuitBreaker("a->b", policy, kernel, trace.emit) };
+  return { kernel, policy, trace, causal, ledger: q.ledger, breaker: circuitBreaker("a->b", policy, kernel, trace.emit) };
 }
 const failure = (reason: FailureReason = "backend-rejected"): TransportResult => ({ ok: false, reason, ambiguous: true });
 const success: TransportResult = { ok: true, ambiguous: false };
@@ -114,4 +116,75 @@ test("complete path evidence matches exact replay and event slicing", () => {
     return { path: f.path.measure(), trace: f.trace.measure(), causal: f.causal };
   };
   expect(run(false)).toEqual(run(false)); expect(run(true)).toEqual(run(false));
+});
+
+
+test("network retirement disposes owned and incoming breaker state without changing another caller path", () => {
+  const input=verticalFixture({count:1,horizon:500}), f=machine();
+  for(const path of input.paths) if(["lb","a","b"].includes(path.source)) path.circuitBreaker=f.policy;
+  input.ledger.push(...f.ledger);
+  let context: NetworkContext | undefined;
+  const run=createNetworkRuntime(input,{resource:()=>undefined,install(_kernel,_trace,c){context=c;}});
+  context!.retireOwner!("a");
+  let paths=run.evidence().network.paths;
+  expect(paths.find((p)=>p.target === "a")!.circuitBreaker!.disposed).toBe(true);
+  expect(paths.find((p)=>p.target === "b")!.circuitBreaker!.disposed).toBe(false);
+  expect(paths.find((p)=>p.source === "a")!.circuitBreaker!.disposed).toBe(true);
+  expect(paths.find((p)=>p.source === "b")!.circuitBreaker!.disposed).toBe(false);
+  const endpoint=context!.endpoint("a");
+  context!.startOwner!("a"); paths=run.evidence().network.paths;
+  expect(paths.find((p)=>p.target === "a")!.circuitBreaker).toMatchObject({state:"closed",generation:1,disposed:false});
+  expect(context!.endpoint("a")).toEqual(endpoint); // New caller policy state cannot heal readiness.
+  run.dispose();
+  expect(run.evidence().network.paths.filter((p)=>p.circuitBreaker).every((p)=>p.circuitBreaker!.disposed)).toBe(true);
+});
+
+test("cooldown priority precedes an arrival at the exact boundary", () => {
+  const f=machine(1); f.breaker.complete(f.breaker.admit(work("failure"))!,failure());
+  let admitted=false;
+  f.kernel.schedule(100,3,"same-boundary-arrival",()=>{admitted=!!f.breaker.admit(work("probe"));});
+  f.kernel.advanceTo(100); expect(admitted).toBe(true); expect(f.breaker.measure().probeInFlight).toBe(true);
+  f.breaker.dispose(); expect(f.kernel.pending).toBe(0);
+});
+
+test("local transport resets do not count as backend failure, external resets do", () => {
+  const f=transportFixture();
+  f.path.exchange(work("local"),()=>{}); f.kernel.advanceTo(0); f.path.reset(true);
+  expect(f.path.measure().circuitBreaker!.state).toBe("closed");
+  f.path.exchange(work("external"),()=>{}); f.kernel.advanceTo(0); f.path.reset();
+  expect(f.path.measure().circuitBreaker!.state).toBe("open"); f.path.dispose();
+});
+
+
+test("full network evidence and breaker traces replay identically under advanceTo and advanceSlice", () => {
+  const input=networkFixture({count:8,interval:100,horizon:2000,bytes:0,responseBytes:0,establish:0,propagation:0}), f=machine(1);
+  input.paths[0]!.circuitBreaker=f.policy; input.ledger.push(...f.ledger);
+  input.endpoints.app!.ready=false;
+  const run=(slice:boolean)=>{const r=createNetworkRuntime(input); if(slice){while(!r.advanceSlice(r.horizon,3)){/* same deterministic input */}}else r.advanceTo(r.horizon);return r.evidence();};
+  expect(run(false)).toEqual(run(true)); expect(run(false)).toEqual(run(false));
+});
+
+test("callers on the same clock keep independent circuits and replacement paths start closed", () => {
+  const f=machine(1), other=circuitBreaker("app#1->target",f.policy,f.kernel,f.trace.emit);
+  f.breaker.complete(f.breaker.admit(work("app0-fail"))!,failure());
+  const accepted=other.admit(work("app1-success"))!; other.complete(accepted,success);
+  expect(f.breaker.measure().state).toBe("open"); expect(other.measure().state).toBe("closed");
+  f.breaker.dispose(); expect(f.kernel.pending).toBe(0);
+  const replacement=circuitBreaker("a->b",f.policy,f.kernel,f.trace.emit);
+  expect(replacement.measure()).toMatchObject({state:"closed",consecutiveFailures:0,probeInFlight:false});
+});
+
+
+test("LB health checks obey OPEN and close only by completing a reserved half-open probe", () => {
+  const f=transportFixture(), {q}=quantities();
+  f.path.exchange(work("first-failure"),()=>{});
+  const lb=loadBalancer({id:"lb",kind:"load-balancer",backends:["app"],policy:"round-robin",maxOutstanding:q("max",10,"count"),maxPending:q("pending",10,"count"),pendingTimeout:q("pending-timeout",1000,"us"),
+    health:{interval:q("interval",100,"us"),timeout:q("timeout",50,"us"),healthy:q("healthy",1,"count"),unhealthy:q("unhealthy",1,"count"),operation:"light",initial:"eligible"}},
+    f.kernel,new Map([[JSON.stringify(["lb","app"]),f.path]]),new Map(),"health-proof",300,f.trace.emit);
+  f.kernel.advanceTo(100); expect(f.path.measure().circuitBreaker!.state).toBe("open");
+  const before=f.counts().delivered; f.kernel.advanceTo(110); expect(f.counts().delivered).toBe(before);
+  f.success(); f.kernel.advanceTo(210);
+  expect(f.path.measure().circuitBreaker!.state).toBe("closed");
+  const probe=f.trace.measure().events.find((e)=>e.kind === "breaker-probe-start" && JSON.parse(e.detail).health === true);
+  expect(probe).toBeDefined(); lb.dispose(); f.path.dispose(); expect(f.kernel.pending).toBe(0);
 });

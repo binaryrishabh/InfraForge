@@ -1,4 +1,4 @@
-import { retrySettingsError } from "@infraforge/domain/resource";
+import { circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -40,14 +40,19 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     const edgeIds = new Set(design.connections.map((e) => e.id));
     if (edgeIds.size !== design.connections.length) error("EDGE_ID", "connections", "Unique connection identities required");
     for (const r of design.resources) {
+      const breakerError = circuitBreakerSettingsError(r.type, r.circuitBreaker);
+      if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["id", "type", "x", "y", "skuId", "autoscaling", "retry", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["id", "type", "x", "y", "skuId", "autoscaling", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
       if (!spec) { error("MISSING_RESOURCE_PROFILE", `nodes.${r.id}`, TRANSLATION_OWNERS[r.type].requires); continue; }
       if (spec.type !== r.type || !spec.profileVersion || !spec.provenance.length) error("RESOURCE_PROFILE", `nodes.${r.id}`, "Matching versioned resource profile/provenance required");
+      if (r.circuitBreaker?.enabled && !spec.circuitBreaker) error("MISSING_BREAKER_PROFILE", `nodes.${r.id}.circuitBreaker`, "Enabled circuit breaker requires a reviewed path policy");
+      if (spec.circuitBreaker && r.circuitBreaker?.enabled && (requireKnown(spec.circuitBreaker.failureThreshold, "count") !== r.circuitBreaker.failureThreshold || requireKnown(spec.circuitBreaker.cooldown, "us") !== r.circuitBreaker.cooldownMs! * 1000)) error("BREAKER_MISMATCH", `nodes.${r.id}.circuitBreaker`, "Path policy must match saved threshold and cooldown");
+      if (spec.circuitBreaker && (r.type !== "Load Balancer" || !r.circuitBreaker?.enabled)) error("BREAKER_BINDING", `nodes.${r.id}.circuitBreaker`, "A path circuit breaker requires enabled load balancer intent");
       if (spec.securityReplacement !== "explicit-reviewed/1") error("LEGACY_SECURITY_INCOMPLETE", `nodes.${r.id}`, "Legacy public/encryption/openPorts are historical only; reviewed listeners, external entry and policy/TLS replacement required");
       if (r.autoscaling?.enabled && !spec.controller) error("MISSING_CONTROLLER_PROFILE", `nodes.${r.id}.controller`, "Legacy autoscaling has no provisioning/readiness/drain or metric-freshness policy");
       if (spec.controller && (r.type !== "Virtual Machine" || !r.autoscaling?.enabled)) error("CONTROLLER_BINDING", `nodes.${r.id}.controller`, "A controller requires an enabled VM pool intent");
@@ -115,7 +120,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
         const mapped = { ...l, id: `${prefix}/${l.id}`, from: endpoint(l.from), to: endpoint(l.to) };
         const old = links.get(mapped.id); if (old && JSON.stringify(canonical(old)) !== JSON.stringify(canonical(mapped))) throw Error(`Conflicting shared physical link ${mapped.id}`); links.set(mapped.id, mapped);
       }
-      runtime.paths.push({ id, source, target, request: edge.request.map((l) => `${prefix}/${l}`), response: edge.response.map((l) => `${prefix}/${l}`), pool: t.pool, bytes: t.bytes });
+      const breaker = edge.purpose === "routing" ? contract.nodes[source.split("#")[0]!]!.circuitBreaker : undefined;
+      runtime.paths.push({ ...(breaker ? { circuitBreaker: breaker } : {}), id, source, target, request: edge.request.map((l) => `${prefix}/${l}`), response: edge.response.map((l) => `${prefix}/${l}`), pool: t.pool, bytes: t.bytes });
       runtime.systems.connections.push({ ...rewriteReferences(edge.security, (v) => ref(v)), path: id });
     };
     phase = "topology";

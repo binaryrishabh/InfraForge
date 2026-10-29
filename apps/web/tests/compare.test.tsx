@@ -68,3 +68,11 @@ test("retry comparison spells out every setting instead of rendering object plac
   for (const text of ["on", "2 total attempts", "5 total attempts", "backoff 100 ms", "jitter 0.2", "concurrent retry limit 4", "connectionFailure, timeout"]) expect(html).toContain(text);
   expect(html).not.toContain("[object Object]");
 });
+
+test("circuit breaker comparisons show enabled state, failure threshold and cooldown", () => {
+  const html=render(<DesignChangeSummary review={{classification:"one-change",count:1,inputHash:"test",starting:comparison.starting,
+    differences:{added:[],removed:[],addedConnections:[],removedConnections:[],resourceOrder:null,connectionOrder:null,
+      reconfigured:[{id:"lb",fields:[{field:"circuitBreaker",earlier:{enabled:true,failureThreshold:3,cooldownMs:1000},later:{enabled:false,failureThreshold:5,cooldownMs:2000}}]}]}}} />);
+  for(const text of ["on; open after 3 failures","wait 1000 ms","off; open after 5 failures","wait 2000 ms"]) expect(html).toContain(text);
+  expect(html).not.toContain("[object Object]");
+});

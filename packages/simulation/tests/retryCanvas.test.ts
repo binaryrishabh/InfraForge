@@ -1,14 +1,15 @@
 import { test, expect } from "bun:test";
-import { DEFAULT_RETRY_SETTINGS, type RetrySettings } from "@infraforge/domain/resource";
+import { DEFAULT_RETRY_SETTINGS, type CircuitBreakerSettings, type RetrySettings } from "@infraforge/domain/resource";
 import type { SavedProductDesign } from "../src/model2/product/contracts";
 import { contractFromDesign } from '../src/model2/product/fromDesign';
 import { compileProduct } from '../src/model2/product/compiler';
 import { createProductModel2 } from '../src/model2/product/run';
 import { createHash } from 'node:crypto';
 const d = {schema:'infraforge-saved-design/1',resources:[{id:'lb',type:'Load Balancer',x:0,y:0},{id:'app',type:'Virtual Machine',x:0,y:0}],connections:[{id:'e',sourceId:'lb',targetId:'app',sourceType:'Load Balancer',targetType:'Virtual Machine',port:80}],workload:{targetThroughput:60,throughputUnit:'per-minute',trafficShape:'steady',readWriteRatio:0.8,payloadSize:'light'}} as const;
-function output(retry?: RetrySettings) {
+function output(retry?: RetrySettings, circuitBreaker?: CircuitBreakerSettings) {
   const saved = structuredClone(d) as unknown as SavedProductDesign;
   if (retry) saved.resources[0]!.retry = retry;
+  if (circuitBreaker) saved.resources[0]!.circuitBreaker = circuitBreaker;
   const a = contractFromDesign(saved); if ("refused" in a) throw Error(JSON.stringify(a));
   const c = compileProduct(saved, a.contract); if (!c.ok) throw Error(JSON.stringify(c));
   const r = createProductModel2(c.value); r.advanceTo(1000000);
@@ -23,6 +24,8 @@ test("absent and disabled retry preserve pre-change contract, compiled input, as
     evidence: "2e8fbc542b68a4596b5a7a16034600650fe8c30202ac1f626265d1d63b724404",
     assumptions: "d20f1bb8e6bb3442d6a044cf99f61d59ba5b643178760f731a7b3c58a52f3f7f",
   });
+  expect(output(undefined, { enabled: false })).toEqual(a);
+  expect(output(undefined, { enabled: false, failureThreshold: 3, cooldownMs: 1000 })).toEqual(a);
   expect(output({ enabled: false })).toEqual(a);
   expect(output({ ...DEFAULT_RETRY_SETTINGS, enabled: false })).toEqual(a);
 });
