@@ -63,5 +63,5 @@ test("both run-input readers reject malformed or oversized profile lists", () =>
   for (const version of [1, 2]) for (const adapterProfiles of [null, "failure-cause/1", {}, [1], ["unknown/1"], ["failure-cause/1", "failure-cause/1"], Array(1000).fill("failure-cause/1")]) {
     expect(() => readRunInputs({...input, version, adapterProfiles})).toThrow("cannot be reconstructed safely");
   }
-  for (const adapterProfiles of [[], ["failure-cause/1"]]) expect(readRunInputs({...input, adapterProfiles}).adapterProfiles).toEqual(adapterProfiles);
+  for (const adapterProfiles of [[], ["failure-cause/1" as const]]) expect(readRunInputs({...input, adapterProfiles}).adapterProfiles).toEqual(adapterProfiles);
 });

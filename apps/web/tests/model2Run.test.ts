@@ -86,7 +86,7 @@ for (const historical of [true, false]) test(`worker startup and server replay p
     }
     h.tick(); const logs = server.advance();
     expect(h.seconds().at(-1)!.view).toEqual(server.view());
-    const stable = (rows: typeof logs) => rows.map(({timestamp: _clock, ...row}) => row);
+    const stable = (rows: typeof logs) => rows.map(row => ({...row, timestamp: ""}));
     expect(stable(h.seconds().at(-1)!.logs)).toEqual(stable(logs));
   }
   expect(h.messages.at(-1)!.type).toBe("done");
