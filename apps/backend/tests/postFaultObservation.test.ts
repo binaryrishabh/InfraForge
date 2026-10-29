@@ -45,15 +45,17 @@ function recorded(design = d.starter!, last = 135): StoredRun {
 }
 const row = () => recorded();
 
-test("database headroom requires a spare session; a missing count stays unevaluated", () => {
-  const def = afterTheCacheReturnsV2;
-  const attempt = { challengeId: def.id, challengeVersion: def.version, challengeSpecHash: specHash(def),
-    challengePrediction: answers(def, { "target-health": "healthy", "overall-health": "healthy", "database-health": "healthy" }),
-    predictionSubmittedAt: new Date(), evaluationStopAtSimulatedSeconds: def.evaluationSeconds, challengeExperiment: recordedExperiment(def) };
-  for (const [connections, status] of [[84, "met"], [85, "not-met"], [86, "not-met"], [undefined, "not-evaluated"]] as const) {
-    const judged = evaluateAttempt(attempt, { status: "torn-down", runtimeActive: false, input: def.starter!, stages: [], failure: null,
-      terminal: { simulatedSeconds: def.evaluationSeconds, installedSkus: { db: "db.t3.micro" }, resources: [{ id: "db", connections }] } });
-    expect(judged.criteria.find(c => c.id === "connections")?.status).toBe(status);
+test("database session equality preserves v1 judging; strict spare capacity is opt-in", () => {
+  for (const def of [definition("scale-out-safely"), d, afterTheCacheReturnsV2]) {
+    const strict = def === afterTheCacheReturnsV2;
+    const attempt = { challengeId: def.id, challengeVersion: def.version, challengeSpecHash: specHash(def),
+      challengePrediction: answers(def, { "target-health": "healthy", "overall-health": "healthy", "database-health": "healthy", "scale-out": "yes" }),
+      predictionSubmittedAt: new Date(), evaluationStopAtSimulatedSeconds: def.evaluationSeconds, challengeExperiment: recordedExperiment(def) };
+    for (const [connections, status] of (strict ? [[84, "met"], [85, "not-met"], [86, "not-met"], [undefined, "not-evaluated"]] : [[100, "met"], [101, "not-met"], [undefined, "not-evaluated"]])) {
+      const judged = evaluateAttempt(attempt, { status: "torn-down", runtimeActive: false, input: def.starter!, stages: [], failure: null,
+        terminal: { simulatedSeconds: def.evaluationSeconds, installedSkus: strict ? { db: "db.t3.micro" } : {}, resources: [{ id: "db", connections: connections as number | undefined }] } });
+      expect(judged.criteria.find(c => c.id === "connections")?.status).toBe(status);
+    }
   }
 });
 

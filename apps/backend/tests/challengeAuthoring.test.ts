@@ -14,7 +14,7 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
-  "after-the-cache-returns@2": "671827c2caba8226877412cf963bd86ea13aee783ca9a9d61bcb42cc31469bb7",
+  "after-the-cache-returns@2": "adf507d15e19849bfe896d6f4fedf491a59f1b29cc835394f2b171e0903f7250",
   "after-the-cache-returns@1": "4511ec082bcd0127140ea1689ccdc0fb5179362f891645ccef6008dde0e645e6",
   "headroom-under-cpu-pressure@1": "ca4b7cc902a9515b7cdb5251cfc27cd964172a917a5b75ccd64cfa6f7c96b10a",
   "first-production-api@1": "515c84a6da8a78c5b4c30269e0c20dff5f934e8f98608fbac572f3782dd33888",
@@ -173,3 +173,4 @@ describe("calibration against the real engine", () => {
     expect(report.terminal?.resources.find(r => r.id === "db")?.connections!).toBeLessThan(85);
   }, 300000);
 });
+

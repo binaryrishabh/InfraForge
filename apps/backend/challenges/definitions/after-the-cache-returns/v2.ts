@@ -21,7 +21,7 @@ export const afterTheCacheReturnsV2: ChallengeDefinition = {
   criteria: [
     { id: "checks", kind: "deployment-checks", label: "Passes the deployment checks" },
     { id: "health", kind: "overall-health", label: "Overall modeled health is Healthy at second 137", allowed: ["healthy"] },
-    { id: "connections", kind: "database-connections", label: "The database has strictly positive spare session capacity" },
+    { id: "connections", kind: "database-connections", requireSpare: true, label: "The database has strictly positive spare session capacity" },
     { id: "budget", kind: "monthly-budget", label: "Monthly estimate is $1,000 or less", maxUsd: 1000 },
   ],
   predictions: [

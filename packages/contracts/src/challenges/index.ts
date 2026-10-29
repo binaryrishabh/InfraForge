@@ -18,7 +18,7 @@ export type ChallengeCriterion =
   | { id: string; kind: "overall-health"; label: string; allowed: OverallHealth[] }
   | { id: string; kind: "no-saturation"; label: string }
   | { id: string; kind: "database-healthy"; label: string }
-  | { id: string; kind: "database-connections"; label: string }
+  | { id: string; kind: "database-connections"; label: string; requireSpare?: boolean }
   // Every resource except the experiment's target stays out of saturation and failure.
   | { id: string; kind: "survivors-unsaturated"; label: string };
 
