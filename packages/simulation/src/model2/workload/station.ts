@@ -1,3 +1,4 @@
+import { carryCause, type Cause } from "./cause";
 import { requireKnown } from "../../reality/quantity";
 import type { EventKernel } from "../time";
 import type { Invocation, Receipt, RemoteOutcome, StationState, WorkStation } from "./contracts";
@@ -5,7 +6,7 @@ import { identity } from "./arrivals";
 
 interface Call {
   work: Invocation;
-  done(outcome: RemoteOutcome): void;
+  done(outcome: RemoteOutcome, cause?: Cause): void;
   phase: "queued" | "cpu" | "io" | "waiting" | "finished";
   remaining: number;
   cpuRemaining: number;
@@ -28,11 +29,11 @@ export function workloadStation(config: WorkStation, demands: Map<string, { cpuU
       busy += elapsed; call.remaining -= elapsed; call.since = kernel.now;
     }
   };
-  const finish = (call: Call, outcome: RemoteOutcome) => {
+  const finish = (call: Call, outcome: RemoteOutcome, cause?: Cause) => {
     if (call.phase === "finished") return;
     account(call); active.delete(call.work.callId); queue.delete(call.work.callId); call.cancelEvent?.(); call.phase = "finished";
     if (outcome === "completed") completed++; else if (outcome === "cancelled") cancelled++; else failed++;
-    call.done(outcome); pump();
+    call.done(outcome, outcome === "completed" ? undefined : cause); pump();
   };
   const schedule = (call: Call) => {
     if (paused || (call.phase !== "cpu" && call.phase !== "io")) return;
@@ -45,7 +46,7 @@ export function workloadStation(config: WorkStation, demands: Map<string, { cpuU
         // Append to a flat tuple. Re-encoding a nested JSON string at every stage
         // would double escaping and make identity size exponential in path depth.
         const child: Invocation = { ...call.work, parentCallId: call.work.callId, callId: identity(...JSON.parse(call.work.callId), "dependency", config.downstream) };
-        call.child = send(config.downstream, child, (outcome) => finish(call, outcome));
+        call.child = send(config.downstream, child, (outcome, cause) => finish(call, outcome, outcome === "completed" || !cause ? undefined : carryCause(cause)));
       } else finish(call, "completed");
     });
   };

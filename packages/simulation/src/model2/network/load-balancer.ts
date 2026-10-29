@@ -1,3 +1,4 @@
+import { carryCause, type Cause } from "../workload/cause";
 import { requireKnown } from "../../reality/quantity";
 import type { EventClock } from "../time";
 import { lexical } from "../time";
@@ -7,8 +8,8 @@ import type { LoadBalancer, Trace, TransportResult } from "./contracts";
 import type { pathTransport } from "./transport";
 import type { CausalObserver } from "../workload/causal";
 
-interface Request { work: Invocation; done(outcome: RemoteOutcome): void; receipt?: Receipt; timer?: () => boolean; retryTimer?: () => boolean; attempt: number; backend?: string; retrying: boolean; waiting?: boolean; terminal: boolean }
-export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Map<string, ReturnType<typeof pathTransport>>, operations: Map<string, OperationClass>, seed: string, horizon: number, trace: Trace, causal?: CausalObserver) {
+interface Request { work: Invocation; done(outcome: RemoteOutcome, cause?: Cause): void; cause?: Cause; receipt?: Receipt; timer?: () => boolean; retryTimer?: () => boolean; attempt: number; backend?: string; retrying: boolean; waiting?: boolean; terminal: boolean }
+export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Map<string, ReturnType<typeof pathTransport>>, operations: Map<string, OperationClass>, seed: string, horizon: number, trace: Trace, causal?: CausalObserver, failureCauseProfile?: "failure-cause/1") {
   const members = [...config.backends].sort().map((id) => ({ id, health: config.health.initial === "eligible", draining: false, successes: 0, failures: 0, outstanding: 0, selected: 0, probes: 0, epoch: 0, cancelCheck: undefined as (() => boolean) | undefined }));
   let disposed = false;
   const healthCancels = new Map<string, () => void>();
@@ -20,13 +21,13 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
   const suppressedByReason = { "max-attempts": 0, budget: 0, deadline: 0, "non-retryable": 0, "ambiguous-write": 0 };
   const suppress = (r: Request, reason: keyof typeof suppressedByReason, id = r.work.callId) => {
     if (enhanced) { suppressedByReason[reason]++; trace("retry-suppressed", id, reason, r.work.rootId, r.work.attempt + r.attempt - 1, true); }
-    finish(r, "rejected");
+    finish(r, "rejected", r.cause);
   };
   const path = (backend: string) => paths.get(JSON.stringify([config.id, backend]))!;
-  const finish = (r: Request, outcome: RemoteOutcome) => {
+  const finish = (r: Request, outcome: RemoteOutcome, cause?: Cause) => {
     if (r.terminal) return; r.terminal = true; r.timer?.(); r.retryTimer?.(); if (r.waiting) { retriesWaiting--; r.waiting = false; } active.delete(r.work.callId); pending.delete(r.work.callId);
     if (outcome === "completed") completed++; else if (outcome === "cancelled") cancelled++; else rejected++;
-    r.done(outcome); pump();
+    r.done(outcome, failureCauseProfile && outcome !== "completed" ? carryCause(cause) : undefined); pump();
   };
   const choose = (previous?: string) => {
     let eligible = members.filter((m) => m.health && !m.draining);
@@ -37,6 +38,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
   };
   const attempt = (r: Request) => {
     if (r.terminal) return;
+    r.cause = undefined;
     if (r.waiting) { retriesWaiting--; r.waiting = false; }
     if (r.attempt && config.retry?.enforceCallerDeadline && kernel.now >= r.work.offeredAt + requireKnown(operations.get(r.work.operation)!.callerTimeout, "us")) { suppress(r, "deadline"); return; }
     const member = choose(r.backend); if (!member) { trace("lb-failure", r.work.callId, "no-backend", r.work.rootId, r.work.attempt); finish(r, "rejected"); return; }
@@ -49,13 +51,14 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
     r.receipt = path(member.id).exchange(work, (result: TransportResult) => {
       member.outstanding--; if (r.retrying) { activeRetries--; r.retrying = false; }
       if (r.terminal) return;
-      trace("attempt-terminal", work.callId, result.ok ? "completed" : result.reason!, work.rootId, work.attempt);
+      r.cause = failureCauseProfile && !result.ok ? result.cause : undefined;
+      trace("attempt-terminal", work.callId, result.ok ? "completed" : result.reason!, work.rootId, work.attempt, undefined, r.cause);
       if (result.ok) { finish(r, "completed"); return; }
       const policy = config.retry, op = operations.get(r.work.operation)!;
       const safe = !result.ambiguous || ["read-only", "idempotent"].includes(op.idempotency) || policy?.allowAmbiguousNonIdempotent;
-      if (!policy) { finish(r, "rejected"); return; }
+      if (!policy) { finish(r, "rejected", r.cause); return; }
       if (!safe) { suppress(r, "ambiguous-write", work.callId); return; }
-      if (result.reason === "circuit-open" || (policy.operations && !policy.operations.includes(op.id)) || !policy.retryOn.includes(result.reason!)) { suppress(r, "non-retryable", work.callId); return; }
+      if (result.reason === "circuit-open" || (failureCauseProfile && result.cause?.rootReason === "circuit-open") || (policy.operations && !policy.operations.includes(op.id)) || !policy.retryOn.includes(result.reason!)) { suppress(r, "non-retryable", work.callId); return; }
       if (r.attempt >= requireKnown(policy.maxAttempts, "count")) { suppress(r, "max-attempts", work.callId); return; }
       const jitter = 1 + requireKnown(policy.jitter, "ratio") * (2 * keyedUniform(seed, config.id, work.callId, "retry-backoff") - 1);
       const delay = Math.ceil(requireKnown(policy.backoff, "us") * 2 ** (r.attempt - 1) * jitter);

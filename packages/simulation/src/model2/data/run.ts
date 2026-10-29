@@ -1,3 +1,4 @@
+import { seedCause } from "../workload/cause";
 import { requireKnown } from "../../reality/quantity";
 import { createNetworkRuntime } from "../network/run";
 import type { DataInput } from "./contracts";
@@ -43,11 +44,11 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
         holdLeaseUntilRemoteTerminal: true,
         leaseHeldOnlyWithRemote: config.semantics === "postgresql-keyed/2",
         open(id, done) {
-          if (!external) { done(undefined, open(id) ? undefined : refusal); return () => false; }
-          return external.open(id, (route, failure) => {
-            if (failure) return done(route, failure);
+          if (!external) { const accepted = open(id); done(undefined, accepted ? undefined : refusal, !accepted && input.failureCauseProfile ? seedCause(refusal, path.target) : undefined); return () => false; }
+          return external.open(id, (route, failure, cause) => {
+            if (failure) return done(route, failure, cause);
             if (open(id)) return done(route);
-            external.close(id); done(route, refusal);
+            external.close(id); done(route, refusal, input.failureCauseProfile ? seedCause(refusal, path.target) : undefined);
           });
         },
         close(id) { database.closeSession(id); external?.close(id); },

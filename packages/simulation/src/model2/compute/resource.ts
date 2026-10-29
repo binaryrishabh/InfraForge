@@ -1,3 +1,4 @@
+import { carryCause, causeFields, type Cause } from "../workload/cause";
 import { requireKnown } from "../../reality/quantity";
 import type { EventClock } from "../time";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
@@ -8,7 +9,7 @@ import { residentMemory } from "./memory";
 import type { CausalObserver } from "../workload/causal";
 
 interface Call { work: Invocation; phase: "queued" | "cpu" | "wait" | "dependency" | "finished";
-  done(outcome: RemoteOutcome): void; child?: Receipt; cancelWait?: () => boolean; waitRemaining: number; waitSince: number }
+  done(outcome: RemoteOutcome, cause?: Cause): void; child?: Receipt; cancelWait?: () => boolean; waitRemaining: number; waitSince: number }
 export function computeResource(config: ComputeResource, profiles: Map<string, ComputeProfile>, kernel: EventClock,
   send: (target: string, work: Invocation, done: Call["done"]) => Receipt, causal?: CausalObserver, ownedCpu?: ReturnType<typeof cpuScheduler>) {
   const workers = requireKnown(config.workers, "count"), capacity = requireKnown(config.queueCapacity, "count");
@@ -17,13 +18,13 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
   let paused = false, received = 0, admitted = 0, rejected = 0, completed = 0, failed = 0, cancelled = 0, allocationRejected = 0, pumping = false;
   let occupancyAt = kernel.now, occupancy = 0;
   const accountOccupancy = () => { occupancy += active.size * (kernel.now - occupancyAt); occupancyAt = kernel.now; };
-  const finish = (call: Call, outcome: RemoteOutcome) => {
+  const finish = (call: Call, outcome: RemoteOutcome, cause?: Cause) => {
     if (call.phase === "finished") return;
     if (call.phase === "cpu") scheduler.remove(call.work.callId);
     accountOccupancy(); call.cancelWait?.(); active.delete(call.work.callId); queue.delete(call.work.callId); memory.release(call.work.callId); call.phase = "finished";
     if (outcome === "completed") completed++; else if (outcome === "cancelled") cancelled++; else failed++;
-    causal?.({ atUs: kernel.now, kind: "app-terminal", resource: config.id, work: call.work, detail: { outcome } });
-    call.done(outcome); pump();
+    causal?.({ atUs: kernel.now, kind: "app-terminal", resource: config.id, work: call.work, detail: { outcome, ...causeFields(outcome === "completed" ? undefined : cause) } });
+    call.done(outcome, outcome === "completed" ? undefined : cause); pump();
   };
   const scheduleWait = (call: Call) => {
     if (paused) return;
@@ -35,7 +36,7 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
         call.phase = "dependency";
         const child = { ...call.work, parentCallId: call.work.callId, callId: identity(...JSON.parse(call.work.callId), "dependency", downstream) };
         causal?.({ atUs: kernel.now, kind: "app-dependency", resource: config.id, work: child, detail: { target: downstream } });
-        call.child = send(downstream, child, (outcome) => finish(call, outcome));
+        call.child = send(downstream, child, (outcome, cause) => finish(call, outcome, outcome === "completed" || !cause ? undefined : carryCause(cause)));
       } else finish(call, "completed");
     });
   };

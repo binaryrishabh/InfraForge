@@ -48,6 +48,8 @@ export interface Invocation extends WorkIdentity {
   message?: { request: unknown; response?: unknown; bodyBytes?: { request?: number; response?: number } };
   sessionId?: string;
 }
+import type { Cause } from "./cause";
+export type RemoteCompletion = (outcome: RemoteOutcome, cause?: Cause) => void;
 export type RemoteOutcome = "completed" | "rejected" | "cancelled";
 export type CallerOutcome = "completed" | "rejected" | "deadline-exceeded" | "abandoned";
 export interface Receipt {
@@ -68,6 +70,7 @@ export interface WorkStation {
 }
 export interface WorkRouter { id: string; kind: "router"; backends: string[] }
 export interface WorkloadInput {
+  failureCauseProfile?: "failure-cause/1";
   modelVersion: "2";
   workloadVersion: "m2b/1";
   seed: string;

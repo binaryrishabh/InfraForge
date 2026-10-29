@@ -1,9 +1,10 @@
+import type { RemoteCompletion } from "../workload/contracts";
 import type { EventClock, EventKernel } from "../time";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
 import type { CausalObserver } from "../workload/causal";
 import type { cpuScheduler } from "../compute/scheduler";
 
-export type RequestPort = (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt;
+export type RequestPort = (target: string, work: Invocation, done: RemoteCompletion) => Receipt;
 // Version 1 deliberately exposes only the existing deterministic primitives.
 // Adapters are trusted TypeScript; this is an API boundary, not a sandbox.
 export interface ModuleHost {

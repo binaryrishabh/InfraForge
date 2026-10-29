@@ -1,3 +1,4 @@
+import type { RemoteCompletion } from "../workload/contracts";
 import { requireKnown } from "../../reality/quantity";
 import { createComputeRuntime, validateComputeInput } from "../compute/run";
 import { lexical } from "../time";
@@ -39,8 +40,8 @@ export interface NetworkExtension {
   resource: ResourceFactory;
   install?(kernel: EventKernel, trace: Trace, context: NetworkContext): void;
   disconnected?(target: string, session: string): void;
-  connection?(path: PathConfig, kernel: EventKernel, send: (source: string, target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt, context: NetworkContext): ConnectionHook | undefined;
-  receive?(target: string, work: Invocation, done: (outcome: RemoteOutcome) => void, next: () => Receipt): Receipt | undefined;
+  connection?(path: PathConfig, kernel: EventKernel, send: (source: string, target: string, work: Invocation, done: RemoteCompletion) => Receipt, context: NetworkContext): ConnectionHook | undefined;
+  receive?(target: string, work: Invocation, done: RemoteCompletion, next: () => Receipt): Receipt | undefined;
 }
 
 interface NetworkSnapshot {
@@ -84,14 +85,14 @@ export function createNetworkRuntime(authored: NetworkInput, extension?: Network
       context.abortOwned(id);
       for (const p of input.paths) if (p.source === id || p.target === id) paths.get(JSON.stringify([p.source, p.target]))!.reset(true);
     };
-    const send = (source: string, target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => { const path = paths.get(JSON.stringify([source, target])); if (!path) throw Error("Missing explicit transport path"); return path.exchange(work, (result) => done(result.ok ? "completed" : "rejected")); };
+    const send = (source: string, target: string, work: Invocation, done: RemoteCompletion) => { const path = paths.get(JSON.stringify([source, target])); if (!path) throw Error("Missing explicit transport path"); return path.exchange(work, (result) => done(result.ok ? "completed" : "rejected", result.cause)); };
     let liveCalls = 0;
     const callBudget = input.limits.maxLiveCalls === undefined ? undefined : { enter() {
       if (liveCalls >= input.limits.maxLiveCalls!) throw Error("Executor live-call budget exhausted");
       liveCalls++; let released = false;
       return () => { if (!released) { released = true; liveCalls--; } };
     } };
-    for (const p of input.paths) paths.set(JSON.stringify([p.source, p.target]), pathTransport(p, kernel, links, deliver, (id) => states.get(id)!.alive, trace.emit, (session, target) => extension?.disconnected?.(target, session), extension?.connection?.(p, kernel, send, context), callBudget));
+    for (const p of input.paths) paths.set(JSON.stringify([p.source, p.target]), pathTransport(p, kernel, links, deliver, (id) => states.get(id)!.alive, trace.emit, (session, target) => extension?.disconnected?.(target, session), extension?.connection?.(p, kernel, send, context), callBudget, input.failureCauseProfile));
     const modules = loadBalancerModules(input);
     const lbs = new Map(input.resources.filter(r => modules.has(r.kind)).map(r => [r.id, modules.create(r, { clock: extension?.clockFor?.(r.id, kernel) ?? kernel, send: (target, work, done) => send(r.id, target, work, done), paths, trace: trace.emit, causal: extension?.causal })]));
     disposeNetwork = () => { for (const lb of lbs.values()) lb.dispose(); for (const path of paths.values()) path.dispose(); };

@@ -1,21 +1,22 @@
+import type { Cause } from "../workload/cause";
 import { requireKnown } from "../../reality/quantity";
 import type { EventKernel } from "../time";
 import type { ConnectionHook, ConnectionRoute, FailureReason, PoolConfig, Trace } from "./contracts";
 
 export interface Lease { connection: string; route?: ConnectionRoute; release(): void; fail(reason: FailureReason): void }
-interface Acquisition { id: string; ready(lease: Lease): void; fail(reason: FailureReason): void; timer?: () => boolean; connection?: Connection }
+interface Acquisition { id: string; ready(lease: Lease): void; fail(reason: FailureReason, cause?: Cause): void; timer?: () => boolean; connection?: Connection }
 interface Connection { id: string; route?: ConnectionRoute; state: "connecting" | "ready" | "draining"; users: Map<string, Acquisition>; reserved: Map<string, Acquisition>; timers: Array<() => boolean>; expiry?: () => boolean; uses: number }
 export function connectionPool(id: string, config: PoolConfig, kernel: EventKernel, reachable: (route?: ConnectionRoute) => boolean, trace?: Trace, hook?: ConnectionHook) {
   const connections = new Map<string, Connection>(), waiting = new Map<string, Acquisition>();
   const max = requireKnown(config.maxConnections, "count"), streams = requireKnown(config.streams, "count"), limit = requireKnown(config.pending, "count");
   let sequence = 0, created = 0, closed = 0, failed = 0, acquisitions = 0, released = 0, failedStreams = 0, reused = 0, rejected = 0, cancelled = 0, pumping = false, draining = false;
-  const removeConnection = (c: Connection, reason?: FailureReason) => {
+  const removeConnection = (c: Connection, reason?: FailureReason, cause?: Cause) => {
     if (!connections.delete(c.id)) return;
     c.timers.forEach((cancel) => cancel()); c.expiry?.(); hook?.close(c.id); closed++; if (reason) failed++;
     trace?.("connection-closed", c.id, reason ?? "closed", undefined, undefined, !!config.evidenceProfile);
     failedStreams += c.users.size;
     const owners = [...c.users.values(), ...c.reserved.values()]; c.users.clear(); c.reserved.clear();
-    for (const a of owners) { a.timer?.(); waiting.delete(a.id); a.fail(reason ?? "drained"); }
+    for (const a of owners) { a.timer?.(); waiting.delete(a.id); a.fail(reason ?? "drained", cause); }
   };
   const idle = (c: Connection) => {
     if (c.users.size || c.reserved.size || c.state === "connecting") return;
@@ -44,9 +45,9 @@ export function connectionPool(id: string, config: PoolConfig, kernel: EventKern
       idle(c); pump();
     }));
     if (hook) c.timers.push(kernel.schedule(kernel.now, 2, JSON.stringify(["pool-connect-gate", c.id]), () => {
-      c.timers.push(hook.open(c.id, (route, failure) => {
+      c.timers.push(hook.open(c.id, (route, failure, cause) => {
         if (!connections.has(c.id)) return;
-        if (failure) { removeConnection(c, failure); pump(); return; }
+        if (failure) { removeConnection(c, failure, cause); pump(); return; }
         c.route = route; establish();
       }));
     })); else establish();

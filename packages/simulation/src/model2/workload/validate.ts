@@ -8,6 +8,7 @@ import { WORKLOAD_LIMITS as caps } from "./policy";
 
 export function validateWorkload(input: WorkloadInput) {
   const errors = validateLedger(input.ledger);
+  if (input.failureCauseProfile !== undefined && input.failureCauseProfile !== "failure-cause/1") errors.push("Unsupported failure cause profile");
   const ledger = new Map(input.ledger.map((e) => [e.id, e]));
   if (input.modelVersion !== "2" || input.workloadVersion !== "m2b/1" || !input.seed?.trim() || input.ledger.some((e) => e.modelVersion !== "2" || !e.validityDomain?.trim())) errors.push("Explicit internal M2B version/seed/ledger validity domain required");
   for (const [key, n] of Object.entries(input.limits)) if (!Number.isSafeInteger(n) || n < (key === "maxRawResults" ? 0 : 1)) errors.push(`Invalid budget: ${key}`);

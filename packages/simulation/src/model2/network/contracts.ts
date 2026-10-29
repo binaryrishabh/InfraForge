@@ -1,3 +1,4 @@
+import type { Cause } from "../workload/cause";
 import type { Quantity } from "../../reality/quantity";
 import type { ComputeInput, ComputeResource } from "../compute/contracts";
 
@@ -58,14 +59,14 @@ export interface NetworkInput extends Omit<ComputeInput, "workloadVersion" | "re
 export const RETRYABLE_FAILURES = ["acquire-timeout", "connect-timeout", "response-timeout", "reset", "drained", "pool-overflow", "link-overflow", "backend-rejected"] as const;
 export type FailureReason = typeof RETRYABLE_FAILURES[number] | "session-limit" | "circuit-open";
 export interface TraceEvent { at: number; kind: string; id: string; root?: string; attempt?: number; detail: string }
-export type Trace = (kind: string, id: string, detail: string, root?: string, attempt?: number, poolEvidence?: boolean) => void;
-export interface TransportResult { ok: boolean; reason?: FailureReason; ambiguous: boolean }
+export type Trace = (kind: string, id: string, detail: string, root?: string, attempt?: number, poolEvidence?: boolean, cause?: Cause) => void;
+export interface TransportResult { ok: boolean; reason?: FailureReason; ambiguous: boolean; cause?: Cause }
 export interface ConnectionRoute { target: string; request: string[]; response: string[] }
 export interface ConnectionHook {
   holdLeaseUntilRemoteTerminal?: boolean;
   // Hold a cancelled caller's lease only when a remote request actually started (newer revisions); older ones hold once delivered.
   leaseHeldOnlyWithRemote?: boolean;
-  open(id: string, done: (route?: ConnectionRoute, failure?: FailureReason) => void): () => boolean;
+  open(id: string, done: (route?: ConnectionRoute, failure?: FailureReason, cause?: Cause) => void): () => boolean;
   close(id: string): void;
   returnTraffic?(id: string): boolean;
 }

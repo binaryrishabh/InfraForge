@@ -15,5 +15,5 @@ export function loadBalancerModules(input: NetworkInput) {
   return new ModuleRegistry<NetworkInput["resources"][number], LoadBalancerHost, ReturnType<typeof loadBalancer>>()
     .register("load-balancer", { manifest: manifest("load-balancer", "m2d/1"),
       validate(config) { if (!input.resources.includes(config)) throw Error("Foreign LB configuration"); if (!validated) { validateNetwork(input); validated = true; } },
-      instantiate(config, host) { return loadBalancer(config, host.clock, host.paths, new Map(input.operations.map(o => [o.id, o])), input.seed, requireKnown(input.horizon, "us"), host.trace, host.causal); } });
+      instantiate(config, host) { return loadBalancer(config, host.clock, host.paths, new Map(input.operations.map(o => [o.id, o])), input.seed, requireKnown(input.horizon, "us"), host.trace, host.causal, input.failureCauseProfile); } });
 }

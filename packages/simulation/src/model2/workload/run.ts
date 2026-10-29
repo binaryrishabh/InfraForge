@@ -1,3 +1,5 @@
+import type { RemoteCompletion } from "./contracts";
+import { causeFields, type Cause } from "./cause";
 import { utf8Bytes } from "../time";
 import { EventKernel, lexical, type EventClock } from "../time";
 import { requireKnown } from "../../reality/quantity";
@@ -10,17 +12,17 @@ import type { CallerOutcome, Invocation, Receipt, RemoteOutcome, TraceRow, Workl
 import type { CausalObserver } from "./causal";
 
 export interface WorkEndpoint<M extends StationState> {
-  accept(work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt;
+  accept(work: Invocation, done: RemoteCompletion): Receipt;
   pause(value: boolean): void;
   measure(): M;
 }
 export interface RuntimeModules<M extends StationState> {
   clockFor?(id: string, kernel: EventKernel): EventClock;
   causal?: CausalObserver;
-  station(config: WorkStation, demands: Map<string, { cpuUs: number; ioUs: number }>, kernel: EventKernel, send: (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt): WorkEndpoint<M>;
-  install?(kernel: EventKernel, stations: Map<string, WorkEndpoint<M>>, send: (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt): void;
-  route?(target: string, work: Invocation, done: (outcome: RemoteOutcome) => void, direct: () => Receipt): Receipt;
-  enter?(target: string, work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt;
+  station(config: WorkStation, demands: Map<string, { cpuUs: number; ioUs: number }>, kernel: EventKernel, send: (target: string, work: Invocation, done: RemoteCompletion) => Receipt): WorkEndpoint<M>;
+  install?(kernel: EventKernel, stations: Map<string, WorkEndpoint<M>>, send: (target: string, work: Invocation, done: RemoteCompletion) => Receipt): void;
+  route?(target: string, work: Invocation, done: RemoteCompletion, direct: () => Receipt): Receipt;
+  enter?(target: string, work: Invocation, done: RemoteCompletion): Receipt;
 }
 
 // Separate internal workload revision; no public export, HTTP route or Model-1 dispatch.
@@ -39,7 +41,7 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
   const kernel = new EventKernel(input.limits.maxEvents, input.limits.maxPendingEvents), horizon = requireKnown(input.horizon, "us"), step = requireKnown(input.sampleInterval, "us");
   const stations = new Map<string, WorkEndpoint<M>>();
   const routers = new Map(input.resources.filter((r) => r.kind === "router").map((r) => [r.id, { backends: r.backends, next: 0 }]));
-  const send = (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt => {
+  const send = (target: string, work: Invocation, done: RemoteCompletion): Receipt => {
     const direct = () => {
       const router = routers.get(target);
       if (router) return send(router.backends[router.next++ % router.backends.length]!, work, done);
@@ -65,12 +67,12 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
     modules.causal?.({ atUs: kernel.now, kind: "caller-offered", resource: "$caller", work, detail: {} });
     const pending: { work: Invocation; receipt?: Receipt } = { work }; live.set(rootId, pending);
     let terminal = false, cancelDeadline: (() => boolean) | undefined, cancelAbandon: (() => boolean) | undefined;
-    const finish = (outcome: CallerOutcome) => {
+    const finish = (outcome: CallerOutcome, cause?: Cause) => {
       if (terminal) return;
       terminal = true; live.delete(rootId); cancelDeadline?.(); cancelAbandon?.();
       const key = outcome === "deadline-exceeded" ? "deadlineExceeded" : outcome;
       counts[key]++; perOperation[key]++;
-      modules.causal?.({ atUs: kernel.now, kind: "caller-terminal", resource: "$caller", work, detail: { outcome, responseUs: kernel.now - work.offeredAt } });
+      modules.causal?.({ atUs: kernel.now, kind: "caller-terminal", resource: "$caller", work, detail: { outcome, ...causeFields(input.failureCauseProfile && outcome === "rejected" ? cause : undefined), responseUs: kernel.now - work.offeredAt } });
       book.record({ ...work, at: kernel.now, outcome, responseUs: kernel.now - work.offeredAt }); next?.();
     };
     const stop = (outcome: "deadline-exceeded" | "abandoned") => {
@@ -82,9 +84,9 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
     };
     cancelDeadline = kernel.schedule(kernel.now + requireKnown(operation.callerTimeout, "us"), 1, identity("caller-stop", rootId, 0), () => stop("deadline-exceeded"));
     if (operation.abandonAfter) cancelAbandon = kernel.schedule(kernel.now + requireKnown(operation.abandonAfter, "us"), 1, identity("caller-stop", rootId, 1), () => stop("abandoned"));
-    pending.receipt = (modules.enter ?? send)(operation.entry, work, (outcome) => {
+    pending.receipt = (modules.enter ?? send)(operation.entry, work, (outcome, cause) => {
       if (terminal) { counts.remoteOutcomesAfterCallerStop++; return; }
-      finish(outcome === "completed" ? "completed" : "rejected");
+      finish(outcome === "completed" ? "completed" : "rejected", cause);
     });
     if (pending.receipt.admitted) counts.admitted++;
   };

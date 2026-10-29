@@ -1,3 +1,4 @@
+import type { RemoteCompletion } from "../workload/contracts";
 import { requireKnown } from "../../reality/quantity";
 import type { ComputeInput, ComputeState } from "./contracts";
 import type { WorkloadInput } from "../workload/contracts";
@@ -16,10 +17,10 @@ import type { CausalObserver } from "../workload/causal";
 import type { CpuOwners, ClockOwners } from "../composition/host";
 
 const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value));
-export type Deliver = (target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt;
+export type Deliver = (target: string, work: Invocation, done: RemoteCompletion) => Receipt;
 export interface ComputeComposition {
-  send(source: string, target: string, work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt;
-  receive(target: string, work: Invocation, done: (outcome: RemoteOutcome) => void, direct: () => Receipt): Receipt;
+  send(source: string, target: string, work: Invocation, done: RemoteCompletion): Receipt;
+  receive(target: string, work: Invocation, done: RemoteCompletion, direct: () => Receipt): Receipt;
 }
 export type ResourceFactory = (id: string, kernel: EventKernel, send: Deliver) => WorkEndpoint<ComputeState> | undefined;
 export function createComputeModel2(authored: ComputeInput) {

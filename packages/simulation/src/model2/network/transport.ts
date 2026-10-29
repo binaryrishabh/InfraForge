@@ -1,3 +1,4 @@
+import { carryCause, seedCause, type Cause } from "../workload/cause";
 import { circuitBreaker } from "./circuit-breaker";
 import { requireKnown } from "../../reality/quantity";
 import type { Deliver } from "../compute/run";
@@ -7,8 +8,8 @@ import type { ConnectionHook, FailureReason, PathConfig, Trace, TransportResult 
 import type { networkLink } from "./link";
 import { connectionPool, type Lease } from "./pool";
 
-export function pathTransport(config: PathConfig, kernel: EventKernel, links: Map<string, ReturnType<typeof networkLink>>, deliver: Deliver, alive: (id: string) => boolean, trace: Trace, disconnected?: (session: string, target: string) => void, hook?: ConnectionHook, callBudget?: { enter(): () => void }) {
-  const breaker = config.circuitBreaker ? circuitBreaker(config.id, config.circuitBreaker, kernel, trace, config.source) : undefined;
+export function pathTransport(config: PathConfig, kernel: EventKernel, links: Map<string, ReturnType<typeof networkLink>>, deliver: Deliver, alive: (id: string) => boolean, trace: Trace, disconnected?: (session: string, target: string) => void, hook?: ConnectionHook, callBudget?: { enter(): () => void }, failureCauseProfile?: "failure-cause/1") {
+  const breaker = config.circuitBreaker ? circuitBreaker(config.id, config.circuitBreaker, kernel, trace, config.source, failureCauseProfile) : undefined;
   const liveReceipts = new Map<string, () => void>();
   let localReset = false;
   const targets = new Map<string, string>();
@@ -20,8 +21,9 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
       const token = breaker?.admit(work, options?.healthCheck);
       if (breaker && !token) {
         offered++; failed++; reasons["circuit-open"] = (reasons["circuit-open"] ?? 0) + 1;
-        trace("transport-terminal", work.callId, "circuit-open", work.rootId, work.attempt);
-        done({ ok: false, reason: "circuit-open", ambiguous: false });
+        const cause = failureCauseProfile ? seedCause("circuit-open", config.source) : undefined;
+        trace("transport-terminal", work.callId, "circuit-open", work.rootId, work.attempt, undefined, cause);
+        done({ ok: false, reason: "circuit-open", ambiguous: false, ...(cause ? { cause } : {}) });
         return { admitted: false, state: () => "finished", cancel: () => "already-finished" };
       }
       const releaseCall = callBudget?.enter();
@@ -30,9 +32,11 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
       let terminal = false, delivered = false, remoteFinished = false, heldAfterStop = false, state: ReturnType<Receipt["state"]> = "queued", lease: Lease | undefined, remote: Receipt | undefined;
       let cancelAcquire: (() => boolean) | undefined, cancelTimeout: (() => boolean) | undefined, cancelTransfer: (() => boolean) | undefined;
       const finish = (result: TransportResult, isCancellation = false) => {
-        if (terminal) return; terminal = true; liveReceipts.delete(key); releaseCall?.(); state = "finished"; live--; cancelAcquire?.(); cancelTimeout?.(); cancelTransfer?.();
+        if (terminal) return;
+        if (failureCauseProfile && !result.ok && !result.cause) result = { ...result, cause: seedCause(null, null) };
+        terminal = true; liveReceipts.delete(key); releaseCall?.(); state = "finished"; live--; cancelAcquire?.(); cancelTimeout?.(); cancelTransfer?.();
         if (result.ok) completed++; else if (isCancellation) cancelled++; else { failed++; reasons[result.reason!] = (reasons[result.reason!] ?? 0) + 1; }
-        trace("transport-terminal", key, result.ok ? "completed" : isCancellation ? "cancelled" : result.reason!, work.rootId, work.attempt);
+        trace("transport-terminal", key, result.ok ? "completed" : isCancellation ? "cancelled" : result.reason!, work.rootId, work.attempt, undefined, result.cause);
         if (token) breaker!.complete(token, result, isCancellation, localReset && result.reason === "reset");
         heldAfterStop = !!hook?.holdLeaseUntilRemoteTerminal && isCancellation && (hook?.leaseHeldOnlyWithRemote ? !!remote : delivered) && !remoteFinished;
         if (!result.ok && !isCancellation && ["response-timeout", "reset", "drained"].includes(result.reason!)) lease?.fail(result.reason!); else if (!heldAfterStop) lease?.release();
@@ -51,7 +55,7 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
             if (terminal) return;
             trace("transfer", key, `${direction}:${ids[index]}:${outcome}`, work.rootId, work.attempt);
             if (outcome === "delivered") next();
-            else if (outcome === "overflow") finish({ ok: false, reason: "link-overflow", ambiguous: delivered });
+            else if (outcome === "overflow") finish({ ok: false, reason: "link-overflow", ambiguous: delivered, ...(failureCauseProfile ? { cause: seedCause("link-overflow", ids[index]!) } : {}) });
             // Partition silently discards modeled messages. Only the owning timeout detects it.
           }, { path: config.id, direction, hop: index, origin: direction === "request" ? endpoints.origin : endpoints.destination, destination: direction === "request" ? endpoints.destination : endpoints.origin, callId: work.callId, rootId: work.rootId, attempt: work.attempt });
         }; next();
@@ -68,7 +72,7 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
           trace("request-delivered", key, route.target, work.rootId, work.attempt);
           if (!alive(route.target)) return;
           const request: Invocation = { ...work, sessionId: acquired.connection, ...(work.message ? { message: { request: JSON.parse(JSON.stringify(work.message.request)) } } : {}) };
-          remote = deliver(route.target, request, (outcome) => {
+          remote = deliver(route.target, request, (outcome, cause) => {
             remoteFinished = true;
             if (terminal) {
               if (heldAfterStop) { if (hook?.returnTraffic && !hook.returnTraffic(acquired.connection)) lease?.fail("reset"); else lease?.release(); }
@@ -80,11 +84,11 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
             sendBytes(route.response, totalBytes(requireKnown(bytes.response, "bytes"), request.message?.bodyBytes?.response), "response", () => {
               if (work.message && request.message?.response !== undefined) work.message.response = JSON.parse(JSON.stringify(request.message.response));
               latency.responseTransportUs += kernel.now - serviceEnd;
-              finish(outcome === "completed" ? { ok: true, ambiguous: false } : { ok: false, reason: "backend-rejected", ambiguous: true });
+              finish(outcome === "completed" ? { ok: true, ambiguous: false } : { ok: false, reason: "backend-rejected", ambiguous: true, ...(failureCauseProfile ? { cause: carryCause(cause) } : {}) });
             });
           });
         });
-      }, (reason: FailureReason) => finish({ ok: false, reason, ambiguous: delivered }));
+      }, (reason: FailureReason, cause?: Cause) => finish({ ok: false, reason, ambiguous: delivered, ...(failureCauseProfile ? { cause: cause ? carryCause(cause) : seedCause(reason === "pool-overflow" ? reason : null, reason === "pool-overflow" ? config.id : null) } : {}) }));
       return { admitted: !terminal, state: () => state, cancel: () => {
         if (terminal) return "already-finished";
         finish({ ok: false, reason: "reset", ambiguous: delivered }, true); return "cancelled";
