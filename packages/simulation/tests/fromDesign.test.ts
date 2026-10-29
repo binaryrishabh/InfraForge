@@ -8,6 +8,7 @@ import type { SavedProductDesign } from "../src/model2/product/contracts";
 import { validateLedger } from "../src/reality/ledger";
 import { CATALOG } from "@infraforge/catalog";
 import { requireKnown } from "../src/reality/quantity";
+import { validateDeploymentReadiness } from "@infraforge/domain/validation";
 
 function design(types: Record<string, Resource["type"]>, links: string[][] = []): SavedProductDesign {
   return { schema: "infraforge-saved-design/1", resources: Object.entries(types).map(([id, type]) => ({ id, type, x: 0, y: 0 })), connections: links.map(([s, t], i) => ({ id: `edge-${i}`, sourceId: s!, targetId: t!, sourceType: types[s!]!, targetType: types[t!]!, port: RESOURCE_PORTS[types[t!]!] })), workload: { targetThroughput: 600, throughputUnit: "per-minute", trafficShape: "steady", readWriteRatio: 0.8, payloadSize: "light" } };
@@ -32,6 +33,25 @@ const minimal: Array<[Resource["type"], SavedProductDesign]> = [
   ["Message Queue", design({ app: "Virtual Machine", queue: "Message Queue" }, [["app", "queue"]])],
   ["Monitoring Agent", design({ monitor: "Monitoring Agent", app: "Virtual Machine" }, [["monitor", "app"]])],
 ];
+test("executable legacy wiring preserves shipped readiness errors and warnings", () => {
+  const dns = minimal.find(([type]) => type === "DNS")![1];
+  // The exact DNS fixture already failed this presence rule on shipped main.
+  // It must not gain an edge-type error just because DNS -> VM is not drawable.
+  expect(validateDeploymentReadiness(dns.resources, dns.connections)).toEqual({
+    valid: false, errors: ["DNS requires a target (CDN or Load Balancer)"],
+    warnings: ["app has no downstream data path — data requests will fail"],
+  });
+  const registry = minimal.find(([type]) => type === "Container Registry")![1];
+  expect(validateDeploymentReadiness(registry.resources, registry.connections)).toEqual({
+    valid: true, errors: [], warnings: [
+      "app cannot be reached from any entry point (DNS, CDN, Firewall, or Load Balancer)",
+      "registry cannot be reached from any entry point (DNS, CDN, Firewall, or Load Balancer)",
+      "store cannot be reached from any entry point (DNS, CDN, Firewall, or Load Balancer)",
+    ],
+  });
+  const withLb = design({ dns: "DNS", lb: "Load Balancer", app: "Virtual Machine" }, [["dns", "app"], ["lb", "app"]]);
+  expect(validateDeploymentReadiness(withLb.resources, withLb.connections).valid).toBe(true);
+});
 for (const [type, d] of minimal) test(`${type}: minimal canvas compiles and runs ten seconds`, () => {
   const f = prepare(d), runtime = createProductModel2(f.compiled);
   runtime.advanceTo(10000000); const e = runtime.evidence();
@@ -133,6 +153,7 @@ test("saved LB policies preserve total bounds without mutating the canvas", () =
 test("autoscaling uses an explicitly drawn registry when available", () => {
   const d = design({ lb: "Load Balancer", app: "Virtual Machine", registry: "Container Registry", store: "Object Storage" }, [["lb", "app"], ["app", "registry"], ["registry", "store"]]);
   d.resources[1]!.autoscaling = { enabled: true, minReplicas: 1, maxReplicas: 2, targetCpu: 10 }; d.workload.targetThroughput = 12000;
+  expect(validateDeploymentReadiness(d.resources, d.connections)).toEqual({ valid: true, errors: [], warnings: [] });
   const f = prepare(d), runtime = createProductModel2(f.compiled); runtime.advanceTo(16000000);
   expect(f.contract.nodes.app!.resources.some((r) => r.role === "registry")).toBe(false);
   expect(runtime.evidence().systems.registries).toHaveLength(1);

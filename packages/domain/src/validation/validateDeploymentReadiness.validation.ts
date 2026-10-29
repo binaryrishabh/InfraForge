@@ -35,7 +35,9 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
     for (const line of connections) {
         const source = resources.find(resource => resource.id === line.sourceId);
         const target = resources.find(resource => resource.id === line.targetId);
-        if (source && target) {
+        // Existing wiring retains shipped readiness semantics. Only conditional
+        // rules introduce a readiness requirement; drawing rules are separate.
+        if (source && target && CONNECTION_RULES[source.type]?.some(rule => typeof rule !== "string" && rule.target === target.type)) {
             const verdict = validateConnection(source.type, target.type, { source, connectionId: line.id });
             if (!verdict.valid) errors.push(`${line.id}: ${verdict.message}`);
         }
