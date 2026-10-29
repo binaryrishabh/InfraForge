@@ -1,4 +1,4 @@
-import { circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -40,11 +40,13 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     const edgeIds = new Set(design.connections.map((e) => e.id));
     if (edgeIds.size !== design.connections.length) error("EDGE_ID", "connections", "Unique connection identities required");
     for (const r of design.resources) {
+      const asyncError = asyncSettingsError(r.type, r.asyncQueue, r.asyncWorker);
+      if (asyncError) error("INVALID_ASYNC", `resources.${r.id}.async`, asyncError);
       const breakerError = circuitBreakerSettingsError(r.type, r.circuitBreaker);
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["id", "type", "x", "y", "skuId", "autoscaling", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["id", "type", "x", "y", "skuId", "autoscaling", "asyncQueue", "asyncWorker", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -131,10 +133,10 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     for (const e of [...design.connections].sort((a, b) => a.id < b.id ? -1 : 1)) {
       const intent = contract.edges[e.id]!; semanticEdges.push({ id: e.id, source: e.sourceId, target: e.targetId, purpose: intent.purpose });
       if (intent.purpose === "policy-attachment") { if (nodes.get(e.sourceId)!.type !== "Firewall") throw Error("Policy attachment source must be Firewall"); continue; }
-      if (!intent.security || requireKnown(intent.security.port, "count") !== e.port) throw Error(`Connection ${e.id} port disagrees with reviewed listener contract`);
+      if (!intent.security || requireKnown(intent.security.port, "count") !== (intent.purpose === "queue-poll" ? 5672 : e.port)) throw Error(`Connection ${e.id} port disagrees with reviewed listener contract`);
       for (const s of expansion.get(e.sourceId)!) for (const t of expansion.get(e.targetId)!) {
         const source = ref(`$self/${intent.sourceRole}`, s), target = ref(`$self/${intent.targetRole}`, t);
-        path(`${e.id}:${s}:${t}`, source, target, intent);
+        path(`${e.id}:${s}:${t}`, intent.purpose === "queue-poll" ? target : source, intent.purpose === "queue-poll" ? source : target, intent);
         if (intent.purpose === "routing") { const lb = materialized.get(source); if (lb?.kind !== "load-balancer") throw Error("Routing owner must be LB"); lb.backends.push(target); }
         if (intent.purpose === "monitor-target") { const agent = materialized.get(source); if (agent?.kind !== "monitor") throw Error("Monitor-target owner must be Monitoring Agent"); agent.targets.push(target); }
       }

@@ -31,7 +31,7 @@ export interface NodeContract {
   controller?: ControllerProfile;
   circuitBreaker?: CircuitBreakerPolicy;
 }
-export type EdgePurpose = "dependency" | "routing" | "origin" | "dns-query" | "artifact" | "monitor-target" | "telemetry-export" | "consumer" | "policy-attachment";
+export type EdgePurpose = "queue-poll" | "dependency" | "routing" | "origin" | "dns-query" | "artifact" | "monitor-target" | "telemetry-export" | "consumer" | "policy-attachment";
 export interface TransportProfile {
   version: string; provenance: string[];
   ownership: "per-path" | "shared";

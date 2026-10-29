@@ -4,7 +4,7 @@ export const TRANSLATION_OWNERS = {
   CDN: { kinds: ["cdn"], owner: "systems/cdn", requires: "origin, object key mapping, byte capacity/TTL/coalescing, command demand" },
   Firewall: { kinds: [], owner: "systems/security", requires: "ordered-stateful policy/rules/flow limit and explicit path attachments; no transit capacity" },
   "Load Balancer": { kinds: ["load-balancer"], owner: "network/load-balancer", requires: "backend intent, health operation/timing, routing, admission limits and paths" },
-  "Virtual Machine": { kinds: ["compute"], owner: "compute/resource", requires: "application operation demand, workers, authored effective cores/memory ownership and explicit dependency" },
+  "Virtual Machine": { kinds: ["compute", "async-worker"], owner: "compute/resource", requires: "application operation demand, workers, authored effective cores/memory ownership and explicit dependency" },
   "Container Registry": { kinds: ["registry"], owner: "systems/registry", requires: "object-store backing, namespace, command demand and artifact identity" },
   Cache: { kinds: ["cache"], owner: "data/cache", requires: "logical bytes, key state, TTL/eviction and command CPU" },
   Database: { kinds: ["relational"], owner: "data/database", requires: "keyed transaction plans, sessions/locks/timeouts/CPU and logical durability" },

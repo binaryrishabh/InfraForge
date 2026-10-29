@@ -15,6 +15,8 @@ const fields: Record<string, string[]> = {
   "object-store": ["profile", "capacity", "initial"],
   "delivery-queue": ["profile", "capacityMessages", "capacityBytes", "lease", "retention", "maxAttempts", "dlqMessages", "dlqBytes", "deduplicatePublishes", "consumers"],
 };
+fields["async-publisher"] = ["execution", "broker", "store", "namespace", "objectBytes", "messageBytes", "delay", "publishAttempts"];
+fields["async-worker"] = ["execution", "broker", "store", "database", "databaseOperation", "databaseKey", "namespace", "concurrency", "prefetch", "pollInterval", "cpu", "blockingWait", "ackDelay", "resultBytes", "idempotency", "poisonKeys"];
 const commandKinds = new Set(["dns-authority", "dns-resolver", "cdn", "registry", "artifact-client", "monitor", "telemetry-backend", "object-store", "delivery-queue"]);
 export function validateMaterializedSemantics(input: SystemsInput, edges: SemanticSpec["edges"]) {
   const resources = new Map(input.resources.map((r) => [r.id, r]));
@@ -29,7 +31,7 @@ export function validateMaterializedSemantics(input: SystemsInput, edges: Semant
     if (!listeners.has(JSON.stringify([p.target, dial.protocol, requireKnown(dial.port, "count")]))) throw Error(`Missing listener for ${p.id} -> ${p.target}; port permission is not a service`);
   }
   for (const e of edges) {
-    if (!["dependency", "routing", "origin", "dns-query", "artifact", "monitor-target", "telemetry-export", "consumer", "policy-attachment"].includes(e.purpose)) throw Error(`Unsupported edge intent ${e.id}`);
+    if (!["queue-poll", "dependency", "routing", "origin", "dns-query", "artifact", "monitor-target", "telemetry-export", "consumer", "policy-attachment"].includes(e.purpose)) throw Error(`Unsupported edge intent ${e.id}`);
     if (e.purpose === "policy-attachment" && !input.systems.connections.some((d) => d.firewalls.includes(e.source) && (paths.get(d.path)!.target === e.target || paths.get(d.path)!.target.startsWith(e.target + "#")))) throw Error(`Policy attachment ${e.id} has no actual admitted path policy`);
   }
   // Every materialized dependency is backed by a path; these are relationships, not pairwise physics.

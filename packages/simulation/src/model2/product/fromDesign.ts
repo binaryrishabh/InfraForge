@@ -1,5 +1,5 @@
 import { findSku, CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog";
-import { RESOURCE_PORTS, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
 import type { Quantity, Unit } from "../../reality/quantity";
 import type { ComputeResource } from "../compute/contracts";
 import type { CommandConfig } from "../async/contracts";
@@ -29,6 +29,8 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
     for (const e of connections) if (!byId.has(e.sourceId) || !byId.has(e.targetId) || e.sourceId === e.targetId) error(`connections.${e.id}`, "Connect two different resources that both exist on the canvas.");
     if (refused.length) return { refused };
     for (const r of resources) {
+      const asyncError = asyncSettingsError(r.type, r.asyncQueue, r.asyncWorker);
+      if (asyncError) error(`resources.${r.id}.async`, asyncError);
       const breakerError = circuitBreakerSettingsError(r.type, r.circuitBreaker);
       if (breakerError) error(`resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
@@ -42,7 +44,20 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
       if (r.type === "Monitoring Agent" && !outgoing(r.id).length) error(`resources.${r.id}`, "Connect the monitoring agent to a resource to observe.");
       if (r.autoscaling?.enabled && (r.type !== "Virtual Machine" || incoming(r.id).filter((s) => s.type === "Load Balancer").length !== 1)) error(`resources.${r.id}.autoscaling`, "Autoscaling needs an app server behind exactly one load balancer.");
     }
-    const entries = resources.filter((r) => ["Load Balancer", "CDN", "Virtual Machine"].includes(r.type) && !incoming(r.id).some((s) => ["Load Balancer", "Virtual Machine", "CDN"].includes(s.type)));
+    const asyncQueues = resources.filter((r) => r.asyncQueue?.enabled);
+    const producerQueue = (id: string) => outgoing(id).find((r) => r.asyncQueue?.enabled);
+    for (const queue of asyncQueues) {
+      const producers = incoming(queue.id).filter((r) => r.type === "Virtual Machine" && !r.asyncWorker?.enabled);
+      const workers = outgoing(queue.id).filter((r) => r.asyncWorker?.enabled);
+      if (producers.length !== 1 || workers.length !== 1) error(`resources.${queue.id}`, "Connect one app producer to this queue and draw this queue to one enabled worker VM.");
+      for (const node of [...producers, ...workers]) {
+        if (outgoing(node.id).filter((r) => r.type === "Object Storage").length !== 1) error(`resources.${node.id}`, "Connect exactly one Object Storage to this producer or worker for uploads and results.");
+        if (outgoing(node.id).some((r) => ["Database", "Cache"].includes(r.type)) || node.autoscaling?.enabled) error(`resources.${node.id}`, "This upload journey supports fixed producer and worker VMs without a database or cache dependency.");
+      }
+      if (producers[0] && workers[0] && outgoing(producers[0].id).find((r) => r.type === "Object Storage")?.id !== outgoing(workers[0].id).find((r) => r.type === "Object Storage")?.id) error(`resources.${queue.id}`, "Connect producer and worker to the same Object Storage so the worker can read uploads.");
+    }
+    for (const worker of resources.filter((r) => r.asyncWorker?.enabled)) if (incoming(worker.id).filter((r) => r.asyncQueue?.enabled).length !== 1) error(`resources.${worker.id}`, "Connect one enabled queue to this worker VM.");
+    const entries = resources.filter((r) => !r.asyncWorker?.enabled && ["Load Balancer", "CDN", "Virtual Machine"].includes(r.type) && !incoming(r.id).some((s) => ["Load Balancer", "Virtual Machine", "CDN"].includes(s.type)));
     if (entries.length !== 1) error("caller.entry", "Connect the design into one entry point: one load balancer, CDN or app server.");
     const connected = new Set<string>(), visit = (id: string): void => { if (connected.has(id)) return; connected.add(id); for (const r of [...outgoing(id), ...incoming(id)]) visit(r.id); };
     if (entries[0]) visit(entries[0].id);
@@ -90,6 +105,18 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
       const id = r.id, n = nodes[id]!, target = outgoing(id)[0];
       switch (r.type) {
         case "Virtual Machine": {
+          if (r.asyncWorker?.enabled) {
+            const p = r.asyncWorker, broker = incoming(id).find((r) => r.asyncQueue?.enabled)!, store = outgoing(id).find((r) => r.type === "Object Storage")!;
+            add(r, "main", { kind: "async-worker", execution: execution(r, "main"), broker: `$${broker.id}`, store: `$${store.id}`, databaseOperation: "read", databaseKey: "key", namespace: "results", concurrency: q(`${id}.async.concurrency`, p.concurrency!, "count", "Saved parallel jobs limit.", true), prefetch: q(`${id}.async.prefetch`, p.prefetch!, "count", "Saved worker prefetch credit.", true), cpu: q(`${id}.async.cpuMsPerJob`, p.cpuMsPerJob! * 1000, "cpu-us", "Authored assumption: saved CPU milliseconds per job converted to CPU microseconds.", true), pollInterval: q(`${id}.async.poll`, 10000, "us"), blockingWait: q(`${id}.async.wait`, 0, "us"), ackDelay: q(`${id}.async.ack`, 0, "us"), resultBytes: q(`${id}.async.resultBytes`, 1024, "bytes"), idempotency: "none", poisonKeys: [] });
+            break;
+          }
+          const queue = producerQueue(id);
+          if (queue) {
+            const store = outgoing(id).find((r) => r.type === "Object Storage")!;
+            const config = execution(r, "main"); config.downstream = "$self/publisher"; add(r, "main", config);
+            add(r, "publisher", { kind: "async-publisher", execution: execution(r, "publisher"), broker: `$${queue.id}`, store: `$${store.id}`, namespace: "uploads", objectBytes: q(`${id}.async.objectBytes`, 1024, "bytes"), messageBytes: q(`${id}.async.messageBytes`, 128, "bytes"), delay: q(`${id}.async.delay`, 0, "us"), publishAttempts: q(`${id}.async.attempts`, 1, "count") });
+            internal(r, "main", "publisher"); break;
+          }
           const data = outgoing(id).filter((t) => ["Database", "Cache"].includes(t.type));
           const cache = data.find((t) => t.type === "Cache"), database = data.find((t) => t.type === "Database");
           if (data.length > 1 && !(data.length === 2 && cache && database && !outgoing(cache.id).length)) { error(`resources.${id}`, "Connect the app to one database, one database-backed cache, or one cache and one database; other combinations need an authored operation plan."); break; }
@@ -123,7 +150,7 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
           add(r, "main", { kind: "dns-authority", ...command(r, "main", ["resolve"]), records: [], negativeTtl: q(`${id}.negativeTtl`, 5000000, "us") });
           add(r, "resolver", { kind: "dns-resolver", ...command(r, "resolver", ["resolve"]), authority: "$self", cacheEntries: q(`${id}.entries`, 128, "count") }); internal(r, "resolver", "main", "dns-query"); break;
         case "Firewall": n.firewall = { profile: "ordered-stateful/1", default: "allow", rules: [], maxFlows: q(`${id}.flows`, 10000 * cores.get(id)!, "count") }; break;
-        case "Message Queue": add(r, "main", { kind: "delivery-queue", profile: "visibility-work-queue/1", ...command(r, "main", ["publish", "receive", "ack", "nack"]), capacityMessages: q(`${id}.capacity`, 1000 * cores.get(id)!, "count"), capacityBytes: q(`${id}.bytes`, memory.get(id)! * 1073741824, "bytes"), lease: q(`${id}.lease`, 30000000, "us"), retention: q(`${id}.retention`, 300000000, "us"), maxAttempts: q(`${id}.attempts`, 3, "count"), dlqMessages: q(`${id}.dlq`, 1000, "count"), dlqBytes: q(`${id}.dlqBytes`, 1048576, "bytes"), deduplicatePublishes: true, consumers: [{ id: "worker", credit: q(`${id}.credit`, 1, "count") }] }); break;
+        case "Message Queue": add(r, "main", { kind: "delivery-queue", profile: "visibility-work-queue/1", ...command(r, "main", ["publish", "receive", "ack", "nack"]), capacityMessages: q(`${id}.capacity`, 1000 * cores.get(id)!, "count"), capacityBytes: q(`${id}.bytes`, memory.get(id)! * 1073741824, "bytes"), lease: q(`${id}.lease`, r.asyncQueue?.enabled ? r.asyncQueue.visibilityTimeoutSeconds! * 1000000 : 30000000, "us", undefined, !!r.asyncQueue?.enabled), retention: q(`${id}.retention`, r.asyncQueue?.enabled ? r.asyncQueue.retentionSeconds! * 1000000 : 300000000, "us", undefined, !!r.asyncQueue?.enabled), maxAttempts: q(`${id}.attempts`, r.asyncQueue?.enabled ? r.asyncQueue.maxReceives! : 3, "count", undefined, !!r.asyncQueue?.enabled), dlqMessages: q(`${id}.dlq`, 1000, "count"), dlqBytes: q(`${id}.dlqBytes`, 1048576, "bytes"), deduplicatePublishes: true, consumers: r.asyncQueue?.enabled ? outgoing(id).filter((r) => r.asyncWorker?.enabled).map((w) => ({ id: `$${w.id}`, credit: q(`${w.id}.async.credit`, w.asyncWorker!.prefetch!, "count", "Saved worker prefetch credit mirrored by the broker.", true) })) : [{ id: "worker", credit: q(`${id}.credit`, 1, "count") }] }); break;
         case "Monitoring Agent":
           add(r, "main", { kind: "monitor", ...command(r, "main", ["collect", "export"]), targets: [], backend: "$self/backend", operation: "read", interval: q(`${id}.interval`, 10000000, "us"), exportInterval: q(`${id}.exportInterval`, 10000000, "us"), freshFor: q(`${id}.fresh`, 30000000, "us"), sampleBytes: q(`${id}.sample`, 128, "bytes"), bufferBytes: q(`${id}.bufferBytes`, 1048576, "bytes"), bufferSamples: q(`${id}.bufferSamples`, 1000, "count"), batchSamples: q(`${id}.batch`, 100, "count"), attempts: q(`${id}.attempts`, 2, "count") });
           add(r, "backend", { kind: "telemetry-backend", ...command(r, "backend", ["export"]), samples: q(`${id}.samples`, 10000, "count") }); internal(r, "main", "backend", "telemetry-export"); break;
@@ -188,6 +215,8 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
     for (const e of connections) {
       const s = byId.get(e.sourceId)!, t = byId.get(e.targetId)!;
       let purpose: EdgeContract["purpose"] = "dependency", sourceRole = "main", targetRole = "main";
+      if (s.asyncQueue?.enabled && t.asyncWorker?.enabled) { edges[e.id] = edge(s, `edge.${e.id}`, "main", "main", "queue-poll"); continue; }
+      if (s.type === "Virtual Machine" && (s.asyncWorker?.enabled || producerQueue(s.id)) && ["Message Queue", "Object Storage"].includes(t.type)) { edges[e.id] = edge(t, `edge.${e.id}`, s.asyncWorker?.enabled ? "main" : "publisher", "main", "consumer", e.port, true); continue; }
       if (s.type === "Firewall") purpose = "policy-attachment";
       else if (s.type === "Load Balancer" && t.type === "Virtual Machine") purpose = "routing";
       else if (s.type === "Monitoring Agent" && t.type !== "Firewall") purpose = "monitor-target";

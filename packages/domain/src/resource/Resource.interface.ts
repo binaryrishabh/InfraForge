@@ -3,7 +3,11 @@ import type { ResourceType } from "./RESOURCE_TYPES.constants";
 import type { AutoscalingPolicy } from "./AutoscalingPolicy.interface";
 import type { RetrySettings } from "./RetrySettings.interface";
 
+import type { AsyncQueueSettings, AsyncWorkerSettings } from "./AsyncSettings.interface";
+
 export interface Resource {
+  asyncQueue?: AsyncQueueSettings;
+  asyncWorker?: AsyncWorkerSettings;
   id: string;
   type: ResourceType;
   x: number;
