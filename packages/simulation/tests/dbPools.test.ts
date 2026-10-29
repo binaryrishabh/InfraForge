@@ -105,7 +105,8 @@ test("leases balance after success, DB error, pre-delivery cancel and DB crash b
 
 test("caller deadline during protected commit does not undo its row or relabel the remote outcome", () => {
   const input = dataFixture({ count: 1, cpu: 1, heavy: 1, timeout: 1500, dbCpu: 1000, cancellation: "cooperative" }), q = quantities("protected commit and actual caller deadline");
-  input.workloadVersion = "m2e-pg/2"; input.arrivals[0]!.operation = "heavy";
+  input.workloadVersion = "m2e-pg/2";
+  const arrival = input.arrivals[0]!; if (arrival.kind !== "periodic") throw Error("expected periodic arrival"); arrival.operation = "heavy";
   input.operations.forEach(op => op.onCallerStop = "request-cancellation");
   input.paths.forEach(path => path.pool.remoteCancellation = "request-cancellation");
   const db = input.resources.find(r => r.kind === "relational") as RelationalConfig;
