@@ -57,6 +57,7 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
   });
 
   return {
+    applicationFlowEvidence: () => run.applicationFlowEvidence(),
     get simulatedSeconds() { return run.simulatedSeconds; },
     get horizonSeconds() { return run.horizon / SECOND; },
     view,

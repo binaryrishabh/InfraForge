@@ -17,8 +17,12 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
   compute: (step: string, done: () => void) => void, finish: RemoteCompletion, causal?: CausalObserver) {
   type Slot = { branch: RuntimeFlowCall; work: Invocation; receipt?: Receipt; outcome?: RemoteOutcome; cause?: Cause };
   let cursor = 0, terminal = false, paused = false, parked: (() => void) | undefined, cancelContinuation: (() => boolean) | undefined;
-  let slots: Slot[] = [], step: RuntimeFlowStep | undefined;
+  let slots: Slot[] = [], step: RuntimeFlowStep | undefined, stepSettled = false;
   const emit = (kind: string, detail: Record<string, string | number | boolean | null>, child = work) => causal?.({ atUs: clock.now, resource: owner, work: child, kind: `flow-${kind}`, detail });
+  const settleStep = (outcome: RemoteOutcome) => {
+    if (!step || stepSettled) return;
+    stepSettled = true; emit("step-terminal", { step: step.id, outcome });
+  };
   const cancelSlots = (reason: string) => {
     for (const slot of slots) if (!slot.outcome && slot.receipt) {
       slot.outcome = "cancelled";
@@ -29,7 +33,7 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
   const stop = (outcome: RemoteOutcome, cause?: Cause) => {
     if (terminal) return;
     terminal = true; parked = undefined; cancelContinuation?.();
-    if (step) emit("step-terminal", { step: step.id, outcome });
+    settleStep(outcome);
     cancelSlots(outcome === "completed" ? "cancelled-after-join" : "cancelled-after-stop");
     finish(outcome, cause);
   };
@@ -44,9 +48,10 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
     if (terminal) return;
     step = flow.steps[cursor++];
     if (!step) { stop("completed"); return; }
+    stepSettled = false;
     emit("step-start", { step: step.id, kind: step.kind });
     if (step.kind === "compute") {
-      compute(step.id, () => { if (!terminal) { emit("step-terminal", { step: step!.id, outcome: "completed" }); schedule("computed", next); } });
+      compute(step.id, () => { if (!terminal) { settleStep("completed"); schedule("computed", next); } });
       return;
     }
     const current = step, branches = current.kind === "call" ? [current] : current.branches;
@@ -64,7 +69,7 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
         emit("join", { step: current.id, threshold, contributors: JSON.stringify(succeeded.map(s => s.branch.id)), failed: slots.filter(s => s.outcome === "rejected").length });
         // Freeze this join before cancellation can synchronously invoke a callback.
         cancelSlots("cancelled-after-join");
-        emit("step-terminal", { step: current.id, outcome: "completed" });
+        settleStep("completed");
         schedule("joined", next);
       } else if (succeeded.length + unsettled < threshold) {
         const cause = slots.find(s => s.cause)?.cause;
@@ -84,7 +89,7 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
   };
   return {
     start() { schedule("start", next); },
-    cancel() { if (terminal) return; terminal = true; cancelContinuation?.(); parked = undefined; if (step) emit("step-terminal", { step: step.id, outcome: "cancelled" }); cancelSlots("cancelled-after-stop"); },
+    cancel() { if (terminal) return; terminal = true; cancelContinuation?.(); parked = undefined; settleStep("cancelled"); cancelSlots("cancelled-after-stop"); },
     pause(value: boolean) { paused = value; if (!value && parked) { const run = parked; parked = undefined; schedule("resumed", run); } },
   };
 }

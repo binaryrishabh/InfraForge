@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test";
-import type { Resource } from "@infraforge/domain/resource";
+import { ResourceHealth, type Resource } from "@infraforge/domain/resource";
 import { LayoutSchema, LiveTopologySchema } from "../zod_schemas/layout.schema";
 import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
 import { createModel2Run } from "@infraforge/simulation/model2-run";
@@ -16,7 +16,7 @@ function design() {
 const workload={targetThroughput:60,throughputUnit:"per-minute" as const,trafficShape:"steady" as const,readWriteRatio:1,payloadSize:"light" as const};
 test("flow survives layout save/reload and captured replay; authored branch ordering changes design identity",()=>{
   const d=design();
-  for(const schema of [LayoutSchema,LiveTopologySchema])expect(schema.parse(d).resources).toEqual(d.resources);
+  for(const schema of [LayoutSchema,LiveTopologySchema])expect<Resource[]>(schema.parse(d).resources).toEqual(d.resources);
   const input=readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(d,workload,"flow-parity"))));expect(input.resources).toEqual(d.resources);
   const swapped=structuredClone(d), group=swapped.resources[0]!.applicationFlow!.operations.read!.steps[1]!;
   if(group.kind!=="parallel")throw Error("parallel");group.branches.reverse();
@@ -33,6 +33,8 @@ test("flow browser worker entry and server replay produce identical logs, views 
   for(let i=0;i<5;i++) {
     const stable=(logs:ReturnType<typeof browser.advance>)=>logs.map(({timestamp:_wall,...row})=>row);
     expect(stable(browser.advance())).toEqual(stable(server.advance()));expect(browser.view()).toEqual(server.view());
+    expect(browser.applicationFlowEvidence()).toEqual(server.applicationFlowEvidence());
   }
-  expect(browser.view().metrics.app!.health).toBe("healthy");
+  expect(browser.applicationFlowEvidence()!.events.some(e=>e.kind==="flow-join")).toBe(true);
+  expect(browser.view().metrics.app!.health).toBe(ResourceHealth.HEALTHY);
 });
