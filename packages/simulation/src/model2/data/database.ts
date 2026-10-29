@@ -139,7 +139,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
       if (io) phaseEntries.queued++;
       sessions.set(session, t); queue.set(work.callId, t);
       if (pg) t.cancelStatement = deadline(t, "statement"); else t.cancelTx = deadline(t, "transaction"); pump();
-      return { admitted: true, state: () => t.terminal ? "finished" : t.phase === "queued" ? "queued" : t.phase === "lock" ? "waiting" : "serving", cancel() { if (t.terminal) return "already-finished"; if (pg && t.phase === "commit") { sessionEvents.protectedCommitCancels++; return "unsupported"; } finish(t, false, "cancelled", true); return "cancelled"; } };
+      return { admitted: true, state: () => t.terminal ? "finished" : t.phase === "queued" ? "queued" : t.phase === "lock" ? "waiting" : "serving", cancel() { if (t.terminal) return "already-finished"; if (t.orphaned) return "unsupported"; if (pg && t.phase === "commit") { sessionEvents.protectedCommitCancels++; return "unsupported"; } finish(t, false, "cancelled", true); return "cancelled"; } };
     },
     closeSession(id: string) { const tx = sessions.get(id); if (pg2 && tx && tx.phase !== "queued") { tx.orphaned = true; return; } closeSlot(id); if (tx && !(pg && tx.phase === "commit")) finish(tx, false, "connection-closed"); },
     pause(value: boolean) { paused = value; cpu.pause(value); if (value) { for (const t of [...active.values(), ...queue.values()]) if (!(pg && t.phase === "commit")) finish(t, false, "database-unavailable"); if (pg2) { for (const id of [...sessions.keys()]) closeSlot(id); } else { if (pg) sessionEvents.closed += sessions.size; sessions.clear(); } } else pump(); },

@@ -104,13 +104,16 @@ test("leases balance after success, DB error, pre-delivery cancel and DB crash b
 });
 
 test("caller deadline during protected commit does not undo its row or relabel the remote outcome", () => {
-  const f = transport2(), plan = f.config.plans.heavy!; plan.commitWait = f.q.q("commit.wait", 2000, "us"); plan.durability = "authored-log-ack";
-  const receipt = f.transport.exchange(f.work("a"), () => {});
-  let caller = "in-flight";
-  f.clock.schedule(1500, 1, "caller-deadline", () => { caller = "deadline-exceeded"; receipt.cancel(); });
-  f.clock.advanceTo(5000); expect(caller).toBe("deadline-exceeded"); expect(f.db.evidence().rows[0]!.version).toBe(2);
-  expect(f.events).toContainEqual({ kind: "remote-after-transport-stop", detail: "completed" });
-  expect(f.transport.measure().pool.released).toBe(1);
+  const input = dataFixture({ count: 1, cpu: 1, heavy: 1, timeout: 1500, dbCpu: 1000, cancellation: "cooperative" }), q = quantities("protected commit and actual caller deadline");
+  input.workloadVersion = "m2e-pg/2"; input.arrivals[0]!.operation = "heavy";
+  input.operations.forEach(op => op.onCallerStop = "request-cancellation");
+  input.paths.forEach(path => path.pool.remoteCancellation = "request-cancellation");
+  const db = input.resources.find(r => r.kind === "relational") as RelationalConfig;
+  db.semantics = "postgresql-keyed/2"; db.plans.heavy!.commitWait = q.q("protected.commit.wait", 2000, "us"); db.plans.heavy!.durability = "authored-log-ack";
+  input.ledger.push(...q.ledger);
+  const run = createDataModel2(input); run.advanceTo(run.horizon); const e = run.evidence();
+  expect(e.counts.deadlineExceeded).toBe(1); expect(e.data.databases[0]!.rows[0]!.version).toBe(2);
+  expect(e.network.trace.events.some(event => event.kind === "remote-after-transport-stop" && event.detail === "completed")).toBe(true);
 });
 
 test("cache outage fills per-replica pools, autoscaling exceeds ten sessions, recovery drains state deterministically", () => {
@@ -141,4 +144,11 @@ test("normal sequential load reuses one connection without filling a ten-connect
   config.maxConnections = q.q("ten", 10, "count"); const clock = new EventKernel(10000), pool = connectionPool("normal", config, clock, () => true);
   for (let i = 0; i < 20; i++) { pool.acquire(String(i), lease => lease.release(), () => { throw Error("unexpected refusal"); }); clock.advanceTo((i + 1) * 100); expect(pool.measure().connections).toBeLessThan(10); expect(pool.measure().pending).toBe(0); }
   expect(pool.measure()).toMatchObject({ created: 1, acquired: 20, released: 20 });
+});
+
+test("transport close cannot cancel away a PG2 orphan before its statement boundary", () => {
+  const f = transport2(); f.path.pool.responseTimeout = f.q.q("short.response", 100, "us");
+  f.transport.exchange(f.work("a"), () => {}); f.clock.advanceTo(200);
+  expect(f.db.measure()).toMatchObject({ sessions: 1, orphaned: 1 }); expect(f.db.openSession("b")).toBe(false);
+  f.clock.advanceTo(5000); expect(f.db.measure()).toMatchObject({ sessions: 0, orphaned: 0 }); expect(f.db.evidence().rows[0]!.version).toBe(1);
 });
