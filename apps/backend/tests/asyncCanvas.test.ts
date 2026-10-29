@@ -73,7 +73,7 @@ test('poison browser/server replay agrees through retries, DLQ overflow and back
  d.resources.find(r=>r.id==='queue')!.asyncQueue!.deadLetterCapacity=2;
  const layout={resources:d.resources,connectionLines:d.connections};
  for(const schema of [LayoutSchema,LiveTopologySchema]) {
-  expect(schema.parse(layout).resources).toEqual(d.resources);
+  expect<Resource[]>(schema.parse(layout).resources).toEqual(d.resources);
   for(const [owner,field,values] of [['worker','badJobPercent',[-1,101,0.5,'10']],['queue','deadLetterCapacity',[-1,1001,1.5,'2']]] as const)for(const value of values){
    const bad=structuredClone(layout),resource=bad.resources.find(r=>r.id===owner)!;
    Object.assign(owner==='worker'?resource.asyncWorker!:resource.asyncQueue!,{[field]:value});expect(schema.safeParse(bad).success).toBe(false);

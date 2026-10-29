@@ -26,7 +26,7 @@ test('poison share selects bounded publisher root keys deterministically from se
  expect(keys(a).length).toBeGreaterThan(0);expect(keys(a)).toEqual(keys(b));expect(keys(low).every(k=>keys(a).includes(k))).toBe(true);expect(keys(all)).toHaveLength(123);
  expect(keys(a).every(k=>JSON.parse(k)[0]==='root')).toBe(true);
  expect(a.a.contract.ledger.find(r=>r.id==='worker.asyncWorker.badJobPercent')!.provenance[0]!.source).toBe('saved-design:worker.asyncWorker.badJobPercent');
- const changed=compileProduct(a.d,{...a.a.contract,seed:'other-seed'});expect(changed.ok).toBe(true);if(changed.ok)expect(changed.value.input.resources.find(r=>r.kind==='async-worker')).not.toEqual(a.compiled.input.resources.find(r=>r.kind==='async-worker'));
+ const changed=compileProduct(a.d,withRunLength(a.a.contract,35,'other-seed'));expect(changed.ok).toBe(true);if(changed.ok)expect(changed.value.input.resources.find(r=>r.kind==='async-worker')).not.toEqual(a.compiled.input.resources.find(r=>r.kind==='async-worker'));
 });
 
 test('optional poison settings validate without injecting into earlier designs and retain DLQ provenance',()=>{

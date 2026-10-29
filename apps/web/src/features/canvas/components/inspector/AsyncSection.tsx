@@ -33,7 +33,7 @@ export function AsyncSection({ resource, disabled }: { resource: Resource; disab
 
 export function AsyncQueueReadings({ metrics }: { metrics?: AsyncQueueMetrics }) {
   const failures = metrics?.version === 2 ? metrics : undefined;
-  const values = { ...metrics, failedAttempts: failures?.failedAttempts, deadLetterOverflowDiscards: failures?.deadLetterOverflowDiscards, wastedCpuSeconds: failures?.wastedCpuSeconds };
+  const values: Partial<Record<string, number | null>> = { ...metrics, failedAttempts: failures?.failedAttempts, deadLetterOverflowDiscards: failures?.deadLetterOverflowDiscards, wastedCpuSeconds: failures?.wastedCpuSeconds };
   return <dl aria-label="Live upload journey" className="text-sm">
     {([["published", "Accepted uploads"], ["completed", "Finished jobs (includes duplicate processing)"], ["readyDepth", "Ready messages"], ["oldestReadyAgeSeconds", "Oldest ready message age (seconds)"], ["inFlight", "In flight"], ["redeliveries", "Redeliveries"], ["deadLettered", "Dead-lettered"], ["failedAttempts", "Failed attempts (worker nacks sent)"], ["deadLetterOverflowDiscards", "Dead-letter overflow discards"], ["wastedCpuSeconds", "CPU seconds spent on failed attempts"]] as const).map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{queueMetricText(values[key])}</dd></div>)}
   </dl>;
