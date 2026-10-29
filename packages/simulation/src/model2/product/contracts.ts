@@ -22,6 +22,7 @@ export interface ApplicationProfile {
 type RuntimeResource = SystemsInput["resources"][number];
 export type ResourceTemplate = RuntimeResource extends infer R ? R extends RuntimeResource ? Omit<R, "id"> : never : never;
 export interface NodeContract {
+  asyncBadJobPercent?: Quantity<"percent">;
   type: Resource["type"]; profileVersion: string; provenance: string[];
   resources: Array<{ role: string; config: ResourceTemplate }>;
   // $self resolves to the primary resource; $node/role resolves a declared auxiliary.

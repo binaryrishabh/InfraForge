@@ -6,6 +6,7 @@ import { canonical, derivedLedger } from "./provenance";
 import { TRANSLATION_OWNERS, ownerAccepts, rewriteReferences } from "./owners";
 import { compileArrivals } from "./workload";
 import { compileInterventions } from "./interventions";
+import { compilePoisonKeys } from "./poison";
 import { compileFaults } from "./faults";
 import { validateController } from "./controller-policy";
 import type { SavedProductDesign, ProductContract, CompileResult, Diagnostic, SemanticSpec, CompiledPool, EdgeContract } from "./contracts";
@@ -73,9 +74,11 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
         const worker = spec.resources.find((v) => v.role === spec.primary)?.config;
         if (worker?.kind !== "async-worker" || requireKnown(worker.concurrency, "count") !== r.asyncWorker.concurrency || requireKnown(worker.prefetch, "count") !== r.asyncWorker.prefetch || requireKnown(worker.cpu, "cpu-us") !== r.asyncWorker.cpuMsPerJob! * 1000) error("ASYNC_MISMATCH", `nodes.${r.id}`, "Worker profile must match saved parallelism, credit and CPU demand.");
       }
+      if (spec.asyncBadJobPercent !== undefined && (!r.asyncWorker?.enabled || r.asyncWorker.badJobPercent === undefined || requireKnown(spec.asyncBadJobPercent, "percent") !== r.asyncWorker.badJobPercent)) error("ASYNC_MISMATCH", `nodes.${r.id}`, "Poison share must match saved worker intent.");
+      if (r.asyncWorker?.enabled && r.asyncWorker.badJobPercent !== undefined && spec.asyncBadJobPercent === undefined) error("ASYNC_MISMATCH", `nodes.${r.id}`, "Saved poison share requires an authored profile.");
       if (r.asyncQueue?.enabled) {
         const queue = spec.resources.find((v) => v.role === spec.primary)?.config;
-        if (queue?.kind !== "delivery-queue" || requireKnown(queue.lease, "us") !== r.asyncQueue.visibilityTimeoutSeconds! * 1000000 || requireKnown(queue.retention, "us") !== r.asyncQueue.retentionSeconds! * 1000000 || requireKnown(queue.maxAttempts, "count") !== r.asyncQueue.maxReceives) error("ASYNC_MISMATCH", `nodes.${r.id}`, "Queue profile must match saved visibility, retention and delivery limit.");
+        if (queue?.kind !== "delivery-queue" || requireKnown(queue.lease, "us") !== r.asyncQueue.visibilityTimeoutSeconds! * 1000000 || requireKnown(queue.retention, "us") !== r.asyncQueue.retentionSeconds! * 1000000 || requireKnown(queue.maxAttempts, "count") !== r.asyncQueue.maxReceives || (r.asyncQueue.deadLetterCapacity !== undefined && requireKnown(queue.dlqMessages, "count") !== r.asyncQueue.deadLetterCapacity)) error("ASYNC_MISMATCH", `nodes.${r.id}`, "Queue profile must match saved visibility, retention and delivery limit.");
       }
       if (r.skuId && !contract.capabilities.some((c) => c.resource === r.id && c.sku === r.skuId && c.catalogVersion === contract.catalogVersion)) error("PROVIDER_CAPABILITY_UNKNOWN", `resources.${r.id}.skuId`, "Approximate legacy catalog cannot establish sourced capabilities or application throughput");
     }
@@ -199,6 +202,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (!Number.isSafeInteger(maxLiveCalls)) throw Error("Flow live-call budget overflows");
       runtime.limits = { ...contract.limits, maxEvents, maxLiveCalls };
     }
+    compilePoisonKeys(runtime, contract, provenance);
     phase = "faults"; const crashes = compileFaults(contract.faults, runtime, (id) => expansion.get(id) ?? [id], provenance);
     phase = "interventions"; const interventionReceipts = compileInterventions(design, contract, runtime, provenance);
     phase = "capabilities";
