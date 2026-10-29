@@ -36,7 +36,7 @@ export function expandFirewallRules(rules: FirewallRule[], roleIds: ReadonlyMap<
   for (const [order, r] of rules.entries()) {
     const sources = scopes(r.source), destinations = scopes(r.destination);
     for (const [i, source] of sources.entries()) for (const [j, destination] of destinations.entries()) {
-      if (out.length >= 10000) throw Error("Expanded firewall exceeds 10000 runtime rules");
+      if (out.length >= 2000) throw Error("Expanded firewall exceeds 2000 runtime rules");
       out.push({ ...r, authoredId: r.id, id: `${String(order).padStart(4, "0")}:${r.id}~${i}~${j}`, source, destination });
     }
   }

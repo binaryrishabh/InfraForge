@@ -173,3 +173,12 @@ test("target health uses this window's denials and deliveries across every incom
     expect(live.project().metrics.db!.health).toBe("healthy");
   }
 });
+
+
+test("expanded firewall rules stop at the named 2000-rule admission budget",()=>{
+  const q=quantities();
+  const rules=Array.from({length:32},(_,i)=>({...rule(`rule-${i}`,i,"deny"),protocol:"tcp" as const,source:{kind:"identity" as const,value:"$app"},destination:{kind:"any" as const},priority:q.q(`budget.${i}.priority`,i,"count"),fromPort:q.q(`budget.${i}.from`,1,"count"),toPort:q.q(`budget.${i}.to`,65535,"count")}));
+  const ids=new Map(Array.from({length:128},(_,i)=>[`app#${i}/main`,`app#${i}`]));
+  expect(expandFirewallRules(rules.slice(0,16),new Map([...ids].slice(0,125)))).toHaveLength(2000);
+  expect(()=>expandFirewallRules(rules,ids)).toThrow("Expanded firewall exceeds 2000 runtime rules");
+});
