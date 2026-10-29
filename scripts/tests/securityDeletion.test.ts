@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import { expect, test, afterEach } from "bun:test";
 import type { Resource } from "@infraforge/domain/resource";
 import { LayoutSchema } from "../../apps/backend/zod_schemas/layout.schema";
