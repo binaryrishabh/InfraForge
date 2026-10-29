@@ -46,3 +46,13 @@ test('evidence v3 alone accepts queue counters and keeps historical hashes stabl
  expect(sampleHash(base)).toBe(old);expect(sampleHash(next)).not.toBe(old);
  expect(evidencePayload.safeParse({...next,resources:[{...next.resources[0],asyncQueue:{...metrics,oldestReadyAgeSeconds:null}}]}).success).toBe(true);
 });
+import { captureEvidenceTick } from '../evidence/capture';
+import type { SimulationInstance } from '../simulator/instance';
+
+test('capturing a real opt-in run chooses v3 and retains queue values',()=>{
+ const d=design(),input=captureRunInputs({resources:d.resources,connectionLines:d.connections},d.workload,'capture-async');
+ const instance: SimulationInstance = {model2:createModel2Engine(input,5,buildModel2Contract),tickCount:0,pendingLogs:[],speed:1,lastCheckpointAt:0,accumulatedCostUsd:0,topology:input,topologyRevision:0,actions:new Map(),acknowledge:null,metricsComputedAt:null,metricsTopologyRevision:0,evidence:{window:{start:1,end:5},pending:[]}};
+ instance.model2.advance();instance.metricsComputedAt=new Date().toISOString();captureEvidenceTick(instance);
+ const payload=instance.evidence!.pending[0]!.payload;
+ expect(payload.version).toBe(3);expect(payload.resources.find(r=>r.id==='queue')!.asyncQueue).toMatchObject({published:8,completed:3,readyDepth:4,inFlight:1,redeliveries:0,deadLettered:0});
+});

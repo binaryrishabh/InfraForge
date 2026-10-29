@@ -59,6 +59,7 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
     }
     for (const worker of resources.filter((r) => r.asyncWorker?.enabled)) if (incoming(worker.id).filter((r) => r.asyncQueue?.enabled).length !== 1) error(`resources.${worker.id}`, "Connect one enabled queue to this worker VM.");
     const entries = resources.filter((r) => !r.asyncWorker?.enabled && ["Load Balancer", "CDN", "Virtual Machine"].includes(r.type) && !incoming(r.id).some((s) => ["Load Balancer", "Virtual Machine", "CDN"].includes(s.type)));
+    for (const queue of asyncQueues) if (incoming(queue.id).some((r) => r.type === "Virtual Machine" && r.id !== entries[0]?.id)) error(`resources.${queue.id}`, "This upload journey needs the producer app as the single client entry point; load balancer health polling is not an upload arrival.");
     if (entries.length !== 1) error("caller.entry", "Connect the design into one entry point: one load balancer, CDN or app server.");
     const connected = new Set<string>(), visit = (id: string): void => { if (connected.has(id)) return; connected.add(id); for (const r of [...outgoing(id), ...incoming(id)]) visit(r.id); };
     if (entries[0]) visit(entries[0].id);
