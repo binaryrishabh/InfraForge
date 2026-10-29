@@ -28,7 +28,8 @@ test("all join consumes one owner CPU demand and max branch latency, with determ
 test("2 of 3 delivered loser detaches or cooperatively releases remote work through existing gates", () => {
   for (const remoteCancellation of ["detach", "request-cancellation"] as const) {
     const d = fanout(2); d.paths.forEach(p => p.pool.remoteCancellation = remoteCancellation);
-    const r = createNetworkModel2(d); r.advanceTo(2100); const e = r.evidence();
+    const store = applicationFlowEvidence(1000);
+    const r = createNetworkRuntime(d, {resource:()=>undefined, causal:store.observe}); r.advanceTo(2100); const e = r.evidence();
     expect(e.counts.completed).toBe(1);
     expect(e.resources.find(r => r.id === "tax")!.serving).toBe(remoteCancellation === "detach" ? 1 : 0);
     expect(e.resources.find(r => r.id === "tax")!.cancelled).toBe(remoteCancellation === "detach" ? 0 : 1);
@@ -36,6 +37,12 @@ test("2 of 3 delivered loser detaches or cooperatively releases remote work thro
     const path = r.evidence().network.paths.find(p => p.target === "tax")!;
     expect(path.cancelled).toBe(1);
     expect(path.remoteOutcomesAfterStop).toBe(1);
+    const rows = store.measure().events;
+    expect(rows.filter(e=>e.kind==="flow-branch-terminal" && e.detail.branch==="tax" && e.detail.outcome==="cancelled-after-join")).toHaveLength(1);
+    const late = rows.filter(e=>e.kind==="flow-late-outcome");
+    expect(late).toHaveLength(1);
+    expect(late[0]!.detail).toMatchObject({branch:"tax",outcome:remoteCancellation === "detach" ? "completed" : "cancelled",accounting:"remote-after-transport-stop"});
+    expect(late[0]!.atUs).toBe(remoteCancellation === "detach" ? 3100 : 2100);
   }
 });
 test("request cancellation reaches all live branches; unsupported owner continues to completion", () => {
@@ -108,13 +115,16 @@ test("2 of 3 pool-wait loser withdraws acquisition without remote work", () => {
   d.paths[3]!.pool.maxConnections = q.q("tax.serial.connections", 1, "count");
   d.ledger.push(...q.ledger);
   let dispatch: Parameters<NonNullable<NetworkExtension["connection"]>>[2] | undefined;
-  const r = createNetworkRuntime(d, { resource:()=>undefined, connection:(_path,_clock,send)=>{dispatch=send;return undefined;}, install(kernel) {
+  const store = applicationFlowEvidence(1000);
+  const r = createNetworkRuntime(d, { resource:()=>undefined, causal:store.observe, connection:(_path,_clock,send)=>{dispatch=send;return undefined;}, install(kernel) {
     kernel.schedule(0,0,JSON.stringify(["background"]),()=>{dispatch!("app","tax",{rootId:"background",callId:JSON.stringify(["background"]),attempt:0,operation:"light",offeredAt:0},()=>{});});
   } });
   r.advanceTo(2100);expect(r.evidence().network.paths.find(p=>p.target==="tax")!.pool.cancelled).toBe(1);
   r.advanceTo(r.horizon);const e=r.evidence(),tax=e.resources.find(r=>r.id==="tax")!;
   expect(e.results[0]!.responseUs).toBe(2100); expect(tax.received).toBe(1); // Background call only.
   expect(e.network.paths.find(p => p.target === "tax")!.remoteOutcomesAfterStop).toBe(0);
+  expect(store.measure().events.filter(e=>e.kind==="flow-late-outcome")).toHaveLength(0);
+  expect(store.measure().events.filter(e=>e.kind==="flow-branch-terminal" && e.detail.branch==="tax" && e.detail.outcome==="cancelled-after-join")).toHaveLength(1);
 });
 test("children isolate message/session/payload and use persisted identities; cancellation skips settled receipts", () => {
   const clock = new EventKernel(100), children: Invocation[] = [], callbacks: RemoteCompletion[] = [], cancels: number[] = [], terminal: string[] = [];

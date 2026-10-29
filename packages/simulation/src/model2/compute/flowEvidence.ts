@@ -7,6 +7,16 @@ export function applicationFlowEvidence(rowLimit: number, byteLimit = Infinity) 
   let omitted = 0, retainedBytes = 0;
   return {
     observe(event: CausalEvent) {
+      if (event.kind === "remote-after-transport-stop") {
+        // Transport reports the actual remote terminal, including cooperative cancellation.
+        // Flow call identities end in ["flow", owner, operation, step, branch].
+        let id: unknown;
+        try { id = JSON.parse(String(event.detail.id)); } catch { return; }
+        if (!Array.isArray(id) || id.at(-5) !== "flow" || !id.slice(-4).every(value => typeof value === "string")) return;
+        event = { ...event, kind: "flow-late-outcome", resource: id.at(-4), detail: {
+          ...event.detail, step: id.at(-2), branch: id.at(-1), outcome: event.detail.detail ?? null, accounting: "remote-after-transport-stop",
+        } };
+      }
       if (!event.kind.startsWith("flow-")) return;
       totals[event.kind] = (totals[event.kind] ?? 0) + 1;
       if (events.length >= rowLimit) { omitted++; return; }

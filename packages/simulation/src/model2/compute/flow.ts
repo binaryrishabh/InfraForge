@@ -79,7 +79,9 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
     for (const slot of slots) {
       emit("branch-start", { step: current.id, branch: slot.branch.id, target: slot.branch.target }, slot.work);
       slot.receipt = send(slot.branch.target, slot.work, (outcome, cause) => {
-        if (terminal || joined || slot.outcome) { emit("late-outcome", { step: current.id, branch: slot.branch.id, outcome, accounting: "remote-after-transport-stop" }, slot.work); return; }
+        // Our receipt cancellation can acknowledge synchronously as a rejection.
+        // Actual remote-after-stop outcomes are observed by transport, never this callback.
+        if (terminal || joined || slot.outcome) return;
         slot.outcome = outcome; slot.cause = cause;
         emit("branch-terminal", { step: current.id, branch: slot.branch.id, outcome }, slot.work);
         evaluate();
