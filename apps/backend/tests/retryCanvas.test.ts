@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { DEFAULT_RETRY_SETTINGS, type Resource } from "@infraforge/domain/resource";
+import { DEFAULT_RETRY_SETTINGS, DeploymentChaosNames, type Resource } from "@infraforge/domain/resource";
 import { LayoutSchema, LiveTopologySchema } from "../zod_schemas/layout.schema";
 import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
 import { createModel2Run } from "@infraforge/simulation/model2-run";
@@ -37,7 +37,7 @@ test("browser entry and server replay have identical retry-enabled views after s
   const browser=createModel2Run(input,5), server=createModel2Engine(input,5,buildModel2Contract);
   for(let s=0;s<5;s++) {
     if(s===2) {
-      const action={kind:"chaos" as const,parameters:{type:"crash" as const,resourceId:"vm-a"}};
+      const action={kind:"chaos" as const,parameters:{type:DeploymentChaosNames.Crash,resourceId:"vm-a"}};
       expect(browser.apply(action)).toEqual(server.apply(action));
     }
     const stableLogs = (logs: ReturnType<typeof browser.advance>) => logs.map(({ timestamp: _wallClock, ...row }) => row);
