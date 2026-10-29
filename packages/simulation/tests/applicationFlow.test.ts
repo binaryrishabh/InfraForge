@@ -1,4 +1,4 @@
-import { test, expect } from "bun:test";
+import { test, expect, spyOn } from "bun:test";
 import { createHash } from "node:crypto";
 import { legacyVmCall, fanout, canvasFlow } from "./applicationFlow.fixture";
 import { createNetworkModel2, createNetworkRuntime, type NetworkExtension } from "../src/model2/network/run";
@@ -154,21 +154,52 @@ test("flow cycle check expands router backends and rejects operation effects con
   delete unsafe.paths[1]!.bytes.heavy;
   expect(()=>run(unsafe)).toThrow("bytes");
 });
-test("owner rename preserves equal caller and response timeout outcome and classification", () => {
+test("owner rename preserves a real dispatched branch response-timeout and caller-stop tie", () => {
   const outputs = ["a-app","z-app"].map(name => {
     const d=canvasFlow(); d.resources[0]!.id=name;
+    d.resources[0]!.applicationFlow!.operations.read!.steps.shift(); // No leading CPU: all branches dispatch at t=0.
     d.connections.forEach(e=>e.sourceId=name);
-    const a=contractFromDesign(d);if("refused" in a)throw Error(JSON.stringify(a.refused));
+    const a=contractFromDesign(d, { adapterProfiles: ["failure-cause/1"] });if("refused" in a)throw Error(JSON.stringify(a.refused));
     const contract=a.contract, q=quantities();
+    contract.application!.payloads.light=q.q("tie.payload.light",0,"bytes");
     contract.application!.operations.forEach(o=>o.callerTimeout=q.q(`tie.${o.id}.caller`,1000,"us"));
-    for(const [id,t] of Object.entries(contract.transports)) {t.pool.responseTimeout=q.q(`tie.${id}.response`,1000,"us");t.pool.establish=q.q(`tie.${id}.establish`,0,"us");}
+    for(const [id,t] of Object.entries(contract.transports)) {
+      t.pool.responseTimeout=q.q(`tie.${id}.response`,1000,"us");t.pool.establish=q.q(`tie.${id}.establish`,0,"us");
+      t.links.forEach(l=>l.propagation=q.q(`tie.${id}.${l.id}.propagation`,0,"us"));
+      for(const [op,b] of Object.entries(t.bytes)) { b.request=q.q(`tie.${id}.${op}.request`,0,"bytes");b.response=q.q(`tie.${id}.${op}.response`,0,"bytes"); }
+    }
     contract.ledger.push(...q.ledger);
     const c=compileProduct(d,contract);if(!c.ok)throw Error(JSON.stringify(c.diagnostics));
-    const rows: Array<Record<string,unknown>>=[];const r=createProductModel2(c.value,undefined,e=>{if(e.kind==="caller-terminal")rows.push(e.detail);});r.advanceTo(1000000);
-    return {counts:r.evidence().counts,rows};
+    const scheduled: Array<{at:number;priority:number;key:string}> = [];
+    const original=EventKernel.prototype.schedule;
+    const spy=spyOn(EventKernel.prototype,"schedule").mockImplementation(function(this: EventKernel, at, priority, key, run) {
+      scheduled.push({at,priority,key});return original.call(this,at,priority,key,run);
+    });
+    const rows: import("../src/model2/workload/causal").CausalEvent[]=[];
+    try {
+      const r=createProductModel2(c.value,undefined,e=>rows.push(e));
+      r.advanceTo(999);
+      const starts=rows.filter(e=>e.kind==="flow-branch-start");
+      expect(starts).toHaveLength(3);expect(starts.map(e=>e.atUs)).toEqual([0,0,0]);
+      const delivered=rows.filter(e=>e.kind==="request-delivered" && starts.some(s=>s.work!.callId===e.detail.id));
+      expect(delivered).toHaveLength(3);expect(delivered.map(e=>e.atUs)).toEqual([0,0,0]);
+      const callerStop=scheduled.find(e=>JSON.parse(e.key)[0]==="caller-stop")!;
+      const branchTimers=scheduled.filter(e=>JSON.parse(e.key)[0]==="upstream-timeout" && starts.some(s=>JSON.parse(e.key)[2]===s.work!.callId));
+      expect(branchTimers).toHaveLength(3);
+      expect(callerStop).toMatchObject({at:1000,priority:1});
+      expect(branchTimers.map(e=>({at:e.at,priority:e.priority}))).toEqual(Array.from({length:3},()=>({at:callerStop.at,priority:callerStop.priority})));
+      expect(rows.filter(e=>e.kind==="caller-terminal")).toHaveLength(0);
+      r.advanceTo(1000);
+      const callers=rows.filter(e=>e.kind==="caller-terminal");
+      expect(callers).toHaveLength(1);expect(callers[0]!.atUs).toBe(callerStop.at);
+      expect(callers[0]!.detail).toEqual({outcome:"deadline-exceeded",responseUs:1000});
+      expect(rows.filter(e=>e.kind==="flow-branch-terminal")).toHaveLength(3);
+      return {counts:r.evidence().counts,rows:callers.map(e=>e.detail)};
+    } finally {spy.mockRestore();}
   });
   expect(outputs[0]).toEqual(outputs[1]);expect(outputs[0]!.counts.deadlineExceeded).toBe(1);
 });
+
 test("canvas rejects cycles through load balancer backends and retains health outside the authored flow", () => {
   const d=canvasFlow();d.resources=d.resources.filter(r=>["app","inventory"].includes(r.id));
   d.resources.push({id:"gateway",type:"Load Balancer",x:0,y:0});
