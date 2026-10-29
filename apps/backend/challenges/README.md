@@ -75,16 +75,18 @@ second lesson: delayed scale-out changes later database connection pressure. Its
 its hidden one-change reference passes, and its 106 samples fit the existing bound.
 
 `after-the-cache-returns@2` combines cache recovery and per-instance pool pressure in Model 2.
-Its authored workload is 600 requests/s (80% reads, 20% writes), with a fourfold burst at seconds
-120–140. The cache crashes at 100, ends its crash at 130 plus one microsecond and restarts at
-131 plus one microsecond; 132 is its first available sample. Evaluation at 137 deliberately
+Its authored workload is 600 requests/s (90% reads, 10% writes), with a fourfold burst at seconds
+120–140. The cache crashes at 105, ends its crash at 135 plus one microsecond and restarts at
+136 plus one microsecond; 137 is its first available sample. Evaluation at 137 deliberately
 observes the ongoing burst after the cache returns, rather than scoring an already idle database.
-Writes invalidate the cached key, so cache availability does not remove all database demand.
+The identical no-fault control scales out too, but cache hits keep its database Healthy with spare
+sessions and no refusals through evaluation plus 20 seconds. During the outage, independent
+fallback reads fill the pools; writes invalidate the cached key and contribute to the return tail.
 The burst crosses the app's 20% CPU target: eight replicas can grow to 24, taking possible pool
 sessions from 80 to beyond the database's unchanged 85-session limit. The DB-tier-only reference
 adds both CPU capacity and session headroom; capping replicas alone does not fix database CPU.
 Health samples use interval CPU and recent errors (including session refusals); idle sessions
-alone do not imply saturation. Excess work naturally settles after the burst ends. The unchanged
+alone do not imply saturation. The starter has live/queued work at 137–140, drains at 141 and is Healthy at 142. The unchanged
 statement/transaction deadlines are authored 1s/2s, statement CPU costs 1ms/read and 2ms/write,
 cache deadlines 10ms, and caller concurrency 512. These are educational assumptions, not provider
 defaults or performance guarantees. No retry policy is enabled. `cache-failure@1` stays retired.

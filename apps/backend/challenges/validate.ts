@@ -50,6 +50,7 @@ function checkDefinition(d: ChallengeDefinition): string[] {
   unique("criterion", d.criteria.map((c) => c.id));
   unique("prediction", d.predictions.map((p) => p.id));
   for (const c of d.criteria) {
+    if (c.kind === "database-connections" && c.requireSpare !== undefined && typeof c.requireSpare !== "boolean") problems.push(`${where}: criterion ${c.id} requireSpare must be boolean`);
     if (!CRITERIA.includes(c.kind)) problems.push(`${where}: criterion ${c.id} has unsupported kind ${c.kind}`);
     if (NEEDS_EXPERIMENT.has(c.kind) && !d.experiment) problems.push(`${where}: criterion ${c.id} needs an experiment`);
   }

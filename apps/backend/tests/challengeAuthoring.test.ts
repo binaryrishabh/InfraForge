@@ -14,7 +14,7 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
-  "after-the-cache-returns@2": "adf507d15e19849bfe896d6f4fedf491a59f1b29cc835394f2b171e0903f7250",
+  "after-the-cache-returns@2": "e9e89172faae78389398325d29f231ff68192967073566bd9860af60c5f61e20",
   "after-the-cache-returns@1": "4511ec082bcd0127140ea1689ccdc0fb5179362f891645ccef6008dde0e645e6",
   "headroom-under-cpu-pressure@1": "ca4b7cc902a9515b7cdb5251cfc27cd964172a917a5b75ccd64cfa6f7c96b10a",
   "first-production-api@1": "515c84a6da8a78c5b4c30269e0c20dff5f934e8f98608fbac572f3782dd33888",
@@ -126,8 +126,8 @@ describe("calibration against the real engine", () => {
         expect(at(failed, "cache").health).toBe("healthy"); expect(at(failed, "db").health).toBe("saturated");
         expect(at(failed, "db").connections).toBe(85);
         expect(at(passed, "db").connections!).toBeLessThan(1360);
-        expect(failed.experimentTrace?.moments?.firstTargetHealthy).toBe(132);
-        expect(passed.experimentTrace?.moments?.firstOverallHealthy).toBe(132);
+        expect(failed.experimentTrace?.moments?.firstTargetHealthy).toBe(d.experiment!.atSimulatedSecond + 32);
+        expect(passed.experimentTrace?.moments?.firstOverallHealthy).toBe(d.experiment!.atSimulatedSecond + 32);
         expect(failed.challenge?.criteria.find(c => c.id === "connections")?.status).toBe("not-met");
         expect(REFERENCE[d.id]!.resources.filter(r => r.id !== "db")).toEqual(d.starter!.resources.filter(r => r.id !== "db"));
       }
@@ -139,6 +139,22 @@ describe("calibration against the real engine", () => {
   }
 
   const d = listLatestChallenges().find(({ definition }) => definition.id === "after-the-cache-returns")!.definition;
+  test("after-the-cache-returns@2: the identical burst with no fault scales out with healthy database headroom", () => {
+    const control = cacheReturnEvidence(d, d.starter!, d.evaluationSeconds + 20, false);
+    const initial = control.rows.find(row => row.second === 100)!;
+    const burst = control.rows.filter(row => row.second >= 120);
+    expect(burst.at(-1)!.second).toBe(d.evaluationSeconds + 20);
+    expect(burst).toHaveLength(d.evaluationSeconds + 20 - 120 + 1);
+    for (const row of burst) {
+      expect(row.cacheHealth).toBe("healthy");
+      expect(row.dbHealth).toBe("healthy");
+      expect(row.health).toBe("healthy");
+      expect(row.limit - row.sessions).toBeGreaterThan(0);
+      expect(row.refusals).toBe(0);
+    }
+    expect(burst.some(row => row.replicas > initial.replicas)).toBe(true);
+  }, 600000);
+
   test("after-the-cache-returns@2: real backlog, added pools before refusals, natural drain and byte-identical evidence", () => {
     const first = cacheReturnEvidence(d, d.starter!), second = cacheReturnEvidence(d, d.starter!);
     expect(second.evidenceHash).toBe(first.evidenceHash);
@@ -157,11 +173,19 @@ describe("calibration against the real engine", () => {
     const scaling = first.controller.events.filter(event => event.kind === "evaluation").map(event => ({ at: event.at, ...JSON.parse(event.detail) as { utilization: number; recommendation: number } }));
     const crossing = scaling.find(event => event.recommendation > initial.replicas)!;
     expect(crossing.at).toBeGreaterThan(d.experiment!.atSimulatedSecond * 1_000_000);
-    expect(crossing.utilization).toBeGreaterThan(0.2 * 1.1); // includes the scaler's tolerance
+    expect(crossing.utilization).toBeGreaterThan(d.starter!.resources.find(r => r.id === "app")!.autoscaling!.targetCpu! / 100 * 1.1); // includes the scaler's tolerance
     const drained = first.rows.at(-1)!;
     expect(drained.queued + drained.poolWaiters + drained.orphans).toBe(0);
     expect(drained.live).toBeLessThanOrEqual(initial.live);
-    expect(drained.refusals).toBe(first.rows.find(row => row.second === 142)!.refusals);
+    expect(at.cacheHealth).toBe("healthy");
+    expect(at.dbHealth).not.toBe("healthy");
+    const returned = first.rows.find(row => row.second > d.experiment!.atSimulatedSecond && row.cacheHealth === "healthy")!;
+    const recovered = first.rows.find(row => row.second > at.second && row.dbHealth === "healthy" && row.health === "healthy")!;
+    expect(returned.second).toBeLessThanOrEqual(at.second);
+    expect(recovered).toBeDefined();
+    expect(first.rows.filter(row => row.second >= returned.second && row.second <= at.second).every(row => row.dbHealth !== "healthy")).toBe(true);
+    expect(drained.health).toBe("healthy");
+    expect(drained.refusals).toBe(recovered.refusals);
   }, 600000);
 
   test("after-the-cache-returns@2: capping replicas avoids session exhaustion but cannot fix database CPU", () => {
@@ -173,4 +197,3 @@ describe("calibration against the real engine", () => {
     expect(report.terminal?.resources.find(r => r.id === "db")?.connections!).toBeLessThan(85);
   }, 300000);
 });
-

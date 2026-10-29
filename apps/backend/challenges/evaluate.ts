@@ -152,8 +152,8 @@ class Judge {
         if (!dbs.length) return decided(false, "The design has no database.", ["runInputs.resources"]);
         if (dbs.some((d) => d.connections === undefined)) return pending("Connection counts were not recorded for every database.", ["terminalSnapshot.metrics"]);
         const full = dbs.filter((d) => c.requireSpare ? d.connections! >= d.limit : d.connections! > d.limit);
-        return decided(!full.length, list(dbs.map((d) => `${d.name} had ${d.connections} of ${d.limit} sessions (${d.limit - d.connections!} spare)`)) +
-          ` at second ${t.simulatedSeconds}; ${c.requireSpare ? "strictly positive spare session capacity is required" : "sessions must stay within the limit"}.`, ["terminalSnapshot.metrics", "terminalSnapshot.installedSkus"]);
+        return decided(!full.length, list(dbs.map((d) => c.requireSpare ? `${d.name} had ${d.connections} of ${d.limit} sessions (${d.limit - d.connections!} spare)` : `${d.name} had ${d.connections} of ${d.limit} connections`)) +
+          ` at second ${t.simulatedSeconds}${c.requireSpare ? "; strictly positive spare session capacity is required" : ""}.`, ["terminalSnapshot.metrics", "terminalSnapshot.installedSkus"]);
       }
     }
   }
