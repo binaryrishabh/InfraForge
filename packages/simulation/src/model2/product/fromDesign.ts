@@ -93,7 +93,7 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
           config.memory.limit = q(`${id}.memory.limit`, memory.get(id)! * 1073741824, "bytes", "The memory label is interpreted as GiB for this partial observation only; total memory use remains unknown.");
           if (cache && database) {
             config.downstream = "$self/aside";
-            add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: `$${cache.id}`, database: `$${database.id}`, keys: ["key"], access: "cycle", coalesce: true, onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "main", "aside");
+            add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: `$${cache.id}`, database: `$${database.id}`, keys: ["key"], access: "cycle", coalesce: note(`${id}.cache.singleFlight`, false, "policy", "Plain cache-aside has no single-flight: concurrent misses independently call the database."), onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "main", "aside");
           } else if (data[0]) config.downstream = `$${data[0].id}${data[0].type === "Cache" ? "/aside" : ""}`;
           add(r, "main", config); break;
         }
@@ -106,7 +106,7 @@ export function contractFromDesign(saved: SavedProductDesign): { contract: Produ
           if (target && target.type !== "Database") { error(`resources.${id}`, "Connect the cache to one database for cache-aside reads and write invalidation."); break; }
           add(r, "main", { kind: "cache", semantics: "keyed-cache/1", execution: execution(r, "main"), capacity: q(`${id}.capacity`, memory.get(id)! * 1073741824, "bytes"), entryOverhead: q(`${id}.overhead`, 64, "bytes"), policy: "lru", ttl: q(`${id}.ttl`, 60000000, "us"), initial: [], commandCpu: q(`${id}.cpu`, 100, "cpu-us") });
           if (!target) break;
-          add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: "$self", database: `$${target.id}`, keys: ["key"], access: "cycle", coalesce: true, onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "aside", "main"); break;
+          add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: "$self", database: `$${target.id}`, keys: ["key"], access: "cycle", coalesce: note(`${id}.cache.singleFlight`, false, "policy", "Plain cache-aside has no single-flight: concurrent misses independently call the database."), onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "aside", "main"); break;
         case "Object Storage": objects(r, "main"); break;
         case "CDN":
           if (target?.type !== "Object Storage") { error(`resources.${id}`, "Connect the CDN to one object store; dynamic app origins need an authored HTTP plan."); break; }
