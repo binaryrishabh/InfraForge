@@ -6,7 +6,7 @@ const realTimers: Timers = { set: (run, ms) => setTimeout(run, ms), clear: (hand
 
 /* Runs one Model 2 run inside the worker: one simulated second per 1000/speed ms (or as fast as the engine
 allows), the live view after every second, and actions applied locally. Speed 0 pauses. */
-export function createRunHost(post: (message: FromWorker) => void, timers: Timers = realTimers) {
+export function createRunHost(post: (message: FromWorker) => void, timers: Timers = realTimers, makeRun: typeof createModel2Run = createModel2Run) {
   let run: Model2Run | null = null, start: RunStart | null = null, speed = 1, timer: unknown = null, finished = false;
   const submitted: RunSubmission["actions"] = [];
 
@@ -54,7 +54,7 @@ export function createRunHost(post: (message: FromWorker) => void, timers: Timer
     handle(message: ToWorker) {
       if (message.type === "start") {
         if (run) return post({ type: "error", message: "This worker already runs a simulation." });
-        try { run = createModel2Run(message.start.input, message.start.horizonSeconds); }
+        try { run = makeRun(message.start.input, message.start.horizonSeconds); }
         catch (error) { return post({ type: "error", message: error instanceof Error ? error.message : "Model 2 cannot run this design." }); }
         start = message.start; speed = message.start.speed;
         timer = timers.set(step, 0);

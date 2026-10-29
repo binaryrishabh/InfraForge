@@ -15,7 +15,7 @@ export function validateConnection(sourceType: ResourceType, targetType: Resourc
     }
     const rule = allowed.find(rule => (typeof rule === "string" ? rule : rule.target) === targetType);
     if (!rule) { // If the sepcified sourceType can't make connection with the defined targetType
-        return { valid: false, message: `${sourceType} cannot connect to ${targetType}. Allowed: ${allowed.map(rule => typeof rule === "string" ? rule : rule.target).join(", ")}` };
+        return { valid: false, message: `${sourceType} cannot connect to ${targetType}. Allowed: ${allowed.filter(rule => context === "draw" || typeof rule === "string").map(rule => typeof rule === "string" ? rule : rule.target).join(", ")}` };
     }
     if (typeof rule !== "string" && context !== "draw") {
         const usesConnection = context && Object.values(context.source.applicationFlow?.operations ?? {}).some(flow =>

@@ -29,14 +29,16 @@ test("flow survives layout save/reload and captured replay; authored branch orde
   }
 });
 test("server replay carries bounded flow rows into its serializable official terminal record",()=>{
-  const d=design(), input=readRunInputs(captureRunInputs(d,workload,"flow-parity"));
+  const d=design(), input=readRunInputs(captureRunInputs(d,{...workload,targetThroughput:6000},"flow-parity"));
   const server=createModel2Engine(input,6,buildModel2Contract);
   for(let i=0;i<5;i++) server.advance();
   const instance: SimulationInstance = { model2: server, tickCount: 5, pendingLogs: [], speed: 1, lastCheckpointAt: 0,
     accumulatedCostUsd: 0, topology: d, topologyRevision: 0, actions: new Map(), acknowledge: null, metricsComputedAt: null, metricsTopologyRevision: 0 };
   const record = captureSnapshot("flow-replay", instance, "terminal");
   expect(JSON.parse(JSON.stringify(record)).applicationFlow).toEqual(record.applicationFlow);
-  expect(record.applicationFlow).toMatchObject({profile:"application-flow/1", retained: record.applicationFlow!.events.length, omitted:0});
+  expect(record.applicationFlow).toMatchObject({profile:"application-flow/1", retained: record.applicationFlow!.events.length});
+  expect(record.applicationFlow!.retained).toBe(1000);
+  expect(record.applicationFlow!.omitted).toBeGreaterThan(0);
   expect(record.applicationFlow!.events.some(e=>e.kind==="flow-join")).toBe(true);
   expect(record.applicationFlow!.events.some(e=>e.kind==="flow-branch-terminal" && e.detail.outcome==="cancelled-after-join")).toBe(true);
   expect(record.metrics.app!.health).toBe(ResourceHealth.HEALTHY);
@@ -64,3 +66,25 @@ test("no-flow starter service edges keep the historical connection-rule error cl
   }
 });
 
+
+
+test("a degraded quorum explanation survives official terminal capture", () => {
+  const d = design(), input = readRunInputs(captureRunInputs(d,workload,"degraded-replay"));
+  const server = createModel2Engine(input,1,(...args)=>{
+    const built = buildModel2Contract(...args);
+    if ("refused" in built) return built;
+    const contract = built.contract, transport = structuredClone(contract.transports.assumed!);
+    const quantity = {kind:"known" as const,value:1,unit:"us" as const,provenance:["test.optional-timeout"]};
+    const entry = structuredClone(contract.ledger.find(row=>row.id===transport.pool.responseTimeout.provenance[0])!);
+    contract.ledger.push({...entry,id:"test.optional-timeout",quantity,formula:"1",scope:"Synthetic optional timeout verification"});
+    transport.pool.responseTimeout=quantity;
+    contract.transports.optional=transport;contract.edges["app-tax"]!.transport="optional";
+    return built;
+  });
+  server.advance();
+  const instance: SimulationInstance = {model2:server,tickCount:1,pendingLogs:[],speed:1,lastCheckpointAt:0,accumulatedCostUsd:0,topology:d,topologyRevision:0,actions:new Map(),acknowledge:null,metricsComputedAt:null,metricsTopologyRevision:0};
+  const record = JSON.parse(JSON.stringify(captureSnapshot("degraded",instance,"terminal"))) as ReturnType<typeof captureSnapshot>;
+  expect(record.applicationFlow!.events.some(row=>row.kind==="flow-join" && row.detail.failed===1)).toBe(true);
+  expect(record.applicationFlow!.events.some(row=>row.kind==="flow-branch-terminal" && row.detail.branch==="tax" && row.detail.outcome==="rejected")).toBe(true);
+  expect(record.traffic!.completedRps).toBe(1);
+});
