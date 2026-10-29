@@ -1,3 +1,5 @@
+import { DEFAULT_RETRY_SETTINGS } from "@infraforge/domain/resource";
+import { DesignChangeSummary } from "../src/features/challenges/components/DesignChangeSummary";
 import { expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -56,4 +58,13 @@ test("starting design disclosure retains connection order", () => {
   expect(html).toContain("Connection order changed");
   expect(html).toContain("Earlier connection order: lb → a:80; lb → b:80");
   expect(html).toContain("Later connection order: lb → b:80; lb → a:80");
+});
+
+
+test("retry comparison spells out every setting instead of rendering object placeholders", () => {
+  const html = render(<DesignChangeSummary review={{ classification: "one-change", count: 1, inputHash: "test", starting: comparison.starting,
+    differences: { added: [], removed: [], addedConnections: [], removedConnections: [], resourceOrder: null, connectionOrder: null,
+      reconfigured: [{ id: "lb", fields: [{ field: "retry", earlier: DEFAULT_RETRY_SETTINGS, later: { ...DEFAULT_RETRY_SETTINGS, maxAttempts: 5 } }] }] } }} />);
+  for (const text of ["on", "2 total attempts", "5 total attempts", "backoff 100 ms", "jitter 0.2", "concurrent retry limit 4", "connectionFailure, timeout"]) expect(html).toContain(text);
+  expect(html).not.toContain("[object Object]");
 });

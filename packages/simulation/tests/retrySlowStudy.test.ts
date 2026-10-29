@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { createLiveModel2 } from "../src/model2/product/live";
 import { validateLedger } from "../src/reality/ledger";
-import { RETRY_STUDY_POLICIES, retryStudyDesign, runRetryStudy, type StudyFailure, type StudyPolicy } from "./retryStudy";
+import { pairRetryRoots, RETRY_STUDY_POLICIES, retryStudyDesign, runRetryStudy, type StudyFailure, type StudyPolicy } from "./retryStudy";
 
 const cache = new Map<string, ReturnType<typeof runRetryStudy>>();
 function study(failure: StudyFailure, policy: StudyPolicy) {
@@ -58,6 +58,10 @@ test("the identical bounded policy rescues a short slow period with only four ex
   expect(bounded!.databaseCpuUs - off!.databaseCpuUs).toBeCloseTo(80000, 4);
   expect(bounded!.databaseAdmitted - off!.databaseAdmitted).toBe(bounded!.caller.completed - off!.caller.completed);
   expect(bounded!.databaseCommitted - off!.databaseCommitted).toBe(4);
+  const paired = pairRetryRoots(study("slow-transient", "disabled"), study("slow-transient", "bounded"));
+  expect(paired.directRescues.map((root) => JSON.parse(root)[2])).toEqual(["arrival-99", "arrival-100", "arrival-101", "arrival-102"]);
+  expect(paired.firstAttemptGains).toEqual([]); expect(paired.losses).toEqual([]);
+  expect(paired.alreadySuccessfulRetries).toEqual([]); expect(paired.netGain).toBe(4);
   expect(bounded!.drainAfterLoadFallUs).toBe(off!.drainAfterLoadFallUs);
   expect(bounded!.queueDrainAfterLoadFallUs).toBe(0);
   expect(bounded!.remoteAfterStop).toBe(0); expect(bounded!.responseTimeouts).toBe(0);

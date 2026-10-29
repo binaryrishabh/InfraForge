@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { createLiveModel2 } from "../src/model2/product/live";
-import { RETRY_STUDY_POLICIES, retryStudyDesign, runRetryStudy, type StudyFailure, type StudyPolicy } from "./retryStudy";
+import { pairRetryRoots, RETRY_STUDY_POLICIES, retryStudyDesign, runRetryStudy, type StudyFailure, type StudyPolicy } from "./retryStudy";
 
 const cases = new Map<string, ReturnType<typeof runRetryStudy>>();
 function study(failure: StudyFailure, policy: StudyPolicy, reads = 1) {
@@ -33,16 +33,19 @@ test("saved canvas overload amplifies real attempts and session refusals without
   expect(off.retriesWaiting).toBeNull(); // Disabled profile does not retain this field; never invent a measurement.
 }, 30000);
 
-test("the same bounded policy rescues a transient failure with one DB call per rescued request", () => {
+test("paired roots separate three direct retry rescues from fifteen first-attempt routing gains", () => {
   const off = study("transient", "disabled").summary, aggressive = study("transient", "aggressive").summary, bounded = study("transient", "bounded").summary;
   expect([off, aggressive, bounded].map((s) => [s.originalRequests, s.attempts, s.retries, s.databaseCalls, s.databaseAdmitted, s.sessionRefusals, s.caller.completed, s.caller.rejected])).toEqual([
     [1000, 1000, 0, 1004, 1004, 0, 980, 20],
     [1000, 1020, 20, 1022, 1022, 0, 998, 2],
     [1000, 1018, 18, 1022, 1022, 0, 998, 2],
   ]);
-  const rescued = bounded.caller.completed - off.caller.completed;
-  expect(rescued).toBe(18);
-  expect(bounded.databaseCalls - off.databaseCalls).toBe(rescued);
+  const netGain = bounded.caller.completed - off.caller.completed;
+  expect(netGain).toBe(18); expect(bounded.databaseCalls - off.databaseCalls).toBe(18);
+  const paired = pairRetryRoots(study("transient", "disabled"), study("transient", "bounded"));
+  expect(paired.directRescues.map((root) => JSON.parse(root)[2])).toEqual(["arrival-228", "arrival-240", "arrival-372"]);
+  expect(paired.firstAttemptGains).toHaveLength(15); expect(paired.losses).toEqual([]);
+  expect(paired.alreadySuccessfulRetries).toHaveLength(15); expect(paired.netGain).toBe(netGain);
   expect(study("transient", "bounded").samples.slice(2).map((s) => [s.dbQueued, s.dbServing, s.retriesWaiting])).toEqual(Array.from({ length: 6 }, () => [0, 0, 0]));
   expect(study("overload", "bounded").summary.sessionRefusals - study("overload", "disabled").summary.sessionRefusals).toBe(100);
 }, 15000);

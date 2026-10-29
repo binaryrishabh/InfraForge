@@ -56,6 +56,7 @@ export function runRetryStudy(failure: StudyFailure, policy: StudyPolicy, readFr
   const compiled = compileProduct(design, contract);
   if (!compiled.ok) throw Error(JSON.stringify(compiled.diagnostics));
   if (slow) installSlowFault(compiled.value, contract, failure);
+  const outcomes = new Map<string, string>();
   const callers = new Map<string, { offeredAt: number; operation: string }>();
   const retriesByRoot = new Map<string, number>(), ambiguousWrites = new Set<string>();
   const dbAdmissionsByRoot = new Map<string, number>(), dbLiveByRoot = new Map<string, number>(), callerStopped = new Set<string>();
@@ -75,6 +76,7 @@ export function runRetryStudy(failure: StudyFailure, policy: StudyPolicy, readFr
     const root = rootOf(event);
     if (event.kind === "caller-offered" && root) callers.set(root, { offeredAt: event.atUs, operation: event.work!.operation });
     if (root && event.kind === "caller-terminal") {
+      outcomes.set(root, String(event.detail.outcome));
       callerStopped.add(root);
       if (slow && isResponseStudy(failure) && event.detail.outcome === "rejected" && chainRoot === undefined) {
         chainRoot = root; chain = chains.get(root) ?? []; retainedChainEvents = chain.length; chains.clear();
@@ -158,7 +160,23 @@ export function runRetryStudy(failure: StudyFailure, policy: StudyPolicy, readFr
     traceRetained: evidence.network.trace.retained, traceOmitted: evidence.network.trace.omitted,
     chainRoot: chainRoot ?? null, chainRetained: chain.length, chainOmitted: Math.max(0, retainedChainEvents - chain.length),
     evidenceHash: createHash("sha256").update(JSON.stringify(evidence).replaceAll("\r\n", "\n")).digest("hex") };
-  return { summary, samples, chain, compiled: compiled.value, evidence };
+  const roots = [...callers].map(([root, caller]) => ({ root, ...caller, outcome: outcomes.get(root) ?? "in-flight", attempts: retriesByRoot.get(root) ?? 0 }));
+  return { summary, samples, chain, roots, compiled: compiled.value, evidence };
+}
+
+/** Pair identical offered requests; aggregate completion deltas alone do not establish retry causality. */
+export function pairRetryRoots(off: ReturnType<typeof runRetryStudy>, on: ReturnType<typeof runRetryStudy>) {
+  if (off.roots.length !== on.roots.length) throw Error("Pairing requires the same offered cohort");
+  const baseline = new Map(off.roots.map((r) => [r.root, r]));
+  const directRescues: string[] = [], firstAttemptGains: string[] = [], losses: string[] = [], alreadySuccessfulRetries: string[] = [];
+  for (const root of on.roots) {
+    const before = baseline.get(root.root);
+    if (!before || before.offeredAt !== root.offeredAt || before.operation !== root.operation) throw Error("Pairing requires identical request identity, time and operation");
+    if (before.outcome !== "completed" && root.outcome === "completed") (root.attempts > 1 ? directRescues : firstAttemptGains).push(root.root);
+    if (before.outcome === "completed" && root.outcome !== "completed") losses.push(root.root);
+    if (before.outcome === "completed" && root.outcome === "completed" && root.attempts > 1) alreadySuccessfulRetries.push(root.root);
+  }
+  return { directRescues, firstAttemptGains, losses, alreadySuccessfulRetries, netGain: directRescues.length + firstAttemptGains.length - losses.length };
 }
 
 if (import.meta.main) {
