@@ -14,7 +14,7 @@ export function fields(before: Record<string, unknown>, after: Record<string, un
     canonical(before[field]) === canonical(after[field]) ? [] : [{ field, earlier: before[field] ?? null, later: after[field] ?? null }]);
 }
 export function configuration(r: Resource): Record<string, unknown> {
-  return { type: r.type, skuId: r.skuId ?? null, size: r.size ?? null, region: r.region ?? null,
+  return { ...(r.retry === undefined ? {} : { retry: r.retry }), type: r.type, skuId: r.skuId ?? null, size: r.size ?? null, region: r.region ?? null,
     public: r.public ?? null, encryption: r.encryption ?? null, openPorts: [...r.openPorts ?? []].sort((a, b) => a - b),
     "autoscaling.enabled": r.autoscaling?.enabled ?? null, "autoscaling.minReplicas": r.autoscaling?.minReplicas ?? null,
     "autoscaling.maxReplicas": r.autoscaling?.maxReplicas ?? null, "autoscaling.targetCpu": r.autoscaling?.targetCpu ?? null };

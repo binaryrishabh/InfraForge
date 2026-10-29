@@ -111,7 +111,7 @@ export function deleteConnection(connectionId: string) {
   toast("Connection removed", { action: { label: "Undo", onClick: undo }, duration: 5000 });
 }
 
-const TRACKED = ["name", "skuId", "autoscaling", "public", "encryption", "openPorts"] as const;
+const TRACKED = ["name", "skuId", "autoscaling", "retry", "public", "encryption", "openPorts"] as const;
 export function updateResource(resourceId: string, patch: Partial<Resource>) {
   const store = useCanvasStore.getState();
   if (!editable(store)) return;

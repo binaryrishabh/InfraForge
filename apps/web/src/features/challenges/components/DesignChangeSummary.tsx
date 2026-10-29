@@ -1,7 +1,7 @@
 import type { DesignChangeReview } from "@infraforge/contracts/reports";
 
 const FIELDS: Record<string, string> = { skuId: "catalog size", size: "generic size", type: "resource type", region: "region", public: "public access",
-  encryption: "encryption", openPorts: "open ports", "autoscaling.enabled": "autoscaling", "autoscaling.minReplicas": "minimum replicas",
+  retry: "retry policy", encryption: "encryption", openPorts: "open ports", "autoscaling.enabled": "autoscaling", "autoscaling.minReplicas": "minimum replicas",
   "autoscaling.maxReplicas": "maximum replicas", "autoscaling.targetCpu": "target CPU" };
 const value = (v: unknown): string => v == null ? "not set" : typeof v === "boolean" ? v ? "on" : "off" : Array.isArray(v) ? v.join(", ") || "none" : String(v);
 

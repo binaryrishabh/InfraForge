@@ -57,3 +57,29 @@ test("the inspector exposes what the security scan checks and describes autoscal
   // Server rendering reads the store's initial state, so the connection list is empty here.
   expect(html).toContain("Not connected yet.");
 });
+
+test("retry edits can be undone and redone and are locked during a run", () => {
+  const lb = addResource("Load Balancer", {x:0,y:0})!;
+  const retry = { enabled:true, maxAttempts:2, backoffMs:100, jitterRatio:0.2, maxConcurrentRetries:4, retryOn:["timeout" as const] };
+  updateResource(lb.id,{retry});
+  expect(state().resources[0]!.retry).toEqual(retry);
+  undo(); expect(state().resources[0]!.retry).toBeUndefined();
+  redo(); expect(state().resources[0]!.retry).toEqual(retry);
+  useCanvasStore.setState({liveLocked:true});
+  updateResource(lb.id,{retry:{enabled:false}});
+  expect(state().resources[0]!.retry).toEqual(retry);
+  useCanvasStore.setState({liveLocked:false,isDeploying:true});
+  updateResource(lb.id,{retry:{enabled:false}});
+  expect(state().resources[0]!.retry).toEqual(retry);
+  useCanvasStore.setState({isDeploying:false});
+});
+
+test("retry inspector explains total attempts, failure groups and ambiguous writes", () => {
+  const retry = { enabled:true, maxAttempts:2, backoffMs:100, jitterRatio:0.2, maxConcurrentRetries:4, retryOn:["timeout" as const] };
+  const html=renderToStaticMarkup(<Inspector resource={{id:"lb",type:"Load Balancer",x:0,y:0,retry}} />);
+  for(const text of ["Retry failed requests","Maximum attempts","Backoff","Jitter","Concurrent retry limit","Connection failure","Timeout","Overload","Backend failure","Writes with an unclear result are never retried"]) expect(html).toContain(text);
+  const unknown=renderToStaticMarkup(<Inspector resource={{id:"lb",type:"Load Balancer",x:0,y:0,retry:{enabled:true}}} />);
+  expect(unknown).toContain('placeholder="Unknown"');
+  const vm=renderToStaticMarkup(<Inspector resource={{id:"app",type:"Virtual Machine",x:0,y:0}} />);
+  expect(vm).not.toContain("Retry failed requests");
+});

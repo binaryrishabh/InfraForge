@@ -1,4 +1,5 @@
 import { expect } from "bun:test";
+import { DEFAULT_RETRY_SETTINGS } from "@infraforge/domain/resource";
 import { createModel2Run } from "@infraforge/simulation/model2-run";
 import { readRunInputs } from "../../deployments/runInputs";
 import { LocalHarness, until } from "./localHarness";
@@ -18,7 +19,9 @@ export async function submitBrowserRun(h: LocalHarness, id: string, stopAtSecond
 "browser" (here the same shared run module the web worker uses) runs it with one action and submits; the server
 replays it, and the official record equals what the browser showed. */
 export async function checkBrowserRun(h: LocalHarness, designs: string[], runs: string[]) {
-  const design = (await h.request("/infrastructure", { name: "Browser run", layout }, "POST", 201)).createdInfrastructure;
+  const retryLayout = structuredClone(layout);
+  retryLayout.resources.find((r) => r.type === "Load Balancer")!.retry = { ...DEFAULT_RETRY_SETTINGS };
+  const design = (await h.request("/infrastructure", { name: "Browser run", layout: retryLayout }, "POST", 201)).createdInfrastructure;
   designs.push(design.id);
   const run = (await h.request("/deployments", { infrastructureId: design.id, workloadProfile: workload }, "POST", 201)).createdDeployment;
   runs.push(run.id);

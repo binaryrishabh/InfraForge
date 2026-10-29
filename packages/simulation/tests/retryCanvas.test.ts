@@ -34,6 +34,7 @@ test("canvas retries retain authored quantities and group provenance with exact 
     expect.objectContaining({ origin: "user-authored", sources: ["saved-design:lb.retry.retryOn"] }),
   ]));
   expect(a.contract.ledger.filter((r) => r.id.startsWith("lb.retry.")).every((r) => r.classification === "user-input")).toBe(true);
+  expect(a.evidence.product.semantic.numericOrigins).toEqual(a.compiled.semantic.numericOrigins);
   expect(a.assumptions.some((r) => r.id.includes(".config.retry"))).toBe(false);
 });
 test("direct callers reject invalid retry intent and ownership", () => {

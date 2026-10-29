@@ -47,7 +47,6 @@ export const SIMULATION_CONSTANTS = {
     RESTART_TICKS: 20   // simulated seconds a resource is down during a SKU swap
   },
   CASCADE: {
-    RETRY_AMPLIFICATION: 0.25,   // load multiplier added per stressed upstream
     MAX_RETRY_BOOST: 0.75        // cap so retry storms can't run to infinity
   }
 } as const;
