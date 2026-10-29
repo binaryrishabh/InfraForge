@@ -9,6 +9,7 @@ import { dataModules } from "./modules";
 import { DATA_POLICY_LEDGER } from "./policy";
 import type { NetworkExtension } from "../network/run";
 import type { DatabaseIo } from "./io";
+import type { Trace } from "../network/contracts";
 import type { EventKernel } from "../time";
 const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 export function createDataModel2(authored: DataInput) {
@@ -19,6 +20,7 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
   const input = copy(authored);
   input.resources.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   const databases = new Map<string, ReturnType<typeof relationalDatabase>>(), caches = new Map<string, ReturnType<typeof keyedCache>>(), applications = new Map<string, ReturnType<typeof cacheAside>>();
+  let sessionTrace: Trace | undefined;
   const modules = dataModules(input, { databases, caches, applications });
   const runtime = createNetworkRuntime(networkAdapter(input), {
     ...extension,
@@ -35,14 +37,16 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
       const database = databases.get(path.target)!;
       // A connection first passes the other gate (for example the TLS handshake), then asks the database for a session,
       // as a real client does. The database refuses it when its session limit is full.
+      const open = (id: string) => database.openSession(id, path.pool.evidenceProfile ? kind => sessionTrace?.(kind, id, path.target, undefined, undefined, true) : undefined);
+      const refusal = path.pool.evidenceProfile ? "session-limit" as const : "backend-rejected" as const;
       return {
         holdLeaseUntilRemoteTerminal: true,
         open(id, done) {
-          if (!external) { done(undefined, database.openSession(id) ? undefined : "backend-rejected"); return () => false; }
+          if (!external) { done(undefined, open(id) ? undefined : refusal); return () => false; }
           return external.open(id, (route, failure) => {
             if (failure) return done(route, failure);
-            if (database.openSession(id)) return done(route);
-            external.close(id); done(route, "backend-rejected");
+            if (open(id)) return done(route);
+            external.close(id); done(route, refusal);
           });
         },
         close(id) { database.closeSession(id); external?.close(id); },
@@ -50,6 +54,7 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
       };
     },
     install(kernel, trace, context) {
+      sessionTrace = trace;
       extension?.install?.(kernel, trace, context);
       for (const i of input.dataInterventions) {
         const clock = extension?.clockFor?.(i.target, kernel) ?? kernel;

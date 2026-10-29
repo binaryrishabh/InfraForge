@@ -6,6 +6,7 @@ export interface LinkConfig {
   bandwidth: Quantity<"bytes/s">; propagation: Quantity<"us">; bufferBytes: Quantity<"bytes">;
 }
 export interface PoolConfig {
+  evidenceProfile?: "postgresql-pools/2";
   mode: "serial" | "multiplexed"; reuse: boolean;
   maxConnections: Quantity<"count">; streams: Quantity<"count">; pending: Quantity<"count">;
   establish: Quantity<"us">; acquireTimeout: Quantity<"us">; connectTimeout: Quantity<"us">;
@@ -43,9 +44,9 @@ export interface NetworkInput extends Omit<ComputeInput, "workloadVersion" | "re
   endpoints: Record<string, { alive: boolean; ready: boolean }>;
 }
 export const RETRYABLE_FAILURES = ["acquire-timeout", "connect-timeout", "response-timeout", "reset", "drained", "pool-overflow", "link-overflow", "backend-rejected"] as const;
-export type FailureReason = typeof RETRYABLE_FAILURES[number];
+export type FailureReason = typeof RETRYABLE_FAILURES[number] | "session-limit";
 export interface TraceEvent { at: number; kind: string; id: string; root?: string; attempt?: number; detail: string }
-export type Trace = (kind: string, id: string, detail: string, root?: string, attempt?: number) => void;
+export type Trace = (kind: string, id: string, detail: string, root?: string, attempt?: number, poolEvidence?: boolean) => void;
 export interface TransportResult { ok: boolean; reason?: FailureReason; ambiguous: boolean }
 export interface ConnectionRoute { target: string; request: string[]; response: string[] }
 export interface ConnectionHook {

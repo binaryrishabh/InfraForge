@@ -26,10 +26,12 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
   let sessionLimit = requireKnown(config.maxSessions, "count"), paused = false, received = 0, rejected = 0, admitted = 0, committed = 0, aborted = 0, cancelled = 0, statements = 0, logicalReads = 0, logicalWrites = 0, logBytes = 0, durableCommits = 0, pumping = false;
   const reasons: Record<string, number> = {};
   const sessionEvents = { established: 0, refused: 0, closed: 0, transactionTerminated: 0, protectedCommitCancels: 0 };
-  const openSession = (id: string) => {
+  const sessionTrace = new Map<string, (kind: string) => void>();
+  const closeSlot = (id: string) => { if (!sessions.delete(id)) return; sessionEvents.closed++; sessionTrace.get(id)?.("db-session-closed"); sessionTrace.delete(id); };
+  const openSession = (id: string, trace?: (kind: string) => void) => {
     if (sessions.has(id)) return true;
-    if (paused || sessions.size >= sessionLimit) { sessionEvents.refused++; return false; }
-    sessions.set(id, undefined); sessionEvents.established++; return true;
+    if (paused || sessions.size >= sessionLimit) { sessionEvents.refused++; trace?.("db-session-refused"); return false; }
+    sessions.set(id, undefined); sessionEvents.established++; if (trace) { sessionTrace.set(id, trace); trace("db-session-open"); } return true;
   };
   const finish = (t: Tx, ok: boolean, reason = "", cancel = false) => {
     if (t.terminal) return; t.terminal = true; t.cancelTx?.(); t.cancelStatement?.(); t.cancelLock?.(); t.cancelWait?.(); t.cancelIo?.();
@@ -137,7 +139,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
       if (pg) t.cancelStatement = deadline(t, "statement"); else t.cancelTx = deadline(t, "transaction"); pump();
       return { admitted: true, state: () => t.terminal ? "finished" : t.phase === "queued" ? "queued" : t.phase === "lock" ? "waiting" : "serving", cancel() { if (t.terminal) return "already-finished"; if (pg && t.phase === "commit") { sessionEvents.protectedCommitCancels++; return "unsupported"; } finish(t, false, "cancelled", true); return "cancelled"; } };
     },
-    closeSession(id: string) { const tx = sessions.get(id); if (sessions.delete(id)) sessionEvents.closed++; if (tx && !(pg && tx.phase === "commit")) finish(tx, false, "connection-closed"); },
+    closeSession(id: string) { const tx = sessions.get(id); closeSlot(id); if (tx && !(pg && tx.phase === "commit")) finish(tx, false, "connection-closed"); },
     pause(value: boolean) { paused = value; cpu.pause(value); if (value) { for (const t of [...active.values(), ...queue.values()]) if (!(pg && t.phase === "commit")) finish(t, false, "database-unavailable"); if (pg) sessionEvents.closed += sessions.size; sessions.clear(); } else pump(); },
     capacity(value: number) { cpu.capacity(value); }, sessionCapacity(value: number) { sessionLimit = value; },
     measure: () => ({ id: config.id, sessions: sessions.size, sessionLimit, paused, received, admitted, rejected, completed: committed, failed: aborted, cancelled, queued: queue.size, serving: [...active.values()].filter((t) => t.phase !== "lock").length, waiting: [...active.values()].filter((t) => t.phase === "lock").length, consumedCoreUs: cpu.measure().appCoreUs, busySlotUs: activeArea + active.size * (kernel.now - activeAnchor) }),

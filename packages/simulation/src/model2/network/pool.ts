@@ -12,7 +12,7 @@ export function connectionPool(id: string, config: PoolConfig, kernel: EventKern
   const removeConnection = (c: Connection, reason?: FailureReason) => {
     if (!connections.delete(c.id)) return;
     c.timers.forEach((cancel) => cancel()); c.expiry?.(); hook?.close(c.id); closed++; if (reason) failed++;
-    trace?.("connection-closed", c.id, reason ?? "closed");
+    trace?.("connection-closed", c.id, reason ?? "closed", undefined, undefined, !!config.evidenceProfile);
     failedStreams += c.users.size;
     const owners = [...c.users.values(), ...c.reserved.values()]; c.users.clear(); c.reserved.clear();
     for (const a of owners) { a.timer?.(); waiting.delete(a.id); a.fail(reason ?? "drained"); }
@@ -28,7 +28,7 @@ export function connectionPool(id: string, config: PoolConfig, kernel: EventKern
     let live = true;
     a.ready({ connection: c.id, route: c.route, release() {
       if (!live) return; live = false;
-      if (c.users.delete(a.id)) released++; idle(c); pump();
+      if (c.users.delete(a.id)) { released++; if (config.evidenceProfile) trace?.("connection-released", a.id, c.id, undefined, undefined, true); } idle(c); pump();
     }, fail(reason) { if (live) { live = false; removeConnection(c, reason); pump(); } } });
   };
   const create = () => {

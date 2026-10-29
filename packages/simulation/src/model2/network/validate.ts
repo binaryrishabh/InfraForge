@@ -57,6 +57,7 @@ export function validateNetwork(input: NetworkInput) {
         }
       }
     }
+    if (p.pool.evidenceProfile !== undefined && p.pool.evidenceProfile !== "postgresql-pools/2") throw new Error("Invalid pool evidence profile");
     const c = p.pool, max = number(c.maxConnections, "count", 1), streams = number(c.streams, "count", 1);
     if (max > caps.connectionsPerPool || streams > caps.streamsPerConnection || number(c.pending, "count") > caps.pendingPerPool || !["serial", "multiplexed"].includes(c.mode) || typeof c.reuse !== "boolean" || (c.mode === "serial" && streams !== 1) || (!c.reuse && streams !== 1) || !["detach", "request-cancellation"].includes(c.remoteCancellation)) throw new Error("Invalid connection policy/budget");
     number(c.establish, "us"); for (const t of [c.acquireTimeout, c.connectTimeout, c.responseTimeout, ...(c.idleTimeout ? [c.idleTimeout] : [])]) micros(horizon + number(t, "us", 1));
@@ -71,7 +72,7 @@ export function validateNetwork(input: NetworkInput) {
     probes += (1 + Math.floor(horizon / interval)) * r.backends.length;
     if (r.retry) {
       const tries = number(r.retry.maxAttempts, "count", 1); number(r.retry.maxConcurrentRetries, "count"); number(r.retry.backoff, "us");
-      if (tries > caps.attempts || number(r.retry.jitter, "ratio", 0, false) > 1 || typeof r.retry.allowAmbiguousNonIdempotent !== "boolean" || new Set(r.retry.retryOn).size !== r.retry.retryOn.length || r.retry.retryOn.some((s) => !RETRYABLE_FAILURES.includes(s))) throw new Error("Invalid retry policy");
+      if (tries > caps.attempts || number(r.retry.jitter, "ratio", 0, false) > 1 || typeof r.retry.allowAmbiguousNonIdempotent !== "boolean" || new Set(r.retry.retryOn).size !== r.retry.retryOn.length || r.retry.retryOn.some((s) => !RETRYABLE_FAILURES.some(reason => reason === s))) throw new Error("Invalid retry policy");
       micros(horizon + Math.ceil(number(r.retry.backoff, "us") * 2 ** tries * 2));
     }
   }
