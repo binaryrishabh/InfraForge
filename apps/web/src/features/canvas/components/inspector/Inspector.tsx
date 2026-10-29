@@ -1,3 +1,4 @@
+import { FlowSection } from "./FlowSection";
 import { AsyncSection } from "./AsyncSection";
 import { CircuitBreakerSection } from "./CircuitBreakerSection";
 import { Trash2 } from "lucide-react";
@@ -51,6 +52,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
       {resource.type === RESOURCE_TYPES.LoadBalancer && <RetrySection key={`retry-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <CircuitBreakerSection key={`breaker-${resource.id}`} resource={resource} disabled={locked} />}
       {(resource.type === "Message Queue" || resource.type === "Virtual Machine") && <AsyncSection key={`async-${resource.id}`} resource={resource} disabled={locked} />}
+      {resource.type === "Virtual Machine" && <FlowSection key={`flow-${resource.id}`} resource={resource} disabled={locked} />}
       <ExposureSection key={`exposure-${resource.id}`} resource={resource} disabled={locked} />
       <ConnectionsSection resource={resource} disabled={locked} />
       {!locked && (

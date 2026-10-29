@@ -1,10 +1,20 @@
 import * as z from "zod";
-import { asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
   "Resource IDs cannot use reserved object property names",
 );
+
+const FlowCallSchema = z.object({ id: z.string(), kind: z.literal("call"), edge: z.string(), operation: z.enum(["read", "write"]).optional() }).strict();
+const FlowStepsSchema = z.object({ steps: z.array(z.union([
+  z.object({ id: z.string(), kind: z.literal("compute") }).strict(),
+  FlowCallSchema,
+  z.object({ id: z.string(), kind: z.literal("parallel"), branches: z.array(FlowCallSchema), wait: z.union([z.literal("all"), z.number()]) }).strict(),
+])) }).strict();
+const ApplicationFlowSchema = z.object({ schema: z.literal("application-flow/1"), operations: z.object({
+  read: FlowStepsSchema.optional(), write: FlowStepsSchema.optional(),
+}).strict() }).strict();
 
 const ResourceSchema = z.object({
   id: ResourceIdSchema,
@@ -18,6 +28,7 @@ const ResourceSchema = z.object({
     maxReplicas: z.number().int().positive().optional(),
     targetCpu: z.number().min(0).max(100).optional(),
   }).optional(),
+  applicationFlow: ApplicationFlowSchema.optional(),
   asyncQueue: z.object({ enabled: z.boolean(), visibilityTimeoutSeconds: z.number().optional(), maxReceives: z.number().optional(), retentionSeconds: z.number().optional() }).strict().optional(),
   asyncWorker: z.object({ enabled: z.boolean(), concurrency: z.number().optional(), prefetch: z.number().optional(), cpuMsPerJob: z.number().optional() }).strict().optional(),
   circuitBreaker: z.object({ enabled: z.boolean(), failureThreshold: z.number().optional(), cooldownMs: z.number().optional() }).strict().optional(),
@@ -36,6 +47,8 @@ const ResourceSchema = z.object({
   region: z.string().optional(),
   name: z.string().optional(),
 }).catchall(z.json()).superRefine((resource, ctx) => {
+  const flowMessage = applicationFlowError(resource.type, resource.applicationFlow);
+  if (flowMessage) ctx.addIssue({ code: "custom", path: ["applicationFlow"], message: flowMessage });
   const asyncMessage = asyncSettingsError(resource.type, resource.asyncQueue, resource.asyncWorker);
   if (asyncMessage) ctx.addIssue({ code: "custom", path: ["async"], message: asyncMessage });
   const breakerMessage = circuitBreakerSettingsError(resource.type, resource.circuitBreaker);

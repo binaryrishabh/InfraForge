@@ -7,7 +7,7 @@ export const CONNECTION_RULES: Record<ResourceType, Array<ResourceType>> = {
   [RESOURCE_TYPES.CDN]: [RESOURCE_TYPES.LoadBalancer],
   [RESOURCE_TYPES.Firewall]: [RESOURCE_TYPES.LoadBalancer, RESOURCE_TYPES.VirtualMachine, RESOURCE_TYPES.Database],
   [RESOURCE_TYPES.LoadBalancer]: [RESOURCE_TYPES.VirtualMachine],
-  [RESOURCE_TYPES.VirtualMachine]: [RESOURCE_TYPES.Database, RESOURCE_TYPES.Cache, RESOURCE_TYPES.MessageQueue, RESOURCE_TYPES.ContainerRegistry, RESOURCE_TYPES.ObjectStorage],
+  [RESOURCE_TYPES.VirtualMachine]: [RESOURCE_TYPES.VirtualMachine, RESOURCE_TYPES.LoadBalancer, RESOURCE_TYPES.Database, RESOURCE_TYPES.Cache, RESOURCE_TYPES.MessageQueue, RESOURCE_TYPES.ContainerRegistry, RESOURCE_TYPES.ObjectStorage],
   [RESOURCE_TYPES.ContainerRegistry]: [],
   [RESOURCE_TYPES.Cache]: [RESOURCE_TYPES.Database],
   [RESOURCE_TYPES.Database]: [RESOURCE_TYPES.ObjectStorage],
