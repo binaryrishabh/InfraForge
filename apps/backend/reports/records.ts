@@ -64,10 +64,19 @@ export function readRecords(value: unknown, limits: string[]) {
   if (live && !live.success) limits.push("The accepted live topology is malformed and is not shown.");
   const workload = row.workloadProfile == null ? null : WorkloadProfileSchema.safeParse(row.workloadProfile);
   if (workload && !workload.success) limits.push("The legacy workload record is malformed and is not shown.");
-  const stages: ReportStage[] = list(row.stages, stage, "Deployment stages").map((item) => {
+  const stageRows = list(row.stages, stage, "Deployment stages");
+  const stageEvidence: Record<string, boolean> = {};
+  const stages: ReportStage[] = stageRows.map((item) => {
     const details = z.object({ warnings: z.array(text).max(500).optional(), issues: z.array(text).max(500).optional(),
       monthlyEstimate: amount.optional() }).safeParse(item.details ?? {});
     if (!details.success) limits.push(`Some details for ${item.name} are malformed and are not shown.`);
+    // Keep validity separate from the historical display defaults. A sanitized
+    // empty issues array is not evidence of a completed, clean security scan.
+    stageEvidence[item.name] = Array.isArray(row.stages) && row.stages.length === stageRows.length &&
+      stageRows.filter(s => s.name === item.name).length === 1 && details.success &&
+      (item.name === "SecurityScan" ? details.data.issues !== undefined :
+        item.name === "Validate" ? details.data.warnings !== undefined :
+          item.name === "CostEstimate" ? details.data.monthlyEstimate !== undefined : true);
     return { name: item.name, status: item.status, startedAt: item.startedAt, completedAt: item.completedAt,
       message: item.message, warnings: details.success ? details.data.warnings ?? [] : [],
       issues: details.success ? details.data.issues ?? [] : [],
@@ -75,7 +84,7 @@ export function readRecords(value: unknown, limits: string[]) {
         ? { monthlyEstimateUsd: details.data.monthlyEstimate } : {}) };
   });
   return { input, live: live?.success ? live.data : null,
-    legacyWorkload: workload?.success ? workload.data : null, stages,
+    legacyWorkload: workload?.success ? workload.data : null, stages, stageEvidence,
     timeline: list(row.timeline, event, "Timeline"), chaos: list(row.chaosEvents, chaos, "Chaos events"),
     checkpoint: readCheckpoint(row.simulationState, limits), terminal: readTerminal(row.terminalSnapshot, limits) };
 }

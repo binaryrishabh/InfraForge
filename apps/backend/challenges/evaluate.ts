@@ -1,4 +1,5 @@
 import { isActiveRunStatus } from "@infraforge/contracts/deployment";
+import { findSku } from "@infraforge/catalog";
 import { PREDICTION_CHOICES } from "@infraforge/contracts/challenges";
 import { RESOURCE_TYPES } from "@infraforge/domain/resource";
 import type { RunAction } from "@infraforge/contracts/actions";
@@ -23,6 +24,7 @@ export interface ChallengeAttemptRecord {
 export interface ChallengeEvidence {
   status: string; runtimeActive: boolean; input: Topology | null;
   stages: ReportStage[]; terminal: ReportCheckpoint | null; failure: string | null;
+  stageEvidence?: Readonly<Record<string, boolean>>;
   actions?: RunAction[];
   actionCount?: number;
   runInputs?: RunInputs | null;
@@ -79,7 +81,66 @@ class Judge {
   experimentMissing() {
     return this.experiment?.state === "not-applied" ? `${this.experiment.detail} This attempt is not judged as a resilience experiment.` : null;
   }
-  stage(name: string) { return this.evidence.stages.find((s) => s.name === name && s.status === "completed") ?? null; }
+  stage(name: string) {
+    if (this.definition.scenario && this.evidence.stageEvidence?.[name] !== true) return null;
+    return this.evidence.stages.find((s) => s.name === name && s.status === "completed") ?? null;
+  }
+
+  // Every scenario criterion must have all applicable, valid evidence before it
+  // can decide either success or failure. Historical criteria retain their rules.
+  scenarioCriterionProblem(c: ChallengeCriterion): string | null {
+    const input = this.evidence.input, terminal = this.atEvaluation;
+    if (["overall-health", "no-saturation", "database-healthy", "database-connections", "terminal-p95", "survivors-unsaturated"].includes(c.kind) &&
+      terminal?.measurementFreshness !== "current-revision") return "A current evaluation measurement was not recorded.";
+    const finite = (n: unknown): n is number => typeof n === "number" && Number.isFinite(n) && n >= 0;
+    const health = (ids: string[]) => !!terminal && ids.every(id => {
+      const rows = terminal.resources.filter(r => r.id === id);
+      return rows.length === 1 && ["healthy", "degraded", "saturated", "failed"].includes(rows[0]!.health ?? "");
+    });
+    const allHealth = () => !!input?.resources.length && !!terminal &&
+      terminal.resources.length === input.resources.length && health(input.resources.map(r => r.id));
+    switch (c.kind) {
+      case "deployment-checks":
+        return GATES.every(g => this.stage(g)) ? null : "Complete, valid deployment-check evidence was not recorded.";
+      case "security-clean":
+        return this.stage("SecurityScan") ? null : "Complete, valid security-scan findings were not recorded.";
+      case "monthly-budget":
+        return finite(this.stage("CostEstimate")?.monthlyEstimateUsd) ? null : "A valid monthly estimate was not recorded.";
+      case "min-app-servers":
+      case "catalog-sizes":
+        return input ? null : "The attempt's captured design is unavailable.";
+      case "overall-health":
+        return allHealth() && ["healthy", "degraded", "saturated", "critical"].includes(terminal?.health ?? "")
+          ? null : "Complete resource and overall health measurements were not recorded.";
+      case "no-saturation":
+        return allHealth() ? null : "Known health was not recorded for every captured resource.";
+      case "database-healthy": {
+        if (!input) return "The attempt's captured design is unavailable.";
+        const ids = input.resources.filter(r => r.type === RESOURCE_TYPES.Database).map(r => r.id);
+        return !ids.length || health(ids) ? null : "Known health was not recorded for every database.";
+      }
+      case "database-connections": {
+        if (!input) return "The attempt's captured design is unavailable.";
+        const dbs = input.resources.filter(r => r.type === RESOURCE_TYPES.Database);
+        return dbs.every(db => {
+          const rows = terminal?.resources.filter(r => r.id === db.id) ?? [], count = rows[0]?.connections;
+          const sku = terminal?.installedSkus?.[db.id] ?? db.skuId;
+          const capacity = sku ? findSku(sku) : null;
+          return rows.length === 1 && finite(count) && Number.isSafeInteger(count) &&
+            (!sku || capacity?.category === "Database" && finite(capacity.maxConnections) && capacity.maxConnections > 0);
+        }) ? null : "Valid session counts and capacity were not recorded for every database.";
+      }
+      case "terminal-p95": {
+        const traffic = terminal?.traffic;
+        return traffic && finite(traffic.offeredRps) && finite(traffic.failedRps) && finite(traffic.completedRps) && traffic.completedRps > 0 &&
+          finite(traffic.latencyMs.p50) && finite(traffic.latencyMs.p95) && traffic.latencyMs.p50 <= traffic.latencyMs.p95
+          ? null : "Complete, valid completed-request latency evidence was not recorded.";
+      }
+      case "survivors-unsaturated":
+        return this.plan && input && health(input.resources.filter(r => r.id !== this.plan!.targetResourceId).map(r => r.id))
+          ? null : "Complete experiment survivor measurements were not recorded.";
+    }
+  }
 
   // Why a runtime measurement at the evaluation second does not exist.
   missingMeasurement() {
@@ -94,6 +155,8 @@ class Judge {
     const base = { id: c.id, label: c.label };
     const pending = (detail: string, sources: string[]) => ({ ...base, status: this.active ? "pending" as const : "not-evaluated" as const, detail, sources });
     const decided = (met: boolean, detail: string, sources: string[]) => ({ ...base, status: met ? "met" as const : "not-met" as const, detail, sources });
+    const missing = this.definition.scenario ? this.scenarioCriterionProblem(c) : null;
+    if (missing) return pending(missing, ["runInputs", "stages", "terminalSnapshot"]);
     const input = this.evidence.input;
     switch (c.kind) {
       case "deployment-checks": {

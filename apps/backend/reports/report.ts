@@ -34,7 +34,7 @@ function challengeOf(row: StoredRun, records: Records, registry?: ChallengeRegis
     challengeSpecHash: row.challengeSpecHash ?? null, challengePrediction: row.challengePrediction,
     predictionSubmittedAt: row.predictionSubmittedAt ?? null, evaluationStopAtSimulatedSeconds: row.evaluationStopAtSimulatedSeconds ?? null,
     challengeExperiment: row.challengeExperiment ?? null, challengeScenario: row.challengeScenario ?? null },
-  { status: row.status, runtimeActive: !!row.runtimeActive, input: records.input, stages: records.stages, terminal: records.terminal,
+  { status: row.status, runtimeActive: !!row.runtimeActive, input: records.input, stages: records.stages, stageEvidence: records.stageEvidence, terminal: records.terminal,
     actions: readReportActions(row.actions, []), actionCount: row.actionCount ?? row.actions?.length, runInputs: records.input,
     failure: row.status === "failed" ? failureOf(records)?.message ?? "The run failed without a recorded message." : null }, registry);
 }
