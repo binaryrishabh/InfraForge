@@ -4,13 +4,15 @@ export interface InterventionParameter {
   min?: number; max?: number | "authored-baseline" | "remaining-seconds"; values?: string[];
 }
 export interface InterventionDescriptor {
-  id: string; revision: number; label: string; targetKind: "Database" | "Cache" | "Firewall" | "edge";
-  mechanism: "relational" | "cache" | "firewall" | "transport"; parameters: InterventionParameter[];
+  id: string; revision: number; label: string; targetKind: "Database" | "Cache" | "Firewall" | "Virtual Machine" | "edge";
+  mechanism: "relational" | "cache" | "firewall" | "transport" | "async-worker"; parameters: InterventionParameter[];
   directions?: Array<"request" | "response" | "both">;
   reversible: boolean; endPolicy: "timed" | "one-shot"; requires: string[];
 }
 const duration: InterventionParameter = { name: "duration", kind: "integer", unit: "s", min: 1, max: "remaining-seconds" };
 export const INTERVENTIONS: readonly InterventionDescriptor[] = [
+  { id: "consumer-outage", revision: 1, label: "Consumer outage", targetKind: "Virtual Machine", mechanism: "async-worker",
+    parameters: [duration], reversible: true, endPolicy: "timed", requires: ["fixed primary background worker"] },
   { id: "pool-reset", revision: 1, label: "Reset connection pool", targetKind: "edge", mechanism: "transport", directions: ["both"],
     parameters: [], reversible: false, endPolicy: "one-shot", requires: ["fixed materialized transport pools"] },
   { id: "deny-port", revision: 1, label: "Deny TCP port", targetKind: "Firewall", mechanism: "firewall",

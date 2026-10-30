@@ -75,6 +75,13 @@ export function compileInterventions(design: SavedProductDesign, contract: Produ
     if (row.atUs > requireKnown(input.horizon, "us")) throw Error("INTERVENTION_HORIZON: action is outside the run");
     const {interventionId: kind, parameters} = row.request;
     const durationUs = INTERVENTIONS.find(d => d.id === kind)!.endPolicy === "one-shot" ? undefined : Number(parameters.duration) * SECOND, endUs = durationUs === undefined ? null : row.atUs + durationUs;
+    if (kind === "consumer-outage") {
+      // Reject saved availability changes too: their restore callbacks must never
+      // override this window or establish an ambiguous baseline at its start.
+      if (input.asyncInterventions.some(i => i.kind === "consumer-state" && option.resolvedTargets.includes(i.target) && requireKnown(i.at, "us") < endUs! && requireKnown(i.at, "us") + requireKnown(i.duration, "us") > row.atUs)) throw Error("INTERVENTION_OVERLAP: existing consumer availability control");
+      if (contract.faults.some(f => f.kind === "Crash" && option.resolvedTargets.includes(f.target) && requireKnown(f.at, "us") < endUs! && requireKnown(f.at, "us") + requireKnown(f.duration, "us") + (f.restart ? requireKnown(f.restart, "us") : 0) > row.atUs)
+        || input.networkInterventions.some(i => i.kind === "service-state" && option.resolvedTargets.includes(i.target) && requireKnown(i.at, "us") < endUs! && requireKnown(i.at, "us") + requireKnown(i.duration, "us") > row.atUs)) throw Error("INTERVENTION_GENERATION: consumer outage overlaps endpoint state or replacement");
+    }
     if (kind === "pool-reset") {
       const paths = input.paths.filter(p => option.resolvedTargets.includes(p.id));
       const owns = (endpoint: string, node: string) => endpoint === node || endpoint.startsWith(`${node}/`) || endpoint.startsWith(`${node}#`);
@@ -104,6 +111,7 @@ export function compileInterventions(design: SavedProductDesign, contract: Produ
           fromPort: q("port", Number(parameters.port), "count"), toPort: q("portEnd", Number(parameters.port), "count"), priority: provenance.q(`intervention.${row.id}.priority`, -1, "count", ["deny-port@1: reserved priority ahead of nonnegative baseline rules"], "implementation-policy"), action: "deny",
         }]}, {...common, id: `${common.id}:restore`, at: q("restore", endUs!, "us"), kind: "firewall-rules", restore: true, rules: baseline.rules});
       }
+      else if (kind === "consumer-outage") input.asyncInterventions.push({...common, kind: "consumer-state", available: false, duration: duration!});
       else if (kind === "pool-reset") input.networkInterventions.push({...common, kind: "reset", evidenceActionId: row.id});
       else if (kind === "flush") input.dataInterventions.push({...common, kind});
       else if (kind === "session-capacity") input.dataInterventions.push({...common, kind, duration: duration!, sessions: q("sessions", Number(parameters.sessions), "count")});
