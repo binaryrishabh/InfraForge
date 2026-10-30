@@ -53,3 +53,12 @@ test("bandwidth wire refuses invalid bytes/s and revision", () => {
   for (const bandwidth of [0, 1_000_000_001, 0.5]) expect(() => submit({...request, parameters: {...request.parameters, parameters: {bandwidth, duration: 2}}})).toThrow();
   expect(() => submit({...request, parameters: {...request.parameters, revision: 2}})).toThrow();
 });
+
+test("pool-reset wire is versioned, parameterless and both-directions only", () => {
+  const request = {kind: "intervention", parameters: {interventionId: "pool-reset", revision: 1, target: {edgeId: "edge", direction: "both"}, parameters: {}}};
+  const submit = (r: unknown) => checkSubmission({stopAtSecond: 10, actions: [{atSecond: 1, request: r}]}, free);
+  expect(submit(request).actions).toHaveLength(1);
+  for (const parameters of [{...request.parameters, revision: 2}, {...request.parameters, parameters: {duration: 1}},
+    {...request.parameters, target: {edgeId: "edge", direction: "request"}}, {...request.parameters, target: {edgeId: "edge", direction: "response"}}, {...request.parameters, target: {resourceId: "app"}}])
+    expect(() => submit({...request, parameters})).toThrow();
+});

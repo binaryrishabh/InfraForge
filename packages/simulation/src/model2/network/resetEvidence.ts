@@ -4,7 +4,7 @@ export interface ResetIds { ids: string[]; omitted: number }
 export interface PoolResetResult {
   closedConnections: number; failedStreams: number;
   connections: ResetIds; activeOwners: ResetIds; reservedOwners: ResetIds; waitingOwners: ResetIds;
-  freshOpens: { opened: number; failed: number; results: Array<{connectionId: string; result: string}>; omitted: number };
+  freshOpens: { started: number; pending: number; opened: number; failed: number; results: Array<{connectionId: string; result: string}>; omitted: number };
 }
 // Each list has both a row and a byte limit. Long IDs are omitted, never truncated into misleading identities.
 export function resetIds(ids: Iterable<string>): ResetIds {
@@ -16,6 +16,7 @@ export function resetIds(ids: Iterable<string>): ResetIds {
   return result;
 }
 export function freshOpen(result: PoolResetResult, connectionId: string, outcome: string) {
+  result.freshOpens.pending--;
   if (outcome === "opened") result.freshOpens.opened++; else result.freshOpens.failed++;
   const row = {connectionId, result: outcome};
   if (result.freshOpens.results.length < 4 && utf8Bytes(JSON.stringify([...result.freshOpens.results, row])) <= 512) result.freshOpens.results.push(row);

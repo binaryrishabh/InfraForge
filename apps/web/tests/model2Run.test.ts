@@ -205,3 +205,30 @@ test("worker refuses unsupported bandwidth bounds and revisions before recording
   }
   expect(h.host.actions()).toEqual([]); expect(h.host.evidence()).toEqual(before);
 });
+
+test("pool-reset worker refuses invalid intent and matches complete serialized server evidence", () => {
+  const setup = start({horizonSeconds: 4, stopAtSecond: 4}), h = harness(setup);
+  h.tick();
+  const request = {kind: "intervention" as const, parameters: {interventionId: "pool-reset", revision: 1, target: {edgeId: "app-1-db", direction: "both" as const}, parameters: {}}};
+  const before = h.host.evidence();
+  for (const parameters of [{...request.parameters, revision: 2}, {...request.parameters, parameters: {duration: 1}}, {...request.parameters, target: {edgeId: "app-1-db", direction: "request" as const}}]) {
+    h.host.handle({type: "action", id: "bad", request: {...request, parameters}});
+    expect(h.messages.at(-1)).toMatchObject({type: "action", ok: false});
+  }
+  expect(h.host.actions()).toEqual([]); expect(h.host.evidence()).toEqual(before);
+  h.host.handle({type: "action", id: "reset", request});
+  expect(h.messages.at(-1)).toMatchObject({type: "action", ok: true, outcome: {intervention: {endUs: null}}});
+  h.tick(3);
+  const done = h.messages.at(-1) as Extract<FromWorker, {type: "done"}>;
+  const wire = JSON.parse(JSON.stringify(done.submission)) as typeof done.submission;
+  expect(wire.actions).toEqual([{atSecond: 1, request}]);
+  const replay = createModel2Run(JSON.parse(JSON.stringify(setup.input)), 4);
+  for (let second = 0; second < 4; second++) {
+    for (const action of wire.actions.filter(a => a.atSecond === second)) replay.apply(action.request);
+    replay.advance(); expect(replay.view()).toEqual(h.seconds()[second]!.view);
+    expect(replay.view().activeChaos).toEqual([]);
+  }
+  expect(replay.evidence()).toEqual(h.host.evidence()!);
+  expect(replay.evidence().network.poolResets!.rows[0]).toMatchObject({actionId: "a1", pathId: "app-1-db:app-1:db", closedConnections: 1, freshOpens: {opened: 1, pending: 0}});
+  expect(h.seconds()[1]!.logs.some(l => l.message.includes("Reset connection pool applied") && l.message.includes("one-shot"))).toBe(true);
+});

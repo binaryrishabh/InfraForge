@@ -1,3 +1,5 @@
+import { ActionTimeline } from "../src/features/reports/components/ActionTimeline";
+import type { RunAction } from "@infraforge/contracts/actions";
 import { afterEach, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -53,4 +55,14 @@ test("the live fault control offers the classic crash and CPU spike, never the o
   expect(html).toContain("Crash");
   expect(html).toContain("CPU spike");
   for (const refused of ["Memory leak", "memory-leak", "Disk failure", "disk-failure"]) expect(html).not.toContain(refused);
+});
+
+test("pool reset timeline shows applied one-shot with no restore window", () => {
+  const request = {interventionId: "pool-reset", revision: 1, target: {edgeId: "app-db", direction: "both" as const}, parameters: {}};
+  const action: RunAction = {id: "a1", deploymentId: "run", sequence: 1, kind: "intervention", parameters: request, status: "completed",
+    requestedAt: "2026-10-30T00:00:00Z", appliedAt: "2026-10-30T00:00:01Z", completedAt: "2026-10-30T00:00:02Z", appliedSimulatedSeconds: 1, completedSimulatedSeconds: 2,
+    outcome: {intervention: {...request, actionId: "a1", resolvedTargets: ["app-db:app:db"], affectedPaths: ["app-db:app:db"], atUs: 1_000_001, endUs: null}, interventionEnded: true}, failureReason: null};
+  const html = renderToStaticMarkup(<ActionTimeline actions={[action]} />);
+  for (const text of ["Reset connection pool v1", "Applied", "one-shot", "app-db:app:db"]) expect(html).toContain(text);
+  expect(html).not.toContain("baseline restore at");
 });

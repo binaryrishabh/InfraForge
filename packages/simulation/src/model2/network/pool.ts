@@ -39,6 +39,7 @@ export function connectionPool(id: string, config: PoolConfig, kernel: EventKern
   const create = () => {
     const c: Connection = { id: JSON.stringify([id, sequence++]), state: "connecting", users: new Map(), reserved: new Map(), timers: [], uses: 0, ...(resetResult ? {fresh: resetResult} : {}) };
     connections.set(c.id, c); created++;
+    if (c.fresh) { c.fresh.freshOpens.started++; c.fresh.freshOpens.pending++; }
     trace?.("connection-created", c.id, id);
     c.timers.push(kernel.schedule(kernel.now + requireKnown(config.connectTimeout, "us"), 1, JSON.stringify(["pool-connect-timeout", c.id]), () => { removeConnection(c, "connect-timeout"); pump(); }));
     const establish = () => c.timers.push(kernel.schedule(kernel.now + requireKnown(config.establish, "us"), 2, JSON.stringify(["pool-connect-ready", c.id]), () => {
@@ -89,7 +90,7 @@ export function connectionPool(id: string, config: PoolConfig, kernel: EventKern
         closedConnections: cs.length, failedStreams: cs.reduce((n,c) => n + c.users.size, 0),
         connections: resetIds(connections.keys()), activeOwners: resetIds(cs.flatMap(c => [...c.users.keys()])),
         reservedOwners: resetIds(cs.flatMap(c => [...c.reserved.keys()])), waitingOwners: resetIds([...waiting.values()].filter(a => !a.connection).map(a => a.id)),
-        freshOpens: {opened: 0, failed: 0, results: [], omitted: 0},
+        freshOpens: {started: 0, pending: 0, opened: 0, failed: 0, results: [], omitted: 0},
       } : undefined;
       resetResult = result;
       for (const c of [...connections.values()]) removeConnection(c, reason); pump();

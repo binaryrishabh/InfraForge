@@ -13,20 +13,21 @@ const engine = () => createModel2Run({resources: [{id: "app", type: "Virtual Mac
   connectionLines: [{id: "db-edge", sourceId: "app", targetId: "db", sourceType: "Virtual Machine", targetType: "Database", port: 5432}, {id: "cache-edge", sourceId: "app", targetId: "cache", sourceType: "Virtual Machine", targetType: "Cache", port: 6379}, {id: "policy", sourceId: "firewall", targetId: "db", sourceType: "Firewall", targetType: "Database", port: 5432}],
   workloadProfile: resolveWorkload({targetThroughput: 600, throughputUnit: "per-minute", trafficShape: "steady", readWriteRatio: 1, payloadSize: "light"}), seed: "action-proof"}, 6);
 
-for (const kind of ["session-capacity", "flush", "deny-port"]) test(`intervention completion DTO correlates exact timing and real engine effect, kind=${kind}`, () => {
-  const flush = kind === "flush";
+for (const kind of ["session-capacity", "flush", "deny-port", "pool-reset"]) test(`intervention completion DTO correlates exact timing and real engine effect, kind=${kind}`, () => {
+  const flush = kind === "flush", reset = kind === "pool-reset", oneShot = flush || reset;
   const model2 = engine(), instance = {model2, actions: new Map(), pendingLogs: []} as unknown as SimulationInstance;
-  const request: ActionRequest = {kind: "intervention" as const, parameters: {interventionId: kind, revision: 1, target: {resourceId: flush ? "cache" : kind === "deny-port" ? "firewall" : "db"}, parameters: flush ? {} : kind === "deny-port" ? {port: 5432, duration: 2} : {sessions: 0, duration: 2}}};
+  const request: ActionRequest = {kind: "intervention" as const, parameters: {interventionId: kind, revision: 1, target: reset ? {edgeId: "db-edge", direction: "both"} : {resourceId: flush ? "cache" : kind === "deny-port" ? "firewall" : "db"}, parameters: oneShot ? {} : kind === "deny-port" ? {port: 5432, duration: 2} : {sessions: 0, duration: 2}}};
   const applied = applyAction(instance, "durable-1", request);
   expect(applied.status).toBe("running");
   const running = instance.actions.get("durable-1")!;
   expect(actionCompletion(instance, running)).toBeNull();
-  if (!flush) { model2.advance(); model2.advance(); expect(actionCompletion(instance, running)).toBeNull(); }
+  if (!oneShot) { model2.advance(); model2.advance(); expect(actionCompletion(instance, running)).toBeNull(); }
   model2.advance();
   const done = actionCompletion(instance, running)!;
   expect(done).toMatchObject({status: "completed", outcome: {interventionEnded: true}});
   expect(model2.evidence().product.interventions![0]!.phase).toBe("completed");
   if (flush) expect(model2.evidence().data.caches[0]!.epoch).toBe(1);
+  else if (reset) { expect(model2.view().activeChaos).toEqual([]); expect(model2.evidence().network.poolResets!.rows).toHaveLength(1); }
   else if (kind === "deny-port") expect(model2.evidence().systems.security.policies[0]!.generation).toBe(3);
   else expect(model2.evidence().data.databases[0]!.sessions.limit).toBe(100);
   const at = new Date(), row = {id: "durable-1", deploymentId: "run", sequence: 1, ...request, status: "completed", requestedAt: at, appliedAt: at, completedAt: at,

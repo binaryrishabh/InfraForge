@@ -1,3 +1,5 @@
+import { networkFixture } from "./networkFixture";
+import { createNetworkModel2 } from "../src/model2/network/run";
 import { expect, test } from "bun:test";
 import { securityDesign, prepareSecurity } from "./securityCanvas.fixture";
 import { compileProduct } from "../src/model2/product/compiler";
@@ -85,7 +87,7 @@ test("reset evidence bounds identities and rows while preserving omitted and con
   const evidence = resetEvidence();
   for (let i = 0; i < 30; i++) {
     const row = {actionId: "reset", pathId: `p${i}`, atUs: 1, closedConnections: 10, failedStreams: 20,
-      connections: ids, activeOwners: ids, reservedOwners: ids, waitingOwners: ids, freshOpens: {opened: 0, failed: 0, results: [], omitted: 0}};
+      connections: ids, activeOwners: ids, reservedOwners: ids, waitingOwners: ids, freshOpens: {started: 100, pending: 100, opened: 0, failed: 0, results: [], omitted: 0}};
     for (let j = 0; j < 100; j++) freshOpen(row, `c${j}`, "session-limit");
     evidence.add(row);
   }
@@ -93,4 +95,52 @@ test("reset evidence bounds identities and rows while preserving omitted and con
   expect(e).toMatchObject({closedConnections: 300, failedStreams: 600, omitted: 14});
   expect(e.rows).toHaveLength(16); expect(e.rows[0]!.freshOpens).toMatchObject({failed: 100, omitted: 96});
   expect(new TextEncoder().encode(JSON.stringify(e)).length).toBeLessThanOrEqual(RESET_EVIDENCE_BYTES);
+});
+
+test("canvas reset fails shared active users with reset and retries move to another backend", () => {
+  const design = securityDesign({lb: "Load Balancer", a: "Virtual Machine", b: "Virtual Machine"}, [["lb","a"],["lb","b"]]);
+  design.workload.targetThroughput = 6000;
+  design.resources[0]!.retry = {enabled: true, maxAttempts: 2, backoffMs: 1, jitterRatio: 0, maxConcurrentRetries: 16, retryOn: ["connectionFailure"]};
+  const {contract} = prepareSecurity(design), {q,ledger} = quantities();
+  contract.horizon = q("shared.horizon", 1_000_000, "us");
+  contract.application!.demands.find(p => p.id === "canvas.read")!.cpu = q("shared.cpu", 100_000, "cpu-us");
+  const pool = contract.transports.assumed!.pool;
+  pool.mode = "multiplexed"; pool.streams = q("shared.streams", 8, "count"); pool.maxConnections = q("shared.connections", 1, "count");
+  contract.ledger.push(...ledger);
+  const c = compileProduct(design, withTimeline(contract, [{id: "shared", kind: "intervention", atUs: 50_000, request: {...request, target: {edgeId: "edge-0", direction: "both"}}}]));
+  if (!c.ok) throw Error(JSON.stringify(c.diagnostics));
+  const run = createProductModel2(c.value); run.advanceTo(49_999);
+  const before = run.evidence().network.paths.find(p => p.id === "edge-0:lb:a")!.pool.activeStreams;
+  expect(before).toBeGreaterThan(1);
+  run.advanceTo(50_000);
+  const at = run.evidence(), summary = at.network.poolResets!.rows[0]!;
+  expect(summary.closedConnections).toBe(1); expect(summary.failedStreams).toBe(before);
+  expect(at.network.paths.find(p => p.id === "edge-0:lb:a")!.reasons.reset).toBe(before);
+  expect(summary.activeOwners.ids.length + summary.activeOwners.omitted).toBe(before);
+  run.advanceTo(run.horizon);
+  const e = run.evidence();
+  expect(e.network.loadBalancers[0]!.retries).toBeGreaterThanOrEqual(before);
+  const resetOwners = new Set(summary.activeOwners.ids);
+  const roots = new Set(at.network.trace.events.filter(r => r.kind === "transport-terminal" && r.detail === "reset" && resetOwners.has(r.id)).map(r => r.root));
+  expect(e.network.trace.events.some(r => r.kind === "request-delivered" && r.detail === "b" && r.attempt === 1 && roots.has(r.root))).toBe(true);
+  expect(e.network.paths.find(p => p.id === "edge-1:lb:b")!.completed).toBeGreaterThan(0);
+});
+
+test("reset evidence distinguishes reserved owners, unassigned waiters and pending fresh opens", () => {
+  const input = networkFixture({count: 4, interval: 1, connections: 1, streams: 1, establish: 1000, horizon: 5000, timeout: 5000}), {q,ledger} = quantities();
+  input.networkInterventions = [{id: "reset", kind: "reset", target: "caller-app", at: q("pending.reset", 100, "us"), evidenceActionId: "reset"}]; input.ledger.push(...ledger);
+  const run = createNetworkModel2(input); run.advanceTo(100);
+  const row = run.evidence().network.poolResets!.rows[0]!;
+  expect(row).toMatchObject({closedConnections: 1, failedStreams: 0, activeOwners: {ids: [], omitted: 0}, freshOpens: {started: 1, pending: 1, opened: 0, failed: 0}});
+  expect(row.reservedOwners.ids).toHaveLength(1); expect(row.waitingOwners.ids.length + row.waitingOwners.omitted).toBe(3);
+  run.advanceTo(2000);
+  expect(run.evidence().network.poolResets!.rows[0]!.freshOpens).toMatchObject({started: 1, pending: 0, opened: 1, failed: 0});
+});
+
+test("pool reset refuses lifecycle-controlled drawn endpoints", () => {
+  const design = securityDesign({lb: "Load Balancer", app: "Virtual Machine"}, [["lb","app"]]);
+  design.resources[1]!.autoscaling = {enabled: true, minReplicas: 1, maxReplicas: 2, targetCpu: 60};
+  const {contract} = prepareSecurity(design);
+  const c = compileProduct(design, withTimeline(contract, [{...reset, request: {...request, target: {edgeId: "edge-0", direction: "both"}}}]));
+  expect(c.ok).toBe(false); expect(c.diagnostics[0]!.message).toContain("GENERATION");
 });
