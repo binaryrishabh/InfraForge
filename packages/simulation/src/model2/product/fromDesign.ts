@@ -116,7 +116,8 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     };
     const security = (r: Resource, port: number, id: string, chosen = false) => ({ port: q(`${id}.port`, port, "count", "The connection uses this listening port.", chosen), protocol: "tcp" as const, firewalls: incoming(r.id).filter((s) => s.type === "Firewall").map((s) => s.id), tls: { mode: "plaintext" as const, trustedIssuers: [] } });
     const edge = (r: Resource, id: string, sourceRole: string, targetRole = "main", purpose: EdgeContract["purpose"] = "dependency", port = RESOURCE_PORTS[r.type], chosen = false): EdgeContract => ({ purpose, sourceRole, targetRole, transport: r.type === "Database" ? "database" : r.type === "Cache" ? "cache" : "assumed", request: ["request"], response: ["response"], security: security(r, port, id, chosen) });
-    const internal = (r: Resource, sourceRole: string, targetRole: string, purpose: EdgeContract["purpose"] = "dependency") => nodes[r.id]!.internalEdges.push({ id: `${sourceRole}-${targetRole}`, ...edge(r, `${r.id}.internal.${sourceRole}-${targetRole}`, sourceRole, targetRole, purpose) });
+    // A call between roles inside one resource is not a network flow, so no firewall applies to it.
+    const internal = (r: Resource, sourceRole: string, targetRole: string, purpose: EdgeContract["purpose"] = "dependency") => { const e = edge(r, `${r.id}.internal.${sourceRole}-${targetRole}`, sourceRole, targetRole, purpose); nodes[r.id]!.internalEdges.push({ id: `${sourceRole}-${targetRole}`, ...e, security: { ...e.security!, firewalls: [] } }); };
     const add = (r: Resource, role: string, config: ResourceTemplate) => nodes[r.id]!.resources.push({ role, config });
     for (const r of resources) nodes[r.id] = { type: r.type, profileVersion: "canvas-assumptions/2", provenance: [SOURCE], primary: "main", securityReplacement: "explicit-reviewed/1", resources: [], internalEdges: [], identities: [], listeners: [] };
     for (const r of resources.filter((r) => r.asyncQueue?.enabled || r.asyncWorker?.enabled || producerQueue(r.id))) {
@@ -271,7 +272,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       const n = nodes[r.id]!, count = r.autoscaling?.enabled ? r.autoscaling.maxReplicas! : 1;
       for (const { role } of n.resources) {
         n.identities.push({ role, zone: "internal", address: Array.from({ length: Math.min(count, 128) }, () => { const a = address++; return `10.0.${Math.floor(a / 254)}.${a % 254 + 1}`; }).join(",") });
-        const ports = new Set(r.listenerSettings?.ports ?? [RESOURCE_PORTS[r.type], ...connections.filter((e) => e.targetId === r.id && edges[e.id]!.targetRole === role).map((e) => e.port)]);
+        const ports = new Set((role === n.primary ? r.listenerSettings?.ports : undefined) ?? [RESOURCE_PORTS[r.type], ...connections.filter((e) => e.targetId === r.id && edges[e.id]!.targetRole === role).map((e) => e.port)]);
         for (const port of [...ports].sort((a, b) => a - b)) n.listeners.push({ role, protocol: "tcp", port: q(`${r.id}.${role}.listener.${port}`, port, "count", r.listenerSettings !== undefined ? "Saved explicit TCP listener port." : undefined, r.listenerSettings !== undefined), tls: "plaintext" });
       }
     }

@@ -9,7 +9,7 @@ export function validateSecurityBinding(r: Resource, n: NodeContract) {
   const same = (a: unknown, b: unknown) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
   if (r.listenerSettings !== undefined || n.listenerIntent !== undefined) {
     if (!same(r.listenerSettings, n.listenerIntent)) throw Error(`Listener intent must match saved ports for ${r.id}`);
-    for (const { role } of n.resources) {
+    for (const { role } of n.resources.filter(x => x.role === n.primary)) {
       const rows = n.listeners.filter(l => l.role === role);
       if (rows.some(l => l.protocol !== "tcp" || l.tls !== "plaintext") || !same(rows.map(l => requireKnown(l.port, "count")).sort((a,b) => a-b), [...r.listenerSettings!.ports].sort((a,b) => a-b))) throw Error(`Explicit listeners must match saved ports for ${r.id}/${role}`);
     }

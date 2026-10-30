@@ -19,9 +19,9 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
   const opted = input.securityProfile === "canvas-security/1";
   type Admission = { at: number; connectionId: string; path: string; source: string; target: string; port: number; reason: string; allowed: boolean; firewall?: string; rule?: string; direction?: string; generation?: number; defaultAction?: string };
   const admissions: Admission[] = []; let omitted = 0, admissionBytes = 0;
-  const edgeCounts = new Map(input.paths.map(p => [p.id, { path: p.id, source: p.source, target: p.target, admitted: 0, denied: 0, noListener: 0, backendDeliveries: 0, lastDenial: undefined as Admission | undefined, policyDenied: {} as Record<string, number> }]));
+  const edgeCounts = new Map(input.paths.filter(p => !p.id.includes("/internal/")).map(p => [p.id, { path: p.id, source: p.source, target: p.target, admitted: 0, denied: 0, noListener: 0, backendDeliveries: 0, lastDenial: undefined as Admission | undefined, policyDenied: {} as Record<string, number> }]));
   const record = (row: Admission) => {
-    const c = edgeCounts.get(row.path)!;
+    const c = edgeCounts.get(row.path) ?? { admitted: 0, denied: 0, noListener: 0, lastDenial: undefined as Admission | undefined, policyDenied: {} as Record<string, number> }; // internal hops are not counted
     if (row.allowed) c.admitted++; else { c.denied++; c.lastDenial = row; if (row.reason === "no-listener") c.noListener++; if (row.firewall) { const key = `${row.firewall}:${row.direction}:${row.rule ?? "default"}`; c.policyDenied[key] = (c.policyDenied[key] ?? 0) + 1; } }
     const bytes = utf8Bytes(JSON.stringify(row));
     if (admissions.length >= Math.min(SYSTEM_LIMITS.events, input.limits.maxTraceRows) || admissionBytes + bytes > (input.limits.maxTraceBytes ?? Infinity)) { omitted++; return; }
@@ -70,7 +70,7 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
     hook(path: PathConfig, send: (source: string, target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt): ConnectionHook {
       const dial = input.systems.connections.find((c) => c.path === path.id)!;
       return {
-        ...(opted ? { securityEvidence: true as const, delivered: () => { edgeCounts.get(path.id)!.backendDeliveries++; } } : {}),
+        ...(opted ? { securityEvidence: true as const, delivered: () => { const c = edgeCounts.get(path.id); if (c) c.backendDeliveries++; } } : {}),
         open(id, done) {
           attempts++; pending.add(id); let stopped = false, receipt: Receipt | undefined;
           const admit = (selected: PathConfig) => {
