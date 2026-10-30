@@ -2,6 +2,8 @@ import { afterEach, expect, spyOn, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { InterventionOption } from "@infraforge/contracts/actions";
 import { interventionError } from "@infraforge/domain/resource";
+import * as React from "react";
+import * as fields from "../src/ui/Field";
 import * as browserRuns from "../src/features/model2Run/browserRuns";
 import { FaultControl } from "../src/features/live/controls/FaultControl";
 import { useCanvasStore } from "../src/features/canvas/store/canvasStore";
@@ -19,14 +21,37 @@ function capabilities(options: InterventionOption[]) {
 }
 const render = () => renderToStaticMarkup(<FaultControl deploymentId="run" resources={resources} />);
 
-test("invalid intervention parameters display the existing reason alongside the disabled Apply", () => {
+test("validation waits for an edit, uses human status copy and clears after correction", () => {
   capabilities([{ interventionId: "cpu-capacity", revision: 1, target: { resourceId: "db" }, authoredBaseline: 2, resolvedTargets: ["db/main"], affectedPaths: [] }]);
-  const html = render();
-  const reason = interventionError({ interventionId: "cpu-capacity", revision: 1, target: { resourceId: "db" }, parameters: { cores: NaN, duration: NaN } }, { authoredBaseline: 2, remainingSeconds: 10 });
-  expect(reason).not.toBeNull();
-  expect(html).toContain(`role="alert"`);
-  expect(html).toContain(reason!);
-  expect(html).toMatch(/<button[^>]*disabled=""[^>]*>.*?Apply cpu capacity/s);
+  // Exercise the real field handlers across static renders without a DOM dependency.
+  const states: unknown[] = [];
+  let cursor = 0, inputs: React.InputHTMLAttributes<HTMLInputElement>[] = [];
+  const state = spyOn(React, "useState").mockImplementation(((initial: unknown) => {
+    const index = cursor++;
+    if (!(index in states)) states[index] = typeof initial === "function" ? initial() : initial;
+    return [states[index], (next: unknown) => { states[index] = typeof next === "function" ? next(states[index]) : next; }];
+  }) as typeof React.useState);
+  const input = spyOn(fields, "Input").mockImplementation(props => { inputs.push(props); return <input {...props} />; });
+  const view = () => { cursor = 0; inputs = []; return render(); };
+  const edit = (index: number, value: string) => inputs[index]!.onChange!({ target: { value } } as React.ChangeEvent<HTMLInputElement>);
+  try {
+    const pristine = view();
+    expect(pristine).not.toContain("INTERVENTION_BOUNDS");
+    expect(pristine).not.toContain('role="alert"');
+    expect(pristine).not.toContain('role="status"');
+    expect(pristine).toMatch(/<button[^>]*disabled=""[^>]*>.*?Apply cpu capacity/s);
+    edit(0, "-1");
+    const invalid = view();
+    const reason = interventionError({ interventionId: "cpu-capacity", revision: 1, target: { resourceId: "db" }, parameters: { cores: -1, duration: NaN } }, { authoredBaseline: 2, remainingSeconds: 10 })!;
+    expect(invalid).toContain('role="status"');
+    expect(invalid).not.toContain('role="alert"');
+    expect(invalid).not.toContain("INTERVENTION_BOUNDS:");
+    expect(invalid).toContain(reason.replace(/^\w+:\s*/, "").replace(/^./, c => c.toUpperCase()) + ".");
+    edit(0, "1"); view(); edit(1, "2");
+    expect(view()).not.toContain('role="status"');
+    edit(0, "");
+    expect(view()).toContain('role="status"');
+  } finally { input.mockRestore(); state.mockRestore(); }
 });
 
 test("edge choices resolve endpoint names and retain direction; missing edges fall back to their id", () => {

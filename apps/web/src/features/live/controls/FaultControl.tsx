@@ -31,6 +31,8 @@ function InterventionControl({ deploymentId, resources, fixedTarget }: Props) {
   const parameters = Object.fromEntries((chosen?.parameters ?? []).map(p => [p.name, p.kind === "boolean" ? valueFor(p.name) === "true" : p.kind === "enum" ? valueFor(p.name) : valueFor(p.name) === "" ? NaN : Number(valueFor(p.name))]));
   const request = option && chosen ? {interventionId: chosen.id, revision: chosen.revision, target: option.target, parameters} : null;
   const error = request ? interventionError(request, bounds) : "No supported intervention for this target.";
+  const touched = Object.keys(values).some(key => key.startsWith(`${target}:${chosen?.id}:`));
+  const validationReason = error?.replace(/^\w+:\s*/, "").replace(/^./, c => c.toUpperCase());
   const inject = async () => {
     if (!request || error) return;
     setBusy(true);
@@ -60,7 +62,7 @@ function InterventionControl({ deploymentId, resources, fixedTarget }: Props) {
         }</Field>)}
         {"edgeId" in option.target && <p className="text-xs">Resolved transport targets: {option.resolvedTargets.join(", ")}. Affected paths: {option.affectedPaths.join(", ")}.</p>}
         <p className="text-xs">{chosen.endPolicy === "timed" ? "Restores the authored baseline when the duration ends. Existing effects remain." : chosen.id === "pool-reset" ? "Applies once. Current connections close; subsequent work can open fresh connections. Completed writes remain." : "Applies once. Deleted cache entries stay deleted until refilled."}</p>
-        {error && <p role="alert" className="text-xs text-warn">{error}</p>}
+        {touched && validationReason && <p role="status" className="text-xs text-warn">{validationReason}{/[.!?]$/.test(validationReason) ? "" : "."}</p>}
         <Button variant="secondary" size="sm" icon={<Zap size={14} aria-hidden="true" />} loading={busy} disabled={!!error} onClick={() => void inject()}>Apply {chosen.label.toLowerCase()}</Button>
       </> : <p className="text-xs">{capabilities ? "No supported intervention for this target." : "Intervention capabilities are Unknown until the browser run reports them."}</p>}
     </div>
