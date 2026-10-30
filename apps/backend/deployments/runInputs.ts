@@ -18,7 +18,7 @@ const RunInputsV1Schema = z.object({
     readWriteRatio: z.number().min(0).max(1),
   }),
   seed: z.string().min(1),
-  adapterProfiles: z.array(z.enum(["failure-cause/1", "application-flow/2"])).max(2).refine(values => new Set(values).size === values.length).optional(),
+  adapterProfiles: z.array(z.enum(["failure-cause/1", "application-flow/2", "application-flow/3"])).max(3).refine(values => new Set(values).size === values.length).optional(),
 });
 const RunInputsV2Schema = RunInputsV1Schema.extend({ version: z.literal(2),
   simulationModelVersion: z.string().min(1).max(64), catalogSnapshot: z.string().min(1).max(64) });

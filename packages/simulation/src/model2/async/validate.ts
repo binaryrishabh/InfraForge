@@ -15,6 +15,10 @@ export function validateAsync(i: AsyncInput) {
   const n = <U extends Unit>(q: Quantity<U>, unit: U, min = 0, integer = true) => { const value = requireKnown(q, unit); if (value < min || (integer && !Number.isSafeInteger(value)) || !q.provenance.length || q.provenance.some((id) => { const v = ledger.get(id); return !v || v.kind !== "known" || v.unit !== unit || v.value !== value; })) throw Error("Invalid async quantity/provenance"); return value; };
   const key = (s: string) => typeof s === "string" && s.length > 0 && s.length <= caps.keyCharacters;
   const path = (source: string, target: string) => { if (!i.paths.some((p) => p.source === source && p.target === target)) throw Error(`Missing async transport path ${source}->${target}`); };
+  for (const owner of i.resources) if (owner.kind === "compute" && owner.applicationFlow) for (const flow of Object.values(owner.applicationFlow.operations)) for (const step of flow.steps) if (step.kind === "publish") {
+    const helper = resources.get(step.target);
+    if (helper?.kind !== "async-publisher" || requireKnown(helper.publishAttempts, "count") !== 1) throw Error("Typed publish requires an existing single-attempt publisher helper");
+  }
   for (const r of i.resources) if (isAsync(r)) {
     if (r.execution.id !== r.id || r.execution.downstream || r.execution.quota || r.execution.memory.coverage !== "partial" || r.execution.memory.policy !== "observe" || Object.keys(r.execution.memory).some((k) => !["coverage", "policy"].includes(k)) || i.interventions.some((f) => f.target === r.id) || i.faults.some((f) => f.target === r.id) || i.dataInterventions.some((f) => f.target === r.id)) throw Error("Async resources own execution/fault policy; process memory Unknown");
     if (r.kind === "delivery-queue" || r.kind === "object-store") {

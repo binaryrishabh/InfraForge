@@ -6,7 +6,7 @@ export interface RunTopology {
   connectionLines: ConnectionLine[];
 }
 
-export type AdapterProfile = "failure-cause/1" | "application-flow/2";
+export type AdapterProfile = "failure-cause/1" | "application-flow/2" | "application-flow/3";
 
 // Missing profiles identify inputs captured before implicit adapter profiles were recorded.
 export interface RunProfileSelection { adapterProfiles?: AdapterProfile[] }

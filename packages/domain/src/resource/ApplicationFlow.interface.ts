@@ -2,11 +2,12 @@ export const FLOW_OPERATIONS = ["read", "write"] as const;
 export type FlowOperation = typeof FLOW_OPERATIONS[number];
 export interface FlowCall { id: string; kind: "call"; edge: string; operation?: FlowOperation }
 export interface FlowData { id: string; kind: "data"; edge: string; operation: FlowOperation }
-export type FlowStep = { id: string; kind: "compute" } | FlowCall | FlowData | {
+export interface FlowPublish { id: string; kind: "publish"; edge: string }
+export type FlowStep = { id: string; kind: "compute" } | FlowCall | FlowData | FlowPublish | {
   id: string; kind: "parallel"; branches: FlowCall[]; wait: "all" | number;
 };
 export interface ApplicationFlow {
-  schema: "application-flow/1" | "application-flow/2";
+  schema: "application-flow/1" | "application-flow/2" | "application-flow/3";
   operations: Partial<Record<FlowOperation, { steps: FlowStep[] }>>;
 }
 /** Shared structural validator. Connectivity, profiles and effect safety belong to compilation. */
@@ -16,19 +17,23 @@ export function applicationFlowError(type: string, value: unknown): string | und
   const keys = (v: Record<string, unknown>, allowed: string[]) => Object.keys(v).every(k => allowed.includes(k));
   const id = (v: unknown) => typeof v === "string" && /^[a-zA-Z0-9_-]{1,64}$/.test(v);
   if (type !== "Virtual Machine") return "Application flows require a Virtual Machine.";
-  if (!object(value) || !keys(value, ["schema", "operations"]) || !["application-flow/1", "application-flow/2"].includes(String(value.schema)) || !object(value.operations)) return "Expected application-flow/1 operations.";
+  if (!object(value) || !keys(value, ["schema", "operations"]) || !["application-flow/1", "application-flow/2", "application-flow/3"].includes(String(value.schema)) || !object(value.operations)) return "Expected supported application-flow operations.";
   if (!Object.keys(value.operations).length || !keys(value.operations, [...FLOW_OPERATIONS])) return "Choose read or write for each flow.";
   for (const [operation, flow] of Object.entries(value.operations)) {
     if (!object(flow) || !keys(flow, ["steps"]) || !Array.isArray(flow.steps) || !flow.steps.length || flow.steps.length > 32) return `${operation}: use 1–32 ordered steps.`;
     const ids = new Set<unknown>();
+    let publishes = 0;
     const unique = (v: unknown) => id(v) && !ids.has(v) && !!ids.add(v);
     const call = (v: unknown): boolean => object(v) && keys(v, ["id", "kind", "edge", "operation"]) && unique(v.id) && v.kind === "call" && typeof v.edge === "string" && v.edge.length > 0 && v.edge.length <= 256 && (v.operation === undefined || FLOW_OPERATIONS.includes(v.operation as FlowOperation));
     for (const step of flow.steps) {
       if (!object(step)) return `${operation}: invalid step.`;
       if (step.kind === "call") { if (!call(step)) return `${operation}: calls need unique IDs and a connected edge.`; }
       else if (step.kind === "data") {
-        if (value.schema !== "application-flow/2" || !keys(step, ["id", "kind", "edge", "operation"]) || !unique(step.id) || typeof step.edge !== "string" || !step.edge.length || step.edge.length > 256 || !FLOW_OPERATIONS.includes(step.operation as FlowOperation)) return `${operation}: data needs application-flow/2, a unique ID, connected edge and explicit read/write.`;
+        if (!["application-flow/2", "application-flow/3"].includes(String(value.schema)) || !keys(step, ["id", "kind", "edge", "operation"]) || !unique(step.id) || typeof step.edge !== "string" || !step.edge.length || step.edge.length > 256 || !FLOW_OPERATIONS.includes(step.operation as FlowOperation)) return `${operation}: data needs application-flow/2 or /3, a unique ID, connected edge and explicit read/write.`;
         if (operation === "read" && step.operation === "write") return "A read-only flow cannot contain a data write.";
+      }
+      else if (step.kind === "publish") {
+        if (value.schema !== "application-flow/3" || operation !== "write" || ++publishes > 1 || !keys(step, ["id", "kind", "edge"]) || !unique(step.id) || typeof step.edge !== "string" || !step.edge.length || step.edge.length > 256) return `${operation}: publish needs application-flow/3, one sequential write step, a unique ID and attached queue edge.`;
       }
       else if (step.kind === "compute") { if (!keys(step, ["id", "kind"]) || !unique(step.id)) return `${operation}: compute takes no parameters and needs a unique ID.`; }
       else if (step.kind === "parallel") {

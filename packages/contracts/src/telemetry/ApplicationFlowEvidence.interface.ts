@@ -1,6 +1,6 @@
 /** Bounded observed flow transitions; omitted rows are counted explicitly. */
 export interface ApplicationFlowEvidence {
-  profile: "application-flow/1" | "application-flow/2";
+  profile: "application-flow/1" | "application-flow/2" | "application-flow/3";
   events: Array<{
     atUs: number; kind: string; resource: string;
     work?: { rootId: string; callId: string; parentCallId?: string; attempt: number; operation: string; offeredAt: number };

@@ -14,4 +14,4 @@ export { DEFAULT_CIRCUIT_BREAKER_SETTINGS, circuitBreakerSettingsError, type Cir
 
 export { DEFAULT_ASYNC_QUEUE_SETTINGS, DEFAULT_ASYNC_WORKER_SETTINGS, asyncSettingsError, type AsyncQueueSettings, type AsyncWorkerSettings } from "./AsyncSettings.interface";
 
-export { FLOW_OPERATIONS, applicationFlowError, type ApplicationFlow, type FlowOperation, type FlowStep, type FlowCall, type FlowData } from "./ApplicationFlow.interface";
+export { FLOW_OPERATIONS, applicationFlowError, type ApplicationFlow, type FlowOperation, type FlowStep, type FlowCall, type FlowData, type FlowPublish } from "./ApplicationFlow.interface";

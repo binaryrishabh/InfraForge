@@ -6,7 +6,7 @@ import { utf8Bytes } from "../time";
 export const APPLICATION_FLOW_MAX_BYTES = 1024 * 1024;
 
 /** Byte accounting includes the entire flow object, not just event payloads. */
-export function applicationFlowEvidence(rowLimit: number, byteLimit = Infinity, profile: "application-flow/1" | "application-flow/2" = "application-flow/1") {
+export function applicationFlowEvidence(rowLimit: number, byteLimit = Infinity, profile: "application-flow/1" | "application-flow/2" | "application-flow/3" = "application-flow/1") {
   const events: CausalEvent[] = [], totals: Record<string, number> = {};
   let omitted = 0, retainedBytes = 0;
   const envelope = () => ({ profile, events: [] as CausalEvent[], totals, retained: events.length, omitted });

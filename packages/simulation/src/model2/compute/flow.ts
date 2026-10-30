@@ -7,7 +7,8 @@ import { identity } from "../workload/arrivals";
 
 export interface RuntimeFlowCall { id: string; kind: "call"; target: string; operation?: string }
 export interface RuntimeFlowData { id: string; kind: "data"; target: string; operation: "read" | "write"; command: "query" | "cache-aside" }
-export type RuntimeFlowStep = { id: string; kind: "compute" } | RuntimeFlowCall | RuntimeFlowData | {
+export interface RuntimeFlowPublish { id: string; kind: "publish"; target: string; edge: string; operation: "write" }
+export type RuntimeFlowStep = { id: string; kind: "compute" } | RuntimeFlowCall | RuntimeFlowData | RuntimeFlowPublish | {
   id: string; kind: "parallel"; branches: RuntimeFlowCall[]; wait: "all" | number;
 };
 export interface RuntimeFlow { steps: RuntimeFlowStep[] }
@@ -16,11 +17,18 @@ export interface RuntimeFlow { steps: RuntimeFlowStep[] }
 export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFlow, clock: EventClock,
   send: (target: string, work: Invocation, done: RemoteCompletion) => Receipt,
   compute: (step: string, done: () => void) => void, finish: RemoteCompletion, causal?: CausalObserver) {
-  type Slot = { branch: RuntimeFlowCall | RuntimeFlowData; work: Invocation; receipt?: Receipt; outcome?: RemoteOutcome; cause?: Cause };
+  type Slot = { branch: RuntimeFlowCall | RuntimeFlowData | RuntimeFlowPublish; work: Invocation; receipt?: Receipt; outcome?: RemoteOutcome; cause?: Cause };
   let cursor = 0, terminal = false, paused = false, parked: (() => void) | undefined, cancelContinuation: (() => boolean) | undefined;
   let slots: Slot[] = [], step: RuntimeFlowStep | undefined, stepSettled = false;
   const emit = (kind: string, detail: Record<string, string | number | boolean | null>, child = work) => causal?.({ atUs: clock.now, resource: owner, work: child, kind: `flow-${kind}`, detail });
-  const dataFields = (branch: RuntimeFlowCall | RuntimeFlowData): Record<string, string> => branch.kind === "data" ? { target: branch.target, operation: branch.operation, command: branch.command } : {};
+  const dataFields = (branch: Slot["branch"]): Record<string, string> => branch.kind === "data" ? { target: branch.target, operation: branch.operation, command: branch.command } : branch.kind === "publish" ? { target: branch.target, operation: branch.operation, edge: branch.edge } : {};
+  const publishFields = (slot: Slot): Record<string, string | number | boolean | null> => {
+    if (slot.branch.kind !== "publish") return {};
+    const response = slot.work.message?.response as Partial<import("../async/contracts").FlowPublishReply> | undefined;
+    return { ...dataFields(slot.branch), stage: response?.stage ?? "Unknown", replyReason: response?.replyReason ?? null,
+      confirmation: response?.confirmation ?? "Unknown", ambiguous: response?.ambiguous ?? true,
+      physicalDurability: "Unknown", ...causeFields(slot.cause ?? { rootReason: null, rootResource: null, depth: 0 }) };
+  };
   const settleStep = (outcome: RemoteOutcome) => {
     if (!step || stepSettled) return;
     stepSettled = true; emit("step-terminal", { step: step.id, outcome });
@@ -28,7 +36,7 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
   const cancelSlots = (reason: string) => {
     for (const slot of slots) if (!slot.outcome && slot.receipt) {
       slot.outcome = "cancelled";
-      emit("branch-terminal", { step: step!.id, branch: slot.branch.id, outcome: reason, ...dataFields(slot.branch) }, slot.work);
+      emit("branch-terminal", { step: step!.id, branch: slot.branch.id, outcome: reason, ...dataFields(slot.branch), ...publishFields(slot) }, slot.work);
       slot.receipt.cancel();
     }
   };
@@ -62,6 +70,7 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
       rootId: work.rootId, attempt: work.attempt, offeredAt: work.offeredAt, parentCallId: work.callId,
       callId: identity(...JSON.parse(work.callId), "flow", owner, work.operation, current.id, branch.id), operation: branch.operation ?? work.operation,
       ...(branch.kind === "data" ? { message: { request: { kind: "query", key: "key" } } } : {}),
+      ...(branch.kind === "publish" ? { message: { request: { kind: "flow-publish", edge: branch.edge } } } : {}),
     } }));
     let dispatching = true, joined = false;
     const evaluate = () => {
@@ -86,7 +95,7 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
         // Actual remote-after-stop outcomes are observed by transport, never this callback.
         if (terminal || joined || slot.outcome) return;
         slot.outcome = outcome; slot.cause = cause;
-        emit("branch-terminal", { step: current.id, branch: slot.branch.id, outcome, ...(slot.branch.kind === "data" ? { ...dataFields(slot.branch), ...causeFields(cause), ...(slot.work.message?.response && typeof slot.work.message.response === "object" && "hit" in slot.work.message.response ? { hit: !!slot.work.message.response.hit } : {}) } : {}) }, slot.work);
+        emit("branch-terminal", { step: current.id, branch: slot.branch.id, outcome, ...publishFields(slot), ...(slot.branch.kind === "data" ? { ...dataFields(slot.branch), ...causeFields(cause), ...(slot.work.message?.response && typeof slot.work.message.response === "object" && "hit" in slot.work.message.response ? { hit: !!slot.work.message.response.hit } : {}) } : {}) }, slot.work);
         evaluate();
       });
     }

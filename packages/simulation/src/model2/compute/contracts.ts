@@ -15,7 +15,7 @@ export interface ComputeProfile extends Omit<DemandProfile, "schema" | "io" | "s
 }
 export interface ComputeResource extends Omit<WorkStation, "kind" | "concurrency"> {
   kind: "compute";
-  applicationFlow?: { schema: "application-flow/1" | "application-flow/2"; operations: Record<string, RuntimeFlow> };
+  applicationFlow?: { schema: "application-flow/1" | "application-flow/2" | "application-flow/3"; operations: Record<string, RuntimeFlow> };
   // Explicit operation routing; omitted retains the historical single dependency.
   downstreamByOperation?: Record<string, string>;
   workers: Quantity<"count">;

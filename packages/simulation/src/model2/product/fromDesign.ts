@@ -17,7 +17,8 @@ const operations = ["read", "write", "health"] as const;
 // Only new captures select current implicit profiles. Historical builds use their recorded list.
 export function currentAdapterProfiles(resources: SavedProductDesign["resources"]): AdapterProfile[] {
   const dataFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/2");
-  return [...(dataFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : [])];
+  const publishFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/3");
+  return [...(dataFlow || publishFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : []), ...(publishFlow ? ["application-flow/3" as const] : [])];
 }
 
 /** Canvas intent is preserved; missing application and service settings are visible assumptions.
@@ -30,13 +31,15 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const design = savedPoolPolicies(saved), resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
     // New canvas runs with retry/breaker intent record observational cause evidence; no learner control, and no decision depends on it.
     const profiles = history && "adapterProfiles" in history ? history.adapterProfiles : history ? [] : currentAdapterProfiles(resources);
-    if (profiles.some(p => !["failure-cause/1", "application-flow/2"].includes(p)) || new Set(profiles).size !== profiles.length) error("adapterProfiles", "Unsupported adapter profile selection.");
+    if (profiles.some(p => !["failure-cause/1", "application-flow/2", "application-flow/3"].includes(p)) || new Set(profiles).size !== profiles.length) error("adapterProfiles", "Unsupported adapter profile selection.");
     const failureCause = profiles.includes("failure-cause/1");
     const hasSecurity = resources.some(r => r.listenerSettings !== undefined || r.firewallSettings !== undefined);
     const hasFlow = resources.some(r => r.applicationFlow !== undefined);
     const flow2 = resources.some(r => r.applicationFlow?.schema === "application-flow/2");
     if (flow2 !== profiles.includes("application-flow/2")) error("adapterProfiles", "Application Flow /2 requires its captured application-flow/2 adapter profile and matching saved intent.");
-    const flowProfile = flow2 ? "application-flow/2" as const : "application-flow/1" as const;
+    const flow3 = resources.some(r => r.applicationFlow?.schema === "application-flow/3");
+    if (flow3 !== profiles.includes("application-flow/3")) error("adapterProfiles", "Application Flow /3 requires its captured application-flow/3 adapter profile and matching saved intent.");
+    const flowProfile = flow3 ? "application-flow/3" as const : flow2 ? "application-flow/2" as const : "application-flow/1" as const;
     const byId = new Map(resources.map((r) => [r.id, r]));
     const connections = [...design.connections].sort((a, b) => a.id < b.id ? -1 : 1);
     const outgoing = (id: string) => connections.filter((e) => e.sourceId === id).map((e) => byId.get(e.targetId)!);
@@ -50,7 +53,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       if (securityError) error(`resources.${r.id}.security`, securityError);
       const flowError = applicationFlowError(r.type, r.applicationFlow);
       if (flowError) error(`resources.${r.id}.applicationFlow`, flowError);
-      if (r.applicationFlow && (r.asyncWorker?.enabled || outgoing(r.id).some(t => !(r.applicationFlow?.schema === "application-flow/2" ? ["Virtual Machine", "Load Balancer", "Database", "Cache"] : ["Virtual Machine", "Load Balancer"]).includes(t.type)))) error(`resources.${r.id}.applicationFlow`, "Flow v1 calls connected VM or load balancer services only; async/data/publish bindings are unsupported.");
+      if (r.applicationFlow && (r.asyncWorker?.enabled || outgoing(r.id).some(t => !(r.applicationFlow?.schema === "application-flow/3" ? ["Virtual Machine", "Load Balancer", "Database", "Cache", "Message Queue", "Object Storage"] : r.applicationFlow?.schema === "application-flow/2" ? ["Virtual Machine", "Load Balancer", "Database", "Cache"] : ["Virtual Machine", "Load Balancer"]).includes(t.type)))) error(`resources.${r.id}.applicationFlow`, "Flow v1 calls connected VM or load balancer services only; async/data/publish bindings are unsupported.");
       const asyncError = asyncSettingsError(r.type, r.asyncQueue, r.asyncWorker);
       if (asyncError) error(`resources.${r.id}.async`, asyncError);
       const breakerError = circuitBreakerSettingsError(r.type, r.circuitBreaker);
@@ -143,19 +146,19 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
           const queue = producerQueue(id);
           if (queue) {
             const store = outgoing(id).find((r) => r.type === "Object Storage")!;
-            const config = execution(r, "main"); config.downstream = "$self/publisher"; add(r, "main", config);
+            const config = execution(r, "main"); if (r.applicationFlow?.schema !== "application-flow/3") config.downstream = "$self/publisher"; add(r, "main", config);
             add(r, "publisher", { kind: "async-publisher", execution: execution(r, "publisher"), broker: `$${queue.id}`, store: `$${store.id}`, namespace: "uploads", objectBytes: q(`${id}.async.objectBytes`, 1024, "bytes"), messageBytes: q(`${id}.async.messageBytes`, 128, "bytes"), delay: q(`${id}.async.delay`, 0, "us"), publishAttempts: q(`${id}.async.attempts`, 1, "count") });
             internal(r, "main", "publisher"); break;
           }
           const data = outgoing(id).filter((t) => ["Database", "Cache"].includes(t.type));
           const cache = data.find((t) => t.type === "Cache"), database = data.find((t) => t.type === "Database");
-          if (r.applicationFlow?.schema === "application-flow/2") {
+          if (r.applicationFlow && r.applicationFlow.schema !== "application-flow/1") {
             if (data.filter(t => t.type === "Database").length > 1 || data.filter(t => t.type === "Cache").length > 1 || (cache && (outgoing(cache.id).length !== 1 || outgoing(cache.id)[0]?.type !== "Database" || (database && outgoing(cache.id)[0]?.id !== database.id)))) { error(`resources.${id}`, "Flow /2 supports one attached database and one optional cache drawn to that same database."); break; }
           }
           else if (data.length > 1 && !(data.length === 2 && cache && database && !outgoing(cache.id).length)) { error(`resources.${id}`, "Connect the app to one database, one database-backed cache, or one cache and one database; other combinations need an authored operation plan."); break; }
           const config = execution(r, "main");
           config.memory.limit = q(`${id}.memory.limit`, memory.get(id)! * 1073741824, "bytes", "The memory label is interpreted as GiB for this partial observation only; total memory use remains unknown.");
-          if (r.applicationFlow?.schema === "application-flow/2") { /* The authored steps own every data dependency. */ }
+          if (r.applicationFlow && r.applicationFlow.schema !== "application-flow/1") { /* The authored steps own every data dependency. */ }
           else if (cache && database) {
             config.downstream = "$self/aside";
             add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: `$${cache.id}`, database: `$${database.id}`, keys: ["key"], access: "cycle", coalesce: note(`${id}.cache.singleFlight`, false, "policy", "Plain cache-aside has no single-flight: concurrent misses independently call the database."), onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "main", "aside");
@@ -257,7 +260,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       if (s.type === "Virtual Machine" && (s.asyncWorker?.enabled || producerQueue(s.id)) && ["Message Queue", "Object Storage"].includes(t.type)) { edges[e.id] = edge(t, `edge.${e.id}`, s.asyncWorker?.enabled ? "main" : "publisher", "main", "consumer", e.port, true); continue; }
       if (s.type === "Firewall") purpose = "policy-attachment";
       else if (s.type === "Load Balancer" && t.type === "Virtual Machine") purpose = "routing";
-      else if (s.type === "Virtual Machine" && s.applicationFlow && ["Virtual Machine", "Load Balancer", ...(s.applicationFlow.schema === "application-flow/2" ? ["Database", "Cache"] : [])].includes(t.type)) { purpose = "dependency"; targetRole = t.type === "Cache" ? "aside" : "main"; }
+      else if (s.type === "Virtual Machine" && s.applicationFlow && ["Virtual Machine", "Load Balancer", ...(s.applicationFlow.schema !== "application-flow/1" ? ["Database", "Cache"] : [])].includes(t.type)) { purpose = "dependency"; targetRole = t.type === "Cache" ? "aside" : "main"; }
       else if (s.type === "Monitoring Agent" && t.type !== "Firewall") purpose = "monitor-target";
       else if (["CDN", "Container Registry"].includes(s.type) && t.type === "Object Storage") purpose = "origin";
       else if (s.type === "Cache" && t.type === "Database") sourceRole = "aside";
@@ -335,7 +338,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       note(`${r.id}.applicationFlow.worker`, "thread-per-request: worker held while waiting", "policy", "Authored assumption: thread-per-request: worker held while waiting; waiting consumes no CPU.");
     }
     note("security.scope", "logical TCP admission only", "policy", "Public exposure, encryption and open ports stay saved metadata; assumed listeners and allow policies do not certify the design's security.");
-    note("application.scope", "one-key educational application", "policy", asyncQueues.length ? "Each served producer request uploads one object and publishes one message; the worker reads it, spends authored CPU, writes a result and acknowledges. Other service edges retain their bootstrap behavior." : "Requests use one assumed key; queue, object and registry edges receive explicit bootstrap commands rather than invented application fan-out.");
+    note("application.scope", "one-key educational application", "policy", asyncQueues.length ? flow3 ? "An authored write publish step uploads one object, publishes once and waits for broker confirmation of logical ownership; physical durability Unknown. Worker completion is separate. No retry or rollback is implied." : "Each served producer request uploads one object and publishes one message; the worker reads it, spends authored CPU, writes a result and acknowledges. Other service edges retain their bootstrap behavior." : "Requests use one assumed key; queue, object and registry edges receive explicit bootstrap commands rather than invented application fan-out.");
     note("workload.arrivals", "deterministic open-loop", "policy", "Requests begin immediately at evenly spaced intervals with a fractional read/write mixture; peak traffic occupies seconds ten through twenty.");
     for (const r of saved.resources.filter((r) => r.type === "Load Balancer" && r.autoscaling?.enabled)) note(`${r.id}.poolMapping`, resources.filter((x) => x.autoscaling?.enabled).map((x) => x.id), "policy", "The first app by ID owns the adjustable replicas while its drawn siblings stay fixed, preserving the load balancer's total replica bounds.");
     // Non-numeric policy choices are also reviewable; quantity leaves are already listed above.

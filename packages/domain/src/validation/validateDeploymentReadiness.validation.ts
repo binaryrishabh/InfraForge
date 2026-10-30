@@ -17,7 +17,8 @@ export function validateConnection(sourceType: ResourceType, targetType: Resourc
     if (!rule) { // If the sepcified sourceType can't make connection with the defined targetType
         return { valid: false, message: `${sourceType} cannot connect to ${targetType}. Allowed: ${allowed.filter(rule => context === "draw" || typeof rule === "string" || rule.requires === "application-flow/2").map(rule => typeof rule === "string" ? rule : rule.target).join(", ")}` };
     }
-    if (typeof rule !== "string" && context !== "draw" && (rule.requires === "application-flow" || context?.source.applicationFlow?.schema === "application-flow/2")) {
+    if (targetType === RESOURCE_TYPES.MessageQueue && context && context !== "draw" && context.source.applicationFlow?.schema === "application-flow/3" && !Object.values(context.source.applicationFlow.operations).some(flow => flow.steps.some(step => step.kind === "publish" && step.edge === context.connectionId))) return { valid: false, message: "This upload queue needs an Application Flow publish step on the source VM" };
+    if (typeof rule !== "string" && context !== "draw" && (rule.requires === "application-flow" || (context?.source.applicationFlow && context.source.applicationFlow.schema !== "application-flow/1"))) {
         const usesConnection = context && Object.values(context.source.applicationFlow?.operations ?? {}).some(flow =>
             flow.steps.some(step => step.kind === (rule.requires === "application-flow/2" ? "data" : "call") && "edge" in step ? step.edge === context.connectionId :
                 rule.requires === "application-flow" && step.kind === "parallel" && step.branches.some(branch => branch.edge === context.connectionId)));
@@ -37,7 +38,7 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
         const target = resources.find(resource => resource.id === line.targetId);
         // Existing wiring retains shipped readiness semantics. Only conditional
         // rules introduce a readiness requirement; drawing rules are separate.
-        if (source && target && CONNECTION_RULES[source.type]?.some(rule => typeof rule !== "string" && rule.target === target.type)) {
+        if (source && target && (CONNECTION_RULES[source.type]?.some(rule => typeof rule !== "string" && rule.target === target.type) || (source.applicationFlow?.schema === "application-flow/3" && target.type === RESOURCE_TYPES.MessageQueue))) {
             const verdict = validateConnection(source.type, target.type, { source, connectionId: line.id });
             if (!verdict.valid) errors.push(`${line.id}: ${verdict.message}`);
         }

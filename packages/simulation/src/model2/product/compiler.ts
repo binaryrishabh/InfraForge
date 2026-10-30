@@ -37,8 +37,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
   try {
     boundedProduct(design); boundedProduct(contract);
     design = savedPoolPolicies(design);
-    if (contract.applicationFlowProfile !== undefined && !["application-flow/1", "application-flow/2"].includes(contract.applicationFlowProfile)) error("UNKNOWN_FLOW_PROFILE", "applicationFlowProfile", "Unsupported flow profile");
-    if ((design.resources.some(r => r.applicationFlow?.schema === "application-flow/2") ? "application-flow/2" : design.resources.some(r => r.applicationFlow) ? "application-flow/1" : undefined) !== contract.applicationFlowProfile) error("FLOW_PROFILE", "applicationFlowProfile", "Saved flow requires the application-flow/1 adapter");
+    if (contract.applicationFlowProfile !== undefined && !["application-flow/1", "application-flow/2", "application-flow/3"].includes(contract.applicationFlowProfile)) error("UNKNOWN_FLOW_PROFILE", "applicationFlowProfile", "Unsupported flow profile");
+    if ((design.resources.some(r => r.applicationFlow?.schema === "application-flow/3") ? "application-flow/3" : design.resources.some(r => r.applicationFlow?.schema === "application-flow/2") ? "application-flow/2" : design.resources.some(r => r.applicationFlow) ? "application-flow/1" : undefined) !== contract.applicationFlowProfile) error("FLOW_PROFILE", "applicationFlowProfile", "Saved flow requires the application-flow/1 adapter");
     if (contract.applicationFlowProfile && !contract.version.endsWith(`/${contract.applicationFlowProfile}`)) error("FLOW_VERSION", "version", "Flow semantic version must identify application-flow/1");
     if (contract.failureCauseProfile !== undefined && contract.failureCauseProfile !== "failure-cause/1") error("UNKNOWN_CAUSE_PROFILE", "failureCauseProfile", "Unsupported failure cause profile");
     if (design.schema !== "infraforge-saved-design/1" || contract.schema !== "infraforge-product-model2/1" || !contract.version || !contract.designVersion || !contract.catalogVersion || contract.workloadVersion !== "product-arrivals/1") error("VERSION_REQUIRED", "versions", "Explicit design/compiler/application/catalog/workload versions required");
@@ -173,7 +173,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     }
     for (const r of resources) if (r.applicationFlow) for (const instance of expansion.get(r.id)!) {
       const owner = materialized.get(ref(`$self/${contract.nodes[r.id]!.primary}`, instance));
-      if (r.applicationFlow.schema === "application-flow/2") {
+      if (r.applicationFlow.schema !== "application-flow/1") {
         const attached = design.connections.filter(e => e.sourceId === r.id).map(e => nodes.get(e.targetId)!);
         for (const edge of design.connections.filter(e => e.sourceId === r.id && ["Database", "Cache"].includes(nodes.get(e.targetId)!.type))) {
           if (!Object.values(r.applicationFlow.operations).some(flow => flow.steps.some(s => s.kind === "data" && s.edge === edge.id))) throw Error(`Data connection ${edge.id} needs an exact typed step on its source flow`);
@@ -191,7 +191,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
         return { id: c.id, kind: "call" as const, target, ...(c.operation ? { operation: c.operation } : {}) };
       };
       const data = (c: import("@infraforge/domain/resource").FlowData) => {
-        if (r.applicationFlow!.schema !== "application-flow/2" || contract.applicationFlowProfile !== "application-flow/2") throw Error("Data steps require application-flow/2");
+        if (r.applicationFlow!.schema === "application-flow/1" || !["application-flow/2", "application-flow/3"].includes(contract.applicationFlowProfile ?? "")) throw Error("Data steps require application-flow/2");
         const drawn = design.connections.find(e => e.id === c.edge && e.sourceId === r.id), binding = contract.edges[c.edge];
         const targetNode = drawn && nodes.get(drawn.targetId), targetSpec = targetNode && contract.nodes[targetNode.id];
         const command = targetNode?.type === "Database" ? "query" as const : targetNode?.type === "Cache" ? "cache-aside" as const : undefined;
@@ -205,7 +205,20 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
         if (command === "query" && c.operation === "write" && design.connections.some(e => e.sourceId === r.id && nodes.get(e.targetId)?.type === "Cache")) throw Error("Use a cache write to update the database and invalidate the attached cache");
         return { id: c.id, kind: "data" as const, target, operation: c.operation, command };
       };
-      owner.applicationFlow = { schema: r.applicationFlow.schema, operations: Object.fromEntries(Object.entries(r.applicationFlow.operations).map(([op, flow]) => [op, { steps: flow.steps.map(s => s.kind === "compute" ? s : s.kind === "call" ? call(s) : s.kind === "data" ? data(s) : { ...s, branches: s.branches.map(call) }) }])) };
+      const publish = (c: import("@infraforge/domain/resource").FlowPublish) => {
+        const drawn = design.connections.find(e => e.id === c.edge && e.sourceId === r.id), binding = contract.edges[c.edge];
+        const queue = drawn && nodes.get(drawn.targetId), publisher = materialized.get(ref(`$self/publisher`, instance));
+        const workers = queue && design.connections.filter(e => e.sourceId === queue.id).map(e => nodes.get(e.targetId)!).filter(n => n.asyncWorker?.enabled);
+        const stores = design.connections.filter(e => e.sourceId === r.id && nodes.get(e.targetId)?.type === "Object Storage");
+        const worker = workers?.[0], store = stores[0];
+        if (r.applicationFlow!.schema !== "application-flow/3" || contract.applicationFlowProfile !== "application-flow/3" || !drawn || !binding || queue?.type !== "Message Queue" || !queue.asyncQueue?.enabled || binding.purpose !== "consumer" || binding.sourceRole !== "publisher" || binding.targetRole !== contract.nodes[queue.id]!.primary || publisher?.kind !== "async-publisher") throw Error("Publish needs its enabled attached queue and producer publisher helper");
+        if (contract.caller.entry !== `$${r.id}` || r.autoscaling?.enabled || r.asyncWorker?.enabled || design.connections.some(e => e.targetId === r.id && ["Virtual Machine", "Load Balancer", "CDN"].includes(nodes.get(e.sourceId)!.type)) || design.connections.filter(e => e.targetId === queue.id && nodes.get(e.sourceId)?.type === "Virtual Machine").length !== 1 || design.connections.filter(e => e.sourceId === r.id && nodes.get(e.targetId)?.type === "Message Queue").length !== 1 || workers?.length !== 1 || !worker || worker.autoscaling?.enabled || stores.length !== 1 || !store || design.connections.filter(e => e.sourceId === worker.id && nodes.get(e.targetId)?.type === "Object Storage").length !== 1 || !design.connections.some(e => e.sourceId === worker.id && e.targetId === store.targetId) || design.connections.some(e => [r.id, worker.id].includes(e.sourceId) && ["Database", "Cache"].includes(nodes.get(e.targetId)!.type))) throw Error("Publish requires a fixed direct-entry producer and one worker sharing the same attached object store");
+        const workerOwner = materialized.get(ref(`$${worker.id}`));
+        if (publisher.broker !== ref(`$${queue.id}`) || publisher.store !== ref(`$${store.targetId}`) || publisher.namespace !== "uploads" || requireKnown(publisher.objectBytes, "bytes") !== 1024 || requireKnown(publisher.messageBytes, "bytes") !== 128 || requireKnown(publisher.delay, "us") !== 0 || requireKnown(publisher.publishAttempts, "count") !== 1 || workerOwner?.kind !== "async-worker" || workerOwner.broker !== publisher.broker || workerOwner.store !== publisher.store) throw Error("Publish must preserve the existing upload payload, store, worker and single-attempt policy");
+        return { id: c.id, kind: "publish" as const, target: publisher.id, edge: c.edge, operation: "write" as const };
+      };
+      if (r.applicationFlow.schema === "application-flow/3" && design.connections.some(e => e.sourceId === r.id && nodes.get(e.targetId)?.asyncQueue?.enabled) && !Object.values(r.applicationFlow.operations).some(f => f.steps.some(s => s.kind === "publish"))) throw Error("An attached upload queue needs an authored publish step");
+      owner.applicationFlow = { schema: r.applicationFlow.schema, operations: Object.fromEntries(Object.entries(r.applicationFlow.operations).map(([op, flow]) => [op, { steps: flow.steps.map(s => s.kind === "compute" ? s : s.kind === "call" ? call(s) : s.kind === "data" ? data(s) : s.kind === "publish" ? publish(s) : { ...s, branches: s.branches.map(call) }) }])) };
     }
     const entry = ref(contract.caller.entry); path("external-entry", "$caller", entry, { purpose: "dependency", sourceRole: "external", targetRole: "entry", ...contract.caller });
     for (const e of contract.caller.dependencies) path(`external/${e.id}`, "$caller", ref(e.target), { ...e, sourceRole: "external", targetRole: "target" });
@@ -224,7 +237,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
         if (r.kind !== "compute") return 1;
         const flow = r.applicationFlow?.operations[operation];
         if (!flow) { const target = r.downstreamByOperation?.[operation] ?? r.downstream; return 1 + (target ? calls(target, operation, chain) : 0); }
-        const total = 1 + flow.steps.reduce((sum, s) => sum + (s.kind === "compute" ? 1 : s.kind === "data" ? (s.command === "cache-aside" ? 4 : 1) : s.kind === "call" ? calls(s.target, s.operation ?? operation, chain) : s.branches.reduce((n, b) => n + calls(b.target, b.operation ?? operation, chain), 0)), 0);
+        const total = 1 + flow.steps.reduce((sum, s) => sum + (s.kind === "compute" ? 1 : s.kind === "publish" ? 3 : s.kind === "data" ? (s.command === "cache-aside" ? 4 : 1) : s.kind === "call" ? calls(s.target, s.operation ?? operation, chain) : s.branches.reduce((n, b) => n + calls(b.target, b.operation ?? operation, chain), 0)), 0);
         memo.set(key, total); return total;
       };
       const factor = Math.max(...runtime.operations.map(op => calls(op.entry, op.id)));
