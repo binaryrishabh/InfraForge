@@ -13,6 +13,8 @@ test("whole script precompiles exact targets and microsecond boundaries without 
   expect(receipts[0]!.resolvedTargets.length).toBeGreaterThan(0);
   const missing = structuredClone(scenario); missing.steps[0]!.request.target = {resourceId: "missing"};
   expect(() => compileScenario(missing, interventionInput(), 5)).toThrow();
+  const bypass = interventionInput(); bypass.connectionLines = [];
+  expect(() => compileScenario(scenario, bypass, 5)).toThrow();
   const overlap = {...scenario, steps: [...scenario.steps, {...scenario.steps[0]!, id: "overlap", atSecond: 3}]};
   expect(() => compileScenario(overlap, interventionInput(), 6)).toThrow();
 });

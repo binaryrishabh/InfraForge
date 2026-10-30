@@ -19,6 +19,9 @@ import { afterTheCacheReturnsV2 } from "../challenges/definitions/after-the-cach
 import { createModel2Engine, type ContractBuilder } from "../simulator/model2Engine";
 import { buildModel2Contract } from "../simulator/contractBuilder";
 import { currentSecond } from "../simulator/engineView";
+import { recordedScenario } from "../challenges/scenario";
+import { dueScenarioSteps } from "@infraforge/simulation/model2-run";
+import { boundRetriesDuringSlowdownV1 } from "../challenges/definitions/bound-retries-during-slowdown/v1";
 
 // Historical report fixtures deliberately keep their published Model 1 conditions.
 export const legacyDefinition = (id: string) => findChallenge(id, 1)!.definition;
@@ -37,6 +40,8 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "bound-retries-during-slowdown": {...boundRetriesDuringSlowdownV1.starter!, resources: boundRetriesDuringSlowdownV1.starter!.resources.map(r => r.id === "lb" ?
+    {...r, retry: {enabled: true, maxAttempts: 2, backoffMs: 100, jitterRatio: 0.2, maxConcurrentRetries: 4, retryOn: ["backendFailure", "timeout", "connectionFailure"]}} : r)},
   "after-the-cache-returns": { ...afterTheCacheReturnsV2.starter!, resources: afterTheCacheReturnsV2.starter!.resources.map((r) =>
     r.id === "db" ? { ...r, skuId: "db.m5.xlarge" } : r) },
   "headroom-under-cpu-pressure": starter([["dns", T.DNS, 0, 1], ["lb", T.LoadBalancer, 1, 1, { autoscaling: { enabled: true, minReplicas: 2, maxReplicas: 4, targetCpu: 60 } }],
@@ -79,6 +84,8 @@ export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, p
     accumulatedCostUsd: 0, topology: runInputs, topologyRevision: 0, actions: new Map(), acknowledge: null,
     metricsComputedAt: new Date().toISOString(), metricsTopologyRevision: 0 };
   const plan = recordedExperiment(def);
+  const scenario = recordedScenario(def, runInputs);
+  let nextScenarioStep = 0;
   instance.evidence = createEvidenceBuffer(plan, def.evaluationSeconds);
   const actions: StoredAction[] = [];
   const deploymentId = randomUUID();
@@ -101,6 +108,13 @@ export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, p
         appliedAt: new Date(), completedAt: null, appliedSimulatedSeconds: second, completedSimulatedSeconds: null,
         outcome: applied.outcome as StoredAction["outcome"], failureReason: null });
     }
+    if (scenario && !options.skipExperiment) for (const step of dueScenarioSteps(scenario, nextScenarioStep, second)) {
+      const id = randomUUID(), applied = applyAction(instance, id, {kind: "intervention", parameters: step.request});
+      actions.push({id, deploymentId, sequence: actions.length + 1, scenarioStepId: step.id, kind: "intervention", parameters: storedJson(step.request) as StoredAction["parameters"], status: applied.status,
+        requestedAt: new Date(), appliedAt: new Date(), completedAt: null, appliedSimulatedSeconds: second, completedSimulatedSeconds: null,
+        outcome: storedJson(applied.outcome) as StoredAction["outcome"], failureReason: null});
+      nextScenarioStep++;
+    }
   }
   instance.tickCount = currentSecond(instance);
   const now = new Date().toISOString();
@@ -116,6 +130,7 @@ export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, p
     liveTopology: { resources: runInputs.resources, connectionLines: runInputs.connectionLines },
     terminalSnapshot: active ? null : storedJson(captureSnapshot("attempt", instance, "terminal")), actions, runtimeActive: active,
     challengeId: def.id, challengeVersion: def.version, challengeSpecHash: options.hash ?? specHash(def), challengePrediction: prediction,
-    predictionSubmittedAt: new Date(), evaluationStopAtSimulatedSeconds: def.evaluationSeconds, challengeExperiment: options.plan === undefined ? plan : options.plan };
+    predictionSubmittedAt: new Date(), evaluationStopAtSimulatedSeconds: def.evaluationSeconds, challengeExperiment: options.plan === undefined ? plan : options.plan,
+    ...(scenario ? {challengeScenario: scenario} : {}) };
   return row;
 }

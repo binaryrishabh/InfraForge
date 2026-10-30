@@ -77,6 +77,7 @@ export interface ReportTopology {
 }
 
 export interface ReportCheckpoint {
+  traffic?: { offeredRps: number; completedRps: number; failedRps: number; latencyMs: {p50: number | null; p95: number | null} };
   capturedAt?: string;
   topologyRevision?: number;
   speed?: number;

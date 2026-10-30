@@ -12,10 +12,12 @@ export const reportRouter = Router();
 export const reportSelection = { id: true, infrastructureId: true, runName: true, runtimeActive: true,
   sourceRunId: true, rerunMode: true, autoStopAtSimulatedSeconds: true, sourceRun: { select: { runName: true } },
   challengeId: true, challengeVersion: true, challengeSpecHash: true, challengePrediction: true, predictionSubmittedAt: true,
-  evaluationStopAtSimulatedSeconds: true, challengeExperiment: true,
+  evaluationStopAtSimulatedSeconds: true, challengeExperiment: true, challengeScenario: true,
   improvementSourceId: true, learningHypothesis: true, learningIntent: true,
-  // Summaries need only a resilience attempt's scheduled fault; full reports select every action.
-  actions: { where: { kind: "chaos", parameters: { path: ["trigger"], equals: "challenge-experiment" } }, orderBy: { sequence: "asc" }, take: 1 },
+  // Scenarios need every action for receipt integrity, including detection of unreadable or extra rows.
+  // Earlier attempts retain the scheduled-fault projection.
+  actions: { where: { OR: [{kind: "chaos", parameters: {path: ["trigger"], equals: "challenge-experiment"}},
+    {deployment: {challengeScenario: {path: ["version"], equals: 1}}}] }, orderBy: { sequence: "asc" }, take: 501 },
   status: true, createdAt: true, updatedAt: true, resourceCount: true, workloadProfile: true,
   seed: true, runInputs: true, liveTopology: true, topologyRevision: true, stages: true,
   timeline: true, chaosEvents: true, simulationState: true, terminalSnapshot: true, _count: { select: { actions: true } } } as const;

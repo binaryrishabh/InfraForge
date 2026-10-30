@@ -9,16 +9,23 @@ import { appServersBehindBalancer, busiestTypes, databaseConnections, genericSiz
 import { REGISTRY, type ChallengeRegistry } from "./registry";
 import { readStoredPrediction } from "./prediction";
 import { FAULT_LABEL, isExperimentAction, readRecordedExperiment, recordedExperiment } from "./experiment";
+import { sameScenarioValue, verifiedScenario } from "./scenario";
+import type { RecordedScenario } from "@infraforge/contracts/challenges";
+import type { RunInputs } from "@infraforge/contracts/run-inputs";
+import { orderedScenarioSteps } from "@infraforge/simulation/model2-run";
 
 export interface ChallengeAttemptRecord {
   challengeId: string; challengeVersion: number | null; challengeSpecHash: string | null;
   challengePrediction: unknown; predictionSubmittedAt: Date | null; evaluationStopAtSimulatedSeconds: number | null;
   challengeExperiment?: unknown;
+  challengeScenario?: unknown;
 }
 export interface ChallengeEvidence {
   status: string; runtimeActive: boolean; input: Topology | null;
   stages: ReportStage[]; terminal: ReportCheckpoint | null; failure: string | null;
   actions?: RunAction[];
+  actionCount?: number;
+  runInputs?: RunInputs | null;
 }
 
 const GATES = ["Validate", "SecurityScan", "CostEstimate"] as const;
@@ -127,6 +134,11 @@ class Judge {
         const t = this.atEvaluation;
         if (!t?.health) return pending(this.missingMeasurement(), ["terminalSnapshot"]);
         return decided(c.allowed.includes(t.health as never), `Overall health was ${t.health} at second ${t.simulatedSeconds}.`, ["terminalSnapshot.overallHealth"]);
+      }
+      case "terminal-p95": {
+        const t = this.atEvaluation, traffic = t?.traffic;
+        if (!t || !traffic || traffic.latencyMs.p95 === null || traffic.completedRps <= 0) return pending("No completed-request latency measurement exists at the evaluation second.", ["terminalSnapshot.traffic"]);
+        return decided(traffic.latencyMs.p95 <= c.maxMs, `At second ${t.simulatedSeconds}, p95 was ${traffic.latencyMs.p95.toFixed(3)} ms from ${traffic.completedRps} completed requests; the limit is ${c.maxMs} ms.`, ["terminalSnapshot.traffic"]);
       }
       case "no-saturation": {
         const t = this.atEvaluation;
@@ -241,8 +253,14 @@ export function evaluateAttempt(attempt: ChallengeAttemptRecord, evidence: Chall
   const plan = attempt.challengeExperiment == null ? null : readRecordedExperiment(attempt.challengeExperiment);
   const expected = entry ? recordedExperiment(entry.definition) : null;
   const planMatches = (attempt.challengeExperiment == null) === (expected === null) && JSON.stringify(plan) === JSON.stringify(expected);
+  let scenario: RecordedScenario | null = null;
+  let scenarioMatches = attempt.challengeScenario == null && !entry?.definition.scenario;
+  if (entry?.definition.scenario && evidence.runInputs) {
+    try { scenario = verifiedScenario(attempt.challengeScenario, entry.definition, evidence.runInputs); scenarioMatches = true; }
+    catch { scenarioMatches = false; }
+  }
   const definitionMatches = !!entry && entry.hash === attempt.challengeSpecHash &&
-    entry.definition.evaluationSeconds === attempt.evaluationStopAtSimulatedSeconds && planMatches;
+    entry.definition.evaluationSeconds === attempt.evaluationStopAtSimulatedSeconds && planMatches && scenarioMatches;
   const submittedAt = attempt.predictionSubmittedAt?.toISOString() ?? "";
   if (!entry || !definitionMatches || !prediction) {
     return { challengeId: attempt.challengeId, version: attempt.challengeVersion ?? 0, title: entry?.definition.title ?? attempt.challengeId,
@@ -253,13 +271,16 @@ export function evaluateAttempt(attempt: ChallengeAttemptRecord, evidence: Chall
   }
   const { definition } = entry;
   const judge = new Judge(definition, evidence, plan);
-  const criteria = definition.criteria.map((c) => judge.criterion(c));
+  const scenarioProblem = scenario ? scenarioEvidenceProblem(scenario, evidence) : null;
+  const criteria = definition.criteria.map((c) => scenarioProblem ? {id: c.id, label: c.label,
+    status: judge.active ? "pending" as const : "not-evaluated" as const, detail: scenarioProblem, sources: ["RunAction", "challengeScenario"]} : judge.criterion(c));
   let status = overall(judge.active, criteria);
   // A resilience attempt whose fault never happened as planned has nothing to be judged against.
   if (judge.experimentMissing() && !judge.active && status !== "not-met") status = "not-evaluated";
   // New observation exercises require their later evaluation even when a static
   // requirement already failed. Preserve the earlier versions' judging behavior.
   if (definition.experiment?.postFaultObservationSeconds && !judge.active && (!judge.atEvaluation || judge.experimentMissing())) status = "not-evaluated";
+  if (scenario && !judge.active && (!judge.atEvaluation || scenarioProblem)) status = "not-evaluated";
   const inspectNext: string[] = [];
   const hot = judge.atEvaluation?.resources.filter((r) => r.health === "saturated" || r.health === "failed").map((r) => r.id) ?? [];
   if (hot.length) inspectNext.push(`Open ${list(hot)} in the final-state table and follow their upstream connections.`);
@@ -268,6 +289,22 @@ export function evaluateAttempt(attempt: ChallengeAttemptRecord, evidence: Chall
   return { challengeId: definition.id, version: definition.version, title: definition.title, evaluationSeconds: definition.evaluationSeconds,
     status, statusDetail: STATUS_DETAIL[status], definitionMatches, criteria,
     metCount: criteria.filter((c) => c.status === "met").length, total: criteria.length,
-    predictions: definition.predictions.map((q) => judge.prediction(q, prediction.answers[q.id] ?? "")),
+    predictions: definition.predictions.map((q) => scenarioProblem ? {id: q.id, prompt: q.prompt, predicted: prediction.answers[q.id] ?? "", actual: null,
+      outcome: "unknown" as const, detail: scenarioProblem, sources: ["RunAction"]} : judge.prediction(q, prediction.answers[q.id] ?? "")),
     reasoning: prediction.reasoning, predictionSubmittedAt: submittedAt, inspectNext, experiment: judge.experiment };
+}
+
+function scenarioEvidenceProblem(plan: RecordedScenario, evidence: ChallengeEvidence): string | null {
+  const actions = evidence.actions ?? [], steps = orderedScenarioSteps(plan);
+  if (evidence.actionCount !== actions.length) return "Scenario action evidence is missing or unreadable; this attempt is unscored.";
+  const scripted = actions.filter(a => a.scenarioStepId !== undefined);
+  if (scripted.length !== steps.length || actions.some(a => !a.scenarioStepId && a.kind !== "speed" && a.kind !== "teardown")) return "The recorded actions do not match the complete scenario; this attempt is unscored.";
+  for (const [i, step] of steps.entries()) {
+    const action = scripted[i], receipt = plan.receipts[i];
+    if (!action || !receipt || action.scenarioStepId !== step.id || action.kind !== "intervention" || !sameScenarioValue(action.parameters, step.request) ||
+      action.status !== "completed" || !action.appliedAt || !action.completedAt || action.appliedSimulatedSeconds !== step.atSecond ||
+      action.completedSimulatedSeconds !== Math.ceil((receipt.endUs ?? receipt.atUs) / 1_000_000) || action.outcome?.interventionEnded !== true ||
+      !sameScenarioValue(action.outcome.intervention, receipt)) return `Scenario step ${step.id} has no exact target, application and end receipt; this attempt is unscored.`;
+  }
+  return null;
 }

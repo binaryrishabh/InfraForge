@@ -18,6 +18,7 @@ import { writeHeavyV2 } from "./write-heavy/v2";
 import { scaleOutSafelyV2 } from "./scale-out-safely/v2";
 import { peakTrafficV2 } from "./peak-traffic/v2";
 import { headroomUnderCpuPressureV2 } from "./headroom-under-cpu-pressure/v2";
+import { boundRetriesDuringSlowdownV1 } from "./bound-retries-during-slowdown/v1";
 
 /* Every published version of every challenge, calibrated against simulation model
 "1" and catalog "2026-08". Versions are immutable and never removed: historical
@@ -44,4 +45,5 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   loseAnAppServerV2,
   headroomUnderCpuPressureV2,
   afterTheCacheReturnsV2,
+  boundRetriesDuringSlowdownV1,
 ];

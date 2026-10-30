@@ -36,6 +36,19 @@ export function compileScenario(scenario: ChallengeScenario, input: CapturedMode
   if (error) throw Error(error);
   const built = buildContractFromRunInputs(input, evaluationSecond);
   if ("refused" in built) throw Error(built.refused.join(" "));
+  const reachable = new Set<string>();
+  const visit = (id: string) => {
+    if (reachable.has(id)) return;
+    reachable.add(id);
+    for (const edge of input.connectionLines.filter(edge => edge.sourceId === id)) visit(edge.targetId);
+  };
+  visit(built.contract.caller.entry.replace(/^\$/, "").split("/")[0]!);
+  for (const step of scenario.steps) {
+    const target = step.request.target;
+    const edge = "edgeId" in target ? input.connectionLines.find(edge => edge.id === target.edgeId) : null;
+    const ids = "resourceId" in target ? [target.resourceId] : edge ? [edge.sourceId, edge.targetId] : [];
+    if (!ids.length || ids.some(id => !reachable.has(id))) throw Error(`Scenario step ${step.id} must stay on the captured serving path.`);
+  }
   const design = {schema: "infraforge-saved-design/1" as const, resources: input.resources, connections: input.connectionLines, workload: input.workloadProfile};
   const contract = withTimeline(built.contract, orderedScenarioSteps(scenario).map((step, i) => ({id: `a${i + 1}`, kind: "intervention", atUs: step.atSecond * 1_000_000 + 1, request: step.request})));
   const compiled = compileProduct(design, contract);

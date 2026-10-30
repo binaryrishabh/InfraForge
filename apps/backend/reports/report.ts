@@ -20,6 +20,7 @@ export interface StoredRun {
   runtimeActive?: boolean; challengeId?: string | null; challengeVersion?: number | null; challengeSpecHash?: string | null;
   challengePrediction?: unknown; predictionSubmittedAt?: Date | null; evaluationStopAtSimulatedSeconds?: number | null;
   challengeExperiment?: unknown;
+  challengeScenario?: unknown;
   improvementSourceId?: string | null; learningHypothesis?: string | null; learningIntent?: string | null;
 }
 
@@ -32,9 +33,9 @@ function challengeOf(row: StoredRun, records: Records, registry?: ChallengeRegis
   return evaluateAttempt({ challengeId: row.challengeId, challengeVersion: row.challengeVersion ?? null,
     challengeSpecHash: row.challengeSpecHash ?? null, challengePrediction: row.challengePrediction,
     predictionSubmittedAt: row.predictionSubmittedAt ?? null, evaluationStopAtSimulatedSeconds: row.evaluationStopAtSimulatedSeconds ?? null,
-    challengeExperiment: row.challengeExperiment ?? null },
+    challengeExperiment: row.challengeExperiment ?? null, challengeScenario: row.challengeScenario ?? null },
   { status: row.status, runtimeActive: !!row.runtimeActive, input: records.input, stages: records.stages, terminal: records.terminal,
-    actions: readReportActions(row.actions, []),
+    actions: readReportActions(row.actions, []), actionCount: row.actionCount ?? row.actions?.length, runInputs: records.input,
     failure: row.status === "failed" ? failureOf(records)?.message ?? "The run failed without a recorded message." : null }, registry);
 }
 

@@ -21,6 +21,7 @@ import { checkCredentials } from "./credentialChecks";
 import { checkLearningExperiments } from "./learningChecks";
 import { checkOperationalDeadline } from "./operationalChecks";
 import { checkBrowserRun, submitBrowserRun } from "./browserRunChecks";
+import { checkScenarioAttempts } from "./scenarioChecks";
 
 type Event = Record<string, any>;
 const integration = process.env.INTEGRATION_RUN === "1" ? describe : describe.skip;
@@ -544,6 +545,8 @@ integration("local deployment lifecycle", () => {
       evidence.challenges = await checkChallengeAttempts(harness, sessions, infrastructureIds, deploymentIds);
       phase("resilience experiment scheduled exactly and judged");
       evidence.resilience = await checkResilienceAttempt(harness, infrastructureIds, deploymentIds);
+      phase("scripted challenge parity and scoring");
+      evidence.scenario = await checkScenarioAttempts(harness, infrastructureIds, deploymentIds);
       phase("bounded experiment traces");
       evidence.experimentTraces = await checkExperimentTraces(harness, sessions, infrastructureIds, deploymentIds);
       phase("cross-challenge learning history");

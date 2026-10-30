@@ -4,11 +4,12 @@ import { ConflictError } from "../utils/errors";
 import { findChallenge, challengeSeed } from "./registry";
 import { recordedExperiment } from "./experiment";
 import { readPrediction } from "./prediction";
+import { verifiedScenario } from "./scenario";
 
 // Never substitute the latest version, current saved design, seed or rules.
 export function improvementSource(row: { challengeId?: string | null; challengeVersion?: number | null; challengeSpecHash?: string | null;
   status: string; runtimeActive?: boolean; runInputs: unknown; challengePrediction?: unknown;
-  evaluationStopAtSimulatedSeconds?: number | null; challengeExperiment?: unknown }, challengeId: string) {
+  evaluationStopAtSimulatedSeconds?: number | null; challengeExperiment?: unknown; challengeScenario?: unknown }, challengeId: string) {
   const entry = row.challengeId === challengeId && row.challengeVersion ? findChallenge(challengeId, row.challengeVersion) : null;
   if (!entry || entry.hash !== row.challengeSpecHash || row.runtimeActive || !["completed", "failed", "torn-down"].includes(row.status)) {
     throw new ConflictError("The source must be a finished attempt with its exact challenge version available.");
@@ -22,6 +23,10 @@ export function improvementSource(row: { challengeId?: string | null; challengeV
   try { readPrediction(row.challengePrediction, definition, input.resources.map((r) => r.type)); }
   catch { throw new ConflictError("The source has no readable complete prediction; its challenge conditions cannot be reused safely."); }
   const fixed = captureRunInputs(input, definition.workload, challengeSeed(definition));
+  try {
+    if (definition.scenario) verifiedScenario(row.challengeScenario, definition, input);
+    else if (row.challengeScenario != null) throw Error("Unexpected scenario");
+  } catch { throw new ConflictError("The source's recorded scenario does not match its challenge version and topology."); }
   if (input.version !== 2 || input.simulationModelVersion !== fixed.simulationModelVersion || canonical(input) !== canonical(row.runInputs) ||
       canonical(input.workloadProfile) !== canonical(fixed.workloadProfile) || input.seed !== fixed.seed ||
       row.evaluationStopAtSimulatedSeconds !== definition.evaluationSeconds ||

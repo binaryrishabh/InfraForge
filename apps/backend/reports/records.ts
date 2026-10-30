@@ -33,6 +33,8 @@ const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction:
     resourceId: boundedId, durationTicks: amount.int(), remainingTicks: amount })).max(500).optional(),
   restarting: z.array(boundedId).max(500).optional(), pools: boundedMap(pool).optional(),
   installedSkus: boundedMap(boundedId).optional(),
+  traffic: z.object({offeredRps: amount.max(100_000_000), completedRps: amount.max(100_000_000), failedRps: amount.max(100_000_000),
+    latencyMs: z.object({p50: amount.max(3_600_000).nullable(), p95: amount.max(3_600_000).nullable()}).strict()}).strict().optional(),
   metrics: z.unknown().optional() });
 const terminal = checkpoint.extend({ version: z.literal(1), kind: z.literal("terminal"), capturedAt: timestamp,
   topologyRevision: z.number().int().nonnegative(), simulatedSeconds: amount, accumulatedCostUsd: amount,
@@ -105,6 +107,7 @@ function readCheckpoint(value: unknown, limits: string[]): ReportCheckpoint | nu
     health: data.overallHealth, accumulatedCostUsd: data.accumulatedCostUsd,
     burnRatePerHourUsd: data.burnRatePerHourUsd, targetLoadFraction: data.targetLoadFraction,
     activeChaos: data.activeChaos, restarting: data.restarting, pools: data.pools, installedSkus: data.installedSkus,
+    ...(data.traffic ? {traffic: data.traffic} : {}),
     measurementFreshness: data.metricsComputedAt === null ? "initialized" :
       data.metricsTopologyRevision === undefined || data.topologyRevision === undefined || !data.metricsComputedAt ? "unknown" :
         data.metricsTopologyRevision !== data.topologyRevision ? "previous-revision" : "current-revision" };

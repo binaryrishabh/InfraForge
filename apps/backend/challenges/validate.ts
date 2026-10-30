@@ -50,7 +50,7 @@ function checkDefinition(d: ChallengeDefinition): string[] {
   const parsed = definition.safeParse(d);
   if (!parsed.success) return parsed.error.issues.map((issue) => `${where}: ${issue.path.join(".") || "definition"} ${issue.message}`);
   const problems: string[] = [];
-  if (d.scenario) {
+  if (d.scenario !== undefined) {
     const error = scenarioError(d.scenario, d.evaluationSeconds);
     if (error) problems.push(`${where}: ${error}`);
     if (d.experiment || d.engine !== "2") problems.push(`${where}: scenarios require Model 2 and exclude experiments`);

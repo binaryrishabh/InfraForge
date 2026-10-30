@@ -52,6 +52,32 @@ An optional `experiment` makes a resilience challenge: one fault InfraForge appl
   `overall-health`. A post-fault overall-health prediction is useful; during a crash it is always
   critical. Use later-evaluation criteria before inventing a recovery criterion.
 
+## Scripted Model 2 scenarios
+
+New versions may instead supply `scenario: {version: 1, visibility, steps}`. A scenario and
+legacy `experiment` are mutually exclusive. Steps have unique ids, integer `atSecond >= 1`
+and exact versioned intervention requests. There are at most 20 steps. Authored order breaks
+ties; tick S completes before application at S * 1,000,000 + 1 microseconds. Timed effects
+restore at that microsecond plus duration, strictly before evaluation.
+
+Attempt creation precompiles the entire script against the learner's captured topology,
+including future overlaps. Missing or unsupported targets are refused without substitution.
+The immutable attempt plan records the definition hash, model/catalog/profile selection and
+resolved receipts. The browser runs the script but submits no scripted actions; the server
+reconstructs it from that plan and establishes each durable action before advancing past S.
+Only exact stored steps may carry the internal scenario step id; learner interventions remain
+refused. Scoring requires every exact application and end receipt plus terminal evidence.
+
+Use `revealed` for this slice. `debrief` is a presentation designation: a browser-executed
+script is inspectable and provides no secrecy. No hidden-reveal UI is provided.
+`terminal-p95` uses existing completed-request traffic evidence at the exact evaluation second;
+missing latency or no completions stays unscored. It makes no continuous-window claim.
+
+`bound-retries-during-slowdown@1` reduces DB CPU at second 2 for two seconds and evaluates
+at second 5. Its starter's 1748.415 ms p95 fails the 1000 ms limit; the bounded-retry reference's
+859.495 ms passes. Both estimate $240/month. These are deterministic educational outcomes,
+not availability or cloud-performance guarantees. All earlier definitions and pins remain intact.
+
 ## Post-fault evidence and calibration
 
 `evidence/observation.ts` derives target and whole-system facts independently, only after the

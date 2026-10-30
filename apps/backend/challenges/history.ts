@@ -12,7 +12,7 @@ export function learningAttempt(row: StoredRun): LearningAttempt {
   return { runId: row.id, challengeId: row.challengeId!, version: row.challengeVersion ?? 0,
     learning: report.run.learning,
     title: evaluation?.title ?? row.challengeId!, createdAt: row.createdAt.toISOString(),
-    category: row.challengeExperiment == null ? "design" : "resilience", fault: plan?.fault ?? null,
+    category: row.challengeExperiment == null && row.challengeScenario == null ? "design" : "resilience", fault: plan?.fault ?? null,
     status: evaluation?.status ?? "unavailable", metCount: evaluation?.metCount ?? 0, total: evaluation?.total ?? 0,
     predictionMatched: evaluation?.predictions.filter((p) => p.outcome === "matched").length ?? 0,
     predictionKnown: evaluation?.predictions.filter((p) => p.outcome !== "unknown").length ?? 0,

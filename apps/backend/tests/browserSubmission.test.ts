@@ -34,6 +34,8 @@ test("versioned interventions enforce strict parameters, bounds, remaining horiz
   expect(() => submit({...action, request: {...action.request, parameters: {...action.request.parameters, revision: 2}}})).toThrow();
   expect(() => submit({...action, request: {...action.request, parameters: {...action.request.parameters, trigger: "challenge-experiment"}}})).toThrow();
   expect(() => submit(action, attempt)).toThrow("challenge");
+  expect(() => submit({...action, scenarioStepId: "db-slowdown"}, attempt)).toThrow();
+  expect(() => submit({...action, request: {...action.request, scenarioStepId: "db-slowdown"}})).toThrow();
   expect(() => submit({...action, atSecond: 899})).toThrow();
   expect(() => checkSubmission({stopAtSecond: 900, actions: [{...action, atSecond: 899}]}, free)).toThrow("BOUNDS");
 });
