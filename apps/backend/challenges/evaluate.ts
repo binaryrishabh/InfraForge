@@ -274,7 +274,10 @@ export function evaluateAttempt(attempt: ChallengeAttemptRecord, evidence: Chall
   const scenarioProblem = scenario ? scenarioEvidenceProblem(scenario, evidence) : null;
   const criteria = definition.criteria.map((c) => scenarioProblem ? {id: c.id, label: c.label,
     status: judge.active ? "pending" as const : "not-evaluated" as const, detail: scenarioProblem, sources: ["RunAction", "challengeScenario"]} : judge.criterion(c));
-  let status = overall(judge.active, criteria);
+  // Scenarios require evidence for every requirement before static failures can
+  // produce a score. Earlier challenge versions retain their original aggregation.
+  let status = scenario && !judge.active && criteria.some(c => c.status === "not-evaluated")
+    ? "not-evaluated" as const : overall(judge.active, criteria);
   // A resilience attempt whose fault never happened as planned has nothing to be judged against.
   if (judge.experimentMissing() && !judge.active && status !== "not-met") status = "not-evaluated";
   // New observation exercises require their later evaluation even when a static

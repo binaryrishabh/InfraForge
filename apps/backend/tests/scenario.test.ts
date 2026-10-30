@@ -15,7 +15,8 @@ import { advanceTickBatch, scenarioDue } from "../simulator/tickBatch";
 import type { SimulationInstance } from "../simulator/instance";
 import { compileScenario, dueScenarioSteps } from "@infraforge/simulation/model2-run";
 import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
-import { REFERENCE, answers, attemptRow } from "./challengeHarness";
+import { REFERENCE, answers, attemptRow, legacyDefinition } from "./challengeHarness";
+import { specHash } from "../challenges/registry";
 
 const prediction = answers(d, {"overall-health": "saturated"});
 const reference = attemptRow(d, REFERENCE[d.id]!, prediction);
@@ -48,6 +49,23 @@ test("missing, wrong, extra, truncated, early or mismatched scenario evidence is
   }
   const forged = structuredClone(reference); (forged.challengeScenario as {definitionHash: string}).definitionHash = "0".repeat(64);
   expect(buildRunReport(forged).challenge?.status).toBe("unavailable");
+});
+test("missing required scenario evidence outranks static failures without changing historical judging", () => {
+  for (const missing of ["traffic", "Validate", "SecurityScan", "CostEstimate"]) {
+    const row = structuredClone(reference);
+    (row.stages.find(s => s.name === "CostEstimate")!.details as {monthlyEstimate: number}).monthlyEstimate = 2001;
+    (row.terminalSnapshot as {traffic?: unknown}).traffic = missing === "traffic" ? undefined : {offeredRps: 1, completedRps: 1, failedRps: 0, latencyMs: {p50: 1500, p95: 1500}};
+    if (missing !== "traffic") row.stages = row.stages.filter(s => s.name !== missing);
+    const result = buildRunReport(row).challenge!;
+    expect(result.criteria.some(c => c.status === "not-met")).toBe(true);
+    expect(result.criteria.some(c => c.status === "not-evaluated")).toBe(true);
+    expect(result.status).toBe("not-evaluated");
+  }
+  const old = legacyDefinition("first-production-api"), historical = structuredClone(reference);
+  Object.assign(historical, {challengeId: old.id, challengeVersion: old.version, challengeSpecHash: specHash(old), challengeScenario: null,
+    evaluationStopAtSimulatedSeconds: old.evaluationSeconds, terminalSnapshot: null});
+  (historical.stages.find(s => s.name === "CostEstimate")!.details as {monthlyEstimate: number}).monthlyEstimate = 2001;
+  expect(buildRunReport(historical).challenge?.status).toBe("not-met");
 });
 test("preflight refuses missing and unsupported targets, and authoring rejects experiment plus scenario", () => {
   const missing = structuredClone(d.starter!); missing.resources = missing.resources.filter(r => r.id !== "db");
