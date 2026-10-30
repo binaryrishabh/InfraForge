@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { captureRunInputs } from "../deployments/runInputs";
 import { classifyComparison } from "../comparison/classify";
+import { designDifference, normalizedTopology, unambiguous } from "../comparison/design";
 import { compareInputs } from "../comparison/inputs";
 import { normalizedFinalState } from "../comparison/outcomes";
 import type { StoredRun } from "../reports/report";
@@ -156,4 +157,22 @@ describe("challenge attempts", () => {
     const freeform = { ...starter, id: "freeform", challengeId: null, challengeExperiment: null };
     expect(classifyComparison(starter, freeform).challengeConditions).toBeNull();
   }, 120000);
+});
+
+
+test("connection ID comparison preserves no-flow results and covers historical flow bindings", () => {
+  const renamed = structuredClone(captured);
+  for (const edge of renamed.connectionLines) edge.id = `renamed-${edge.id}`;
+  expect(normalizedTopology(renamed)).toEqual(normalizedTopology(captured));
+  expect(designDifference(captured, renamed)).toEqual(designDifference(captured, captured));
+  expect(compareInputs(captured, renamed)).toEqual(compareInputs(captured, captured));
+  expect(normalizedTopology(captured).connections.every(edge => !("id" in edge))).toBe(true);
+  const duplicateIds = structuredClone(captured); duplicateIds.connectionLines[1]!.id = duplicateIds.connectionLines[0]!.id;
+  expect(unambiguous(duplicateIds)).toBe(true);
+  expect(compareInputs(captured, duplicateIds)).toEqual(compareInputs(captured, captured));
+  const flow = structuredClone(captured);
+  flow.resources.find(r => r.type === "Virtual Machine")!.applicationFlow = { schema: "application-flow/1", operations: { read: { steps: [{ id: "cpu", kind: "compute" }] } } };
+  const renamedFlow = { ...flow, connectionLines: renamed.connectionLines };
+  expect(compareInputs(flow, renamedFlow).grade).toBe("one-change-design");
+  expect(designDifference(flow, renamedFlow).addedConnections).toHaveLength(renamedFlow.connectionLines.length);
 });

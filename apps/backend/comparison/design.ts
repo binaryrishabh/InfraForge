@@ -19,22 +19,27 @@ export function configuration(r: Resource): Record<string, unknown> {
     "autoscaling.enabled": r.autoscaling?.enabled ?? null, "autoscaling.minReplicas": r.autoscaling?.minReplicas ?? null,
     "autoscaling.maxReplicas": r.autoscaling?.maxReplicas ?? null, "autoscaling.targetCpu": r.autoscaling?.targetCpu ?? null };
 }
-const edge = (c: ConnectionLine) => ({ sourceId: c.sourceId, targetId: c.targetId, port: c.port });
+const flowBound = (topology: RunTopology) => topology.resources.some(r => r.applicationFlow !== undefined);
+const edge = (c: ConnectionLine, includeId = false) => ({ ...(includeId ? { id: c.id } : {}), sourceId: c.sourceId, targetId: c.targetId, port: c.port });
 export function normalizedTopology(topology: RunTopology) {
   return { resources: topology.resources.map((r) => ({ id: r.id, ...configuration(r) })).sort((a, b) => a.id.localeCompare(b.id)),
     // Connection order is kept as captured: Model 1 runs used it for routing and pool templates.
-    connections: topology.connectionLines.map(edge) };
+    connections: topology.connectionLines.map(c => edge(c, flowBound(topology))) };
 }
 export function unambiguous(topology: RunTopology) {
   return topology.resources.length <= 500 && topology.connectionLines.length <= 1000 &&
     new Set(topology.resources.map((r) => r.id)).size === topology.resources.length &&
-    new Set(topology.connectionLines.map((c) => canonical(edge(c)))).size === topology.connectionLines.length;
+    new Set(topology.connectionLines.map((c) => canonical(edge(c)))).size === topology.connectionLines.length &&
+    (!flowBound(topology) || new Set(topology.connectionLines.map(c => c.id)).size === topology.connectionLines.length);
 }
 export function designDifference(before: RunTopology, after: RunTopology): DesignDifference {
   const a = new Map(before.resources.map((r) => [r.id, r]));
   const b = new Map(after.resources.map((r) => [r.id, r]));
-  const ae = new Map(before.connectionLines.map((c) => [canonical(edge(c)), edge(c)]));
-  const be = new Map(after.connectionLines.map((c) => [canonical(edge(c)), edge(c)]));
+  // Use the same projection for identity, additions/removals and authored order.
+  const includeId = flowBound(before) || flowBound(after);
+  const beforeEdges = before.connectionLines.map(c => edge(c, includeId)), afterEdges = after.connectionLines.map(c => edge(c, includeId));
+  const ae = new Map(beforeEdges.map(c => [canonical(c), c]));
+  const be = new Map(afterEdges.map(c => [canonical(c), c]));
   const orderA = before.resources.map((r) => r.id), orderB = after.resources.map((r) => r.id);
   return { added: [...b.keys()].filter((id) => !a.has(id)).sort(), removed: [...a.keys()].filter((id) => !b.has(id)).sort(),
     reconfigured: [...b].filter(([id]) => a.has(id)).sort(([x], [y]) => x.localeCompare(y)).flatMap(([id, r]) => {
@@ -42,6 +47,6 @@ export function designDifference(before: RunTopology, after: RunTopology): Desig
     }), addedConnections: [...be].filter(([k]) => !ae.has(k)).sort(([x], [y]) => x.localeCompare(y)).map(([, v]) => v),
     removedConnections: [...ae].filter(([k]) => !be.has(k)).sort(([x], [y]) => x.localeCompare(y)).map(([, v]) => v),
     resourceOrder: canonical(orderA) === canonical(orderB) ? null : { earlier: orderA, later: orderB },
-    connectionOrder: canonical(before.connectionLines.map(edge)) === canonical(after.connectionLines.map(edge)) ? null :
-      { earlier: before.connectionLines.map(edge), later: after.connectionLines.map(edge) } };
+    connectionOrder: canonical(beforeEdges) === canonical(afterEdges) ? null :
+      { earlier: beforeEdges, later: afterEdges } };
 }

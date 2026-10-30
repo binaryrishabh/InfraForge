@@ -6,10 +6,10 @@ export interface FieldDifference { field: string; earlier: unknown; later: unkno
 export interface DesignDifference {
   added: string[]; removed: string[];
   reconfigured: Array<{ id: string; fields: FieldDifference[] }>;
-  addedConnections: Array<{ sourceId: string; targetId: string; port: number }>;
-  removedConnections: Array<{ sourceId: string; targetId: string; port: number }>;
+  addedConnections: Array<{ id?: string; sourceId: string; targetId: string; port: number }>;
+  removedConnections: Array<{ id?: string; sourceId: string; targetId: string; port: number }>;
   resourceOrder: { earlier: string[]; later: string[] } | null;
-  connectionOrder: { earlier: Array<{ sourceId: string; targetId: string; port: number }>; later: Array<{ sourceId: string; targetId: string; port: number }> } | null;
+  connectionOrder: { earlier: Array<{ id?: string; sourceId: string; targetId: string; port: number }>; later: Array<{ id?: string; sourceId: string; targetId: string; port: number }> } | null;
 }
 export interface StartingComparison {
   grade: StartingGrade;
