@@ -49,7 +49,6 @@ export const NodeCard = memo(function NodeCard({ resource, mode }: { resource: R
   // A resilience attempt's scheduled fault on this resource: before, during and after its window.
   const plan = useExperimentPlan((s) => (s.plan?.target === resource.id ? s.plan : null));
   const seconds = useSimulationStore((s) => (plan && mode === "live" ? s.simulatedSeconds : 0));
-  const experiment = !!plan && !!chaos && chaos.chaosType === plan.fault;
   const scheduled = plan && mode === "live" && !chaos && seconds < plan.at ? plan : null;
   const ended = plan && mode === "live" && !chaos && seconds >= plan.at + plan.duration ? plan : null;
   const targeted = plan && mode === "design" ? plan : null;
@@ -98,7 +97,7 @@ export const NodeCard = memo(function NodeCard({ resource, mode }: { resource: R
       </div>
       {effects.map((chaos, index) => (
         <div key={chaos.intervention?.actionId ?? index} className="if-num flex items-center justify-between border-t border-fail/40 bg-fail-soft px-2.5 py-1 text-[10.5px] font-semibold text-fail">
-          <span>{experiment ? "Experiment" : "Fault"}: {(chaos.intervention ? `${chaos.intervention.label} ${JSON.stringify(chaos.intervention.parameters)}; restores at ${chaos.intervention.restoreAtUs} us` : CHAOS_LABELS[chaos.chaosType!])}</span><span>{chaos.remainingTicks}s left</span>
+          <span>{plan && chaos.chaosType === plan.fault ? "Experiment" : "Fault"}: {(chaos.intervention ? `${chaos.intervention.label} ${JSON.stringify(chaos.intervention.parameters)}; restores at ${chaos.intervention.restoreAtUs} us` : CHAOS_LABELS[chaos.chaosType!])}</span><span>{chaos.remainingTicks}s left</span>
         </div>
       ))}
       {targeted && (

@@ -5,12 +5,13 @@ import { useCanvasStore } from "../src/features/canvas/store/canvasStore";
 import { useSimulationStore } from "../src/features/monitoring/store/simulationStore";
 import { updateResource } from "../src/features/canvas/actions";
 import { undo, redo } from "../src/features/canvas/history";
-import { ResourceHealth, type Resource } from "@infraforge/domain/resource";
+import { DeploymentChaosNames, ResourceHealth, type Resource } from "@infraforge/domain/resource";
 import { createRunHost } from "../src/features/model2Run/worker/host";
 import type { FromWorker } from "../src/features/model2Run/protocol";
 import { createModel2Run } from "@infraforge/simulation/model2-run";
 import { resolveWorkload } from "@infraforge/domain/workload";
 import { NodeLive } from "../src/features/live/NodeLive";
+import { useExperimentPlan } from "../src/features/challenges/experimentPlanStore";
 import { NodeCard } from "../src/features/canvas/components/node/NodeCard";
 import { ConnectionLinesLayer } from "../src/features/canvas/components/ConnectionLinesLayer";
 import { RailConnection } from "../src/features/canvas/components/RailConnection";
@@ -109,4 +110,20 @@ test("live nodes and rails show intervention parameters and exact restore time, 
     sim.activeChaos = [];
     for (const html of [node(), card(), rails()]) expect(html).not.toContain("Deny TCP port");
   } finally { sim.activeChaos = previousChaos; canvas.liveMode = previousMode; }
+});
+
+for (const experimentFirst of [true, false]) test(`node card labels each effect independently, experimentFirst=${experimentFirst}`, () => {
+  const sim = useSimulationStore.getInitialState(), plan = useExperimentPlan.getInitialState();
+  const previousChaos = sim.activeChaos, previousPlan = plan.plan;
+  try {
+    plan.plan = {fault: DeploymentChaosNames.Crash, at: 0, duration: 30, target: db.id, targetType: db.type};
+    sim.activeChaos = [{resourceId: db.id, chaosType: DeploymentChaosNames.Crash, durationTicks: 30, remainingTicks: 20},
+      {resourceId: db.id, durationTicks: 2, remainingTicks: 1, intervention: {actionId: "deny", label: "Deny TCP port", parameters: {port: 5432, duration: 2}, restoreAtUs: 3_000_001}}];
+    if (!experimentFirst) sim.activeChaos.reverse();
+    const html = renderToStaticMarkup(<NodeCard resource={db} mode="live" />);
+    expect(html).toContain("Experiment: Crash");
+    expect(html).toContain("Fault: Deny TCP port");
+    expect(html).not.toContain("Experiment: Deny TCP port");
+    expect(html).not.toContain("Fault: Crash");
+  } finally { sim.activeChaos = previousChaos; plan.plan = previousPlan; }
 });
