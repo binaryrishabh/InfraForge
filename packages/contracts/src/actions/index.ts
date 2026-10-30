@@ -19,6 +19,8 @@ export interface InterventionOption {
 }
 export interface InterventionReceipt extends InterventionRequest {
   actionId: string; resolvedTargets: string[]; affectedPaths: string[]; atUs: number; endUs: number | null;
+  /** Set only when the lists above were cut to fit the stored size: the real counts. */
+  resolvedTargetCount?: number; affectedPathCount?: number;
 }
 export interface ActionOutcome {
   intervention?: InterventionReceipt; interventionEnded?: boolean;

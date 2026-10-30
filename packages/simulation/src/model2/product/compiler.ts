@@ -14,6 +14,7 @@ import { COMPILER_VERSION } from "./contracts";
 import { boundedProduct } from "./bounds";
 import { validateSecurityBinding, expandFirewallRules } from "./security";
 import { validateMaterializedSemantics } from "./semantics";
+import { capReceipt } from "./receiptBudget";
 import { capabilityFacts } from "./capabilities";
 import { WORKLOAD_LIMITS } from "../workload/policy";
 import { numericOrigins } from "./origins";
@@ -210,7 +211,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     }
     compilePoisonKeys(runtime, contract, provenance);
     phase = "faults"; const crashes = compileFaults(contract.faults, runtime, (id) => expansion.get(id) ?? [id], provenance);
-    phase = "interventions"; const interventionReceipts = compileInterventions(design, contract, runtime, provenance);
+    phase = "interventions"; const interventionReceipts = compileInterventions(design, contract, runtime, provenance).map(capReceipt);
     phase = "capabilities";
     const capabilities = capabilityFacts(contract, resources);
     semantic = { schema: "infraforge-semantic-infrastructure/1", versions: { design: contract.designVersion, compiler: COMPILER_VERSION, model: "2", application: `${app.id}@${app.version}`, catalog: contract.catalogVersion, workload: contract.workloadVersion, contract: contract.version }, nodes: resources.map((r) => ({ id: r.id, type: r.type, owner: TRANSLATION_OWNERS[r.type].owner, profile: contract.nodes[r.id]!.profileVersion })), edges: semanticEdges, capabilities, legacyMetadata: resources.map(({ id, region, public: exposed, encryption, openPorts }) => ({ id, region, public: exposed, encryption, openPorts })), unknown: ["Provider effective CPU/credits, memory/device failure, price/region physics", "TLS crypto CPU/timing, physical link demand unless explicitly supplied", "Application profiles prove only their authored validity domain"], numericOrigins: [] };

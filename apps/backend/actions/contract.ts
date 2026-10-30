@@ -11,6 +11,7 @@ const receipt = z.object({ interventionId: id, revision: z.number().int().positi
   target: z.union([z.object({resourceId: id}).strict(), z.object({edgeId: id, direction: z.enum(["request", "response", "both"])}).strict()]),
   parameters: z.record(z.string(), z.union([z.number().finite(), z.boolean(), z.string()])),
   actionId: id, resolvedTargets: z.array(id).min(1).max(2048), affectedPaths: z.array(id).max(2048), atUs: amount.int(), endUs: amount.int().nullable(),
+  resolvedTargetCount: z.number().int().positive().optional(), affectedPathCount: z.number().int().nonnegative().optional(),
 }).strict().refine(value => interventionError({interventionId: value.interventionId, revision: value.revision, target: value.target, parameters: value.parameters}) === null);
 const outcomeSchema = z.object({ intervention: receipt.optional(), interventionEnded: z.boolean().optional(), previousTarget: amount.optional(), appliedTarget: amount.optional(),
   previousSpeed: amount.optional(), appliedSpeed: amount.optional(), durationSimulatedSeconds: amount.optional(),
