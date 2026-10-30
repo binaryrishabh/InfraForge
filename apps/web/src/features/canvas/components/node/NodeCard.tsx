@@ -19,7 +19,7 @@ function ExposureMarks({ resource }: { resource: Resource }) {
   if (resource.encryption) marks.push("encrypted");
   if (resource.openPorts?.length) marks.push(resource.openPorts.map((p) => `:${p}`).join(" "));
   if (!marks.length) return null;
-  return <p className="if-num mt-1 truncate text-[10.5px] text-ink-3">{marks.join(" Â· ")}</p>;
+  return <p className="if-num mt-1 truncate text-[10.5px] text-ink-3">{marks.join(" · ")}</p>;
 }
 
 /* A station tile: the same pictogram and name the maps and timetables use, then either
@@ -43,7 +43,9 @@ export const NodeCard = memo(function NodeCard({ resource, mode }: { resource: R
   const metric = useSimulationStore((s) => (mode === "live" ? s.metrics[resource.id] : undefined));
   const restarting = useSimulationStore((s) => mode === "live" && s.restarting.includes(resource.id));
   const history = useSimulationStore((s) => (mode === "live" ? s.cpuHistory[resource.id] : undefined));
-  const chaos = useSimulationStore((s) => (mode === "live" ? s.activeChaos.find((c) => c.resourceId === resource.id) : undefined));
+  const activeChaos = useSimulationStore((s) => s.activeChaos);
+  const effects = mode === "live" ? activeChaos.filter(c => c.resourceId === resource.id) : [];
+  const chaos = effects[0];
   // A resilience attempt's scheduled fault on this resource: before, during and after its window.
   const plan = useExperimentPlan((s) => (s.plan?.target === resource.id ? s.plan : null));
   const seconds = useSimulationStore((s) => (plan && mode === "live" ? s.simulatedSeconds : 0));
@@ -76,11 +78,11 @@ export const NodeCard = memo(function NodeCard({ resource, mode }: { resource: R
               <span className="if-num text-[15px] font-semibold text-ink">{capacity.value.toLocaleString()} <span className="text-[11px] text-ink-3">{capacity.unit}</span></span>
               <span className="if-num truncate text-[11px] text-ink-2">{resource.skuId ?? "generic"}</span>
             </div>
-            {pool && <p className="if-num mt-0.5 truncate text-[10.5px] text-ink-3">autoscaling Â· target {resource.autoscaling?.targetCpu ?? SIMULATION_CONSTANTS.AUTOSCALING.DEFAULT_TARGET_CPU}% CPU</p>}
+            {pool && <p className="if-num mt-0.5 truncate text-[10.5px] text-ink-3">autoscaling · target {resource.autoscaling?.targetCpu ?? SIMULATION_CONSTANTS.AUTOSCALING.DEFAULT_TARGET_CPU}% CPU</p>}
             <ExposureMarks resource={resource} />
           </div>
         ) : !metric ? (
-          <p role="status" className="mt-3 text-xs text-ink-3">Waiting for the first measurementâ€¦</p>
+          <p role="status" className="mt-3 text-xs text-ink-3">Waiting for the first measurement…</p>
         ) : (
           <div className="mt-1.5 flex flex-col gap-1">
             <MeterRow label="CPU" value={metric.cpu} />
@@ -94,11 +96,11 @@ export const NodeCard = memo(function NodeCard({ resource, mode }: { resource: R
           </div>
         )}
       </div>
-      {chaos && (
-        <div className="if-num flex items-center justify-between border-t border-fail/40 bg-fail-soft px-2.5 py-1 text-[10.5px] font-semibold text-fail">
+      {effects.map((chaos, index) => (
+        <div key={chaos.intervention?.actionId ?? index} className="if-num flex items-center justify-between border-t border-fail/40 bg-fail-soft px-2.5 py-1 text-[10.5px] font-semibold text-fail">
           <span>{experiment ? "Experiment" : "Fault"}: {(chaos.intervention ? `${chaos.intervention.label} ${JSON.stringify(chaos.intervention.parameters)}; restores at ${chaos.intervention.restoreAtUs} us` : CHAOS_LABELS[chaos.chaosType!])}</span><span>{chaos.remainingTicks}s left</span>
         </div>
-      )}
+      ))}
       {targeted && (
         <div className="if-num truncate border-t border-line bg-surface px-2.5 py-1 text-[10.5px] text-ink-2" title="The challenge experiment targets this resource">Experiment: {(CHAOS_LABELS[targeted.fault as keyof typeof CHAOS_LABELS] ?? targeted.fault).toLowerCase()} at {targeted.at} s</div>
       )}

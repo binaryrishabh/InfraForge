@@ -13,7 +13,8 @@ import { plural } from "@/lib/format";
 (freeform runs only). */
 export function NodeLive({ deploymentId, resource, resources, controls, ended = false }: { deploymentId: string; resource: Resource | undefined; resources: Resource[]; controls: boolean; ended?: boolean }) {
   const metric = useSimulationStore((s) => (resource ? s.metrics[resource.id] : undefined));
-  const chaos = useSimulationStore((s) => (resource ? s.activeChaos.find((c) => c.resourceId === resource.id) : undefined));
+  const activeChaos = useSimulationStore((s) => s.activeChaos);
+  const effects = activeChaos.filter(c => c.resourceId === resource?.id);
   const restarting = useSimulationStore((s) => !!resource && s.restarting.includes(resource.id));
   if (!resource) return <p className="px-4 py-6 text-sm text-ink-3">Select a resource on the canvas (or Tab to it and press Enter) to see its live measurements.</p>;
   return (
@@ -33,7 +34,7 @@ export function NodeLive({ deploymentId, resource, resources, controls, ended = 
           <MeterRow label="MEM" value={metric.memory} />
           <p className="if-num mt-1 flex justify-between text-xs text-ink-2"><span>{metric.rps ?? 0} requests/s</span>{metric.connections !== undefined && <span>{plural(metric.connections, "connection")}</span>}</p>
         </>}
-        {chaos && <p className="if-num mt-1 text-xs font-semibold text-fail">Fault active: {(chaos.intervention ? `${chaos.intervention.label} ${JSON.stringify(chaos.intervention.parameters)}; restores at ${chaos.intervention.restoreAtUs} us` : CHAOS_LABELS[chaos.chaosType!])} Â· {chaos.remainingTicks} s left</p>}
+        {effects.map((chaos, index) => <p key={chaos.intervention?.actionId ?? index} className="if-num mt-1 text-xs font-semibold text-fail">Fault active: {(chaos.intervention ? `${chaos.intervention.label} ${JSON.stringify(chaos.intervention.parameters)}; restores at ${chaos.intervention.restoreAtUs} us` : CHAOS_LABELS[chaos.chaosType!])} · {chaos.remainingTicks} s left</p>)}
         {restarting && <p className="if-num mt-1 text-xs font-semibold text-warn">Restarting on a new size</p>}
       </div>
       {controls && <>
