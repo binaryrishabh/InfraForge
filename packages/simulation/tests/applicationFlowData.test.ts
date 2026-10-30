@@ -50,7 +50,14 @@ test("database CPU slowdown is reflected in flow latency, session refusal retain
     const db = c.nodes.db!.resources[0]!.config; if (db.kind !== "relational") throw Error("db");
     const q = quantities(); db.execution.cores = q.q("proof.slow", 0.25, "cores"); c.ledger.push(...q.ledger);
   });
-  expect(slow.results[0]!.responseUs!).toBeGreaterThan(baseline.results[0]!.responseUs!);
+  expect(slow.results[0]!.responseUs! - baseline.results[0]!.responseUs!).toBe(3000);
+  const cacheBaseline=run(true),cacheSlow=run(true,c=>{
+    const db=c.nodes.db!.resources[0]!.config;if(db.kind!=="relational")throw Error("db");
+    const q=quantities();db.execution.cores=q.q("proof.cache-slow",0.25,"cores");c.ledger.push(...q.ledger);
+  });
+  expect(cacheSlow.results[0]!.responseUs! - cacheBaseline.results[0]!.responseUs!).toBe(3000);
+  expect(cacheSlow.data.databases[0]!.logicalReads).toBe(1);
+  expect(cacheSlow.data.caches[0]!.hits).toBe(1);
   const e = run(false, c => {
     c.failureCauseProfile = "failure-cause/1";
     c.interventions = [{id:"sessions",atUs:0,request:{interventionId:"session-capacity",revision:1,target:{resourceId:"db"},parameters:{sessions:0,duration:2}}}];
@@ -113,4 +120,21 @@ test("parallel service calls cannot hide a downstream cache fill", () => {
   d.resources.push({id:"leaf",type:"Virtual Machine",x:0,y:0});
   d.connections.push(...["service","leaf"].map(id=>({id:`app-${id}`,sourceId:"app",targetId:id,sourceType:"Virtual Machine",targetType:"Virtual Machine",port:80})));
   const b=contractFromDesign(d);expect("refused" in b).toBe(true);if("refused" in b)expect(b.refused.some(d=>d.message.includes("mutating data"))).toBe(true);
+});
+
+
+test("cause capture stays observational for failed data calls",()=>{
+  const build=(capture:boolean)=>{
+    const d=canvasDataFlow(true),b=contractFromDesign(d,{adapterProfiles:capture?["application-flow/2","failure-cause/1"]:["application-flow/2"]});
+    if("refused" in b)throw Error(JSON.stringify(b.refused));
+    b.contract.interventions=[{id:"sessions",atUs:0,request:{interventionId:"session-capacity",revision:1,target:{resourceId:"db"},parameters:{sessions:0,duration:2}}}];
+    const c=compileProduct(d,b.contract);if(!c.ok)throw Error(JSON.stringify(c.diagnostics));
+    const r=createProductModel2(c.value);r.advanceTo(2000000);return r.evidence();
+  };
+  const off=build(false),on=build(true);
+  expect(on.counts).toEqual(off.counts);expect(on.results).toEqual(off.results);
+  expect(on.data.databases).toEqual(off.data.databases);expect(on.data.caches).toEqual(off.data.caches);
+  const strip=(events:NonNullable<typeof on.applicationFlow>["events"])=>events.map(e=>{const {rootReason:_r,rootResource:_s,depth:_d,...detail}=e.detail;return {...e,detail};});
+  expect(strip(on.applicationFlow!.events)).toEqual(strip(off.applicationFlow!.events));
+  expect(on.applicationFlow!.events.some(e=>e.kind==="flow-branch-terminal"&&e.detail.rootReason==="session-limit"&&e.detail.rootResource==="db")).toBe(true);
 });
