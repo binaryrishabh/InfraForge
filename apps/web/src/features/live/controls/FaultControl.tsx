@@ -6,6 +6,7 @@ import { applyIntervention, injectChaos } from "@/api/deployment.api";
 import { errorMessage } from "@/api/errorMessage";
 import { browserRunFor } from "@/features/model2Run/browserRuns";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
+import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import { Button } from "@/ui/Button";
 import { Field, Input, Select } from "@/ui/Field";
 import { FAULTS } from "../faults";
@@ -14,6 +15,7 @@ const targetKey = (t: InterventionTarget) => "resourceId" in t ? `resource:${t.r
 type Props = { deploymentId: string; resources: Resource[]; fixedTarget?: string };
 function InterventionControl({ deploymentId, resources, fixedTarget }: Props) {
   useSimulationStore(s => s.simulatedSeconds); // Worker capabilities refresh with each shown second.
+  const lines = useCanvasStore(s => s.connectionLines);
   const capabilities = browserRunFor(deploymentId)?.interventions;
   const options = (capabilities?.options ?? []).filter(o => !fixedTarget || ("resourceId" in o.target && o.target.resourceId === fixedTarget));
   const [requested, setRequested] = useState("");
@@ -36,7 +38,12 @@ function InterventionControl({ deploymentId, resources, fixedTarget }: Props) {
     catch (error) { toast.error(errorMessage(error, "The intervention could not be applied.")); }
     finally { setBusy(false); }
   };
-  const label = (t: InterventionTarget) => "resourceId" in t ? resources.find(r => r.id === t.resourceId)?.name || t.resourceId : `${t.edgeId} (${t.direction})`;
+  const name = (id: string) => resources.find(r => r.id === id)?.name || id;
+  const label = (t: InterventionTarget) => {
+    if ("resourceId" in t) return name(t.resourceId);
+    const edge = lines.find(line => line.id === t.edgeId);
+    return `${edge ? `${name(edge.sourceId)} → ${name(edge.targetId)}` : t.edgeId} (${t.direction})`;
+  };
   return <ControlBlock title="Apply an intervention" aside="Product policy v1">
     <div className="flex flex-col gap-2">
       {!fixedTarget && <Field label="Target">{({id}) => <Select id={id} value={target} onChange={e => setRequested(e.target.value)}>
@@ -53,6 +60,7 @@ function InterventionControl({ deploymentId, resources, fixedTarget }: Props) {
         }</Field>)}
         {"edgeId" in option.target && <p className="text-xs">Resolved transport targets: {option.resolvedTargets.join(", ")}. Affected paths: {option.affectedPaths.join(", ")}.</p>}
         <p className="text-xs">{chosen.endPolicy === "timed" ? "Restores the authored baseline when the duration ends. Existing effects remain." : chosen.id === "pool-reset" ? "Applies once. Current connections close; subsequent work can open fresh connections. Completed writes remain." : "Applies once. Deleted cache entries stay deleted until refilled."}</p>
+        {error && <p role="alert" className="text-xs text-warn">{error}</p>}
         <Button variant="secondary" size="sm" icon={<Zap size={14} aria-hidden="true" />} loading={busy} disabled={!!error} onClick={() => void inject()}>Apply {chosen.label.toLowerCase()}</Button>
       </> : <p className="text-xs">{capabilities ? "No supported intervention for this target." : "Intervention capabilities are Unknown until the browser run reports them."}</p>}
     </div>
