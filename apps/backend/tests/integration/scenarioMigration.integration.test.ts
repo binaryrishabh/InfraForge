@@ -31,7 +31,7 @@ integration("scenario migration preserves history and guards exact, unique, immu
       VALUES ($1,$2,$3,$4,$5,$6,$7,1,$8,$9,now(),5,${scenario === undefined ? "" : "$11,"}$10,now())`,
     [id, design, owner, input, input.seed, input.workloadProfile, d.id, specHash(d), {answers: {health: "healthy"}, reasoning: null}, experiment ?? null, ...(scenario === undefined ? [] : [scenario])]);
     await insert(legacy);
-    await db.query('INSERT INTO "Deployment" (id,"ownerId","runInputs",seed,"workloadProfile","updatedAt") VALUES ($1,$2,$3,$4,$5,now())', [free, owner, input, input.seed, input.workloadProfile]);
+    await db.query('INSERT INTO "Deployment" (id,"runInputs",seed,"workloadProfile","updatedAt") VALUES ($1,$2,$3,$4,now())', [free, input, input.seed, input.workloadProfile]);
     const speed = randomUUID();
     await db.query('INSERT INTO "RunAction" (id,"deploymentId",sequence,kind,parameters) VALUES ($1,$2,1,\'speed\',\'{"speed":1}\')', [speed, legacy]);
     const before = (await db.query('SELECT * FROM "Deployment" ORDER BY id')).rows;
