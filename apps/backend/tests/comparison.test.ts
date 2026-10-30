@@ -24,7 +24,7 @@ function row(id: string, changes: Partial<StoredRun> = {}): StoredRun {
     runInputs: structuredClone(captured), liveTopology: layout, terminalSnapshot: structuredClone(terminal), actions: [], actionCount: 0, ...changes };
 }
 function action(kind = "load", seconds = 5, parameters: object = { targetLoadFraction: 0.5 }): RunAction {
-  return { id: "action", deploymentId: "a", sequence: 1, kind, parameters, status: "completed", requestedAt: at, appliedAt: at,
+  return { id: "action", deploymentId: "a", sequence: 1, scenarioStepId: null, kind, parameters, status: "completed", requestedAt: at, appliedAt: at,
     completedAt: at, appliedSimulatedSeconds: seconds, completedSimulatedSeconds: seconds,
     outcome: kind === "speed" ? { previousSpeed: 1, appliedSpeed: 60 } : { previousTarget: 1, appliedTarget: 0.5 }, failureReason: null };
 }

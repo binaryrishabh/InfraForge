@@ -16,7 +16,7 @@ const costStage = { name: "CostEstimate", status: "completed", message: "Recorde
   startedAt: time, completedAt: time, details: { monthlyEstimate: 74.25 } };
 
 function action(overrides: Partial<RunAction> = {}): RunAction {
-  return { id: "11111111-1111-4111-8111-111111111112", deploymentId: "run", sequence: 1, kind: "load",
+  return { id: "11111111-1111-4111-8111-111111111112", deploymentId: "run", sequence: 1, scenarioStepId: null, kind: "load",
     parameters: { targetLoadFraction: 0.5 }, status: "requested", requestedAt: new Date(time),
     appliedAt: null, completedAt: null, appliedSimulatedSeconds: null, completedSimulatedSeconds: null,
     outcome: null, failureReason: null, ...overrides };

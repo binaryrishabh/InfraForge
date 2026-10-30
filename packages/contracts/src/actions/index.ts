@@ -36,6 +36,7 @@ export interface ActionOutcome {
 
 export interface RunAction {
   id: string; deploymentId: string; sequence: number;
+  scenarioStepId?: string;
   kind: ActionRequest["kind"]; parameters: ActionRequest["parameters"];
   status: "requested" | "applying" | "running" | "completed" | "failed" | "cancelled";
   requestedAt: string; appliedAt: string | null; completedAt: string | null;

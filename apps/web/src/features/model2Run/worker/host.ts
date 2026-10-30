@@ -1,4 +1,4 @@
-import { ActionRefused, createModel2Run, type Model2Run } from "@infraforge/simulation/model2-run";
+import { ActionRefused, compileScenario, dueScenarioSteps, createModel2Run, type Model2Run } from "@infraforge/simulation/model2-run";
 import type { FromWorker, RunStart, RunSubmission, ToWorker } from "../protocol";
 
 type Timers = { set: (run: () => void, ms: number) => unknown; clear: (handle: unknown) => void };
@@ -9,6 +9,7 @@ allows), the live view after every second, and actions applied locally. Speed 0 
 export function createRunHost(post: (message: FromWorker) => void, timers: Timers = realTimers, makeRun: typeof createModel2Run = createModel2Run) {
   let run: Model2Run | null = null, start: RunStart | null = null, speed = 1, timer: unknown = null, finished = false;
   const submitted: RunSubmission["actions"] = [];
+  let nextScenarioStep = 0;
 
   const finish = () => {
     if (finished || !run) return;
@@ -28,6 +29,12 @@ export function createRunHost(post: (message: FromWorker) => void, timers: Timer
       if (plan && second === plan.atSimulatedSecond) {
         run.apply({ kind: "chaos", parameters: { type: plan.fault, resourceId: plan.resourceId, trigger: "challenge-experiment" } });
       }
+      if (start.scenario) for (const step of dueScenarioSteps(start.scenario, nextScenarioStep, second)) {
+        if (second !== step.atSecond) throw Error("The scenario boundary was skipped.");
+        run.apply({kind: "intervention", parameters: step.request});
+        nextScenarioStep++;
+        logs.push({timestamp: new Date().toISOString(), source: "model-2", severity: "info", message: `Scenario step applied: ${step.id} at second ${second}.`});
+      }
       const applicationFlow = run.applicationFlowEvidence();
       post({ type: "second", ...(applicationFlow ? { applicationFlow } : {}), view: run.view(), interventions: {options: run.interventionOptions(), remainingSeconds: Math.max(0, Math.floor(run.horizonSeconds - second - 0.000001))}, logs, burnRatePerHourUsd: run.burnRatePerHourUsd() });
       if (second >= start.stopAtSecond) { finish(); return; }
@@ -40,7 +47,7 @@ export function createRunHost(post: (message: FromWorker) => void, timers: Timer
   };
 
   const act = (id: string, request: Extract<ToWorker, { type: "action" }>["request"]) => {
-    if (start?.experiment) return post({type: "action", id, ok: false, message: "Challenge attempts take only the server-authored experiment."});
+    if (start?.challengeId || start?.experiment || start?.scenario) return post({type: "action", id, ok: false, message: "Challenge attempts run under server-authored conditions."});
     if (!run || finished) return post({ type: "action", id, ok: false, message: "The run is not running." });
     try {
       const at = run.simulatedSeconds, applied = run.apply(request);
@@ -57,7 +64,13 @@ export function createRunHost(post: (message: FromWorker) => void, timers: Timer
     handle(message: ToWorker) {
       if (message.type === "start") {
         if (run) return post({ type: "error", message: "This worker already runs a simulation." });
-        try { run = makeRun(message.start.input, message.start.horizonSeconds); }
+        try {
+          if (message.start.scenario) {
+            if (message.start.experiment) throw Error("A scenario cannot include a legacy experiment.");
+            compileScenario(message.start.scenario, message.start.input, message.start.stopAtSecond);
+          }
+          run = makeRun(message.start.input, message.start.horizonSeconds);
+        }
         catch (error) { return post({ type: "error", message: error instanceof Error ? error.message : "Model 2 cannot run this design." }); }
         start = message.start; speed = message.start.speed;
         timer = timers.set(step, 0);

@@ -1,6 +1,12 @@
 import type { SimulationInstance } from "./instance";
 import { captureEvidenceTick } from "../evidence/capture";
 import { currentSecond } from "./engineView";
+import { dueScenarioSteps } from "@infraforge/simulation/model2-run";
+
+export function scenarioDue(instance: SimulationInstance) {
+  const s = instance.scenario;
+  return !!s && (s.pending.size > 0 || dueScenarioSteps(s.plan, s.next, currentSecond(instance)).length > 0);
+}
 
 export function reachedMatchedStop(instance: SimulationInstance) {
   return instance.autoStopAtSimulatedSeconds != null && currentSecond(instance) >= instance.autoStopAtSimulatedSeconds;
@@ -23,7 +29,7 @@ export async function advanceTickBatch(instance: SimulationInstance, complete: (
   if (instance.evidence?.captureError) throw instance.evidence.captureError;
   await persist?.(instance);
   const started = performance.now();
-  for (let i = 0; i < instance.speed && !stopped() && !reachedMatchedStop(instance) && !experimentDue(instance) && !replayDue(instance); i++) {
+  for (let i = 0; i < instance.speed && !stopped() && !reachedMatchedStop(instance) && !experimentDue(instance) && !scenarioDue(instance) && !replayDue(instance); i++) {
     const remaining = MODEL2_BATCH_BUDGET_MS - (performance.now() - started);
     // Catching up after an action uses the same budget; the run resumes once it is caught up.
     if ((i > 0 && remaining <= 0) || !instance.model2.catchUp(Math.max(0, remaining))) break;

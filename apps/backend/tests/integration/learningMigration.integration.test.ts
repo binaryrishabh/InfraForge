@@ -40,6 +40,7 @@ integration("migration 17 preserves populated schema 16 and enforces immutable s
     // The release gate expects each guard function to match the LATEST registered migration that defines it.
     await db.query(await Bun.file(new URL("20261029000000_async_queue_evidence/migration.sql", directory)).text());
     await db.query(await Bun.file(new URL("20261030000000_intervention_action_kind/migration.sql", directory)).text());
+    await db.query(await Bun.file(new URL("20261030010000_challenge_scenarios/migration.sql", directory)).text());
     await checkSchemaGuards(db);
     const insert = (id: string, parent: string, seed = input.seed, hypothesis: string | null = "A learner-owned hypothesis") => db.query(`
       INSERT INTO "Deployment" (id,"infrastructureId","ownerId","runInputs",seed,"workloadProfile","challengeId","challengeVersion",

@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test";
 import { DEFAULT_RETRY_SETTINGS, RESOURCE_TYPES as T, DeploymentChaosNames, type Resource } from "@infraforge/domain/resource";
 import { resolveWorkload } from "@infraforge/domain/workload";
-import { createModel2Run } from "@infraforge/simulation/model2-run";
+import { compileScenario, dueScenarioSteps, createModel2Run } from "@infraforge/simulation/model2-run";
+import type { ChallengeScenario } from "@infraforge/contracts/challenges";
 import { buildModel2Contract, buildContractFromRunInputs } from "@infraforge/simulation/internal-product";
 import { createRunHost } from "../src/features/model2Run/worker/host";
 import type { FromWorker, RunStart } from "../src/features/model2Run/protocol";
@@ -140,6 +141,40 @@ test("a challenge worker refuses a free intervention before recording or changin
   h.host.handle({type: "action", id: "spoof", request: {kind: "intervention", parameters: {interventionId: "session-capacity", revision: 1, target: {resourceId: "db"}, parameters: {sessions: 0, duration: 1}}}});
   expect(h.messages.at(-1)).toMatchObject({type: "action", id: "spoof", ok: false});
   expect(h.host.actions()).toEqual([]); expect(h.host.evidence()).toEqual(before);
+});
+
+test("scripted browser steps and official reconstruction have identical per-second and final evidence", () => {
+  const scenario: ChallengeScenario = {version: 1, visibility: "revealed", steps: [
+    {id: "cpu", atSecond: 2, request: {interventionId: "cpu-capacity", revision: 1, target: {resourceId: "db"}, parameters: {cores: 0.02, duration: 2}}},
+    {id: "sessions", atSecond: 2, request: {interventionId: "session-capacity", revision: 1, target: {resourceId: "db"}, parameters: {sessions: 4, duration: 2}}},
+    {id: "edge", atSecond: 5, request: {interventionId: "delay", revision: 1, target: {edgeId: "app-1-db", direction: "request"}, parameters: {delay: 1000, duration: 1}}},
+  ]};
+  const setup = start({challengeId: "scenario", scenario, horizonSeconds: 7, stopAtSecond: 7, speed: 60});
+  const expected = compileScenario(scenario, setup.input, 7), h = harness(setup), server = createModel2Run(structuredClone(setup.input), 7);
+  let next = 0;
+  for (let second = 1; second <= 7; second++) {
+    h.tick(); server.advance();
+    for (const step of dueScenarioSteps(scenario, next, second)) {server.apply({kind: "intervention", parameters: step.request}); next++;}
+    expect(h.seconds().at(-1)!.view).toEqual(server.view());
+    expect(h.host.actions()).toEqual(server.actions);
+  }
+  expect(h.host.evidence()).toEqual(server.evidence());
+  expect(server.evidence().product.interventions.map(({phase, ...receipt}) => {expect(phase).toBe("completed"); return receipt;})).toEqual(expected);
+  expect(h.messages.at(-1)).toEqual({type: "done", submission: {stopAtSecond: 7, actions: []}});
+  expect(h.seconds().flatMap(s => s.logs).filter(l => l.message.startsWith("Scenario step applied:")).map(l => l.message)).toEqual([
+    "Scenario step applied: cpu at second 2.", "Scenario step applied: sessions at second 2.", "Scenario step applied: edge at second 5.",
+  ]);
+});
+
+test("design-only challenges also refuse ad-hoc actions and invalid scripts fail before the first tick", () => {
+  const h = harness({challengeId: "design-only"});
+  h.host.handle({type: "action", id: "ad-hoc", request: {kind: "load", parameters: {targetLoadFraction: 2}}});
+  expect(h.messages.at(-1)).toMatchObject({type: "action", id: "ad-hoc", ok: false});
+  expect(h.host.actions()).toEqual([]);
+  const invalid = harness({scenario: {version: 1, visibility: "revealed", steps: [{id: "missing", atSecond: 2,
+    request: {interventionId: "cpu-capacity", revision: 1, target: {resourceId: "missing"}, parameters: {cores: 0.01, duration: 1}}}]}});
+  invalid.tick(5);
+  expect(invalid.messages.at(-1)?.type).toBe("error"); expect(invalid.seconds()).toEqual([]);
 });
 
 test("versioned same-second ordering survives the tenth accepted action", () => {

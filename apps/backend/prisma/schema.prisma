@@ -49,6 +49,7 @@ model Deployment {
   predictionSubmittedAt DateTime?
   evaluationStopAtSimulatedSeconds Int?
   challengeExperiment              Json?
+  challengeScenario                Json?
   improvementSourceId   String?
   improvementSource     Deployment?  @relation("ChallengeLearning", fields: [improvementSourceId], references: [id], onDelete: SetNull)
   improvements          Deployment[] @relation("ChallengeLearning")
@@ -82,6 +83,7 @@ model RunAction {
   deploymentId              String
   deployment                Deployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
   sequence                  Int
+  scenarioStepId            String?
   kind                      String
   parameters                Json
   status                    String   @default("requested")
@@ -93,6 +95,7 @@ model RunAction {
   outcome                   Json?
   failureReason             String?  @db.VarChar(500)
   @@unique([deploymentId, sequence])
+  @@unique([deploymentId, scenarioStepId])
   @@index([deploymentId, status, sequence])
 }
 

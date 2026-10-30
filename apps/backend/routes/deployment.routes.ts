@@ -7,6 +7,8 @@ import { ConflictError, ValidationError, NotFoundError } from "../utils/errors";
 import { DeploymentCreateBodySchema, DeploymentIdSchema } from "../zod_schemas/deployment.schema";
 import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
 import { readRecordedExperiment } from "../challenges/experiment";
+import { verifiedScenario } from "../challenges/scenario";
+import { findChallenge } from "../challenges/registry";
 import { runtimeHorizon } from "../deployments/operationalLimits";
 import { checkSubmission } from "../browserRuns/submission";
 import { storedJson } from "../utils/json";
@@ -76,7 +78,11 @@ deploymentRouter.get("/:deploymentId/browser-run", async (req, res) => {
   const input = readRunInputs(run.runInputs);
   const horizonSeconds = runtimeHorizon(executionAllowance(run.autoStopAtSimulatedSeconds ?? run.evaluationStopAtSimulatedSeconds).durationSeconds);
   const plan = run.challengeExperiment == null ? null : readRecordedExperiment(run.challengeExperiment);
+  const definition = run.challengeId && run.challengeVersion ? findChallenge(run.challengeId, run.challengeVersion)?.definition : null;
+  const scenario = run.challengeScenario == null ? null : definition ? verifiedScenario(run.challengeScenario, definition, input) : null;
+  if (run.challengeScenario != null && !scenario) throw new ConflictError("The recorded scenario is unavailable.");
   res.json({ success: true, browserRun: { input, horizonSeconds, stopAtSecond: run.evaluationStopAtSimulatedSeconds ?? horizonSeconds,
+    ...(run.challengeId ? {challengeId: run.challengeId} : {}), ...(scenario ? {scenario: {version: scenario.version, visibility: scenario.visibility, steps: scenario.steps}} : {}),
     ...(plan ? { experiment: { fault: plan.fault, resourceId: plan.targetResourceId, atSimulatedSecond: plan.atSimulatedSecond } } : {}) } });
 });
 

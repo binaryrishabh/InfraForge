@@ -5,17 +5,18 @@ import { requireProductionEndpoints } from "../release/runtime";
 
 test("release accepts only an unchanged ordered migration prefix", async () => {
   const manifest = await migrationManifest();
-  expect(manifest).toHaveLength(30);
+  expect(manifest).toHaveLength(31);
   expect(manifest[16]?.name).toBe("20261018000000_challenge_learning");
   expect(manifest[18]?.name).toBe("20261020000000_model2_lesson");
   expect(manifest[19]?.name).toBe("20261021000000_first_stack_submissions");
   expect(manifest[20]?.name).toBe("20261022000000_historical_replay");
   expect(manifest[21]?.name).toBe("20261023000000_account_essentials");
-  expect(manifest.at(-3)?.name).toBe("20261028010000_browser_runs");
-  expect(manifest.at(-2)?.name).toBe("20261029000000_async_queue_evidence");
-  expect(manifest.at(-1)?.name).toBe("20261030000000_intervention_action_kind");
+  expect(manifest.at(-4)?.name).toBe("20261028010000_browser_runs");
+  expect(manifest.at(-3)?.name).toBe("20261029000000_async_queue_evidence");
+  expect(manifest.at(-2)?.name).toBe("20261030000000_intervention_action_kind");
+  expect(manifest.at(-1)?.name).toBe("20261030010000_challenge_scenarios");
   const rows = manifest.map((item) => ({ migration_name: item.name, checksum: item.checksum, finished_at: "done", rolled_back_at: null }));
-  expect(inspectHistory(manifest, rows)).toBe(30);
+  expect(inspectHistory(manifest, rows)).toBe(31);
   expect(inspectHistory(manifest, rows.slice(0, 20))).toBe(20);
   expect(inspectHistory(manifest, rows.slice(0, 21))).toBe(21);
   expect(inspectHistory(manifest, rows.slice(0, 17))).toBe(17);

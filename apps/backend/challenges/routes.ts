@@ -2,6 +2,7 @@ import { ACTIVE_RUN_STATUSES } from "@infraforge/contracts/deployment";
 import { admitDeployment } from "../deployments/admission";
 import { requireCapability } from "../capabilities/policy";
 import { Router } from "express";
+import { recordedScenario } from "./scenario";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { validateDeploymentReadiness } from "@infraforge/domain/validation";
@@ -196,6 +197,9 @@ challengeRouter.post("/:id/attempts", async (req, res) => {
     }
     const prediction = readPrediction(body.data.prediction, definition, runInputs.resources.map((r) => r.type));
     const experiment = recordedExperiment(definition);
+    let scenario;
+    try { scenario = recordedScenario(definition, runInputs); }
+    catch (error) { throw new ValidationError(`The scenario cannot run: ${(error as Error).message}`); }
     requireCapability(ownerId, { capability: "run.start", purpose: "learner", engine: definition.engine ?? "1", profile: runInputs.simulationModelVersion, durationSeconds: definition.evaluationSeconds });
     const created = await admitDeployment(tx, { id: randomUUID(), infrastructureId: design.id, ownerId, runName: design.name,
       resourceCount: runInputs.resources.length, workloadProfile: runInputs.workloadProfile, seed: runInputs.seed, runInputs,
@@ -203,7 +207,8 @@ challengeRouter.post("/:id/attempts", async (req, res) => {
       challengeId: definition.id, challengeVersion: definition.version, challengeSpecHash: hash,
       ...(improvement ? { improvementSourceId: improvement.sourceRunId, learningHypothesis: improvement.hypothesis, learningIntent: improvement.intent } : {}),
       challengePrediction: storedJson(prediction), predictionSubmittedAt: new Date(),
-      evaluationStopAtSimulatedSeconds: definition.evaluationSeconds, ...(experiment ? { challengeExperiment: storedJson(experiment) } : {}) });
+      evaluationStopAtSimulatedSeconds: definition.evaluationSeconds, ...(experiment ? { challengeExperiment: storedJson(experiment) } : {}),
+      ...(scenario ? { challengeScenario: storedJson(scenario) } : {}) });
     return created;
   });
   res.status(201).json({ success: true, createdDeployment: run });

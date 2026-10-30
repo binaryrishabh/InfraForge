@@ -3,6 +3,7 @@ import type { ActionOutcome, ActionRequest } from "@infraforge/contracts/actions
 import type { RunTopology, RunProfileSelection } from "@infraforge/contracts/run-inputs";
 import type { ApplicationFlowEvidence, LiveView, SimulationLog } from "@infraforge/contracts/telemetry";
 import type { ResolvedWorkloadProfile } from "@infraforge/domain/workload";
+import type { ChallengeScenario } from "@infraforge/contracts/challenges";
 
 // Messages between the page and the Model 2 run worker.
 export interface RunStart {
@@ -10,6 +11,8 @@ export interface RunStart {
   horizonSeconds: number;
   // The run stops by itself here (a challenge's evaluation second, or the horizon).
   stopAtSecond: number;
+  challengeId?: string;
+  scenario?: ChallengeScenario;
   // A challenge's scheduled fault, applied right after the run reaches its second.
   experiment?: { fault: Extract<ActionRequest, { kind: "chaos" }>["parameters"]["type"]; resourceId: string; atSimulatedSecond: number };
   speed: number;

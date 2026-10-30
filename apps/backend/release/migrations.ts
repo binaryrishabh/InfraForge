@@ -16,7 +16,7 @@ export const ADDITIVE_MIGRATIONS = new Set(["20261009000000_capture_run_inputs",
   "20261017000000_credential_usernames", "20261018000000_challenge_learning", "20261019000000_internal_model2", "20261020000000_model2_lesson", "20261021000000_first_stack_submissions", "20261022000000_historical_replay", "20261023000000_account_essentials",
   "20261024120000_account_mail_outbox", "20261024130000_account_mail_intents",
   "20261025000000_first_stack_queue_operations", "20261025120000_email_login_intents", "20261028000000_evidence_unknown_values", "20261028010000_browser_runs",
-  "20261029000000_async_queue_evidence", "20261030000000_intervention_action_kind"]);
+  "20261029000000_async_queue_evidence", "20261030000000_intervention_action_kind", "20261030010000_challenge_scenarios"]);
 
 export async function migrationManifest(): Promise<Migration[]> {
   const directory = new URL("../prisma/migrations/", import.meta.url);
@@ -88,7 +88,7 @@ export async function checkModel1SchemaGuards(db: Database) {
     run_action_evidence_guard: ["protect_run_action", 19, 'BEFORE UPDATE ON public."RunAction"'],
     deployment_lineage_guard: ["protect_run_lineage", 19, 'BEFORE UPDATE OF "sourceRunId", "rerunMode", "autoStopAtSimulatedSeconds" ON public."Deployment"'],
     deployment_challenge_attempt: ["verify_challenge_attempt", 7, 'BEFORE INSERT ON public."Deployment"'],
-    deployment_challenge_guard: ["protect_challenge_attempt", 19, 'BEFORE UPDATE OF "challengeId", "challengeVersion", "challengeSpecHash", "challengePrediction", "predictionSubmittedAt", "evaluationStopAtSimulatedSeconds", "challengeExperiment" ON public."Deployment"'],
+    deployment_challenge_guard: ["protect_challenge_attempt", 19, 'BEFORE UPDATE OF "challengeId", "challengeVersion", "challengeSpecHash", "challengePrediction", "predictionSubmittedAt", "evaluationStopAtSimulatedSeconds", "challengeExperiment", "challengeScenario" ON public."Deployment"'],
     infrastructure_challenge_guard: ["protect_challenge_design", 19, 'BEFORE UPDATE OF "challengeId", "challengeVersion" ON public."Infrastructure"'],
     run_action_challenge_guard: ["restrict_challenge_actions", 7, 'BEFORE INSERT ON public."RunAction"'],
   };
@@ -104,6 +104,7 @@ export async function checkModel1SchemaGuards(db: Database) {
   await db.query('SELECT "deploymentId", "simulatedSeconds", "sampledAt", payload, hash FROM "RunEvidenceSample" LIMIT 0');
   await db.query('SELECT username FROM "User" LIMIT 0');
   await db.query('SELECT "improvementSourceId", "learningHypothesis", "learningIntent" FROM "Deployment" LIMIT 0');
+  await db.query('SELECT d."challengeScenario", r."scenarioStepId" FROM "Deployment" d CROSS JOIN "RunAction" r LIMIT 0');
   await checkCredentialSchema(db);
 }
 

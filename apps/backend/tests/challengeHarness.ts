@@ -97,7 +97,7 @@ export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, p
       const id = randomUUID();
       const parameters = { type: plan.fault, resourceId: plan.targetResourceId, trigger: EXPERIMENT_TRIGGER } as const;
       const applied = applyAction(instance, id, { kind: "chaos", parameters });
-      actions.push({ id, deploymentId, sequence: actions.length + 1, kind: "chaos", parameters, status: applied.status, requestedAt: new Date(),
+      actions.push({ id, deploymentId, sequence: actions.length + 1, scenarioStepId: null, kind: "chaos", parameters, status: applied.status, requestedAt: new Date(),
         appliedAt: new Date(), completedAt: null, appliedSimulatedSeconds: second, completedSimulatedSeconds: null,
         outcome: applied.outcome as StoredAction["outcome"], failureReason: null });
     }

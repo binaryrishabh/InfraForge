@@ -87,7 +87,7 @@ export function actionDto(row: StoredAction): RunAction {
       case "teardown": z.object({ capturedAt: outcomeSchema.shape.capturedAt.unwrap(), appliedRevision: amount }).parse(outcome); break;
     }
   }
-  return { id: row.id, deploymentId: row.deploymentId, sequence: row.sequence, ...request, status,
+  return { id: row.id, deploymentId: row.deploymentId, sequence: row.sequence, ...(row.scenarioStepId ? {scenarioStepId: row.scenarioStepId} : {}), ...request, status,
     requestedAt: row.requestedAt.toISOString(), appliedAt: row.appliedAt?.toISOString() ?? null,
     completedAt: row.completedAt?.toISOString() ?? null,
     appliedSimulatedSeconds: row.appliedSimulatedSeconds, completedSimulatedSeconds: row.completedSimulatedSeconds,

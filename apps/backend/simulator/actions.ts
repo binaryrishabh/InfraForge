@@ -9,8 +9,9 @@ import { isExperimentAction } from "../challenges/experiment";
 import { currentSecond } from "./engineView";
 
 // The experiment's phase follows its one durable row; a failed row is final and is never retried.
-function settleExperiment(instance: SimulationInstance, action: { kind: string; parameters: unknown }, applied: boolean) {
+function settleExperiment(instance: SimulationInstance, action: { kind: string; parameters: unknown; scenarioStepId?: string | null }, applied: boolean) {
   if (instance.experiment && isExperimentAction(action as never)) instance.experiment.phase = applied ? "applied" : "failed";
+  if (action.scenarioStepId) instance.scenario?.pending.delete(action.scenarioStepId);
 }
 
 export async function processRunActions(deploymentId: string, instance: SimulationInstance, remove: () => void) {
@@ -46,6 +47,8 @@ export async function processRunActions(deploymentId: string, instance: Simulati
     }
     // Applied in memory now; a failed acknowledgement freezes this state and is retried, never replayed.
     settleExperiment(instance, action, true);
+    if (action.scenarioStepId) instance.pendingLogs.push({timestamp: new Date().toISOString(), source: "model-2", severity: "info",
+      message: `Scenario step applied: ${action.scenarioStepId} at second ${currentSecond(instance)}.`});
     const appliedAt = new Date();
     await acknowledgeAction(instance, action.id, { ...result, appliedAt, appliedSimulatedSeconds: currentSecond(instance),
       ...(result.status === "completed" ? { completedAt: appliedAt, completedSimulatedSeconds: currentSecond(instance) } : {}) });
