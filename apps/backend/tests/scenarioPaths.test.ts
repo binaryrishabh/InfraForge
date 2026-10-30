@@ -5,6 +5,7 @@ import { captureRunInputs } from "../deployments/runInputs";
 import { recordedScenario } from "../challenges/scenario";
 import { preflight } from "../challenges/preflight";
 import { validateChallengeVersions } from "../challenges/validate";
+import { createModel2Run } from "@infraforge/simulation/model2-run";
 
 function race(): ChallengeStarter {
   return {resources: [
@@ -53,4 +54,38 @@ test("quorum-only database paths refuse authoring and preflight, including neste
     {id: "nested", kind: "parallel", wait: 1, branches: [{id: "data", kind: "call", edge: "slow-data"}, {id: "fast", kind: "call", edge: "slow-fast"}]},
   ]}}};
   expect(record).toThrow("serving path");
+});
+
+for (const cache of [false, true]) test(`typed scenario data paths follow explicit read/write operations, cache=${cache}`, () => {
+  const design: ChallengeStarter = {resources: [
+    {id: "app", type: "Virtual Machine", x: 0, y: 0, applicationFlow: {schema: "application-flow/2", operations: {
+      read: {steps: [{id: "read", kind: "data", edge: cache ? "app-cache" : "app-db", operation: "read"}]},
+      write: {steps: [{id: "write", kind: "data", edge: cache ? "app-cache" : "app-db", operation: "write"}]},
+    }}}, {id: "db", type: "Database", x: 2, y: 0}, ...(cache ? [{id: "cache", type: "Cache" as const, x: 1, y: 0}] : []),
+  ], connectionLines: cache ? [
+    {id: "app-cache", sourceId: "app", targetId: "cache", sourceType: "Virtual Machine", targetType: "Cache", port: 6379},
+    {id: "cache-db", sourceId: "cache", targetId: "db", sourceType: "Cache", targetType: "Database", port: 5432},
+  ] : [{id: "app-db", sourceId: "app", targetId: "db", sourceType: "Virtual Machine", targetType: "Database", port: 5432}]};
+  for (const readWriteRatio of [1, 0]) {
+    const definition = {...d, starter: design, workload: {...d.workload, targetThroughput: 60, readWriteRatio}};
+    const input = captureRunInputs(design, definition.workload), run = createModel2Run(input, 5);
+    run.advance();
+    const database = run.evidence().data.databases[0]!;
+    expect(readWriteRatio ? database.logicalReads : database.logicalWrites).toBeGreaterThan(0);
+    expect(() => recordedScenario(definition, input)).not.toThrow();
+    expect(preflight(definition, design).valid).toBe(true);
+    expect(validateChallengeVersions([definition], {}).filter(p => !p.includes("not pinned"))).toEqual([]);
+  }
+  const flow = design.resources[0]!.applicationFlow!;
+  flow.operations.read!.steps = [{id: "compute", kind: "compute"}];
+  // A typed read on an unoffered write branch is inactive. Offering that write
+  // follows its explicit data operation, rather than inheriting the parent's.
+  flow.operations.write!.steps = [{id: "query", kind: "data", edge: cache ? "app-cache" : "app-db", operation: "read"}];
+  expect(() => recordedScenario(d, captureRunInputs(design, d.workload))).toThrow("serving path");
+  const workload = {...d.workload, readWriteRatio: 0, targetThroughput: 60};
+  const input = captureRunInputs(design, workload), run = createModel2Run(input, 5);
+  run.advance();
+  expect(run.evidence().data.databases[0]!.logicalReads).toBeGreaterThan(0);
+  expect(run.evidence().data.databases[0]!.logicalWrites).toBe(0);
+  expect(() => recordedScenario({...d, workload}, input)).not.toThrow();
 });

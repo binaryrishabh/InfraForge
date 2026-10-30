@@ -72,6 +72,7 @@ function servingPath(input: SystemsInput) {
       const flow = node.applicationFlow?.operations[operation];
       if (flow) for (const step of flow.steps) {
         if (step.kind === "call") call(step.target, step.operation ?? operation);
+        else if (step.kind === "data") call(step.target, step.operation);
         else if (step.kind === "parallel" && (step.wait === "all" || step.wait === step.branches.length)) {
           for (const branch of step.branches) call(branch.target, branch.operation ?? operation);
         }
