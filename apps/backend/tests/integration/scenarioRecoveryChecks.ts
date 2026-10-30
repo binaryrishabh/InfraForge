@@ -33,7 +33,8 @@ export async function checkScenarioRecovery(h: LocalHarness, workspace: string, 
   await h.sql.query('INSERT INTO "RunAction" (id,"deploymentId",sequence,kind,parameters,"scenarioStepId") VALUES ($1,$2,1,\'intervention\',$3,$4)',
     [randomUUID(), lost, d.scenario!.steps[0]!.request, d.scenario!.steps[0]!.id]);
   await h.sql.query('UPDATE "RunAction" SET status=\'applying\' WHERE "deploymentId"=$1', [lost]);
-  expect((await submitBrowserRun(h, lost, 5)).status).toBe("torn-down");
+  expect((await submitBrowserRun(h, lost, 5)).status).toBe("failed");
+  expect(await row(lost)).toMatchObject({status: "failed", runtimeActive: false});
   expect(await actions(lost)).toHaveLength(1);
   expect(await actions(lost)).toMatchObject([{status: "failed", appliedAt: null, appliedSimulatedSeconds: null}]);
   expect((await report(lost)).challenge).toMatchObject({status: "not-evaluated", metCount: 0});
