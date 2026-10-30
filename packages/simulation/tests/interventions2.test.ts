@@ -3,7 +3,7 @@ import { securityDesign, prepareSecurity } from "./securityCanvas.fixture";
 import { compileProduct } from "../src/model2/product/compiler";
 import { createProductModel2 } from "../src/model2/product/run";
 import { withTimeline } from "../src/model2/product/timeline";
-import { intervention } from "./interventionFixture";
+import { intervention, interventionInput, advance } from "./interventionFixture";
 import { quantities } from "./workloadFixture";
 import { compileInterventions } from "../src/model2/product/interventions";
 import { derivedLedger } from "../src/model2/product/provenance";
@@ -97,4 +97,41 @@ test("adjacent deny-port windows restore before the next rule install independen
   expect(policy.rules.map(r => r.id)).toEqual(["intervention:a:deny-port"]);
   run.advanceTo(2_000_001);
   expect(run.evidence().systems.security.policies[0]!.rules).toEqual([]);
+});
+
+test("bandwidth increases large-payload transfer latency and restores the exact authored rate", () => {
+  const input = interventionInput(false, 1);
+  input.workloadProfile = resolveWorkload({...input.workloadProfile, payloadSize: "heavy"});
+  const run = createModel2Run(input, 6), baseline = createModel2Run(input, 6);
+  run.apply(intervention("bandwidth", {bandwidth: 262_144, duration: 2}, {edgeId: "app-db", direction: "request"}));
+  advance(run, 2); advance(baseline, 2);
+  const e = run.evidence(), b = baseline.evidence();
+  expect(e.network.links.find(l => l.id === "app-db:app:db/request")!.bandwidthBytesPerSecond).toBe(262_144);
+  expect(e.counts.completed).toBeLessThan(b.counts.completed);
+  expect(run.view().traffic.latencyMs.p95).toBeGreaterThan(1000);
+  expect(baseline.view().traffic.latencyMs.p95).toBeLessThan(100);
+  advance(run, 1);
+  expect(run.evidence().network.links.find(l => l.id === "app-db:app:db/request")!.bandwidthBytesPerSecond).toBe(b.network.links.find(l => l.id === "app-db:app:db/request")!.bandwidthBytesPerSecond);
+});
+
+test("bandwidth restores exactly at the ending microsecond", () => {
+  const {design, contract} = setup();
+  const c = compileProduct(design, withTimeline(contract, [{id: "rate", atUs: 1, kind: "intervention", request: intervention("bandwidth", {bandwidth: 1000, duration: 1}, {edgeId: "edge-1", direction: "both"}).parameters}]));
+  if (!c.ok) throw Error(JSON.stringify(c.diagnostics));
+  const run = createProductModel2(c.value); run.advanceTo(1_000_000);
+  expect(run.evidence().network.links.find(l => l.id === "edge-1:app:db/request")!.bandwidthBytesPerSecond).toBe(1000);
+  run.advanceTo(1_000_001);
+  expect(run.evidence().network.links.find(l => l.id === "edge-1:app:db/request")!.bandwidthBytesPerSecond).toBe(125_000_000);
+  expect(run.activeInterventions()).toEqual([]);
+});
+
+test("bandwidth compile refuses invalid bounds, revision and overlapping aliases", () => {
+  const {design, contract} = setup();
+  const request = intervention("bandwidth", {bandwidth: 1000, duration: 1}, {edgeId: "edge-1", direction: "both"}).parameters;
+  for (const r of [{...request, revision: 2}, {...request, parameters: {bandwidth: 0, duration: 1}}]) {
+    const c = compileProduct(design, {...contract, interventions: [{id: "bad", atUs: 1, request: r}]});
+    expect(c.ok).toBe(false); expect(c.diagnostics[0]!.message).toMatch(/BOUNDS|REVISION/);
+  }
+  const c = compileProduct(design, {...contract, interventions: [{id: "one", atUs: 1, request}, {id: "two", atUs: 1, request: {...request, target: {edgeId: "edge-1", direction: "request"}}}]});
+  expect(c.ok).toBe(false); expect(c.diagnostics[0]!.message).toContain("OVERLAP");
 });

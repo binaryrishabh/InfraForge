@@ -3,7 +3,7 @@ import { INTERVENTIONS, interventionError } from "../src/resource";
 const request = { interventionId: "session-capacity", revision: 1, target: { resourceId: "db" }, parameters: { sessions: 0, duration: 1 } };
 test("capabilities round-trip as data and enforce product policy at contextual boundaries", () => {
   expect(JSON.parse(JSON.stringify(INTERVENTIONS))).toEqual(INTERVENTIONS);
-  expect(INTERVENTIONS.map(d => d.id)).toEqual(["deny-port", "session-capacity", "cpu-capacity", "flush", "delay", "partition"]);
+  expect(INTERVENTIONS.map(d => d.id)).toEqual(["deny-port", "session-capacity", "cpu-capacity", "flush", "delay", "bandwidth", "partition"]);
   expect(interventionError(request, { remainingSeconds: 1 })).toBeNull();
   for (const parameters of [{sessions: -1, duration: 1}, {sessions: 513, duration: 1}, {sessions: 0.5, duration: 1}, {sessions: Infinity, duration: 1}, {sessions: 0, duration: 301}, {sessions: 0}, {sessions: 0, duration: 1, extra: true}])
     expect(interventionError({...request, parameters}, {authoredBaseline: 512})).toContain("INTERVENTION_");
@@ -28,4 +28,12 @@ test("deny-port policy declares one bounded TCP port and timed restore", () => {
   expect(interventionError(request)).toBeNull();
   expect(interventionError({...request, parameters: {port: 65535, duration: 300}})).toBeNull();
   for (const port of [0, 65536, 1.1, Infinity]) expect(interventionError({...request, parameters: {port, duration: 1}})).toContain("BOUNDS");
+});
+
+test("bandwidth has bounded bytes/s and revision refusal in the capability table", () => {
+  const request = {interventionId: "bandwidth", revision: 1, target: {edgeId: "a", direction: "both"}, parameters: {bandwidth: 1, duration: 1}};
+  expect(interventionError(request)).toBeNull();
+  expect(interventionError({...request, parameters: {bandwidth: 1_000_000_000, duration: 1}})).toBeNull();
+  for (const bandwidth of [0, -1, 1.5, 1_000_000_001, Infinity]) expect(interventionError({...request, parameters: {bandwidth, duration: 1}})).toContain("BOUNDS");
+  expect(interventionError({...request, revision: 2})).toContain("REVISION");
 });

@@ -20,6 +20,8 @@ export const INTERVENTIONS: readonly InterventionDescriptor[] = [
     parameters: [], reversible: false, endPolicy: "one-shot", requires: ["fixed cache role"] },
   { id: "delay", revision: 1, label: "Edge delay", targetKind: "edge", mechanism: "transport",
     parameters: [{ name: "delay", kind: "integer", unit: "us", min: 0, max: 5_000_000 }, duration], reversible: true, endPolicy: "timed", requires: ["materialized transport links"] },
+  { id: "bandwidth", revision: 1, label: "Edge bandwidth", targetKind: "edge", mechanism: "transport",
+    parameters: [{ name: "bandwidth", kind: "integer", unit: "bytes/s", min: 1, max: 1_000_000_000 }, duration], reversible: true, endPolicy: "timed", requires: ["materialized transport links"] },
   { id: "partition", revision: 1, label: "Partition edge", targetKind: "edge", mechanism: "transport",
     parameters: [duration], reversible: true, endPolicy: "timed", requires: ["materialized transport links"] },
 ];

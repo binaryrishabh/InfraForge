@@ -99,10 +99,11 @@ export function compileInterventions(design: SavedProductDesign, contract: Produ
       else if (kind === "flush") input.dataInterventions.push({...common, kind});
       else if (kind === "session-capacity") input.dataInterventions.push({...common, kind, duration: duration!, sessions: q("sessions", Number(parameters.sessions), "count")});
       else if (kind === "cpu-capacity") input.dataInterventions.push({...common, kind, duration: duration!, cores: q("cores", Number(parameters.cores), "cores")});
-      else if (kind === "delay" || kind === "partition") {
+      else if (kind === "delay" || kind === "partition" || kind === "bandwidth") {
         // Each materialized link retains an exact sourced delay quantity.
         const delay = kind === "delay" ? provenance.q(`intervention.${row.id}.delay.${input.networkInterventions.length}`, Number(parameters.delay), "us", [`intervention delay@1; product policy`], "user-input") : undefined;
-        input.networkInterventions.push(kind === "delay" ? {...common, kind, duration: duration!, delay: delay!} : {...common, kind, duration: duration!});
+        const bandwidth = kind === "bandwidth" ? provenance.q(`intervention.${row.id}.bandwidth.${input.networkInterventions.length}`, Number(parameters.bandwidth), "bytes/s", ["intervention bandwidth@1; product policy"], "user-input") : undefined;
+        input.networkInterventions.push(kind === "bandwidth" ? {...common, kind, duration: duration!, bandwidth: bandwidth!} : kind === "delay" ? {...common, kind, duration: duration!, delay: delay!} : {...common, kind, duration: duration!});
       } else throw Error("INTERVENTION_ADAPTER: no real mechanism adapter");
     }
     receipts.push({...row.request, actionId: row.id, resolvedTargets: option.resolvedTargets, affectedPaths: option.affectedPaths, atUs: row.atUs, endUs});

@@ -104,6 +104,7 @@ test("versioned worker actions replay in same-second order with identical quanti
     [2, [action("cpu-capacity", {cores: 0, duration: 1}), action("flush", {}, {resourceId: "cache"})]],
     [4, [action("delay", {delay: 1000, duration: 1}, {edgeId: "app-1-db", direction: "response"})]],
     [6, [action("partition", {duration: 1}, {edgeId: "app-2-db", direction: "request"})]],
+    [8, [action("bandwidth", {bandwidth: 100_000, duration: 1}, {edgeId: "app-1-db", direction: "both"})]],
   ]);
   const submitted: Array<{atSecond: number; request: Parameters<typeof server.apply>[0]}> = [];
   for (let second = 0; second < 10; second++) {
@@ -129,7 +130,8 @@ test("versioned worker actions replay in same-second order with identical quanti
   }
   expect(replay.actions).toEqual(server.actions);
   expect(replay.evidence()).toEqual(h.host.evidence()!);
-  expect(replay.evidence().product.interventions).toHaveLength(5);
+  expect(replay.evidence().product.interventions).toHaveLength(6);
+  expect(h.seconds().some(s => s.logs.some(log => log.message.includes("Flush cache applied at 2000001 us") && log.message.includes("one-shot")))).toBe(true);
 });
 
 test("a challenge worker refuses a free intervention before recording or changing its run", () => {
@@ -186,4 +188,15 @@ test("deny-port worker messages and serialized replay retain active state and co
     replay.advance(); expect(replay.view()).toEqual(seconds[second]!.view);
   }
   expect(replay.evidence()).toEqual(h.host.evidence()!);
+});
+
+test("worker refuses unsupported bandwidth bounds and revisions before recording", () => {
+  const h = harness();
+  const parameters = {interventionId: "bandwidth", revision: 1, target: {edgeId: "app-1-db", direction: "both" as const}, parameters: {bandwidth: 0, duration: 1}};
+  const before = h.host.evidence();
+  for (const value of [parameters, {...parameters, revision: 2, parameters: {bandwidth: 1000, duration: 1}}]) {
+    h.host.handle({type: "action", id: "bad", request: {kind: "intervention", parameters: value}});
+    expect(h.messages.at(-1)).toMatchObject({type: "action", ok: false});
+  }
+  expect(h.host.actions()).toEqual([]); expect(h.host.evidence()).toEqual(before);
 });
