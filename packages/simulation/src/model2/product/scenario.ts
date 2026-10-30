@@ -3,6 +3,8 @@ import type { ChallengeScenario } from "@infraforge/contracts/challenges";
 import { compileProduct } from "./compiler";
 import { withTimeline } from "./timeline";
 import { buildContractFromRunInputs, type CapturedModel2Input } from "./runContract";
+import { rateRows } from "../workload/arrivals";
+import type { SystemsInput } from "../systems/contracts";
 
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const keys = (v: object) => Object.keys(v).sort().join();
@@ -36,22 +38,54 @@ export function compileScenario(scenario: ChallengeScenario, input: CapturedMode
   if (error) throw Error(error);
   const built = buildContractFromRunInputs(input, evaluationSecond);
   if ("refused" in built) throw Error(built.refused.join(" "));
-  const reachable = new Set<string>();
-  const visit = (id: string) => {
-    if (reachable.has(id)) return;
-    reachable.add(id);
-    for (const edge of input.connectionLines.filter(edge => edge.sourceId === id)) visit(edge.targetId);
-  };
-  visit(built.contract.caller.entry.replace(/^\$/, "").split("/")[0]!);
-  for (const step of scenario.steps) {
-    const target = step.request.target;
-    const edge = "edgeId" in target ? input.connectionLines.find(edge => edge.id === target.edgeId) : null;
-    const ids = "resourceId" in target ? [target.resourceId] : edge ? [edge.sourceId, edge.targetId] : [];
-    if (!ids.length || ids.some(id => !reachable.has(id))) throw Error(`Scenario step ${step.id} must stay on the captured serving path.`);
-  }
   const design = {schema: "infraforge-saved-design/1" as const, resources: input.resources, connections: input.connectionLines, workload: input.workloadProfile};
   const contract = withTimeline(built.contract, orderedScenarioSteps(scenario).map((step, i) => ({id: `a${i + 1}`, kind: "intervention", atUs: step.atSecond * 1_000_000 + 1, request: step.request})));
   const compiled = compileProduct(design, contract);
   if (!compiled.ok) throw Error(compiled.diagnostics.map(d => d.message).join(" "));
+  const {resources, paths} = servingPath(compiled.value.input);
+  for (const [i, step] of orderedScenarioSteps(scenario).entries()) {
+    const receipt = compiled.value.interventionReceipts![i]!;
+    const active = "resourceId" in step.request.target && step.request.interventionId !== "deny-port"
+      ? receipt.resolvedTargets.some(id => resources.has(id))
+      : receipt.affectedPaths.some(id => paths.has(id));
+    if (!active) throw Error(`Scenario step ${step.id} must stay on the captured serving path for an offered operation.`);
+  }
   return compiled.value.interventionReceipts ?? [];
+}
+
+// Follow compiled calls, including operation overrides and replica expansion. A drawn
+// edge (or a health probe) alone does not put a target on the workload's serving path.
+function servingPath(input: SystemsInput) {
+  const resources = new Set<string>(), paths = new Set<string>(), seen = new Set<string>();
+  const nodes = new Map(input.resources.map(r => [r.id, r]));
+  const visit = (id: string, operation: string, source: string) => {
+    for (const path of input.paths) if (path.source === source && path.target === id) paths.add(path.id);
+    const key = JSON.stringify([id, operation]);
+    if (seen.has(key)) return;
+    seen.add(key); resources.add(id);
+    const node = nodes.get(id);
+    const call = (target: string, op = operation) => visit(target, op, id);
+    if (node?.kind === "load-balancer" || node?.kind === "router") node.backends.forEach(target => call(target));
+    else if (node?.kind === "compute") {
+      const flow = node.applicationFlow?.operations[operation];
+      if (flow) for (const step of flow.steps) {
+        if (step.kind === "call") call(step.target, step.operation ?? operation);
+        else if (step.kind === "parallel") for (const branch of step.branches) call(branch.target, branch.operation ?? operation);
+      }
+      else { const target = node.downstreamByOperation?.[operation] ?? node.downstream; if (target) call(target); }
+    } else if (node?.kind === "cache-aside" && node.operations[operation]) {
+      call(node.database);
+      if (node.operations[operation] === "read" || node.invalidateWrites) call(node.cache);
+    } else if (node?.kind === "cdn") call(node.origin);
+    else if (node?.kind === "dns-resolver") call(node.authority);
+    else if (node?.kind === "registry") call(node.store);
+  };
+  const offered = new Set<string>();
+  for (const source of input.arrivals) {
+    if (source.kind === "rate") for (const row of rateRows(source.rate)) offered.add(row.operation);
+    else if (source.kind === "trace") source.trace.rows.forEach(row => offered.add(row.operation));
+    else offered.add(source.operation);
+  }
+  for (const operation of input.operations) if (offered.has(operation.id)) visit(operation.entry, operation.id, "$caller");
+  return {resources, paths};
 }

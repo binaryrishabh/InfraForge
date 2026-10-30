@@ -24,6 +24,36 @@ test("due steps retain author order for ties, return every due step and respect 
   expect(dueScenarioSteps(plan, 0, 2).map(s => s.id)).toEqual(["first", "second"]);
   expect(dueScenarioSteps(plan, 1, 9).map(s => s.id)).toEqual(["second", "late"]);
 });
+test("serving paths follow sequential and parallel operation overrides, not inactive edges between active nodes", () => {
+  const input = interventionInput();
+  input.connectionLines = [];
+  input.workloadProfile.readWriteRatio = 0;
+  input.resources.push({id: "helper", type: "Virtual Machine", x: 2, y: 0}, {id: "service", type: "Virtual Machine", x: 3, y: 0});
+  input.resources.push({id: "idle", type: "Virtual Machine", x: 4, y: 0});
+  input.connectionLines.push(
+    {id: "app-helper", sourceId: "app", targetId: "helper", sourceType: "Virtual Machine", targetType: "Virtual Machine", port: 80},
+    {id: "app-service", sourceId: "app", targetId: "service", sourceType: "Virtual Machine", targetType: "Virtual Machine", port: 80},
+    {id: "app-idle", sourceId: "app", targetId: "idle", sourceType: "Virtual Machine", targetType: "Virtual Machine", port: 80},
+    {id: "helper-service", sourceId: "helper", targetId: "service", sourceType: "Virtual Machine", targetType: "Virtual Machine", port: 80},
+    {id: "service-db", sourceId: "service", targetId: "db", sourceType: "Virtual Machine", targetType: "Database", port: 5432},
+  );
+  const app = input.resources.find(r => r.id === "app")!, helper = input.resources.find(r => r.id === "helper")!;
+  helper.applicationFlow = {schema: "application-flow/1", operations: {
+    write: {steps: [{id: "compute", kind: "compute"}]}, read: {steps: [{id: "db", kind: "call", edge: "helper-service"}]},
+  }};
+  for (const parallel of [false, true]) {
+    const call = {id: "helper", kind: "call" as const, edge: "app-helper", operation: "read"};
+    const second = {...call, id: "second", edge: "app-idle"};
+    app.applicationFlow = {schema: "application-flow/1", operations: {write: {steps: parallel ? [{id: "fanout", kind: "parallel", wait: "all", branches: [call, second]}] : [call]}}};
+    expect(() => compileScenario(scenario, input, 5)).not.toThrow();
+    // app and service are both active, but their direct drawn edge is never called.
+    const unusedEdge = {...scenario, steps: [{...scenario.steps[0]!, request: intervention("delay", {delay: 1000, duration: 1}, {edgeId: "app-service", direction: "both"}).parameters}]};
+    expect(() => compileScenario(unusedEdge, input, 5)).toThrow("serving path");
+    if (parallel) helper.applicationFlow.operations.read = {steps: [{id: "compute", kind: "compute"}]};
+    else call.operation = "write";
+    expect(() => compileScenario(scenario, input, 5)).toThrow("serving path");
+  }
+});
 test("malformed, excessive, duplicate, fractional and late scripts are refused", () => {
   expect(scenarioError(scenario, 5)).toBeNull();
   for (const steps of [[], Array(21).fill(scenario.steps[0]), [scenario.steps[0], scenario.steps[0]], [{...scenario.steps[0], atSecond: 1.5}], [{...scenario.steps[0], atSecond: 3}]]) {

@@ -57,6 +57,25 @@ test("preflight refuses missing and unsupported targets, and authoring rejects e
   const mixed = {...d, experiment: {fault: DeploymentChaosNames.Crash, atSimulatedSecond: 2, target: {resourceId: "db", type: "Database" as const}, hypothesis: "Observe"}};
   expect(validateChallengeVersions([mixed], {}).some(p => p.includes("exclude experiments"))).toBe(true);
 });
+test("preflight and authoring refuse a database reached only by an unoffered operation", () => {
+  const design = structuredClone(d.starter!);
+  design.resources.find(r => r.id === "lb")!.retry = {enabled: false};
+  design.resources.push({id: "unused", type: "Virtual Machine", x: 800, y: 900});
+  design.resources.find(r => r.id === "app0")!.applicationFlow = {schema: "application-flow/1", operations: {
+    read: {steps: [{id: "compute", kind: "compute"}]},
+    write: {steps: [{id: "call", kind: "call", edge: "unused-path"}]},
+  }};
+  design.connectionLines = design.connectionLines.filter(e => e.targetId !== "db");
+  design.connectionLines.push(
+    {id: "unused-path", sourceId: "app0", targetId: "unused", sourceType: "Virtual Machine", targetType: "Virtual Machine", port: 80},
+    {id: "unused-db", sourceId: "unused", targetId: "db", sourceType: "Virtual Machine", targetType: "Database", port: 5432},
+  );
+  expect(() => recordedScenario(d, captureRunInputs(design, d.workload))).toThrow("serving path");
+  expect(preflight(d, design).errors.some(p => p.includes("serving path"))).toBe(true);
+  expect(validateChallengeVersions([{...d, starter: design}], {}).some(p => p.includes("serving path"))).toBe(true);
+  // Offering writes makes the same compiled dependency active.
+  expect(() => recordedScenario({...d, workload: {...d.workload, readWriteRatio: 0}}, captureRunInputs(design, {...d.workload, readWriteRatio: 0}))).not.toThrow();
+});
 test("history preserves scenario scoring and improvement requires the exact stored source plan", () => {
   expect(learningAttempt(reference)).toMatchObject({category: "resilience", fault: null, status: "met", metCount: 3});
   expect(improvementSource(reference, d.id).definition.id).toBe(d.id);
