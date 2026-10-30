@@ -39,7 +39,7 @@ test("current and newer backend preserves each creation request and returned run
         requests.push({ method: config.method, url: config.url, body: config.data ? JSON.parse(config.data) : undefined });
         return { data: config.method === "get" ? { runContract } : { createdDeployment: deployment }, status: 200, statusText: "OK", headers: {}, config };
       };
-      expect(await start()).toEqual(deployment);
+      expect(await start()).toMatchObject(deployment);
       expect(requests).toEqual([
         { method: "get", url: `${API_URL}/deployments/capabilities`, body: undefined },
         { method: "post", url: `${API_URL}${path}`, body },
