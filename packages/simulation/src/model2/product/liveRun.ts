@@ -62,7 +62,7 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
         const owner = (id: string) => [...nodeIds].sort((a,b) => b.length-a.length).find(n => id === n || id.startsWith(`${n}#`) || id.startsWith(`${n}/`));
         const affected = [...("resourceId" in r.target ? [r.target.resourceId] : []), ...paths.flatMap(p => [owner(p.source), owner(p.target)]).filter((n): n is string => !!n)];
         const edgeIds = [...new Set(options.filter(o => "edgeId" in o.target && o.affectedPaths.some(p => r.affectedPaths.includes(p))).flatMap(o => "edgeId" in o.target ? [o.target.edgeId] : []))];
-        return [...new Set(affected)].map(resourceId => ({resourceId, durationTicks: (r.endUs! - r.atUs) / SECOND, remainingTicks: (r.endUs! - run.simulatedSeconds * SECOND) / SECOND,
+        return [...new Set(affected)].map(resourceId => ({resourceId, durationTicks: (r.endUs! - r.atUs) / SECOND, remainingTicks: Math.ceil((r.endUs! - run.simulatedSeconds * SECOND) / SECOND),
           intervention: {actionId: r.actionId, label: INTERVENTIONS.find(d => d.id === r.interventionId)!.label, parameters: r.parameters, restoreAtUs: r.endUs!, ...(edgeIds.length ? {edgeIds} : {})}}));
       })],
     traffic: last ? { offeredRps: last.offeredRps, completedRps: last.completedRps, failedRps: last.failedRps, latencyMs: last.latencyMs }

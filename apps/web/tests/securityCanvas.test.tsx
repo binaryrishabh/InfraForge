@@ -99,7 +99,7 @@ test("live nodes and rails show intervention parameters and exact restore time, 
     const resources = [app, db], connectionLines = [{id: "app-db", sourceId: "app", targetId: "db", sourceType: app.type, targetType: db.type, port: 5432}];
     useCanvasStore.setState({resources, connectionLines, liveMode: true});
     canvas.liveMode = true;
-    useSimulationStore.setState({activeChaos: [{resourceId: "db", durationTicks: 2, remainingTicks: 1.000001, intervention: {actionId: "deny", label: "Deny TCP port", parameters: {port: 5432, duration: 2}, restoreAtUs: 3_000_001, edgeIds: ["app-db"]}}]});
+    useSimulationStore.setState({activeChaos: [{resourceId: "db", durationTicks: 2, remainingTicks: 2, intervention: {actionId: "deny", label: "Deny TCP port", parameters: {port: 5432, duration: 2}, restoreAtUs: 3_000_001, edgeIds: ["app-db"]}}]});
     sim.activeChaos = useSimulationStore.getState().activeChaos;
     const node = () => renderToStaticMarkup(<NodeLive deploymentId="run" resource={db} resources={resources} controls={false} />);
     const card = () => renderToStaticMarkup(<NodeCard resource={db} mode="live" />);

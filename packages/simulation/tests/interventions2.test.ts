@@ -151,3 +151,14 @@ for (const port of [443, 5432]) test(`deny-port receipt and live affected paths 
   expect(e.systems.security.policies[0]!.denied > 0).toBe(matching);
   expect(e.data.databases[0]!.transactions.committed > 0).toBe(!matching);
 });
+
+test("live intervention countdown rounds up while preserving the exact restore time", () => {
+  const run = createModel2Run(interventionInput(), 5);
+  run.apply(intervention("session-capacity", {sessions: 0, duration: 2}));
+  for (const remaining of [2, 1]) {
+    advance(run, 1);
+    expect(run.view().activeChaos).toMatchObject([{resourceId: "db", remainingTicks: remaining, intervention: {restoreAtUs: 2_000_001}}]);
+  }
+  advance(run, 1);
+  expect(run.view().activeChaos).toEqual([]);
+});
