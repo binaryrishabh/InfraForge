@@ -1,5 +1,5 @@
 import { interventionOptions, incomingMaterializedLinks } from "./interventions";
-import { interventionError } from "@infraforge/domain/resource";
+import { INTERVENTIONS, interventionError } from "@infraforge/domain/resource";
 import { findSku } from "@infraforge/catalog";
 import { GENERIC_MONTHLY_USD } from "../../cost";
 import { SIMULATION_CONSTANTS } from "../../tuning";
@@ -49,13 +49,22 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
   let target = 1;
   let chaos: Array<{ type: ChaosType; resourceId: string; endsAt: number; duration: number }> = [];
   let last: LiveProjection | null = null;
+  const loggedInterventions = new Set<string>();
 
   const view = (): LiveView => ({
     simulatedSeconds: run.simulatedSeconds, loadFraction: target, targetLoadFraction: target,
     metrics: Object.fromEntries(nodeIds.map((id) => [id, metric(last?.metrics[id])])),
     overallHealth: last?.overallHealth ?? "healthy",
     pools: Object.fromEntries(pools.map((p) => [p.lbId, poolSnapshot(p, last)])),
-    activeChaos: chaos.map((c) => ({ chaosType: c.type, resourceId: c.resourceId, durationTicks: c.duration, remainingTicks: Math.max(0, c.endsAt - run.simulatedSeconds) })),
+    activeChaos: [...chaos.map((c) => ({ chaosType: c.type, resourceId: c.resourceId, durationTicks: c.duration, remainingTicks: Math.max(0, c.endsAt - run.simulatedSeconds) })),
+      ...run.activeInterventions().flatMap(r => {
+        const paths = initial.input.paths.filter(p => r.affectedPaths.includes(p.id));
+        const owner = (id: string) => [...nodeIds].sort((a,b) => b.length-a.length).find(n => id === n || id.startsWith(`${n}#`) || id.startsWith(`${n}/`));
+        const affected = [...("resourceId" in r.target ? [r.target.resourceId] : []), ...paths.flatMap(p => [owner(p.source), owner(p.target)]).filter((n): n is string => !!n)];
+        const edgeIds = [...new Set(options.filter(o => "edgeId" in o.target && o.affectedPaths.some(p => r.affectedPaths.includes(p))).flatMap(o => "edgeId" in o.target ? [o.target.edgeId] : []))];
+        return [...new Set(affected)].map(resourceId => ({resourceId, durationTicks: (r.endUs! - r.atUs) / SECOND, remainingTicks: Math.ceil((r.endUs! - run.simulatedSeconds * SECOND) / SECOND),
+          intervention: {actionId: r.actionId, label: INTERVENTIONS.find(d => d.id === r.interventionId)!.label, parameters: r.parameters, restoreAtUs: r.endUs!, ...(edgeIds.length ? {edgeIds} : {})}}));
+      })],
     traffic: last ? { offeredRps: last.offeredRps, completedRps: last.completedRps, failedRps: last.failedRps, latencyMs: last.latencyMs }
       : { offeredRps: 0, completedRps: 0, failedRps: 0, latencyMs: { p50: null, p95: null } },
   });
@@ -82,7 +91,12 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
       const previous = last;
       last = run.project();
       chaos = chaos.filter((c) => c.endsAt > run.simulatedSeconds);
-      return transitions(previous, last, types);
+      const logs = transitions(previous, last, types);
+      for (const receipt of run.appliedInterventions()) if (!loggedInterventions.has(receipt.actionId)) {
+        loggedInterventions.add(receipt.actionId);
+        logs.push({timestamp: new Date().toISOString(), source: "model-2", severity: "info", message: `${INTERVENTIONS.find(d => d.id === receipt.interventionId)!.label} applied at ${receipt.atUs} us: ${JSON.stringify(receipt.parameters)}${receipt.endUs === null ? " (one-shot)" : `; restores at ${receipt.endUs} us`}.`});
+      }
+      return logs;
     },
     burnRatePerHourUsd() {
       let monthly = 0;

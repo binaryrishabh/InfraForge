@@ -43,7 +43,7 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
       let action = policy.config.default, matched = "default", matchedRule: string | undefined;
       for (const rule of policy.rules) {
         if (count) policy.examined++;
-        if (rule.direction === direction && rule.protocol === "tcp" && port >= requireKnown(rule.fromPort, "count") && port <= requireKnown(rule.toPort, "count") && matches(rule.source, source) && matches(rule.destination, target)) { action = rule.action; matched = opted ? rule.authoredId ?? rule.id : rule.id; matchedRule = matched; break; }
+        if ((rule.direction === direction || rule.direction === "both") && rule.protocol === "tcp" && port >= requireKnown(rule.fromPort, "count") && port <= requireKnown(rule.toPort, "count") && matches(rule.source, source) && matches(rule.destination, target)) { action = rule.action; matched = opted ? rule.authoredId ?? rule.id : rule.id; matchedRule = matched; break; }
       }
       if (action === "deny") return { allowed: false, rule: `${direction}:${matched}`, direction, matchedRule };
     }

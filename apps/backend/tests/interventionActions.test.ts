@@ -9,13 +9,14 @@ import { applyAction } from "../simulator/actionApplication";
 import { actionCompletion } from "../simulator/actionCompletion";
 import { actionDto } from "../actions/contract";
 
-const engine = () => createModel2Run({resources: [{id: "app", type: "Virtual Machine", x: 0, y: 0}, {id: "db", type: "Database", x: 1, y: 0}, {id: "cache", type: "Cache", x: 1, y: 1}] as Resource[],
-  connectionLines: [{id: "db-edge", sourceId: "app", targetId: "db", sourceType: "Virtual Machine", targetType: "Database", port: 5432}, {id: "cache-edge", sourceId: "app", targetId: "cache", sourceType: "Virtual Machine", targetType: "Cache", port: 6379}],
+const engine = () => createModel2Run({resources: [{id: "app", type: "Virtual Machine", x: 0, y: 0}, {id: "db", type: "Database", x: 1, y: 0}, {id: "cache", type: "Cache", x: 1, y: 1}, {id: "firewall", type: "Firewall", x: 2, y: 0}] as Resource[],
+  connectionLines: [{id: "db-edge", sourceId: "app", targetId: "db", sourceType: "Virtual Machine", targetType: "Database", port: 5432}, {id: "cache-edge", sourceId: "app", targetId: "cache", sourceType: "Virtual Machine", targetType: "Cache", port: 6379}, {id: "policy", sourceId: "firewall", targetId: "db", sourceType: "Firewall", targetType: "Database", port: 5432}],
   workloadProfile: resolveWorkload({targetThroughput: 600, throughputUnit: "per-minute", trafficShape: "steady", readWriteRatio: 1, payloadSize: "light"}), seed: "action-proof"}, 6);
 
-for (const flush of [false, true]) test(`intervention completion DTO correlates exact timing and real engine effect, flush=${flush}`, () => {
+for (const kind of ["session-capacity", "flush", "deny-port"]) test(`intervention completion DTO correlates exact timing and real engine effect, kind=${kind}`, () => {
+  const flush = kind === "flush";
   const model2 = engine(), instance = {model2, actions: new Map(), pendingLogs: []} as unknown as SimulationInstance;
-  const request: ActionRequest = {kind: "intervention" as const, parameters: {interventionId: flush ? "flush" : "session-capacity", revision: 1, target: {resourceId: flush ? "cache" : "db"}, parameters: flush ? {} : {sessions: 0, duration: 2}}};
+  const request: ActionRequest = {kind: "intervention" as const, parameters: {interventionId: kind, revision: 1, target: {resourceId: flush ? "cache" : kind === "deny-port" ? "firewall" : "db"}, parameters: flush ? {} : kind === "deny-port" ? {port: 5432, duration: 2} : {sessions: 0, duration: 2}}};
   const applied = applyAction(instance, "durable-1", request);
   expect(applied.status).toBe("running");
   const running = instance.actions.get("durable-1")!;
@@ -26,6 +27,7 @@ for (const flush of [false, true]) test(`intervention completion DTO correlates 
   expect(done).toMatchObject({status: "completed", outcome: {interventionEnded: true}});
   expect(model2.evidence().product.interventions![0]!.phase).toBe("completed");
   if (flush) expect(model2.evidence().data.caches[0]!.epoch).toBe(1);
+  else if (kind === "deny-port") expect(model2.evidence().systems.security.policies[0]!.generation).toBe(3);
   else expect(model2.evidence().data.databases[0]!.sessions.limit).toBe(100);
   const at = new Date(), row = {id: "durable-1", deploymentId: "run", sequence: 1, ...request, status: "completed", requestedAt: at, appliedAt: at, completedAt: at,
     appliedSimulatedSeconds: 0, completedSimulatedSeconds: model2.simulatedSeconds, outcome: done.outcome, failureReason: null} as unknown as StoredAction;

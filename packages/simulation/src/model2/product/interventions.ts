@@ -15,19 +15,30 @@ export function resolveIntervention(design: SavedProductDesign, contract: Produc
   if ("resourceId" in target) {
     const spec = contract.nodes[target.resourceId], resource = design.resources.find(r => r.id === target.resourceId);
     const role = spec?.resources.find(r => r.role === spec.primary), material = input.resources.find(r => r.id === target.resourceId);
-    if (!resource || resource.type !== d.targetKind || !spec || spec.controller || role?.config.kind !== d.mechanism || material?.kind !== d.mechanism) throw Error("INTERVENTION_ROLE: target lacks a fixed declared mechanism role");
-    if (d.id === "cpu-capacity" || d.id === "session-capacity") {
-      if (material.kind !== "relational") throw Error("INTERVENTION_ROLE: relational execution required");
-      authoredBaseline = d.id === "cpu-capacity" ? requireKnown(material.execution.cores, "cores") : requireKnown(material.maxSessions, "count");
+    if (d.id === "deny-port") {
+      if (!resource || resource.type !== "Firewall" || !spec?.firewall || spec.controller || !input.systems.firewalls.some(f => f.id === resource.id)) throw Error("INTERVENTION_ROLE: fixed firewall policy required");
+      resolvedTargets = [resource.id];
+    } else {
+      if (!resource || resource.type !== d.targetKind || !spec || spec.controller || role?.config.kind !== d.mechanism || material?.kind !== d.mechanism) throw Error("INTERVENTION_ROLE: target lacks a fixed declared mechanism role");
+      if (d.id === "cpu-capacity" || d.id === "session-capacity") {
+        if (material.kind !== "relational") throw Error("INTERVENTION_ROLE: relational execution required");
+        authoredBaseline = d.id === "cpu-capacity" ? requireKnown(material.execution.cores, "cores") : requireKnown(material.maxSessions, "count");
+      }
+      resolvedTargets = [material.id];
     }
-    resolvedTargets = [material.id];
   } else {
     if (d.targetKind !== "edge" || !design.connections.some(e => e.id === target.edgeId)) throw Error("INTERVENTION_PATH: semantic edge is absent");
-    const paths = input.paths.filter(p => p.id.startsWith(`${target.edgeId}:`));
+    const edge = design.connections.find(e => e.id === target.edgeId)!, binding = contract.edges[edge.id]!;
+    // Reconstruct the exact compiler key from explicit endpoints and declared roles.
+    const instance = (endpoint: string, node: string, role: string) => role === contract.nodes[node]!.primary ? endpoint : endpoint.slice(0, -(role.length + 1));
+    const paths = input.paths.filter(p => {
+      const source = binding.purpose === "queue-poll" ? p.target : p.source, destination = binding.purpose === "queue-poll" ? p.source : p.target;
+      return p.id === `${edge.id}:${instance(source, edge.sourceId, binding.sourceRole)}:${instance(destination, edge.targetId, binding.targetRole)}`;
+    });
     resolvedTargets = [...new Set(paths.flatMap(p => target.direction === "both" ? [...p.request, ...p.response] : p[target.direction]))].sort();
     if (!resolvedTargets.length || resolvedTargets.some(id => !input.links.some(l => l.id === id))) throw Error("INTERVENTION_PATH: edge has no materialized transport links");
   }
-  const affectedPaths = input.paths.filter(p => [...p.request, ...p.response].some(id => resolvedTargets.includes(id))).map(p => p.id).sort();
+  const affectedPaths = input.paths.filter(p => d.id === "deny-port" ? input.systems.connections.some(c => c.path === p.id && requireKnown(c.port, "count") === Number(request.parameters.port) && c.firewalls.some(id => resolvedTargets.includes(id))) : [...p.request, ...p.response].some(id => resolvedTargets.includes(id))).map(p => p.id).sort();
   if (resolvedTargets.length > 2048 || affectedPaths.length > 2048) throw Error("INTERVENTION_BUDGET: resolved blast radius exceeds receipt budget");
   return {interventionId: d.id, revision: d.revision, target, ...(authoredBaseline === undefined ? {} : {authoredBaseline}), resolvedTargets, affectedPaths};
 }
@@ -73,13 +84,26 @@ export function compileInterventions(design: SavedProductDesign, contract: Produ
     const at = q("at", row.atUs, "us"), duration = durationUs === undefined ? undefined : q("duration", durationUs, "us");
     for (const target of option.resolvedTargets) {
       const common = {id: `${row.id}:${target}`, at, target};
-      if (kind === "flush") input.dataInterventions.push({...common, kind});
+      if (kind === "deny-port") {
+        const baseline = input.systems.firewalls.find(f => f.id === target)!;
+        if (baseline.rules.some(r => requireKnown(r.priority, "count") < 0) || input.systems.interventions.some(i => i.kind === "firewall-rules" && i.target === target && !receipts.some(r => i.id === `${r.actionId}:${target}:start` || i.id === `${r.actionId}:${target}:restore`))) throw Error("INTERVENTION_OVERLAP: ambiguous saved policy update");
+        const ruleId = `intervention:${row.id}:deny-port`;
+        if (baseline.rules.some(r => r.id === ruleId)) throw Error("INTERVENTION_OVERLAP: intervention rule identity conflict");
+        // Opt in only for this run; inferred allow-all baselines remain untouched otherwise.
+        input.securityProfile = "canvas-security/1";
+        input.systems.interventions.push({...common, id: `${common.id}:start`, kind: "firewall-rules", rules: [...baseline.rules, {
+          id: ruleId, direction: "both", protocol: "tcp", source: {kind: "any"}, destination: {kind: "any"},
+          fromPort: q("port", Number(parameters.port), "count"), toPort: q("portEnd", Number(parameters.port), "count"), priority: provenance.q(`intervention.${row.id}.priority`, -1, "count", ["deny-port@1: reserved priority ahead of nonnegative baseline rules"], "implementation-policy"), action: "deny",
+        }]}, {...common, id: `${common.id}:restore`, at: q("restore", endUs!, "us"), kind: "firewall-rules", restore: true, rules: baseline.rules});
+      }
+      else if (kind === "flush") input.dataInterventions.push({...common, kind});
       else if (kind === "session-capacity") input.dataInterventions.push({...common, kind, duration: duration!, sessions: q("sessions", Number(parameters.sessions), "count")});
       else if (kind === "cpu-capacity") input.dataInterventions.push({...common, kind, duration: duration!, cores: q("cores", Number(parameters.cores), "cores")});
-      else if (kind === "delay" || kind === "partition") {
+      else if (kind === "delay" || kind === "partition" || kind === "bandwidth") {
         // Each materialized link retains an exact sourced delay quantity.
         const delay = kind === "delay" ? provenance.q(`intervention.${row.id}.delay.${input.networkInterventions.length}`, Number(parameters.delay), "us", [`intervention delay@1; product policy`], "user-input") : undefined;
-        input.networkInterventions.push(kind === "delay" ? {...common, kind, duration: duration!, delay: delay!} : {...common, kind, duration: duration!});
+        const bandwidth = kind === "bandwidth" ? provenance.q(`intervention.${row.id}.bandwidth.${input.networkInterventions.length}`, Number(parameters.bandwidth), "bytes/s", ["intervention bandwidth@1; product policy"], "user-input") : undefined;
+        input.networkInterventions.push(kind === "bandwidth" ? {...common, kind, duration: duration!, bandwidth: bandwidth!} : kind === "delay" ? {...common, kind, duration: duration!, delay: delay!} : {...common, kind, duration: duration!});
       } else throw Error("INTERVENTION_ADAPTER: no real mechanism adapter");
     }
     receipts.push({...row.request, actionId: row.id, resolvedTargets: option.resolvedTargets, affectedPaths: option.affectedPaths, atUs: row.atUs, endUs});

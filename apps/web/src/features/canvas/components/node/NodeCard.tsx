@@ -43,11 +43,12 @@ export const NodeCard = memo(function NodeCard({ resource, mode }: { resource: R
   const metric = useSimulationStore((s) => (mode === "live" ? s.metrics[resource.id] : undefined));
   const restarting = useSimulationStore((s) => mode === "live" && s.restarting.includes(resource.id));
   const history = useSimulationStore((s) => (mode === "live" ? s.cpuHistory[resource.id] : undefined));
-  const chaos = useSimulationStore((s) => (mode === "live" ? s.activeChaos.find((c) => c.resourceId === resource.id) : undefined));
+  const activeChaos = useSimulationStore((s) => s.activeChaos);
+  const effects = mode === "live" ? activeChaos.filter(c => c.resourceId === resource.id) : [];
+  const chaos = effects[0];
   // A resilience attempt's scheduled fault on this resource: before, during and after its window.
   const plan = useExperimentPlan((s) => (s.plan?.target === resource.id ? s.plan : null));
   const seconds = useSimulationStore((s) => (plan && mode === "live" ? s.simulatedSeconds : 0));
-  const experiment = !!plan && !!chaos && chaos.chaosType === plan.fault;
   const scheduled = plan && mode === "live" && !chaos && seconds < plan.at ? plan : null;
   const ended = plan && mode === "live" && !chaos && seconds >= plan.at + plan.duration ? plan : null;
   const targeted = plan && mode === "design" ? plan : null;
@@ -94,11 +95,11 @@ export const NodeCard = memo(function NodeCard({ resource, mode }: { resource: R
           </div>
         )}
       </div>
-      {chaos && (
-        <div className="if-num flex items-center justify-between border-t border-fail/40 bg-fail-soft px-2.5 py-1 text-[10.5px] font-semibold text-fail">
-          <span>{experiment ? "Experiment" : "Fault"}: {CHAOS_LABELS[chaos.chaosType]}</span><span>{chaos.remainingTicks}s left</span>
+      {effects.map((chaos, index) => (
+        <div key={chaos.intervention?.actionId ?? index} className="if-num flex items-center justify-between border-t border-fail/40 bg-fail-soft px-2.5 py-1 text-[10.5px] font-semibold text-fail">
+          <span>{plan && chaos.chaosType === plan.fault ? "Experiment" : "Fault"}: {(chaos.intervention ? `${chaos.intervention.label} ${JSON.stringify(chaos.intervention.parameters)}; restores at ${chaos.intervention.restoreAtUs} us` : CHAOS_LABELS[chaos.chaosType!])}</span><span>{chaos.remainingTicks}s left</span>
         </div>
-      )}
+      ))}
       {targeted && (
         <div className="if-num truncate border-t border-line bg-surface px-2.5 py-1 text-[10.5px] text-ink-2" title="The challenge experiment targets this resource">Experiment: {(CHAOS_LABELS[targeted.fault as keyof typeof CHAOS_LABELS] ?? targeted.fault).toLowerCase()} at {targeted.at} s</div>
       )}

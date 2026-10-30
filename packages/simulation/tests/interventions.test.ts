@@ -178,3 +178,28 @@ test("shared physical links report all paths and refuse direction aliases before
   const run = createProductModel2(c.value); run.advanceTo(1);
   expect(run.evidence().network.links.find(l => l.id === "transport:shared/common-in")!.addedPropagationUs).toBe(123);
 });
+
+test("active controls follow engine events and clear at the restore microsecond", () => {
+  const f = productFixture({horizon: 4_000_000});
+  const c = compileProduct(f.design, withTimeline(f.contract, [{id: "active", atUs: 1, kind: "intervention", request: intervention("delay", {delay: 100, duration: 2}, {edgeId: f.design.connections[0]!.id, direction: "both"}).parameters}]));
+  if (!c.ok) throw Error(JSON.stringify(c.diagnostics));
+  const run = createProductModel2(c.value);
+  expect(run.activeInterventions()).toEqual([]);
+  run.advanceTo(1); expect(run.activeInterventions()).toHaveLength(1);
+  run.advanceTo(2_000_000); expect(run.activeInterventions()).toHaveLength(1);
+  run.advanceTo(2_000_001); expect(run.activeInterventions()).toEqual([]);
+});
+
+test("edge a never selects materialized paths belonging to a:b", () => {
+  const input = interventionInput();
+  input.connectionLines[0]!.id = "a";
+  input.resources.push({id: "other", type: "Virtual Machine", x: 2, y: 0}, {id: "lb", type: "Load Balancer", x: -1, y: 0});
+  for (const targetId of ["app", "other"]) input.connectionLines.push({id: `lb-${targetId}`, sourceId: "lb", targetId, sourceType: "Load Balancer", targetType: "Virtual Machine", port: 80});
+  input.connectionLines.push({...input.connectionLines[0]!, id: "a:b", sourceId: "other"});
+  const run = createModel2Run(input, 5);
+  const receipt = run.apply(intervention("partition", {duration: 1}, {edgeId: "a", direction: "both"})).outcome.intervention!;
+  expect(receipt.resolvedTargets).toEqual(["a:app:db/request", "a:app:db/response"]);
+  expect(receipt.affectedPaths).toEqual(["a:app:db"]);
+  advance(run, 1);
+  expect(run.evidence().network.links.filter(l => l.id.startsWith("a:b:")).every(l => !l.partitioned)).toBe(true);
+});

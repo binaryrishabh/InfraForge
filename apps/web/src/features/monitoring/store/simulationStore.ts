@@ -84,6 +84,7 @@ export const useSimulationStore = create<SimulationStoreState>()((set, get) => (
           const old = previousChaos[i];
           if (!old || old.resourceId !== next.resourceId ||
               old.chaosType !== next.chaosType ||
+              old.intervention?.actionId !== next.intervention?.actionId ||
               old.remainingTicks !== next.remainingTicks) {
             chaosChanged = true;
             break;

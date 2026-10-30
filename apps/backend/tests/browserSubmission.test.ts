@@ -37,3 +37,19 @@ test("versioned interventions enforce strict parameters, bounds, remaining horiz
   expect(() => submit({...action, atSecond: 899})).toThrow();
   expect(() => checkSubmission({stopAtSecond: 900, actions: [{...action, atSecond: 899}]}, free)).toThrow("BOUNDS");
 });
+
+test("deny-port wire uses the capability bounds and revision", () => {
+  const request = {kind: "intervention", parameters: {interventionId: "deny-port", revision: 1, target: {resourceId: "firewall"}, parameters: {port: 5432, duration: 2}}};
+  const submit = (r: unknown) => checkSubmission({stopAtSecond: 10, actions: [{atSecond: 1, request: r}]}, free);
+  expect(submit(request).actions).toHaveLength(1);
+  for (const port of [0, 65536, 0.5]) expect(() => submit({...request, parameters: {...request.parameters, parameters: {port, duration: 2}}})).toThrow();
+  expect(() => submit({...request, parameters: {...request.parameters, revision: 2}})).toThrow();
+});
+
+test("bandwidth wire refuses invalid bytes/s and revision", () => {
+  const request = {kind: "intervention", parameters: {interventionId: "bandwidth", revision: 1, target: {edgeId: "a", direction: "both"}, parameters: {bandwidth: 1_000_000, duration: 2}}};
+  const submit = (r: unknown) => checkSubmission({stopAtSecond: 10, actions: [{atSecond: 1, request: r}]}, free);
+  expect(submit(request).actions).toHaveLength(1);
+  for (const bandwidth of [0, 1_000_000_001, 0.5]) expect(() => submit({...request, parameters: {...request.parameters, parameters: {bandwidth, duration: 2}}})).toThrow();
+  expect(() => submit({...request, parameters: {...request.parameters, revision: 2}})).toThrow();
+});

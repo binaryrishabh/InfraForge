@@ -26,8 +26,11 @@ const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction:
   capturedAt: timestamp.optional(), topologyRevision: z.number().int().nonnegative().optional(), speed: amount.optional(),
   metricsComputedAt: timestamp.nullable().optional(), metricsTopologyRevision: z.number().int().nonnegative().optional(),
   burnRatePerHourUsd: amount.optional(), targetLoadFraction: amount.max(2).optional(),
-  activeChaos: z.array(z.object({ chaosType: z.enum(DeploymentChaosNames),
-    resourceId: boundedId, durationTicks: amount.int(), remainingTicks: amount.int() })).max(500).optional(),
+  activeChaos: z.array(z.object({ chaosType: z.enum(DeploymentChaosNames).optional(),
+    intervention: z.object({ actionId: boundedId, label: text,
+      parameters: z.record(boundedId, z.union([z.number().finite(), z.boolean(), z.string().max(4000)])).refine(v => Object.keys(v).length <= 32),
+      restoreAtUs: amount.int(), edgeIds: z.array(boundedId).max(2048).optional() }).optional(),
+    resourceId: boundedId, durationTicks: amount.int(), remainingTicks: amount })).max(500).optional(),
   restarting: z.array(boundedId).max(500).optional(), pools: boundedMap(pool).optional(),
   installedSkus: boundedMap(boundedId).optional(),
   metrics: z.unknown().optional() });

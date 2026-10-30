@@ -14,6 +14,7 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({ resourc
   const locked = useCanvasStore((s) => s.liveLocked || s.isDeploying);
   const cardHeights = useCanvasStore((s) => s.cardHeights);
   const metrics = useSimulationStore((s) => (liveMode ? s.metrics : null));
+  const activeChaos = useSimulationStore((s) => (liveMode ? s.activeChaos : null));
   const nodeHeight = liveMode ? NODE_CARD_HEIGHT : DESIGN_CARD_HEIGHT;
   const byId = new Map(resources.map((r) => [r.id, r]));
   return (
@@ -26,12 +27,14 @@ export const ConnectionLinesLayer = memo(function ConnectionLinesLayer({ resourc
         const health = metrics?.[target.id]?.health;
         const security = metrics?.[target.id]?.security;
         const denial = security?.evidence === "complete" ? security.edges.find(e => e.path.startsWith(`${line.id}:`) && e.lastDenial)?.lastDenial : undefined;
-        const securityLabel = denial ? denial.reason === "no-listener" ? "no listener" : denial.reason : undefined;
-        const tone = denial ? "fail" : health === "failed" || health === "saturated" ? "fail" : health === "degraded" ? "warn" : null;
+        const active = activeChaos?.find(c => c.intervention?.edgeIds?.includes(line.id))?.intervention;
+        const interventionLabel = active ? `${active.label} ${JSON.stringify(active.parameters)}; restores at ${active.restoreAtUs} us` : undefined;
+        const securityLabel = interventionLabel ?? (denial ? denial.reason === "no-listener" ? "no listener" : denial.reason : undefined);
+        const tone = active || denial ? "fail" : health === "failed" || health === "saturated" ? "fail" : health === "degraded" ? "warn" : null;
         return (
           <RailConnection key={line.id} source={source} target={target} port={line.port} isSelected={selected} scale={scale}
             nodeWidth={NODE_CARD_WIDTH} sourceHeight={cardHeights[source.id] ?? nodeHeight} targetHeight={cardHeights[target.id] ?? nodeHeight}
-            tone={tone} securityLabel={securityLabel} label={`${source.name || source.id} to ${target.name || target.id}${denial ? `: ${denial.reason}, connection ${denial.connectionId}, selected ${denial.target}:${denial.port}` : ""}`}
+            tone={tone} securityLabel={securityLabel} label={`${interventionLabel ? `${interventionLabel}; ` : ""}${source.name || source.id} to ${target.name || target.id}${denial ? `: ${denial.reason}, connection ${denial.connectionId}, selected ${denial.target}:${denial.port}` : ""}`}
             onSelect={() => { const store = useCanvasStore.getState(); store.setSelectedConnectionId(selected ? null : line.id); store.setSelectedResourceId(null); }}
             onRemove={locked ? undefined : () => deleteConnection(line.id)} />
         );

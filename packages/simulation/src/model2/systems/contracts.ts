@@ -23,7 +23,7 @@ export interface MonitorConfig extends CommandConfig {
 export interface TelemetryConfig extends CommandConfig { id: string; kind: "telemetry-backend"; samples: Quantity<"count"> }
 export type SystemResource = AuthorityConfig | ResolverConfig | CdnConfig | RegistryConfig | StartupConfig | MonitorConfig | TelemetryConfig;
 export interface Scope { kind: "any" | "identity" | "zone" | "cidr"; value?: string }
-export interface FirewallRule { authoredId?: string; id: string; direction: "ingress" | "egress"; protocol: "tcp"; source: Scope; destination: Scope; fromPort: Quantity<"count">; toPort: Quantity<"count">; priority: Quantity<"count">; action: "allow" | "deny" }
+export interface FirewallRule { authoredId?: string; id: string; direction: "ingress" | "egress" | "both"; protocol: "tcp"; source: Scope; destination: Scope; fromPort: Quantity<"count">; toPort: Quantity<"count">; priority: Quantity<"count">; action: "allow" | "deny" }
 export interface FirewallConfig { id: string; profile: "ordered-stateful/1"; default: "allow" | "deny"; maxFlows: Quantity<"count">; rules: FirewallRule[] }
 export interface Listener { resource: string; protocol: "tcp"; port: Quantity<"count">; tls: "plaintext" | "required" | "optional"; certificate?: { names: string[]; issuer: string; notBefore: Quantity<"us">; notAfter: Quantity<"us"> } }
 export interface DialConfig {
@@ -34,7 +34,7 @@ export interface DialConfig {
 export type SystemIntervention = { id: string; at: Quantity<"us"> } & (
   { kind: "dns-record"; target: string; record: AddressRecord } |
   { kind: "cdn-purge"; target: string; key?: string } |
-  { kind: "firewall-rules"; target: string; rules: FirewallRule[] });
+  { kind: "firewall-rules"; target: string; rules: FirewallRule[]; restore?: true });
 export interface SystemsInput extends Omit<AsyncInput, "workloadVersion" | "resources"> {
   securityProfile?: "canvas-security/1";
   workloadVersion: "m2g/1"; resources: Array<AsyncInput["resources"][number] | SystemResource>;

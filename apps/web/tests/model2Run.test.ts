@@ -104,6 +104,7 @@ test("versioned worker actions replay in same-second order with identical quanti
     [2, [action("cpu-capacity", {cores: 0, duration: 1}), action("flush", {}, {resourceId: "cache"})]],
     [4, [action("delay", {delay: 1000, duration: 1}, {edgeId: "app-1-db", direction: "response"})]],
     [6, [action("partition", {duration: 1}, {edgeId: "app-2-db", direction: "request"})]],
+    [8, [action("bandwidth", {bandwidth: 100_000, duration: 1}, {edgeId: "app-1-db", direction: "both"})]],
   ]);
   const submitted: Array<{atSecond: number; request: Parameters<typeof server.apply>[0]}> = [];
   for (let second = 0; second < 10; second++) {
@@ -114,6 +115,8 @@ test("versioned worker actions replay in same-second order with identical quanti
     h.tick(); server.advance();
     expect(h.seconds().at(-1)!.view).toEqual(server.view());
     expect(h.host.actions()).toEqual(server.actions);
+    if (second === 0) expect(server.view().activeChaos.filter(c => c.resourceId === "db")).toMatchObject([{resourceId: "db", intervention: {label: "Session capacity", parameters: {sessions: 0, duration: 1}, restoreAtUs: 1_000_001}}]);
+    if (second === 1) expect(server.view().activeChaos).toEqual([]);
   }
   const done = h.messages.at(-1) as Extract<FromWorker, {type: "done"}>;
   expect(done).toEqual({type: "done", submission: {stopAtSecond: 10, actions: submitted}});
@@ -127,7 +130,8 @@ test("versioned worker actions replay in same-second order with identical quanti
   }
   expect(replay.actions).toEqual(server.actions);
   expect(replay.evidence()).toEqual(h.host.evidence()!);
-  expect(replay.evidence().product.interventions).toHaveLength(5);
+  expect(replay.evidence().product.interventions).toHaveLength(6);
+  expect(h.seconds().some(s => s.logs.some(log => log.message.includes("Flush cache applied at 2000001 us") && log.message.includes("one-shot")))).toBe(true);
 });
 
 test("a challenge worker refuses a free intervention before recording or changing its run", () => {
@@ -153,4 +157,51 @@ test("versioned same-second ordering survives the tenth accepted action", () => 
   expect(changes.map(r => r.quantity.kind === "known" ? r.quantity.value : null)).toHaveLength(11);
   expect(server.evidence().counts.offered).toBeGreaterThan(400);
   expect(server.evidence().counts.offered).toBeLessThan(450); // Final target 1.1, never lexical a9's 0.8.
+});
+
+for (const port of [443, 5432]) test(`deny-port worker messages and serialized replay retain port-specific active state and complete evidence, port=${port}`, () => {
+  const setup = start({horizonSeconds: 6, stopAtSecond: 6});
+  setup.input.resources.push(at("firewall", T.Firewall, 2));
+  setup.input.connectionLines.push(line("firewall", "db", T.Firewall, T.Database));
+  for (const edge of setup.input.connectionLines) if (edge.targetId === "db") edge.port = 5432;
+  const h = harness(setup);
+  h.tick();
+  const request = {kind: "intervention" as const, parameters: {interventionId: "deny-port", revision: 1, target: {resourceId: "firewall"}, parameters: {port, duration: 2}}};
+  for (const parameters of [{port: 0, duration: 2}, {port: 65536, duration: 2}, {port: 1.5, duration: 2}]) {
+    h.host.handle({type: "action", id: "bad", request: {...request, parameters: {...request.parameters, parameters}}});
+    expect(h.messages.at(-1)).toMatchObject({type: "action", ok: false});
+  }
+  h.host.handle({type: "action", id: "revision", request: {...request, parameters: {...request.parameters, revision: 2}}});
+  expect(h.messages.at(-1)).toMatchObject({type: "action", ok: false});
+  h.host.handle({type: "action", id: "deny", request});
+  expect(h.messages.at(-1)).toMatchObject({type: "action", ok: true});
+  h.tick(5);
+  const seconds = h.seconds();
+  expect(seconds[1]!.view.activeChaos.find(c => c.resourceId === "firewall")!.intervention).toMatchObject({label: "Deny TCP port", parameters: {port, duration: 2}, restoreAtUs: 3_000_001});
+  expect(seconds[2]!.view.activeChaos.length).toBeGreaterThan(0);
+  const active = seconds[1]!.view.activeChaos;
+  expect(active.map(c => c.resourceId).sort()).toEqual(port === 5432 ? ["app-1", "app-2", "db", "firewall"] : ["firewall"]);
+  expect(active.flatMap(c => c.intervention?.edgeIds ?? [])).toEqual(port === 5432 ? Array.from({length: 4}, () => ["app-1-db", "app-2-db"]).flat() : []);
+  expect(h.host.evidence()!.product.interventions![0]!.affectedPaths).toEqual(port === 5432 ? ["app-1-db:app-1:db", "app-2-db:app-2:db"] : []);
+  expect(seconds[3]!.view.activeChaos).toEqual([]);
+  const done = h.messages.at(-1) as Extract<FromWorker, {type: "done"}>;
+  const wire = JSON.parse(JSON.stringify(done.submission)) as typeof done.submission;
+  expect(wire.actions).toEqual([{atSecond: 1, request}]);
+  const replay = createModel2Run(JSON.parse(JSON.stringify(setup.input)), 6);
+  for (let second = 0; second < 6; second++) {
+    for (const action of wire.actions.filter(a => a.atSecond === second)) replay.apply(action.request);
+    replay.advance(); expect(replay.view()).toEqual(seconds[second]!.view);
+  }
+  expect(replay.evidence()).toEqual(h.host.evidence()!);
+});
+
+test("worker refuses unsupported bandwidth bounds and revisions before recording", () => {
+  const h = harness();
+  const parameters = {interventionId: "bandwidth", revision: 1, target: {edgeId: "app-1-db", direction: "both" as const}, parameters: {bandwidth: 0, duration: 1}};
+  const before = h.host.evidence();
+  for (const value of [parameters, {...parameters, revision: 2, parameters: {bandwidth: 1000, duration: 1}}]) {
+    h.host.handle({type: "action", id: "bad", request: {kind: "intervention", parameters: value}});
+    expect(h.messages.at(-1)).toMatchObject({type: "action", ok: false});
+  }
+  expect(h.host.actions()).toEqual([]); expect(h.host.evidence()).toEqual(before);
 });

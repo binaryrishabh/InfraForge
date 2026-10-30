@@ -110,7 +110,7 @@ export function CompareView({ comparison: c }: { comparison: RunComparison }) {
                 <p>Topology revision: {s.topologyRevision ?? "unknown"} · measurement revision: {s.metricsTopologyRevision ?? "unknown"} · freshness: {s.measurementFreshness ?? "unknown"}</p>
                 <p>Measurements computed at: {s.metricsComputedAt ?? "not recorded/computed"} · speed: {s.speed ?? "unknown"}×</p>
                 <p>Restarting resources: {s.restarting ? s.restarting.join(", ") || "none" : "unknown"}</p>
-                {s.activeChaos === undefined ? <p>Active faults: unknown.</p> : <ul className="list-disc pl-5">{s.activeChaos.map((f, j) => <li key={j}>{f.chaosType} on {f.resourceId}: {f.remainingTicks} simulated seconds remaining</li>)}</ul>}
+                {s.activeChaos === undefined ? <p>Active faults: unknown.</p> : <ul className="list-disc pl-5">{s.activeChaos.map((f, j) => <li key={j}>{f.intervention ? `${f.intervention.label} ${JSON.stringify(f.intervention.parameters)}; restores at ${f.intervention.restoreAtUs} us` : f.chaosType} on {f.resourceId}: {f.remainingTicks} simulated seconds remaining</li>)}</ul>}
                 {s.installedSkus === undefined ? <p>Installed sizes: unknown.</p> : <ul className="list-disc pl-5">{Object.entries(s.installedSkus).map(([id, sku]) => <li key={id}>{id}: installed {sku}</li>)}</ul>}
                 {s.pools === undefined ? <p>Pool state: unknown.</p> : <ul className="list-disc pl-5">{Object.values(s.pools).map((p) => <li key={p.lbId}>{p.lbId}: {p.currentReplicas} replicas ({p.minReplicas}–{p.maxReplicas}); {p.pending ? `${p.pending.action}, ${p.pending.secondsRemaining} s remaining` : "no pending change"}</li>)}</ul>}
               </div> : <p className="mt-1">No usable final evidence.</p>}
