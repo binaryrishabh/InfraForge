@@ -38,7 +38,7 @@ export function resolveIntervention(design: SavedProductDesign, contract: Produc
     resolvedTargets = [...new Set(paths.flatMap(p => target.direction === "both" ? [...p.request, ...p.response] : p[target.direction]))].sort();
     if (!resolvedTargets.length || resolvedTargets.some(id => !input.links.some(l => l.id === id))) throw Error("INTERVENTION_PATH: edge has no materialized transport links");
   }
-  const affectedPaths = input.paths.filter(p => d.id === "deny-port" ? input.systems.connections.some(c => c.path === p.id && c.firewalls.some(id => resolvedTargets.includes(id))) : [...p.request, ...p.response].some(id => resolvedTargets.includes(id))).map(p => p.id).sort();
+  const affectedPaths = input.paths.filter(p => d.id === "deny-port" ? input.systems.connections.some(c => c.path === p.id && requireKnown(c.port, "count") === Number(request.parameters.port) && c.firewalls.some(id => resolvedTargets.includes(id))) : [...p.request, ...p.response].some(id => resolvedTargets.includes(id))).map(p => p.id).sort();
   if (resolvedTargets.length > 2048 || affectedPaths.length > 2048) throw Error("INTERVENTION_BUDGET: resolved blast radius exceeds receipt budget");
   return {interventionId: d.id, revision: d.revision, target, ...(authoredBaseline === undefined ? {} : {authoredBaseline}), resolvedTargets, affectedPaths};
 }

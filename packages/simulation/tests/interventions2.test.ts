@@ -135,3 +135,19 @@ test("bandwidth compile refuses invalid bounds, revision and overlapping aliases
   const c = compileProduct(design, {...contract, interventions: [{id: "one", atUs: 1, request}, {id: "two", atUs: 1, request: {...request, target: {edgeId: "edge-1", direction: "request"}}}]});
   expect(c.ok).toBe(false); expect(c.diagnostics[0]!.message).toContain("OVERLAP");
 });
+
+for (const port of [443, 5432]) test(`deny-port receipt and live affected paths match the dialed port ${port}`, () => {
+  const design = securityDesign();
+  const run = createModel2Run({resources: design.resources, connectionLines: design.connections, workloadProfile: resolveWorkload(design.workload!), seed: "port-specific"}, 5);
+  const receipt = run.apply(intervention("deny-port", {port, duration: 2}, {resourceId: "firewall"})).outcome.intervention!;
+  const matching = port === 5432;
+  expect(receipt.affectedPaths).toEqual(matching ? ["edge-1:app:db"] : []);
+  advance(run, 1);
+  const active = run.view().activeChaos;
+  expect(active.map(c => c.resourceId).sort()).toEqual(matching ? ["app", "db", "firewall"] : ["firewall"]);
+  expect(active.flatMap(c => c.intervention?.edgeIds ?? [])).toEqual(matching ? ["edge-1", "edge-1", "edge-1"] : []);
+  const e = run.evidence();
+  expect(e.product.interventions![0]!.affectedPaths).toEqual(receipt.affectedPaths);
+  expect(e.systems.security.policies[0]!.denied > 0).toBe(matching);
+  expect(e.data.databases[0]!.transactions.committed > 0).toBe(!matching);
+});

@@ -159,13 +159,14 @@ test("versioned same-second ordering survives the tenth accepted action", () => 
   expect(server.evidence().counts.offered).toBeLessThan(450); // Final target 1.1, never lexical a9's 0.8.
 });
 
-test("deny-port worker messages and serialized replay retain active state and complete evidence", () => {
+for (const port of [443, 5432]) test(`deny-port worker messages and serialized replay retain port-specific active state and complete evidence, port=${port}`, () => {
   const setup = start({horizonSeconds: 6, stopAtSecond: 6});
   setup.input.resources.push(at("firewall", T.Firewall, 2));
   setup.input.connectionLines.push(line("firewall", "db", T.Firewall, T.Database));
+  for (const edge of setup.input.connectionLines) if (edge.targetId === "db") edge.port = 5432;
   const h = harness(setup);
   h.tick();
-  const request = {kind: "intervention" as const, parameters: {interventionId: "deny-port", revision: 1, target: {resourceId: "firewall"}, parameters: {port: 443, duration: 2}}};
+  const request = {kind: "intervention" as const, parameters: {interventionId: "deny-port", revision: 1, target: {resourceId: "firewall"}, parameters: {port, duration: 2}}};
   for (const parameters of [{port: 0, duration: 2}, {port: 65536, duration: 2}, {port: 1.5, duration: 2}]) {
     h.host.handle({type: "action", id: "bad", request: {...request, parameters: {...request.parameters, parameters}}});
     expect(h.messages.at(-1)).toMatchObject({type: "action", ok: false});
@@ -176,8 +177,12 @@ test("deny-port worker messages and serialized replay retain active state and co
   expect(h.messages.at(-1)).toMatchObject({type: "action", ok: true});
   h.tick(5);
   const seconds = h.seconds();
-  expect(seconds[1]!.view.activeChaos.find(c => c.resourceId === "firewall")!.intervention).toMatchObject({label: "Deny TCP port", parameters: {port: 443, duration: 2}, restoreAtUs: 3_000_001});
+  expect(seconds[1]!.view.activeChaos.find(c => c.resourceId === "firewall")!.intervention).toMatchObject({label: "Deny TCP port", parameters: {port, duration: 2}, restoreAtUs: 3_000_001});
   expect(seconds[2]!.view.activeChaos.length).toBeGreaterThan(0);
+  const active = seconds[1]!.view.activeChaos;
+  expect(active.map(c => c.resourceId).sort()).toEqual(port === 5432 ? ["app-1", "app-2", "db", "firewall"] : ["firewall"]);
+  expect(active.flatMap(c => c.intervention?.edgeIds ?? [])).toEqual(port === 5432 ? Array.from({length: 4}, () => ["app-1-db", "app-2-db"]).flat() : []);
+  expect(h.host.evidence()!.product.interventions![0]!.affectedPaths).toEqual(port === 5432 ? ["app-1-db:app-1:db", "app-2-db:app-2:db"] : []);
   expect(seconds[3]!.view.activeChaos).toEqual([]);
   const done = h.messages.at(-1) as Extract<FromWorker, {type: "done"}>;
   const wire = JSON.parse(JSON.stringify(done.submission)) as typeof done.submission;
