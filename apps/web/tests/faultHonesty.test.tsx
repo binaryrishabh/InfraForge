@@ -68,3 +68,12 @@ test("one-shot intervention with valid empty parameters has no validation alert"
   capabilities([{ interventionId: "flush", revision: 1, target: { resourceId: "cache" }, resolvedTargets: [], affectedPaths: [] }]);
   expect(render()).not.toContain('role="alert"');
 });
+
+test("parallel edges with identical display names fall back to distinct ids and directions", () => {
+  initial.connectionLines = [...lines, { ...lines[0]!, id: "parallel-edge-8", port: 6432 }];
+  capabilities(initial.connectionLines.map(line => ({ interventionId: "delay", revision: 1, target: { edgeId: line.id, direction: "request" }, resolvedTargets: [], affectedPaths: [] })));
+  const html = render();
+  expect(html).toContain(">opaque-edge-7 (request)</option>");
+  expect(html).toContain(">parallel-edge-8 (request)</option>");
+  expect(html).not.toContain(">Upload API → Orders database (request)</option>");
+});

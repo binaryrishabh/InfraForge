@@ -44,7 +44,8 @@ function InterventionControl({ deploymentId, resources, fixedTarget }: Props) {
   const label = (t: InterventionTarget) => {
     if ("resourceId" in t) return name(t.resourceId);
     const edge = lines.find(line => line.id === t.edgeId);
-    return `${edge ? `${name(edge.sourceId)} → ${name(edge.targetId)}` : t.edgeId} (${t.direction})`;
+    const ambiguous = edge && lines.some(other => other.id !== edge.id && name(other.sourceId) === name(edge.sourceId) && name(other.targetId) === name(edge.targetId));
+    return `${edge && !ambiguous ? `${name(edge.sourceId)} → ${name(edge.targetId)}` : t.edgeId} (${t.direction})`;
   };
   return <ControlBlock title="Apply an intervention" aside="Product policy v1">
     <div className="flex flex-col gap-2">
