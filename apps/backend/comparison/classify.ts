@@ -59,7 +59,7 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
   if (challengeConditions === "different") unknown.push(fact("challenge-conditions", rows[0].challengeId === rows[1].challengeId
     ? `These attempts ran under different versions or recorded conditions of the same challenge (version ${rows[0].challengeVersion} and version ${rows[1].challengeVersion}). Their challenge results were judged by different rules.`
     : "These runs are attempts at different challenges, judged by different rules.", challengeSources));
-  if (starting.grade === "side-by-side-only") unknown.push(fact("provenance", "Missing/different model or catalog provenance, input versions or ambiguous starting topology permit descriptive comparison only.", ["runInputs"]));
+  if (starting.grade === "side-by-side-only") unknown.push(fact("provenance", starting.compatibilityReason ?? "Missing/different model or catalog provenance, input versions or ambiguous starting topology permit descriptive comparison only.", ["runInputs"]));
   for (const reason of conduct.reasons) unknown.push(fact(`conduct-${unknown.length}`, reason, ["RunAction", "chaosEvents"]));
   if (!exact) unknown.push(fact("checkpoint", "Diagnostic checkpoints may predate teardown. Final-state deltas are withheld unless both snapshots are exact terminal captures.", ["simulationState", "terminalSnapshot"]));
   const shared = [...new Set([...(a?.resources ?? []).map((r) => r.id), ...(b?.resources ?? []).map((r) => r.id)])].sort();

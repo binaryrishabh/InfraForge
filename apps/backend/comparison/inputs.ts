@@ -5,6 +5,8 @@ import { canonical, designDifference, fields, normalizedTopology, unambiguous } 
 export function compareInputs(a: RunInputs | null, b: RunInputs | null): StartingComparison {
   const known = !!a && !!b && unambiguous(a) && unambiguous(b);
   const eq = (x: unknown, y: unknown) => canonical(x) === canonical(y) ? "same" as const : "different" as const;
+  const profiles = (v: RunInputs | null) => v?.version === 2 ? [...(v.adapterProfiles ?? [])].sort() : [];
+  const profilesDiffer = !!a && !!b && eq(profiles(a), profiles(b)) === "different";
   const facets: StartingComparison["facets"] = {
     inputVersion: a && b ? eq(a.version, b.version) : "unknown",
     model: a?.version === 2 && b?.version === 2 ? eq(a.simulationModelVersion, b.simulationModelVersion) : "unknown",
@@ -13,8 +15,9 @@ export function compareInputs(a: RunInputs | null, b: RunInputs | null): Startin
     seed: a && b ? eq(a.seed, b.seed) : "unknown",
     topology: known ? eq(normalizedTopology(a!), normalizedTopology(b!)) : "unknown",
     resourceOrder: known ? eq(a!.resources.map((r) => r.id), b!.resources.map((r) => r.id)) : "unknown",
+    ...(profilesDiffer ? { adapterProfiles: "different" as const } : {}),
   };
-  const compatible = known && facets.inputVersion === "same" && facets.model === "same" && facets.catalog === "same";
+  const compatible = known && facets.inputVersion === "same" && facets.model === "same" && facets.catalog === "same" && !profilesDiffer;
   const designChanged = facets.topology === "different" || facets.resourceOrder === "different";
   const count = Number(designChanged) + Number(facets.workload === "different") + Number(facets.seed === "different");
   const grade = !compatible ? "side-by-side-only" : count === 0 ? "same-starting-point" : count > 1 ? "several-things-changed" :
@@ -29,6 +32,6 @@ export function compareInputs(a: RunInputs | null, b: RunInputs | null): Startin
     alignment.code = alignment.shifted.length ? "shifted" : "aligned";
   }
   if (known && (!capturedOrderPreserved(a!) || !capturedOrderPreserved(b!))) alignment.scope += " Numeric object-key ordering differs from captured array order; positional alignment is unknown for this pair.";
-  return { grade, facets, alignment, design: known ? designDifference(a!, b!) : null,
+  return { grade, facets, alignment, ...(profilesDiffer ? { compatibilityReason: "Captured adapter profile selections differ; these runs use different replay semantics and permit descriptive comparison only." } : {}), design: known ? designDifference(a!, b!) : null,
     workload: a && b ? fields({ ...a.workloadProfile }, { ...b.workloadProfile }) : [] };
 }

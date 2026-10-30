@@ -1,6 +1,17 @@
 import { test, expect } from "bun:test";
 import { applicationFlowError, type ApplicationFlow } from "../src/resource";
 const valid = (): ApplicationFlow => ({ schema: "application-flow/1", operations: { read: { steps: [{ id: "cpu", kind: "compute" }, { id: "join", kind: "parallel", wait: 2, branches: [{ id: "a", kind: "call", edge: "edge-a" }, { id: "b", kind: "call", edge: "edge-b" }] }] } } });
+test("/3 inherits typed data validation and queue edges require exact publish use", () => {
+  const source: Resource = { id: "app", type: "Virtual Machine", x: 0, y: 0, applicationFlow: { schema: "application-flow/3", operations: { write: { steps: [{ id: "p", kind: "publish", edge: "queue-edge" }] } } } };
+  expect(applicationFlowError(source.type, source.applicationFlow)).toBeUndefined();
+  expect(validateConnection(source.type, "Message Queue", { source, connectionId: "queue-edge" }).valid).toBe(true);
+  expect(validateConnection(source.type, "Message Queue", { source, connectionId: "other" }).valid).toBe(false);
+  expect(validateConnection(source.type, "Message Queue", "draw").valid).toBe(true);
+  source.applicationFlow!.operations.write!.steps = [{ id: "d", kind: "data", edge: "db-edge", operation: "write" }];
+  expect(applicationFlowError(source.type, source.applicationFlow)).toBeUndefined();
+  expect(validateConnection(source.type, "Database", { source, connectionId: "db-edge" }).valid).toBe(true);
+  expect(validateConnection(source.type, "Database", { source, connectionId: "other" }).valid).toBe(false);
+});
 test("flow v1 accepts only bounded persisted steps and single-call branches", () => {
   expect(applicationFlowError("Virtual Machine", undefined)).toBeUndefined();
   expect(applicationFlowError("Virtual Machine", valid())).toBeUndefined();

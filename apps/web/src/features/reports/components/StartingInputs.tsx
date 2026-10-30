@@ -3,7 +3,7 @@ import { StatusMark } from "@/ui/StatusMark";
 import { GRADE_LABEL } from "../labels";
 
 const FACET_LABEL: Record<keyof StartingComparison["facets"], string> = {
-  inputVersion: "Input format", model: "Simulation model", catalog: "Catalog", workload: "Workload", seed: "Seed", topology: "Design", resourceOrder: "Resource order",
+  inputVersion: "Input format", model: "Simulation model", catalog: "Catalog", workload: "Workload", seed: "Seed", topology: "Design", resourceOrder: "Resource order", adapterProfiles: "Captured replay profiles",
 };
 const edge = (e: { sourceId: string; targetId: string; port: number }) => `${e.sourceId} → ${e.targetId}:${e.port}`;
 
@@ -14,6 +14,7 @@ export function StartingInputs({ starting, detailed = false }: { starting: Start
   return (
     <div className="flex min-w-0 flex-col gap-4 text-sm">
       <p className="text-[15px] font-semibold text-ink">{GRADE_LABEL[starting.grade]}</p>
+      {starting.compatibilityReason && <p>{starting.compatibilityReason}</p>}
       <ul className="grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
         {(Object.keys(starting.facets) as Array<keyof StartingComparison["facets"]>).map((field) => {
           const value = starting.facets[field];

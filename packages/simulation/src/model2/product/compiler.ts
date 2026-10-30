@@ -211,10 +211,41 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
         const workers = queue && design.connections.filter(e => e.sourceId === queue.id).map(e => nodes.get(e.targetId)!).filter(n => n.asyncWorker?.enabled);
         const stores = design.connections.filter(e => e.sourceId === r.id && nodes.get(e.targetId)?.type === "Object Storage");
         const worker = workers?.[0], store = stores[0];
-        if (r.applicationFlow!.schema !== "application-flow/3" || contract.applicationFlowProfile !== "application-flow/3" || !drawn || !binding || queue?.type !== "Message Queue" || !queue.asyncQueue?.enabled || binding.purpose !== "consumer" || binding.sourceRole !== "publisher" || binding.targetRole !== contract.nodes[queue.id]!.primary || publisher?.kind !== "async-publisher") throw Error("Publish needs its enabled attached queue and producer publisher helper");
-        if (contract.caller.entry !== `$${r.id}` || r.autoscaling?.enabled || r.asyncWorker?.enabled || design.connections.some(e => e.targetId === r.id && ["Virtual Machine", "Load Balancer", "CDN"].includes(nodes.get(e.sourceId)!.type)) || design.connections.filter(e => e.targetId === queue.id && nodes.get(e.sourceId)?.type === "Virtual Machine").length !== 1 || design.connections.filter(e => e.sourceId === r.id && nodes.get(e.targetId)?.type === "Message Queue").length !== 1 || workers?.length !== 1 || !worker || worker.autoscaling?.enabled || stores.length !== 1 || !store || design.connections.filter(e => e.sourceId === worker.id && nodes.get(e.targetId)?.type === "Object Storage").length !== 1 || !design.connections.some(e => e.sourceId === worker.id && e.targetId === store.targetId) || design.connections.some(e => [r.id, worker.id].includes(e.sourceId) && ["Database", "Cache"].includes(nodes.get(e.targetId)!.type))) throw Error("Publish requires a fixed direct-entry producer and one worker sharing the same attached object store");
+        if (r.applicationFlow!.schema !== "application-flow/3"
+          || contract.applicationFlowProfile !== "application-flow/3"
+          || !drawn
+          || !binding
+          || queue?.type !== "Message Queue"
+          || !queue.asyncQueue?.enabled
+          || binding.purpose !== "consumer"
+          || binding.sourceRole !== "publisher"
+          || binding.targetRole !== contract.nodes[queue.id]!.primary
+          || publisher?.kind !== "async-publisher") throw Error("Publish needs its enabled attached queue and producer publisher helper");
+        if (contract.caller.entry !== `$${r.id}`
+          || r.autoscaling?.enabled
+          || r.asyncWorker?.enabled
+          || design.connections.some(e => e.targetId === r.id && ["Virtual Machine", "Load Balancer", "CDN"].includes(nodes.get(e.sourceId)!.type))
+          || design.connections.filter(e => e.targetId === queue.id && nodes.get(e.sourceId)?.type === "Virtual Machine").length !== 1
+          || design.connections.filter(e => e.sourceId === r.id && nodes.get(e.targetId)?.type === "Message Queue").length !== 1
+          || workers?.length !== 1
+          || !worker
+          || worker.autoscaling?.enabled
+          || stores.length !== 1
+          || !store
+          || design.connections.filter(e => e.sourceId === worker.id && nodes.get(e.targetId)?.type === "Object Storage").length !== 1
+          || !design.connections.some(e => e.sourceId === worker.id && e.targetId === store.targetId)
+          || design.connections.some(e => [r.id, worker.id].includes(e.sourceId) && ["Database", "Cache"].includes(nodes.get(e.targetId)!.type))) throw Error("Publish requires a fixed direct-entry producer and one worker sharing the same attached object store");
         const workerOwner = materialized.get(ref(`$${worker.id}`));
-        if (publisher.broker !== ref(`$${queue.id}`) || publisher.store !== ref(`$${store.targetId}`) || publisher.namespace !== "uploads" || requireKnown(publisher.objectBytes, "bytes") !== 1024 || requireKnown(publisher.messageBytes, "bytes") !== 128 || requireKnown(publisher.delay, "us") !== 0 || requireKnown(publisher.publishAttempts, "count") !== 1 || workerOwner?.kind !== "async-worker" || workerOwner.broker !== publisher.broker || workerOwner.store !== publisher.store) throw Error("Publish must preserve the existing upload payload, store, worker and single-attempt policy");
+        if (publisher.broker !== ref(`$${queue.id}`)
+          || publisher.store !== ref(`$${store.targetId}`)
+          || publisher.namespace !== "uploads"
+          || requireKnown(publisher.objectBytes, "bytes") !== 1024
+          || requireKnown(publisher.messageBytes, "bytes") !== 128
+          || requireKnown(publisher.delay, "us") !== 0
+          || requireKnown(publisher.publishAttempts, "count") !== 1
+          || workerOwner?.kind !== "async-worker"
+          || workerOwner.broker !== publisher.broker
+          || workerOwner.store !== publisher.store) throw Error("Publish must preserve the existing upload payload, store, worker and single-attempt policy");
         return { id: c.id, kind: "publish" as const, target: publisher.id, edge: c.edge, operation: "write" as const };
       };
       if (r.applicationFlow.schema === "application-flow/3" && design.connections.some(e => e.sourceId === r.id && nodes.get(e.targetId)?.asyncQueue?.enabled) && !Object.values(r.applicationFlow.operations).some(f => f.steps.some(s => s.kind === "publish"))) throw Error("An attached upload queue needs an authored publish step");

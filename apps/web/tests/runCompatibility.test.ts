@@ -15,7 +15,7 @@ const starts = [
 ];
 
 test("older or unknown backend refuses all freeform starts before creating a waiting run", async () => {
-  for (const runContract of [undefined, null, 0, -1, "1", 1.5]) {
+  for (const runContract of [undefined, null, 0, -1, "1", 1.5, RUN_CONTRACT - 1]) {
     for (const { start } of starts) {
       const requests: string[] = [];
       http.defaults.adapter = async (config) => {

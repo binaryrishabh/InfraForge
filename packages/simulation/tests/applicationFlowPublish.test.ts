@@ -7,6 +7,7 @@ import { createProductModel2 } from "../src/model2/product/run";
 import { withRunLength } from "../src/model2/product/runContract";
 import { validateDataFlowEffects } from "../src/model2/data/flowEffects";
 import { dataAdapter } from "../src/model2/async/validate";
+import { asyncAdapter } from "../src/model2/systems/validate";
 import type { ProductContract, SavedProductDesign } from "../src/model2/product/contracts";
 import { applicationFlowError } from "@infraforge/domain/resource";
 
@@ -70,6 +71,20 @@ test("slow worker and small queue expose broker-capacity refusal; rejected publi
   expect(e.asynchronous.workers[0]!.effects).toBeLessThan(e.asynchronous.brokers[0]!.accepted);
 });
 
+test("queue command refusal and timeout retain their observed reply reasons without retry", () => {
+  for (const reason of ["command-queue-full", "command-timeout"]) {
+    const { evidence: e } = run(canvas(20), c => {
+      const q = quantities(), queue = c.nodes.queue!.resources[0]!.config; if (queue.kind !== "delivery-queue") throw Error("queue");
+      queue.concurrency = q.q("proof.command-concurrency", 1, "count"); queue.pending = q.q("proof.command-pending", 0, "count");
+      queue.demands.publish!.wait = q.q("proof.command-wait", 200000, "us");
+      if (reason === "command-timeout") queue.timeout = q.q("proof.command-timeout", 1000, "us");
+      c.ledger.push(...q.ledger);
+    });
+    expect(terminals(e).some(t => t.detail.replyReason === reason && t.detail.confirmation === "refused" && t.detail.ambiguous === false)).toBe(true);
+    expect(e.asynchronous.publishers[0]!.publishAttempts).toBe(80);
+  }
+});
+
 test("upload refusal, transport pool overflow and lost confirmation preserve stage, Unknown and observed cause", () => {
   const upload = run(canvas(), c => { const q = quantities(), store = c.nodes.store!.resources[0]!.config; if (store.kind !== "object-store") throw Error("store"); store.capacity = q.q("proof.store-full", 1024, "bytes"); c.ledger.push(...q.ledger); }).evidence;
   expect(upload.asynchronous.publishers[0]).toMatchObject({ uploaded: 0, publishAttempts: 0 });
@@ -102,14 +117,14 @@ test("saved publish rejects old schema, read, second publish, arbitrary fields, 
   ];
   for (const change of changes) { const d = canvas(); change(d); expect(contractFromDesign(d)).toHaveProperty("refused"); }
   const d = canvas(), built = contractFromDesign(d); if ("refused" in built) throw Error("build");
-  built.contract.application.operations.find(o => o.id === "write")!.idempotency = "idempotent";
+  built.contract.application!.operations.find(o => o.id === "write")!.idempotency = "idempotent";
   expect(compileProduct(d, built.contract).ok).toBe(false);
   expect(applicationFlowError("Virtual Machine", canvas().resources[0]!.applicationFlow)).toBeUndefined();
 });
 
 test("mixed /1-/2-/3 parallel service and LB branches cannot hide publish, even with a falsely safe operation", () => {
   for (const schema of ["application-flow/1", "application-flow/2", "application-flow/3"] as const) for (const wait of [1, "all"] as const) for (const lb of [false, true]) {
-    const input = dataAdapter(compile().input), producer = input.resources.find(r => r.id === "app"); if (producer?.kind !== "compute") throw Error("app");
+    const input = dataAdapter(asyncAdapter(compile().input)), producer = input.resources.find(r => r.id === "app"); if (producer?.kind !== "compute") throw Error("app");
     input.operations.find(o => o.id === "write")!.idempotency = "idempotent";
     input.resources.push({ ...structuredClone(producer), id: "parent", applicationFlow: { schema, operations: { write: { steps: [{ id: "fan", kind: "parallel", wait, branches: [{ id: "producer", kind: "call", target: lb ? "lb" : "app" }, { id: "leaf", kind: "call", target: "leaf" }] }] } } } }, { ...structuredClone(producer), id: "leaf", applicationFlow: undefined });
     if (lb) input.resources.push({ id: "lb", kind: "load-balancer", backends: ["app"] } as never);
@@ -121,6 +136,45 @@ test("captured /3 selection is authoritative and /2 is only selected for actual 
   const d = canvas(); expect(currentAdapterProfiles(d.resources)).toEqual(["failure-cause/1", "application-flow/3"]);
   expect(contractFromDesign(d, { adapterProfiles: [] })).toHaveProperty("refused");
   expect(contractFromDesign(d, { adapterProfiles: ["application-flow/2"] })).toHaveProperty("refused");
-  d.resources.find(r => r.id === "worker")!.applicationFlow = { schema: "application-flow/2", operations: { read: { steps: [{ id: "c", kind: "compute" }] } } };
+  d.resources.push({ id: "service", type: "Virtual Machine", x: 0, y: 0, applicationFlow: { schema: "application-flow/2", operations: { read: { steps: [{ id: "c", kind: "compute" }] } } } });
+  d.connections.push({ id: "app-service", sourceId: "app", targetId: "service", sourceType: "Virtual Machine", targetType: "Virtual Machine", port: 80 });
+  d.resources[0]!.applicationFlow!.operations.write!.steps.unshift({ id: "call-service", kind: "call", edge: "app-service", operation: "read" });
   expect(currentAdapterProfiles(d.resources)).toEqual(["failure-cause/1", "application-flow/2", "application-flow/3"]);
+  expect(run(d).evidence.counts.completed).toBe(4);
+});
+
+test("caller cancellation before dispatch and during upload/confirmation freezes the flow without rolling back accepted work", () => {
+  for (const timeout of [100, 6500, 7200]) {
+    const { evidence: e } = run(canvas(), c => {
+      const q = quantities(); c.application!.operations.find(o => o.id === "write")!.callerTimeout = q.q("proof.caller-stop", timeout, "us"); c.ledger.push(...q.ledger);
+    });
+    expect(e.counts.completed).toBe(0);
+    expect(e.results).toHaveLength(4);
+    expect(e.applicationFlow!.events.some(e => e.kind === "flow-step-start" && e.detail.step === "after" && e.work?.offeredAt === 0)).toBe(false);
+    expect(terminals(e).length).toBeLessThanOrEqual(4);
+    if (timeout === 100) expect(e.asynchronous.publishers[0]!.publishAttempts).toBe(0);
+    else {
+      expect(e.asynchronous.publishers[0]!.publishAttempts).toBe(4);
+      expect(e.asynchronous.brokers[0]!.accepted).toBe(4);
+      expect(e.asynchronous.workers[0]!.effects).toBe(4);
+      expect(terminals(e).find(t => t.work?.offeredAt === 0)!.detail).toMatchObject({ outcome: "cancelled-after-stop", confirmation: "Unknown", ambiguous: true });
+    }
+  }
+});
+
+test("pause parks the publish continuation; /3 evidence and child budgets stay bounded", () => {
+  const compiled = compile(), q = quantities();
+  compiled.input.faults.push({ id: "pause-confirm", target: "app", kind: "pause-service", at: q.q("proof.pause-at", 7000, "us"), duration: q.q("proof.pause-duration", 10000, "us") }); compiled.input.ledger.push(...q.ledger);
+  const runtime = createProductModel2(compiled); runtime.advanceTo(16000);
+  expect(runtime.evidence().applicationFlow!.events.some(e => e.kind === "flow-step-start" && e.detail.step === "after")).toBe(false);
+  runtime.advanceTo(4000000); const e = runtime.evidence();
+  expect(e.applicationFlow!.events.find(e => e.kind === "flow-step-start" && e.detail.step === "after")!.atUs).toBe(17000);
+  expect(compiled.input.limits.maxLiveCalls).toBe(600000); // owner + two CPU rows + helper/upload/publish
+  expect(compiled.input.limits.maxEvents).toBe(6000000);
+  expect(e.capture.failure).toBeNull();
+  expect(new TextEncoder().encode(JSON.stringify(e.applicationFlow)).length).toBeLessThanOrEqual(1024 * 1024);
+  const bounded = compile(canvas(100)); bounded.input.limits.maxRawResults = 10;
+  const limited = createProductModel2(bounded); limited.advanceTo(4000000); const flow = limited.evidence().applicationFlow!;
+  expect(flow.retained).toBe(10); expect(flow.omitted).toBeGreaterThan(0);
+  expect(Object.values(flow.totals).reduce((n, v) => n + v, 0)).toBe(flow.retained + flow.omitted);
 });

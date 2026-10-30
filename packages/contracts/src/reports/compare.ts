@@ -13,7 +13,8 @@ export interface DesignDifference {
 }
 export interface StartingComparison {
   grade: StartingGrade;
-  facets: Record<"inputVersion" | "model" | "catalog" | "workload" | "seed" | "topology" | "resourceOrder", "same" | "different" | "unknown">;
+  facets: Record<"inputVersion" | "model" | "catalog" | "workload" | "seed" | "topology" | "resourceOrder", "same" | "different" | "unknown"> & { adapterProfiles?: "same" | "different" };
+  compatibilityReason?: string;
   design: DesignDifference | null; workload: FieldDifference[];
   alignment: { code: "aligned" | "shifted" | "unknown"; aligned: string[]; shifted: Array<{ id: string; earlierPosition: number; laterPosition: number }>; scope: string };
 }

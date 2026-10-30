@@ -8,6 +8,6 @@ export type * from "./DeploymentTimeline.interface";
 export * from "./DeploymentTimelineEventNames.enum";
 export type * from "./CapabilityAvailability.interface";
 
-// Browser replay contract 1 includes timed interventions. Increase when new
+// Browser replay contract 2 includes sequential confirm-wait publish. Increase when new
 // browser actions or replay semantics require a newer server.
-export const RUN_CONTRACT = 1;
+export const RUN_CONTRACT = 2;
