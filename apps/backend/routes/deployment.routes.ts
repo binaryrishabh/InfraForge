@@ -10,7 +10,7 @@ import { readRecordedExperiment } from "../challenges/experiment";
 import { runtimeHorizon } from "../deployments/operationalLimits";
 import { checkSubmission } from "../browserRuns/submission";
 import { storedJson } from "../utils/json";
-import { DeploymentStatus } from "@infraforge/contracts/deployment";
+import { DeploymentStatus, RUN_CONTRACT } from "@infraforge/contracts/deployment";
 import { reportRouter } from "../reports/routes";
 import { actionRouter } from "../actions/routes";
 import { rerunRouter } from "../reruns/routes";
@@ -42,7 +42,8 @@ deploymentRouter.post("/", async (req, res) => {
 
 deploymentRouter.get("/capabilities", (_req, res) => {
   const subject = { ownerId: res.locals.userId };
-  res.json({ success: true, availability: {
+  res.setHeader("Cache-Control", "no-store");
+  res.json({ success: true, runContract: RUN_CONTRACT, availability: {
     run: authorizeCapability(subject, { capability: "run.start", purpose: "engineer", engine: "1", profile: null, durationSeconds: null }),
     save: authorizeCapability(subject, { capability: "design.persist", operation: "create", countDelta: 1 }),
     export: authorizeCapability(subject, { capability: "artifact.export", artifactId: "availability", format: "html", scope: "run" }),

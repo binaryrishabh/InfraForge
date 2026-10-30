@@ -1,4 +1,5 @@
 import { useCapabilityAvailability } from "@/api/capabilities.api";
+import { errorMessage } from "@/api/errorMessage";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { RotateCw } from "lucide-react";
@@ -76,7 +77,7 @@ function Form({ id, options, close, onBusy }: { id: string; options: RerunOption
         // A rerun is always a freeform run, even when its source was a challenge attempt.
         store.setCurrentChallengeId(null);
         navigate("/design"); close();
-      } catch { setError("The rerun was not created. The source or design may have changed, or your session ended. Close and reopen to refresh."); }
+      } catch (error) { setError(errorMessage(error, "The rerun was not created. The source or design may have changed, or your session ended. Close and reopen to refresh.")); }
       finally { if (mounted.current) { setBusy(false); onBusy(false); } }
     }}>
       <fieldset disabled={busy || availability?.run.allowed === false}><>{availability?.run.allowed === false && <Notice tone="warn">{availability.run.reason}</Notice>}<RerunChoices options={options} mode={mode} onMode={setMode} matched={matched} onMatched={setMatched} /></></fieldset>

@@ -6,6 +6,7 @@ import type { ConnectionLine } from "@infraforge/domain/resource";
 import { API_URL } from "../client/httpClient";
 import type { RunAction } from "@infraforge/contracts/actions";
 import { actInBrowser, browserRunFor, browserStopStatus, isBrowserStop, stopBrowserRun } from "@/features/model2Run/browserRuns";
+import { requireRunCompatibility } from "@/features/model2Run/compatibility";
 
 // A Model 2 run executing in this browser takes its controls locally; everything else goes to the server.
 
@@ -30,6 +31,7 @@ export const getLiveDeployments = async (): Promise<LiveDeploymentSummary[]> => 
 
 // Create new deployment
 export const createDeployment = async(infrastructureId: string, workloadProfile?: WorkloadProfile): Promise<Deployment> => {
+  await requireRunCompatibility();
   const response = await axios.post(`${API_URL}/deployments`, {
     infrastructureId,
     workloadProfile
