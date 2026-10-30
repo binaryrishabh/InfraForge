@@ -47,3 +47,20 @@ test("closing a cache's saved ports refuses the app's connection to it (the dial
   expect(edge.noListener).toBeGreaterThan(0);
   expect(edge.backendDeliveries).toBe(0);
 });
+
+test("a cache on a saved port still serves through its own internal hop (no silent fallback to the database)", () => {
+  const d = securityDesign({ lb: "Load Balancer", app: "Virtual Machine", cache: "Cache", db: "Database" }, [["lb", "app"], ["app", "cache"], ["cache", "db"]]);
+  d.resources.find(r => r.id === "cache")!.listenerSettings = { version: 1, ports: [6380] };
+  d.connections.find(c => c.targetId === "cache")!.port = 6380;
+  const p = prepareSecurity(d), runtime = createProductModel2(p.compiled); runtime.advanceTo(3000000);
+  const e = runtime.evidence();
+  expect(e.counts.completed).toBeGreaterThan(0);
+  expect(e.data.caches![0]!.hits).toBeGreaterThan(0);
+});
+
+test("a connection id that contains /internal/ is still counted as an outside connection", () => {
+  const d = securityDesign({ lb: "Load Balancer", app: "Virtual Machine", db: "Database" }, [["lb", "app"], ["app", "db"]]);
+  d.connections[1]!.id = "x/internal/y"; d.resources.find(r => r.id === "db")!.listenerSettings = { version: 1, ports: [5432] };
+  const p = prepareSecurity(d), runtime = createProductModel2(p.compiled); runtime.advanceTo(1000000);
+  expect(runtime.evidence().systems.security.edges!.some(x => x.path.startsWith("x/internal/y"))).toBe(true);
+});

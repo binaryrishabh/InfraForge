@@ -19,7 +19,8 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
   const opted = input.securityProfile === "canvas-security/1";
   type Admission = { at: number; connectionId: string; path: string; source: string; target: string; port: number; reason: string; allowed: boolean; firewall?: string; rule?: string; direction?: string; generation?: number; defaultAction?: string };
   const admissions: Admission[] = []; let omitted = 0, admissionBytes = 0;
-  const edgeCounts = new Map(input.paths.filter(p => !p.id.includes("/internal/")).map(p => [p.id, { path: p.id, source: p.source, target: p.target, admitted: 0, denied: 0, noListener: 0, backendDeliveries: 0, lastDenial: undefined as Admission | undefined, policyDenied: {} as Record<string, number> }]));
+  const internalPaths = new Set(input.systems.connections.filter(c => c.internal).map(c => c.path));
+  const edgeCounts = new Map(input.paths.filter(p => !internalPaths.has(p.id)).map(p => [p.id, { path: p.id, source: p.source, target: p.target, admitted: 0, denied: 0, noListener: 0, backendDeliveries: 0, lastDenial: undefined as Admission | undefined, policyDenied: {} as Record<string, number> }]));
   const record = (row: Admission) => {
     const c = edgeCounts.get(row.path) ?? { admitted: 0, denied: 0, noListener: 0, lastDenial: undefined as Admission | undefined, policyDenied: {} as Record<string, number> }; // internal hops are not counted
     if (row.allowed) c.admitted++; else { c.denied++; c.lastDenial = row; if (row.reason === "no-listener") c.noListener++; if (row.firewall) { const key = `${row.firewall}:${row.direction}:${row.rule ?? "default"}`; c.policyDenied[key] = (c.policyDenied[key] ?? 0) + 1; } }
@@ -48,16 +49,17 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
   };
   const inspect = (dial: DialConfig, path: PathConfig, count: boolean) => {
     const port = requireKnown(dial.port, "count");
-    for (const id of dial.firewalls) {
+    for (const id of dial.internal ? [] : dial.firewalls) {
       const p = policies.get(id)!, decision = ruleDecision(p, path.source, path.target, port, count);
       if (count) { p.evaluated++; if (decision.allowed) p.allowed++; else p.denied++; }
       if (!decision.allowed) return { ok: false, reason: `policy-denied:${id}:${decision.rule}`, firewall: id, direction: decision.direction, rule: decision.matchedRule, generation: p.generation, ...(decision.matchedRule === undefined ? { defaultAction: p.config.default } : {}) };
       if (count && p.flows.size >= requireKnown(p.config.maxFlows, "count")) return { ok: false, reason: `flow-capacity:${id}` };
     }
     const listener = listeners.get(JSON.stringify([path.target, dial.protocol, port]));
-    if (!listener) return { ok: false, reason: "no-listener" };
+    if (!listener && !dial.internal) return { ok: false, reason: "no-listener" };
     const endpoint = context.endpoint(path.target); if (!endpoint.alive || !endpoint.ready) return { ok: false, reason: "endpoint-not-ready" };
     if (!context.reachable(path.id)) return { ok: false, reason: "route-unavailable" };
+    if (!listener) return { ok: true, reason: "plaintext" };
     if (dial.tls.mode === "plaintext") return listener.tls === "required" ? { ok: false, reason: "tls-required" } : { ok: true, reason: "plaintext" };
     const cert = listener.certificate;
     if (listener.tls === "plaintext" || !cert) return { ok: false, reason: "tls-not-supported" };
