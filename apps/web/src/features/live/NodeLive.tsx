@@ -3,6 +3,8 @@ import { ResourceIcon } from "@/components/common/ResourceIcon";
 import { HealthMark } from "@/ui/HealthMark";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import { MeterRow } from "@/features/canvas/components/node/MeterRow";
+import { AsyncQueueReadings } from "@/features/canvas/components/inspector/AsyncSection";
+import { SecurityReadings } from "@/features/canvas/components/inspector/SecuritySection";
 import { CHAOS_LABELS } from "@/features/monitoring/chaosLabels";
 import { FaultControl } from "./controls/FaultControl";
 import { ResizeControl } from "./controls/ResizeControl";
@@ -32,11 +34,13 @@ export function NodeLive({ deploymentId, resource, resources, controls, ended = 
         {!metric ? <p role="status" className="text-sm text-ink-3">{ended ? "This run has ended. Its recorded final measurements are in the report." : "No measurement yet."}</p> : <>
           <MeterRow label="CPU" value={metric.cpu} />
           <MeterRow label="MEM" value={metric.memory} />
-          <p className="if-num mt-1 flex justify-between text-xs text-ink-2"><span>{metric.rps ?? 0} requests/s</span>{metric.connections !== undefined && <span>{plural(metric.connections, "connection")}</span>}</p>
+          <p className="if-num mt-1 flex justify-between text-xs text-ink-2"><span>{metric.rps ?? "Unknown"} requests/s</span>{metric.connections !== undefined && <span>{plural(metric.connections, "connection")}</span>}</p>
         </>}
         {effects.map((chaos, index) => <p key={chaos.intervention?.actionId ?? index} className="if-num mt-1 text-xs font-semibold text-fail">Fault active: {(chaos.intervention ? `${chaos.intervention.label} ${JSON.stringify(chaos.intervention.parameters)}; restores at ${chaos.intervention.restoreAtUs} us` : CHAOS_LABELS[chaos.chaosType!])} · {chaos.remainingTicks} s left</p>)}
         {restarting && <p className="if-num mt-1 text-xs font-semibold text-warn">Restarting on a new size</p>}
       </div>
+      {(resource.type === RESOURCE_TYPES.MessageQueue || metric?.asyncQueue) && <section aria-label="Upload queue measurements" className="border-b border-line px-4 py-4"><AsyncQueueReadings metrics={metric?.asyncQueue} /></section>}
+      <section aria-label="Security measurements" className="border-b border-line px-4 py-4 text-sm"><SecurityReadings metrics={metric?.security} /></section>
       {controls && <>
         {resource.type === RESOURCE_TYPES.LoadBalancer && <PoolControl deploymentId={deploymentId} only={resource.id} />}
         {(resource.type === RESOURCE_TYPES.VirtualMachine || resource.type === RESOURCE_TYPES.Database) && <ResizeControl deploymentId={deploymentId} resources={resources} fixedTarget={resource.id} />}
