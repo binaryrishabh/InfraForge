@@ -88,6 +88,10 @@ integration("migration 15 preserves history and enforces bounded immutable sampl
     const rowsBefore = (await db.query('SELECT * FROM "RunEvidenceSample" ORDER BY "simulatedSeconds"')).rows;
     await db.query(await Bun.file(new URL("20261029000000_async_queue_evidence/migration.sql", directory)).text());
     expect((await db.query('SELECT * FROM "RunEvidenceSample" ORDER BY "simulatedSeconds"')).rows).toEqual(rowsBefore);
+    const intervention = () => db.query(`INSERT INTO "RunAction" (id,"deploymentId",sequence,kind,parameters) VALUES ($1,$2,1,'intervention','{}')`, [randomUUID(), freeform]);
+    await rejects(intervention(), /RunAction_kind_check/); // learner interventions need the newest migration
+    await db.query(await Bun.file(new URL("20261030000000_intervention_action_kind/migration.sql", directory)).text());
+    await intervention();
     await insert(resilience, 33, queued);
     await insert(resilience, 34, withQueue({ ...queue, readyDepth: 0, oldestReadyAgeSeconds: null }));
     await rejects(insert(resilience, 35, withQueue({ ...queue, readyDepth: -1 })), /Malformed/);
