@@ -4,6 +4,7 @@ import { createComputeRuntime, validateComputeInput } from "../compute/run";
 import { lexical } from "../time";
 import type { ConnectionHook, NetworkInput, PathConfig } from "./contracts";
 import { computeAdapter, validateNetwork } from "./validate";
+import { resetEvidence, type ResetEvidence } from "./resetEvidence";
 import { networkLink } from "./link";
 import { pathTransport } from "./transport";
 import type { loadBalancer } from "./load-balancer";
@@ -45,6 +46,7 @@ export interface NetworkExtension {
 }
 
 interface NetworkSnapshot {
+  poolResets?: ResetEvidence;
   links: ReturnType<ReturnType<typeof networkLink>["measure"]>[];
   paths: ReturnType<ReturnType<typeof pathTransport>["measure"]>[];
   loadBalancers: ReturnType<ReturnType<typeof loadBalancer>["measure"]>[];
@@ -62,6 +64,7 @@ export function createNetworkRuntime(authored: NetworkInput, extension?: Network
   const input: NetworkInput = JSON.parse(JSON.stringify(authored));
   for (const xs of [input.links, input.paths, input.networkInterventions, input.resources]) xs.sort((a, b) => lexical(a.id, b.id));
   for (const r of input.resources) if (r.kind === "load-balancer") r.backends.sort(lexical);
+  const resets = input.networkInterventions.some(i => i.kind === "reset" && i.evidenceActionId) ? resetEvidence() : undefined;
   let measure: () => NetworkSnapshot;
   let disposeNetwork = () => {};
   const runtime = createComputeRuntime(computeAdapter(input), (kernel, deliver, controls) => {
@@ -106,14 +109,17 @@ export function createNetworkRuntime(authored: NetworkInput, extension?: Network
           if (active) activeStates.set(i.target, { alive: i.alive, ready: i.ready }); else activeStates.delete(i.target);
           applyState(i.target);
         }
-        if (i.kind === "reset") [...paths.values()].find((p) => p.measure().id === i.target)!.reset();
+        if (i.kind === "reset") {
+          const result = [...paths.values()].find((p) => p.measure().id === i.target)!.reset(false, !!i.evidenceActionId);
+          if (result && i.evidenceActionId) resets!.add({...result, actionId: i.evidenceActionId, pathId: i.target, atUs: kernel.now});
+        }
         if (i.kind === "drain") lbs.get(i.target)!.drain(i.backend, requireKnown(i.grace, "us"));
         trace.emit("network-intervention", i.id, active ? "applied" : "ended");
       };
       clock.schedule(requireKnown(i.at, "us"), 0, JSON.stringify(["network-intervention", i.id]), () => apply(true));
       if ("duration" in i) clock.schedule(requireKnown(i.at, "us") + requireKnown(i.duration, "us"), -1, JSON.stringify(["network-intervention-end", i.id]), () => apply(false));
     }
-    measure = () => ({ links: [...links.values()].map((l) => l.measure()), paths: [...paths.values()].map((p) => p.measure()), loadBalancers: [...lbs.values()].map((lb) => lb.measure()), endpoints: Object.fromEntries(states), trace: trace.measure(), policyLedger: NETWORK_POLICY_LEDGER });
+    measure = () => ({ ...(resets ? {poolResets: resets.measure()} : {}), links: [...links.values()].map((l) => l.measure()), paths: [...paths.values()].map((p) => p.measure()), loadBalancers: [...lbs.values()].map((lb) => lb.measure()), endpoints: Object.fromEntries(states), trace: trace.measure(), policyLedger: NETWORK_POLICY_LEDGER });
     return {
       send,
       receive(target, work, done, direct) {

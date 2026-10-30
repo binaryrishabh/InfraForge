@@ -3,15 +3,19 @@ import { requireKnown } from "../../reality/quantity";
 import type { EventKernel } from "../time";
 import type { ConnectionHook, ConnectionRoute, FailureReason, PoolConfig, Trace } from "./contracts";
 
+import { resetIds, freshOpen, type PoolResetResult } from "./resetEvidence";
+
 export interface Lease { connection: string; route?: ConnectionRoute; release(): void; fail(reason: FailureReason): void }
 interface Acquisition { id: string; ready(lease: Lease): void; fail(reason: FailureReason, cause?: Cause, connectionId?: string): void; timer?: () => boolean; connection?: Connection }
-interface Connection { id: string; route?: ConnectionRoute; state: "connecting" | "ready" | "draining"; users: Map<string, Acquisition>; reserved: Map<string, Acquisition>; timers: Array<() => boolean>; expiry?: () => boolean; uses: number }
+interface Connection { id: string; route?: ConnectionRoute; state: "connecting" | "ready" | "draining"; users: Map<string, Acquisition>; reserved: Map<string, Acquisition>; timers: Array<() => boolean>; expiry?: () => boolean; uses: number; fresh?: PoolResetResult; openFinished?: boolean }
 export function connectionPool(id: string, config: PoolConfig, kernel: EventKernel, reachable: (route?: ConnectionRoute) => boolean, trace?: Trace, hook?: ConnectionHook) {
   const connections = new Map<string, Connection>(), waiting = new Map<string, Acquisition>();
   const max = requireKnown(config.maxConnections, "count"), streams = requireKnown(config.streams, "count"), limit = requireKnown(config.pending, "count");
+  let resetResult: PoolResetResult | undefined;
   let sequence = 0, created = 0, closed = 0, failed = 0, acquisitions = 0, released = 0, failedStreams = 0, reused = 0, rejected = 0, cancelled = 0, pumping = false, draining = false;
   const removeConnection = (c: Connection, reason?: FailureReason, cause?: Cause) => {
     if (!connections.delete(c.id)) return;
+    if (c.fresh && !c.openFinished) { c.openFinished = true; freshOpen(c.fresh, c.id, reason ?? "closed"); }
     c.timers.forEach((cancel) => cancel()); c.expiry?.(); hook?.close(c.id); closed++; if (reason) failed++;
     trace?.("connection-closed", c.id, reason ?? "closed", undefined, undefined, !!config.evidenceProfile);
     failedStreams += c.users.size;
@@ -33,13 +37,14 @@ export function connectionPool(id: string, config: PoolConfig, kernel: EventKern
     }, fail(reason) { if (live) { live = false; removeConnection(c, reason); pump(); } } });
   };
   const create = () => {
-    const c: Connection = { id: JSON.stringify([id, sequence++]), state: "connecting", users: new Map(), reserved: new Map(), timers: [], uses: 0 };
+    const c: Connection = { id: JSON.stringify([id, sequence++]), state: "connecting", users: new Map(), reserved: new Map(), timers: [], uses: 0, ...(resetResult ? {fresh: resetResult} : {}) };
     connections.set(c.id, c); created++;
     trace?.("connection-created", c.id, id);
     c.timers.push(kernel.schedule(kernel.now + requireKnown(config.connectTimeout, "us"), 1, JSON.stringify(["pool-connect-timeout", c.id]), () => { removeConnection(c, "connect-timeout"); pump(); }));
     const establish = () => c.timers.push(kernel.schedule(kernel.now + requireKnown(config.establish, "us"), 2, JSON.stringify(["pool-connect-ready", c.id]), () => {
       if (!reachable(c.route)) return; // Silent establishment failure remains owned by its timeout.
       c.timers.forEach((cancel) => cancel()); c.state = "ready";
+      if (c.fresh && !c.openFinished) { c.openFinished = true; freshOpen(c.fresh, c.id, "opened"); }
       trace?.("connection-ready", c.id, id);
       for (const a of [...c.reserved.values()]) if (waiting.has(a.id)) activate(c, a);
       idle(c); pump();
@@ -78,7 +83,18 @@ export function connectionPool(id: string, config: PoolConfig, kernel: EventKern
       }); waiting.set(key, a); pump();
       return () => { if (!waiting.delete(key)) return false; a.timer?.(); a.connection?.reserved.delete(key); cancelled++; pump(); return true; };
     },
-    reset(reason: FailureReason = "reset") { for (const c of [...connections.values()]) removeConnection(c, reason); pump(); },
+    reset(reason: FailureReason = "reset", capture = false) {
+      const cs = capture ? [...connections.values()] : [];
+      const result: PoolResetResult | undefined = capture ? {
+        closedConnections: cs.length, failedStreams: cs.reduce((n,c) => n + c.users.size, 0),
+        connections: resetIds(connections.keys()), activeOwners: resetIds(cs.flatMap(c => [...c.users.keys()])),
+        reservedOwners: resetIds(cs.flatMap(c => [...c.reserved.keys()])), waitingOwners: resetIds([...waiting.values()].filter(a => !a.connection).map(a => a.id)),
+        freshOpens: {opened: 0, failed: 0, results: [], omitted: 0},
+      } : undefined;
+      resetResult = result;
+      for (const c of [...connections.values()]) removeConnection(c, reason); pump();
+      return result;
+    },
     drain(grace: number) {
       if (draining) return; draining = true;
       for (const a of [...waiting.values()]) { a.timer?.(); waiting.delete(a.id); a.connection?.reserved.delete(a.id); a.fail("drained"); }

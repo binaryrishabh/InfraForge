@@ -51,8 +51,8 @@ function InterventionControl({ deploymentId, resources, fixedTarget }: Props) {
             <option value="">Choose</option>{(p.kind === "boolean" ? ["true", "false"] : p.values ?? []).map(v => <option key={v}>{v}</option>)}
           </Select> : <Input id={id} type="number" min={p.min} max={interventionMaximum(p, bounds)} step={p.kind === "integer" ? 1 : "any"} value={valueFor(p.name)} onChange={e => setValues({...values, [`${target}:${chosen.id}:${p.name}`]: e.target.value})} />
         }</Field>)}
-        {"edgeId" in option.target && <p className="text-xs">Shared-link blast radius: {option.resolvedTargets.join(", ")}. Affected paths: {option.affectedPaths.join(", ")}.</p>}
-        <p className="text-xs">{chosen.endPolicy === "timed" ? "Restores the authored baseline when the duration ends. Existing effects remain." : "Applies once. Deleted cache entries stay deleted until refilled."}</p>
+        {"edgeId" in option.target && <p className="text-xs">Resolved transport targets: {option.resolvedTargets.join(", ")}. Affected paths: {option.affectedPaths.join(", ")}.</p>}
+        <p className="text-xs">{chosen.endPolicy === "timed" ? "Restores the authored baseline when the duration ends. Existing effects remain." : chosen.id === "pool-reset" ? "Applies once. Current connections close; subsequent work can open fresh connections. Completed writes remain." : "Applies once. Deleted cache entries stay deleted until refilled."}</p>
         <Button variant="secondary" size="sm" icon={<Zap size={14} aria-hidden="true" />} loading={busy} disabled={!!error} onClick={() => void inject()}>Apply {chosen.label.toLowerCase()}</Button>
       </> : <p className="text-xs">{capabilities ? "No supported intervention for this target." : "Intervention capabilities are Unknown until the browser run reports them."}</p>}
     </div>

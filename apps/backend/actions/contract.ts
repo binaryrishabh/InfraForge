@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { ActionRequest, RunAction } from "@infraforge/contracts/actions";
 import type { RunAction as StoredAction } from "../lib/generated/prisma/client";
-import { DeploymentChaosNames, interventionError, type InterventionRequest } from "@infraforge/domain/resource";
+import { DeploymentChaosNames, INTERVENTIONS, interventionError, type InterventionRequest } from "@infraforge/domain/resource";
 import { LiveTopologySchema } from "../zod_schemas/layout.schema";
 
 const id = z.string().min(1).max(256);
@@ -62,7 +62,7 @@ export function actionDto(row: StoredAction): RunAction {
         if (recorded.interventionId !== request.parameters.interventionId || recorded.revision !== request.parameters.revision ||
           JSON.stringify(Object.entries(recorded.target).sort()) !== JSON.stringify(Object.entries(request.parameters.target).sort()) ||
           JSON.stringify(Object.entries(recorded.parameters).sort()) !== JSON.stringify(Object.entries(request.parameters.parameters).sort())) throw Error("Intervention receipt differs from request");
-        const expectedEnd = request.parameters.interventionId === "flush" ? null : recorded.atUs + Number(request.parameters.parameters.duration) * 1_000_000;
+        const expectedEnd = INTERVENTIONS.find(d => d.id === request.parameters.interventionId)!.endPolicy === "one-shot" ? null : recorded.atUs + Number(request.parameters.parameters.duration) * 1_000_000;
         if (recorded.atUs !== row.appliedSimulatedSeconds! * 1_000_000 + 1 || recorded.endUs !== expectedEnd) throw Error("Intervention timing differs from application");
         if (status === "completed" && row.completedSimulatedSeconds! * 1_000_000 < (recorded.endUs ?? recorded.atUs)) throw Error("Intervention completion precedes its effect");
         if (status === "completed" && outcome?.interventionEnded !== true) throw Error("Intervention completion lacks end evidence");

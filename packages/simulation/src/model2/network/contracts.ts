@@ -49,7 +49,7 @@ export type NetworkIntervention = { id: string; at: Quantity<"us"> } & (
   { kind: "delay"; target: string; duration: Quantity<"us">; delay: Quantity<"us"> } |
   { kind: "service-state"; target: string; duration: Quantity<"us">; alive: boolean; ready: boolean } |
   { kind: "drain"; target: string; backend: string; grace: Quantity<"us"> } |
-  { kind: "reset"; target: string });
+  { kind: "reset"; target: string; evidenceActionId?: string });
 export interface NetworkInput extends Omit<ComputeInput, "workloadVersion" | "resources"> {
   workloadVersion: "m2d/1";
   resources: Array<ComputeResource | Extract<ComputeInput["resources"][number], { kind: "database" }> | LoadBalancer>;
