@@ -13,7 +13,8 @@ import { createModel2Engine } from "../simulator/model2Engine";
 import { applyAction } from "../simulator/actionApplication";
 import { advanceTickBatch, scenarioDue } from "../simulator/tickBatch";
 import type { SimulationInstance } from "../simulator/instance";
-import { dueScenarioSteps } from "@infraforge/simulation/model2-run";
+import { compileScenario, dueScenarioSteps } from "@infraforge/simulation/model2-run";
+import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
 import { REFERENCE, answers, attemptRow } from "./challengeHarness";
 
 const prediction = answers(d, {"overall-health": "saturated"});
@@ -82,6 +83,25 @@ test("history preserves scenario scoring and improvement requires the exact stor
   expect(() => improvementSource({...reference, challengeScenario: null}, d.id)).toThrow("recorded scenario");
   const forged = structuredClone(reference); (forged.challengeScenario as {receipts: unknown[]}).receipts = [];
   expect(() => improvementSource(forged, d.id)).toThrow("recorded scenario");
+});
+test("authoring and preflight refuse the aggregate plan budget for six delays on a 60-slot edge", () => {
+  const lb = `lb${"a".repeat(60)}`, app = `app${"b".repeat(60)}`, edge = `edge${"c".repeat(60)}`;
+  const starter = {resources: [
+    {id: lb, type: "Load Balancer", x: 0, y: 0},
+    {id: app, type: "Virtual Machine", x: 1, y: 0, autoscaling: {enabled: true, minReplicas: 1, maxReplicas: 60, targetCpu: 60}},
+  ], connectionLines: [{id: edge, sourceId: lb, targetId: app, sourceType: "Load Balancer", targetType: "Virtual Machine", port: 80}]};
+  const definition: ChallengeDefinition = {...d, starter, evaluationSeconds: 14, scenario: {version: 1, visibility: "revealed",
+    steps: Array.from({length: 6}, (_,i) => ({id: `step-${i}`, atSecond: 1 + i * 2, request: {
+      interventionId: "delay", revision: 1, target: {edgeId: edge, direction: "both"}, parameters: {delay: 1000, duration: 1},
+    }}))}};
+  const input = captureRunInputs(starter, d.workload);
+  const receipts = compileScenario(definition.scenario!, input, 14);
+  expect(receipts).toHaveLength(6);
+  expect(receipts.every(receipt => Buffer.byteLength(JSON.stringify({intervention: receipt, durationSimulatedSeconds: 1, interventionEnded: true}, null, 1)) < 32768)).toBe(true);
+  expect(() => recordedScenario(definition, input)).toThrow("SCENARIO_PLAN_BUDGET");
+  expect(preflight(definition, starter).errors.some(p => p.includes("SCENARIO_PLAN_BUDGET"))).toBe(true);
+  expect(validateChallengeVersions([definition], {}).some(p => p.includes("SCENARIO_PLAN_BUDGET"))).toBe(true);
+  expect(recordedScenario(d, captureRunInputs(d.starter!, d.workload))).not.toBeNull();
 });
 test("fast server batches freeze on every due boundary and pending durable row", async () => {
   const input = captureRunInputs(d.starter!, d.workload), plan = recordedScenario(d, input)!;
