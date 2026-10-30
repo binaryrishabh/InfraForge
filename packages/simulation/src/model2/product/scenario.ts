@@ -55,6 +55,8 @@ export function compileScenario(scenario: ChallengeScenario, input: CapturedMode
 
 // Follow compiled calls, including operation overrides and replica expansion. A drawn
 // edge (or a health probe) alone does not put a target on the workload's serving path.
+// Quorum losers may be cancelled before a downstream call, so only non-cancellable
+// branches can establish a required path, including through nested service calls.
 function servingPath(input: SystemsInput) {
   const resources = new Set<string>(), paths = new Set<string>(), seen = new Set<string>();
   const nodes = new Map(input.resources.map(r => [r.id, r]));
@@ -70,7 +72,9 @@ function servingPath(input: SystemsInput) {
       const flow = node.applicationFlow?.operations[operation];
       if (flow) for (const step of flow.steps) {
         if (step.kind === "call") call(step.target, step.operation ?? operation);
-        else if (step.kind === "parallel") for (const branch of step.branches) call(branch.target, branch.operation ?? operation);
+        else if (step.kind === "parallel" && (step.wait === "all" || step.wait === step.branches.length)) {
+          for (const branch of step.branches) call(branch.target, branch.operation ?? operation);
+        }
       }
       else { const target = node.downstreamByOperation?.[operation] ?? node.downstream; if (target) call(target); }
     } else if (node?.kind === "cache-aside" && node.operations[operation]) {
