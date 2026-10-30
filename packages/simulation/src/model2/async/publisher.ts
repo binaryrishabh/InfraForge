@@ -4,7 +4,8 @@ import type { Deliver } from "../compute/run";
 import type { Invocation, Receipt, RemoteCompletion } from "../workload/contracts";
 import type { Cause } from "../workload/cause";
 import { carryCause } from "../workload/cause";
-import type { PublisherConfig, ObjectReply, QueueReply, FlowPublishReply } from "./contracts";
+import type { PublisherConfig, ObjectReply, QueueReply } from "./contracts";
+import type { FlowPublishReply } from "../compute/publishReply";
 import { messageClient } from "./client";
 export function asyncPublisher(config: PublisherConfig, kernel: EventKernel, send: Deliver) {
   let received = 0, completed = 0, failed = 0, publishAttempts = 0, ambiguous = 0, uploaded = 0; const live = new Set<string>();

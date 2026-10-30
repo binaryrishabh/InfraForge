@@ -24,6 +24,5 @@ export interface MessageBody { key: string; namespace: string; objectKey: string
 export interface QueueRequest { kind: "publish" | "receive" | "ack" | "nack"; logicalId?: string; body?: MessageBody; delayUs?: number; consumer?: string; receipt?: string; action?: "requeue" | "discard" | "dead-letter" }
 export interface Delivery { id: string; logicalId: string; publishAttempt: string; attempt: number; consumer: string; receipt: string; deliveredAt: number; leaseUntil: number; body: MessageBody }
 export interface QueueReply { ok: boolean; reason?: string; acceptedId?: string; deduplicated?: boolean; delivery?: Delivery; empty?: boolean; durability?: "logical-ownership-only" }
-export interface FlowPublishReply { stage: "upload" | "publish"; replyReason: string | null; confirmation: "confirmed" | "refused" | "not-dispatched" | "Unknown"; ambiguous: boolean }
 export interface ObjectRequest { kind: "put" | "get" | "head" | "delete"; namespace: string; key: string; bytes?: number; content?: string; ifAbsent?: boolean; ifGeneration?: number }
 export interface ObjectReply { ok: boolean; reason?: string; object?: ObjectRow; deleted?: boolean }

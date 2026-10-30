@@ -8,7 +8,9 @@ import { withRunLength } from "../src/model2/product/runContract";
 import { validateDataFlowEffects } from "../src/model2/data/flowEffects";
 import { dataAdapter } from "../src/model2/async/validate";
 import { asyncAdapter } from "../src/model2/systems/validate";
+import { applicationFlowEvidence } from "../src/model2/compute/flowEvidence";
 import type { ProductContract, SavedProductDesign } from "../src/model2/product/contracts";
+import type { ComputeState } from "../src/model2/compute/contracts";
 import { applicationFlowError } from "@infraforge/domain/resource";
 
 function canvas(rps = 1) {
@@ -50,7 +52,7 @@ test("broker confirmation delays continuation and holds a producer worker withou
     const q = quantities(); c.transports.assumed!.links.find(l => l.id === "response")!.propagation = q.q("proof.confirm-delay", 100100, "us"); c.ledger.push(...q.ledger);
   });
   const runtime = createProductModel2(compiled); runtime.advanceTo(200000);
-  expect(runtime.inspect("app")!.compute!.workers.blockedDependency).toBe(1);
+  expect((runtime.inspect("app") as ComputeState).compute!.workers.blockedDependency).toBe(1);
   expect(runtime.evidence().applicationFlow!.events.some(e => e.kind === "flow-step-start" && e.detail.step === "after")).toBe(false);
   runtime.advanceTo(4000000); const e = runtime.evidence();
   expect(e.results[0]!.responseUs!).toBeGreaterThan(base.evidence.results[0]!.responseUs! + 200000);
@@ -177,4 +179,9 @@ test("pause parks the publish continuation; /3 evidence and child budgets stay b
   const limited = createProductModel2(bounded); limited.advanceTo(4000000); const flow = limited.evidence().applicationFlow!;
   expect(flow.retained).toBe(10); expect(flow.omitted).toBeGreaterThan(0);
   expect(Object.values(flow.totals).reduce((n, v) => n + v, 0)).toBe(flow.retained + flow.omitted);
+  const bytes = applicationFlowEvidence(1000, 32000, "application-flow/3"), row = terminals(e)[0]!;
+  for (let i = 0; i < 1200; i++) bytes.observe(row);
+  const captured = bytes.measure(); expect(captured.retained).toBeGreaterThan(0); expect(captured.retained).toBeLessThan(1000);
+  expect(captured.retained + captured.omitted).toBe(1200);
+  expect(new TextEncoder().encode(JSON.stringify(captured)).length).toBeLessThanOrEqual(32000);
 });

@@ -4,6 +4,7 @@ import type { Cause } from "../workload/cause";
 import { carryCause, causeFields } from "../workload/cause";
 import type { CausalObserver } from "../workload/causal";
 import { identity } from "../workload/arrivals";
+import type { FlowPublishReply } from "./publishReply";
 
 export interface RuntimeFlowCall { id: string; kind: "call"; target: string; operation?: string }
 export interface RuntimeFlowData { id: string; kind: "data"; target: string; operation: "read" | "write"; command: "query" | "cache-aside" }
@@ -24,7 +25,7 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
   const dataFields = (branch: Slot["branch"]): Record<string, string> => branch.kind === "data" ? { target: branch.target, operation: branch.operation, command: branch.command } : branch.kind === "publish" ? { target: branch.target, operation: branch.operation, edge: branch.edge } : {};
   const publishFields = (slot: Slot): Record<string, string | number | boolean | null> => {
     if (slot.branch.kind !== "publish") return {};
-    const response = slot.work.message?.response as Partial<import("../async/contracts").FlowPublishReply> | undefined;
+    const response = slot.work.message?.response as Partial<FlowPublishReply> | undefined;
     return { ...dataFields(slot.branch), stage: response?.stage ?? "Unknown", replyReason: response?.replyReason ?? null,
       confirmation: response?.confirmation ?? "Unknown", ambiguous: response?.ambiguous ?? true,
       physicalDurability: "Unknown", ...causeFields(slot.cause ?? { rootReason: null, rootResource: null, depth: 0 }) };
