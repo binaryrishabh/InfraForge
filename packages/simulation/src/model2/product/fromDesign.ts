@@ -267,12 +267,15 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       edges[e.id] = edge(t, `edge.${e.id}`, sourceRole, targetRole, purpose, e.port, true);
     }
     if (refused.length) return { refused };
+    // A saved listener setting applies to every role another resource or the caller dials; roles only reached by internal hops keep inferred ports.
+    const dialled = new Set(connections.map(e => `${e.targetId}/${edges[e.id]!.targetRole}`));
+    for (const r of resources) if (r.type === "DNS") dialled.add(`${r.id}/resolver`);
     let address = 1;
     for (const r of resources) {
       const n = nodes[r.id]!, count = r.autoscaling?.enabled ? r.autoscaling.maxReplicas! : 1;
       for (const { role } of n.resources) {
         n.identities.push({ role, zone: "internal", address: Array.from({ length: Math.min(count, 128) }, () => { const a = address++; return `10.0.${Math.floor(a / 254)}.${a % 254 + 1}`; }).join(",") });
-        const ports = new Set((role === n.primary ? r.listenerSettings?.ports : undefined) ?? [RESOURCE_PORTS[r.type], ...connections.filter((e) => e.targetId === r.id && edges[e.id]!.targetRole === role).map((e) => e.port)]);
+        const ports = new Set((role === n.primary || dialled.has(`${r.id}/${role}`) ? r.listenerSettings?.ports : undefined) ?? [RESOURCE_PORTS[r.type], ...connections.filter((e) => e.targetId === r.id && edges[e.id]!.targetRole === role).map((e) => e.port)]);
         for (const port of [...ports].sort((a, b) => a - b)) n.listeners.push({ role, protocol: "tcp", port: q(`${r.id}.${role}.listener.${port}`, port, "count", r.listenerSettings !== undefined ? "Saved explicit TCP listener port." : undefined, r.listenerSettings !== undefined), tls: "plaintext" });
       }
     }

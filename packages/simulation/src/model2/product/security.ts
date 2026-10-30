@@ -5,11 +5,11 @@ import type { NodeContract } from "./contracts";
 import { canonical } from "./provenance";
 
 /** Refuse forged/mismatched intent before granting the deliberate missing-listener exception. */
-export function validateSecurityBinding(r: Resource, n: NodeContract) {
+export function validateSecurityBinding(r: Resource, n: NodeContract, dialled: ReadonlySet<string> = new Set()) {
   const same = (a: unknown, b: unknown) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
   if (r.listenerSettings !== undefined || n.listenerIntent !== undefined) {
     if (!same(r.listenerSettings, n.listenerIntent)) throw Error(`Listener intent must match saved ports for ${r.id}`);
-    for (const { role } of n.resources.filter(x => x.role === n.primary)) {
+    for (const { role } of n.resources.filter(x => x.role === n.primary || dialled.has(`${r.id}/${x.role}`))) {
       const rows = n.listeners.filter(l => l.role === role);
       if (rows.some(l => l.protocol !== "tcp" || l.tls !== "plaintext") || !same(rows.map(l => requireKnown(l.port, "count")).sort((a,b) => a-b), [...r.listenerSettings!.ports].sort((a,b) => a-b))) throw Error(`Explicit listeners must match saved ports for ${r.id}/${role}`);
     }

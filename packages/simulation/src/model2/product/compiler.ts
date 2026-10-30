@@ -50,6 +50,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (nodes.size !== design.resources.length || design.resources.some((r) => !/^[a-zA-Z0-9_-]{1,64}$/.test(r.id))) error("RESOURCE_ID", "resources", "Unique bounded semantic IDs required; labels/coordinates do not define identity");
     const edgeIds = new Set(design.connections.map((e) => e.id));
     if (edgeIds.size !== design.connections.length) error("EDGE_ID", "connections", "Unique connection identities required");
+    const dialled = new Set(design.connections.map(e => `${e.targetId}/${contract.edges?.[e.id]?.targetRole}`));
+    for (const d of contract.caller?.dependencies ?? []) dialled.add(d.target.slice(1));
     for (const r of design.resources) {
       const securityError = securitySettingsError(r.type, r.listenerSettings, r.firewallSettings, design.resources);
       if (securityError) error("INVALID_SECURITY", `resources.${r.id}.security`, securityError);
@@ -67,7 +69,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
       if (!spec) { error("MISSING_RESOURCE_PROFILE", `nodes.${r.id}`, TRANSLATION_OWNERS[r.type].requires); continue; }
-      validateSecurityBinding(r, spec);
+      validateSecurityBinding(r, spec, dialled);
       if (spec.type !== r.type || !spec.profileVersion || !spec.provenance.length) error("RESOURCE_PROFILE", `nodes.${r.id}`, "Matching versioned resource profile/provenance required");
       if (r.circuitBreaker?.enabled && !spec.circuitBreaker) error("MISSING_BREAKER_PROFILE", `nodes.${r.id}.circuitBreaker`, "Enabled circuit breaker requires a reviewed path policy");
       if (spec.circuitBreaker && r.circuitBreaker?.enabled && (requireKnown(spec.circuitBreaker.failureThreshold, "count") !== r.circuitBreaker.failureThreshold || requireKnown(spec.circuitBreaker.cooldown, "us") !== r.circuitBreaker.cooldownMs! * 1000)) error("BREAKER_MISMATCH", `nodes.${r.id}.circuitBreaker`, "Path policy must match saved threshold and cooldown");

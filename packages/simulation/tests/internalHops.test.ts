@@ -38,3 +38,12 @@ test("autoscaled image bootstrap commands succeed behind a deny-by-default firew
   expect(e.systems.security.admission!.rows.filter(r => r.reason.startsWith("policy-denied"))).toEqual([]);
   expect(e.counts.completed).toBeGreaterThan(0);
 });
+
+test("closing a cache's saved ports refuses the app's connection to it (the dialled helper role follows the saved ports)", () => {
+  const d = securityDesign({ lb: "Load Balancer", app: "Virtual Machine", cache: "Cache", db: "Database" }, [["lb", "app"], ["app", "cache"], ["cache", "db"]]);
+  d.resources.find(r => r.id === "cache")!.listenerSettings = { version: 1, ports: [] };
+  const p = prepareSecurity(d), runtime = createProductModel2(p.compiled); runtime.advanceTo(1000000);
+  const edge = runtime.evidence().systems.security.edges!.find(x => x.target.startsWith("cache"))!;
+  expect(edge.noListener).toBeGreaterThan(0);
+  expect(edge.backendDeliveries).toBe(0);
+});
