@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { compileScenario, dueScenarioSteps, scenarioError } from "../src/model2Run";
 import type { ChallengeScenario } from "@infraforge/contracts/challenges";
+import type { FlowCall } from "@infraforge/domain/resource";
 import { intervention, interventionInput } from "./interventionFixture";
 
 const scenario: ChallengeScenario = {version: 1, visibility: "revealed", steps: [
@@ -42,7 +43,7 @@ test("serving paths follow sequential and parallel operation overrides, not inac
     write: {steps: [{id: "compute", kind: "compute"}]}, read: {steps: [{id: "db", kind: "call", edge: "helper-service"}]},
   }};
   for (const parallel of [false, true]) {
-    const call = {id: "helper", kind: "call" as const, edge: "app-helper", operation: "read"};
+    const call: FlowCall = {id: "helper", kind: "call", edge: "app-helper", operation: "read"};
     const second = {...call, id: "second", edge: "app-idle"};
     app.applicationFlow = {schema: "application-flow/1", operations: {write: {steps: parallel ? [{id: "fanout", kind: "parallel", wait: "all", branches: [call, second]}] : [call]}}};
     expect(() => compileScenario(scenario, input, 5)).not.toThrow();

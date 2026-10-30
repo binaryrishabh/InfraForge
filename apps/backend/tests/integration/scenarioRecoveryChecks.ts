@@ -34,6 +34,7 @@ export async function checkScenarioRecovery(h: LocalHarness, workspace: string, 
     [randomUUID(), lost, d.scenario!.steps[0]!.request, d.scenario!.steps[0]!.id]);
   await h.sql.query('UPDATE "RunAction" SET status=\'applying\' WHERE "deploymentId"=$1', [lost]);
   expect((await submitBrowserRun(h, lost, 5)).status).toBe("torn-down");
+  expect(await actions(lost)).toHaveLength(1);
   expect(await actions(lost)).toMatchObject([{status: "failed", appliedAt: null, appliedSimulatedSeconds: null}]);
   expect((await report(lost)).challenge).toMatchObject({status: "not-evaluated", metCount: 0});
   await redeliver(lost);
@@ -62,6 +63,7 @@ export async function checkScenarioRecovery(h: LocalHarness, workspace: string, 
   await h.startWorker();
   await until(async () => (await row(interrupted)).status === "failed" || undefined, "scenario restart retired replay");
   expect(await row(interrupted)).toMatchObject({status: "failed", runtimeActive: false, terminalSnapshot: null});
+  expect(await actions(interrupted)).toHaveLength(1);
   expect(await actions(interrupted)).toMatchObject([{status: "failed", appliedAt: null}]);
   expect((await report(interrupted)).challenge?.status).toBe("not-evaluated");
   await redeliver(interrupted);
@@ -69,6 +71,7 @@ export async function checkScenarioRecovery(h: LocalHarness, workspace: string, 
   // No special recovery API: the same workspace admits and scores a fresh attempt.
   const retry = await start();
   expect((await submitBrowserRun(h, retry, 5)).status).toBe("torn-down");
+  expect(await actions(retry)).toHaveLength(1);
   expect(await actions(retry)).toMatchObject([{status: "completed", appliedSimulatedSeconds: 2, completedSimulatedSeconds: 5}]);
   expect((await report(retry)).challenge?.status).toBe("met");
   return {lost, interrupted, retry, uncertainAttemptsUnscored: true, redeliverySkipped: true};

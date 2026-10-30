@@ -14,12 +14,13 @@ import { applyAction } from "../simulator/actionApplication";
 import { advanceTickBatch, scenarioDue } from "../simulator/tickBatch";
 import type { SimulationInstance } from "../simulator/instance";
 import { compileScenario, dueScenarioSteps } from "@infraforge/simulation/model2-run";
-import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
+import type { ChallengeDefinition, ChallengeStarter } from "@infraforge/contracts/challenges";
 import { REFERENCE, answers, attemptRow, legacyDefinition } from "./challengeHarness";
 import { specHash } from "../challenges/registry";
 
 const prediction = answers(d, {"overall-health": "saturated"});
 const reference = attemptRow(d, REFERENCE[d.id]!, prediction);
+type FixtureGate = {name: string; details: {monthlyEstimate?: number}};
 test("DB slowdown starter fails and bounded retries pass from exact terminal p95 evidence", () => {
   const pass = buildRunReport(reference), fail = buildRunReport(attemptRow(d, d.starter!, prediction));
   expect(pass.challenge).toMatchObject({status: "met", metCount: 3, total: 3});
@@ -53,9 +54,10 @@ test("missing, wrong, extra, truncated, early or mismatched scenario evidence is
 test("missing required scenario evidence outranks static failures without changing historical judging", () => {
   for (const missing of ["traffic", "Validate", "SecurityScan", "CostEstimate"]) {
     const row = structuredClone(reference);
-    (row.stages.find(s => s.name === "CostEstimate")!.details as {monthlyEstimate: number}).monthlyEstimate = 2001;
+    const stages = row.stages as FixtureGate[];
+    stages.find(s => s.name === "CostEstimate")!.details.monthlyEstimate = 2001;
     (row.terminalSnapshot as {traffic?: unknown}).traffic = missing === "traffic" ? undefined : {offeredRps: 1, completedRps: 1, failedRps: 0, latencyMs: {p50: 1500, p95: 1500}};
-    if (missing !== "traffic") row.stages = row.stages.filter(s => s.name !== missing);
+    if (missing !== "traffic") row.stages = stages.filter(s => s.name !== missing);
     const result = buildRunReport(row).challenge!;
     expect(result.criteria.some(c => c.status === "not-met")).toBe(true);
     expect(result.criteria.some(c => c.status === "not-evaluated")).toBe(true);
@@ -64,7 +66,7 @@ test("missing required scenario evidence outranks static failures without changi
   const old = legacyDefinition("first-production-api"), historical = structuredClone(reference);
   Object.assign(historical, {challengeId: old.id, challengeVersion: old.version, challengeSpecHash: specHash(old), challengeScenario: null,
     evaluationStopAtSimulatedSeconds: old.evaluationSeconds, terminalSnapshot: null});
-  (historical.stages.find(s => s.name === "CostEstimate")!.details as {monthlyEstimate: number}).monthlyEstimate = 2001;
+  (historical.stages as FixtureGate[]).find(s => s.name === "CostEstimate")!.details.monthlyEstimate = 2001;
   expect(buildRunReport(historical).challenge?.status).toBe("not-met");
 });
 test("preflight refuses missing and unsupported targets, and authoring rejects experiment plus scenario", () => {
@@ -104,7 +106,7 @@ test("history preserves scenario scoring and improvement requires the exact stor
 });
 test("authoring and preflight refuse the aggregate plan budget for six delays on a 60-slot edge", () => {
   const lb = `lb${"a".repeat(60)}`, app = `app${"b".repeat(60)}`, edge = `edge${"c".repeat(60)}`;
-  const starter = {resources: [
+  const starter: ChallengeStarter = {resources: [
     {id: lb, type: "Load Balancer", x: 0, y: 0},
     {id: app, type: "Virtual Machine", x: 1, y: 0, autoscaling: {enabled: true, minReplicas: 1, maxReplicas: 60, targetCpu: 60}},
   ], connectionLines: [{id: edge, sourceId: lb, targetId: app, sourceType: "Load Balancer", targetType: "Virtual Machine", port: 80}]};

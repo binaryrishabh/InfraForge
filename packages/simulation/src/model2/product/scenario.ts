@@ -65,7 +65,7 @@ function servingPath(input: SystemsInput) {
     seen.add(key); resources.add(id);
     const node = nodes.get(id);
     const call = (target: string, op = operation) => visit(target, op, id);
-    if (node?.kind === "load-balancer" || node?.kind === "router") node.backends.forEach(target => call(target));
+    if (node?.kind === "load-balancer") node.backends.forEach(target => call(target));
     else if (node?.kind === "compute") {
       const flow = node.applicationFlow?.operations[operation];
       if (flow) for (const step of flow.steps) {
