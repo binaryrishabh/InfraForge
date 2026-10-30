@@ -21,7 +21,7 @@ export function validateDataFlowEffects(input: DataInput) {
     // Cache lookups update LRU state; cache-aside reads may fill and writes invalidate.
     memo.set(key, effect); return effect;
   };
-  for (const r of input.resources) if (r.kind === "compute" && r.applicationFlow?.schema === "application-flow/2") {
+  for (const r of input.resources) if (r.kind === "compute" && r.applicationFlow) {
     for (const [op, flow] of Object.entries(r.applicationFlow.operations)) for (const step of flow.steps) {
       if (step.kind === "parallel" && step.branches.some(b => mutates(b.target, b.operation ?? op))) throw Error("Parallel calls cannot reach mutating data steps, cache fills or unknown effects");
     }

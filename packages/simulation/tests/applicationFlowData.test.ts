@@ -138,3 +138,35 @@ test("cause capture stays observational for failed data calls",()=>{
   expect(strip(on.applicationFlow!.events)).toEqual(strip(off.applicationFlow!.events));
   expect(on.applicationFlow!.events.some(e=>e.kind==="flow-branch-terminal"&&e.detail.rootReason==="session-limit"&&e.detail.rootResource==="db")).toBe(true);
 });
+
+
+test("mixed /1 parents cannot place a /2 cache fill in a parallel group; all-/1 keeps its historical policy", () => {
+  const make = () => {
+    const d = canvasDataFlow(true);
+    d.resources[0]!.id = "service";
+    for (const edge of d.connections) if (edge.sourceId === "app") edge.sourceId = "service";
+    d.resources.unshift({ id: "app", type: "Virtual Machine", x: 0, y: 0, applicationFlow: { schema: "application-flow/1", operations: {
+      read: { steps: [{ id: "parallel", kind: "parallel", wait: 1, branches: [
+        { id: "service", kind: "call", edge: "app-service" }, { id: "leaf", kind: "call", edge: "app-leaf" },
+      ] }] },
+    } } });
+    d.resources.push({ id: "leaf", type: "Virtual Machine", x: 0, y: 0 });
+    d.connections.push(...["service", "leaf"].map(id => ({ id: `app-${id}`, sourceId: "app", targetId: id, sourceType: "Virtual Machine", targetType: "Virtual Machine", port: 80 })));
+    return d;
+  };
+  const legacy = make(); delete legacy.resources.find(r => r.id === "service")!.applicationFlow;
+  const built = contractFromDesign(legacy);
+  if ("refused" in built) throw Error(JSON.stringify(built.refused));
+  const compiled = compileProduct(legacy, built.contract);
+  if (!compiled.ok) throw Error(JSON.stringify(compiled.diagnostics));
+  expect(built.contract.applicationFlowProfile).toBe("application-flow/1");
+  const runtime = createProductModel2(compiled.value); runtime.advanceTo(2000000);
+  expect(runtime.evidence().data.caches[0]!.fills).toBe(1);
+  for (const wait of [1, "all"] as const) {
+    const mixed = make(), group = mixed.resources[0]!.applicationFlow!.operations.read!.steps[0]!;
+    if (group.kind !== "parallel") throw Error("parallel"); group.wait = wait;
+    const result = contractFromDesign(mixed);
+    expect(result).toHaveProperty("refused");
+    if ("refused" in result) expect(result.refused.some(d => d.message.includes("mutating data"))).toBe(true);
+  }
+});
