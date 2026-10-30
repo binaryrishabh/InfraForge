@@ -14,6 +14,7 @@ import { NodeLive } from "./NodeLive";
 import { GatesPanel } from "./GatesPanel";
 import { EventsLog } from "./EventsLog";
 import { LockedPrediction } from "./LockedPrediction";
+import { ScenarioSchedule } from "./ScenarioSchedule";
 
 export type LiveTab = "controls" | "resource" | "gates" | "events";
 
@@ -24,6 +25,7 @@ function ChallengeConditions({ run, brief }: { run: Deployment; brief: Challenge
         <h3 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Lock size={13} aria-hidden="true" /> Fixed conditions</h3>
         <p className="mt-1.5 text-sm text-ink-2">This attempt runs exactly as briefed. Load, faults, scaling and design edits are unavailable because they would change what is judged. You can change the speed or stop.</p>
         {run.challengeExperiment && <p className="mt-1.5 text-sm text-ink-2">The one exception is the challenge's own experiment: InfraForge applies a {faultLabel(run.challengeExperiment.fault).toLowerCase()} to {run.challengeExperiment.targetResourceId} at second {run.challengeExperiment.atSimulatedSecond}, active for {run.challengeExperiment.durationSimulatedSeconds} seconds.</p>}
+        {brief?.id === run.challengeId && brief.version === run.challengeVersion && <div className="mt-2"><ScenarioSchedule deploymentId={run.id} scenario={brief.scenario} resources={run.runInputs?.resources ?? run.liveTopology?.resources ?? []} /></div>}
         {brief && <p className="mt-2 text-xs text-ink-3">{describeWorkload(brief.workload)}. Stops by itself at second {brief.evaluationSeconds}.</p>}
       </section>
       {brief && run.challengePrediction && <LockedPrediction brief={brief} prediction={run.challengePrediction} />}

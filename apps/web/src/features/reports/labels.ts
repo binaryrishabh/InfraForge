@@ -12,3 +12,5 @@ export const STAGE_STATUS_LABEL: Record<string, string> = { completed: "Done", f
 
 // The fault a resilience challenge applies itself, as opposed to one a person requested.
 export const isChallengeExperiment = (action: RunAction) => action.kind === "chaos" && (action.parameters as { trigger?: string }).trigger === "challenge-experiment";
+
+export const isScenarioAction = (action: RunAction) => typeof action.scenarioStepId === "string" && action.scenarioStepId.length > 0;
