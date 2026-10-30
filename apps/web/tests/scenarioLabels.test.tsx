@@ -73,7 +73,7 @@ test("unrevealed and unavailable schedules do not expose step details", () => {
 test("wide live workspace exposes the schedule once in an accessible group", () => {
   const run: Deployment = { id: "run", infrastructureId: null, runName: null, status: DeploymentStatus.BROWSER, resourceCount: 1, stages: [], timeline: [], chaosEvents: [], runInputs: null, liveTopology: { resources, connectionLines: [] }, topologyRevision: 0, createdAt: "", updatedAt: "", challengeId: brief.id, challengeVersion: brief.version };
   const socket = spyOn(deploymentSocket, "useDeploymentSocket").mockReturnValue({ deployment: run, status: DeploymentStatus.LIVE, completedStages: [], timeline: [] });
-  const read = spyOn(challengeBrief, "useChallengeBrief").mockReturnValue({ data: { ...brief, scenario }, error: null, loading: false, retry: () => {} });
+  const read = spyOn(challengeBrief, "useChallengeBrief").mockReturnValue({ request: null, data: { ...brief, scenario }, error: null, loading: false, retry: () => {} });
   const width = spyOn(media, "useMediaQuery").mockImplementation(query => query.includes("min-width"));
   try {
     const html = renderToStaticMarkup(<MemoryRouter><LiveWorkspace deploymentId="run" /></MemoryRouter>);
