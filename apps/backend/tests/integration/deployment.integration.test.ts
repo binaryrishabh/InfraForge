@@ -546,7 +546,7 @@ integration("local deployment lifecycle", () => {
       phase("resilience experiment scheduled exactly and judged");
       evidence.resilience = await checkResilienceAttempt(harness, infrastructureIds, deploymentIds);
       phase("scripted challenge parity and scoring");
-      evidence.scenario = await checkScenarioAttempts(harness, infrastructureIds, deploymentIds);
+      evidence.scenario = await checkScenarioAttempts(harness, infrastructureIds, deploymentIds, queue);
       phase("bounded experiment traces");
       evidence.experimentTraces = await checkExperimentTraces(harness, sessions, infrastructureIds, deploymentIds);
       phase("cross-challenge learning history");

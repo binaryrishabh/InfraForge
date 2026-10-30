@@ -6,8 +6,10 @@ import { LocalHarness, until } from "./localHarness";
 import { boundRetriesDuringSlowdownV1 as d } from "../../challenges/definitions/bound-retries-during-slowdown/v1";
 import { REFERENCE } from "../challengeHarness";
 import { submitBrowserRun } from "./browserRunChecks";
+import type { Queue } from "bullmq";
+import { checkScenarioRecovery } from "./scenarioRecoveryChecks";
 
-export async function checkScenarioAttempts(h: LocalHarness, designs: string[], runs: string[]) {
+export async function checkScenarioAttempts(h: LocalHarness, designs: string[], runs: string[], queue: Queue) {
   const workspace = (await h.request(`/challenges/${d.id}/workspace`, {}, "POST", 201)).designId;
   designs.push(workspace);
   const prediction = {answers: {health: "saturated"}, reasoning: null};
@@ -47,5 +49,6 @@ export async function checkScenarioAttempts(h: LocalHarness, designs: string[], 
   }
   expect(results.map(r => r.status)).toEqual(["not-met", "met"]);
   expect(results[0]!.p95).toBeGreaterThan(1000); expect(results[1]!.p95).toBeLessThan(1000);
+  await checkScenarioRecovery(h, workspace, runs, queue);
   return results;
 }
