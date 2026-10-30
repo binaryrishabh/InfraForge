@@ -149,7 +149,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
           const data = outgoing(id).filter((t) => ["Database", "Cache"].includes(t.type));
           const cache = data.find((t) => t.type === "Cache"), database = data.find((t) => t.type === "Database");
           if (r.applicationFlow?.schema === "application-flow/2") {
-            if (data.filter(t => t.type === "Database").length > 1 || data.filter(t => t.type === "Cache").length > 1 || (cache && (!database || outgoing(cache.id).length !== 1 || outgoing(cache.id)[0]?.id !== database.id))) { error(`resources.${id}`, "Flow /2 supports one attached database and one optional cache drawn to that same database."); break; }
+            if (data.filter(t => t.type === "Database").length > 1 || data.filter(t => t.type === "Cache").length > 1 || (cache && (outgoing(cache.id).length !== 1 || outgoing(cache.id)[0]?.type !== "Database" || (database && outgoing(cache.id)[0]?.id !== database.id)))) { error(`resources.${id}`, "Flow /2 supports one attached database and one optional cache drawn to that same database."); break; }
           }
           else if (data.length > 1 && !(data.length === 2 && cache && database && !outgoing(cache.id).length)) { error(`resources.${id}`, "Connect the app to one database, one database-backed cache, or one cache and one database; other combinations need an authored operation plan."); break; }
           const config = execution(r, "main");

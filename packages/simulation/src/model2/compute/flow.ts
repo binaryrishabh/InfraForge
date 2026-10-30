@@ -20,6 +20,7 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
   let cursor = 0, terminal = false, paused = false, parked: (() => void) | undefined, cancelContinuation: (() => boolean) | undefined;
   let slots: Slot[] = [], step: RuntimeFlowStep | undefined, stepSettled = false;
   const emit = (kind: string, detail: Record<string, string | number | boolean | null>, child = work) => causal?.({ atUs: clock.now, resource: owner, work: child, kind: `flow-${kind}`, detail });
+  const dataFields = (branch: RuntimeFlowCall | RuntimeFlowData): Record<string, string> => branch.kind === "data" ? { target: branch.target, operation: branch.operation, command: branch.command } : {};
   const settleStep = (outcome: RemoteOutcome) => {
     if (!step || stepSettled) return;
     stepSettled = true; emit("step-terminal", { step: step.id, outcome });
@@ -27,7 +28,7 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
   const cancelSlots = (reason: string) => {
     for (const slot of slots) if (!slot.outcome && slot.receipt) {
       slot.outcome = "cancelled";
-      emit("branch-terminal", { step: step!.id, branch: slot.branch.id, outcome: reason }, slot.work);
+      emit("branch-terminal", { step: step!.id, branch: slot.branch.id, outcome: reason, ...dataFields(slot.branch) }, slot.work);
       slot.receipt.cancel();
     }
   };
@@ -79,13 +80,13 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
       }
     };
     for (const slot of slots) {
-      emit("branch-start", { step: current.id, branch: slot.branch.id, target: slot.branch.target }, slot.work);
+      emit("branch-start", { step: current.id, branch: slot.branch.id, target: slot.branch.target, ...dataFields(slot.branch) }, slot.work);
       slot.receipt = send(slot.branch.target, slot.work, (outcome, cause) => {
         // Our receipt cancellation can acknowledge synchronously as a rejection.
         // Actual remote-after-stop outcomes are observed by transport, never this callback.
         if (terminal || joined || slot.outcome) return;
         slot.outcome = outcome; slot.cause = cause;
-        emit("branch-terminal", { step: current.id, branch: slot.branch.id, outcome, ...(slot.branch.kind === "data" ? { target: slot.branch.target, operation: slot.branch.operation, command: slot.branch.command, ...causeFields(cause), ...(slot.work.message?.response && typeof slot.work.message.response === "object" && "hit" in slot.work.message.response ? { hit: !!slot.work.message.response.hit } : {}) } : {}) }, slot.work);
+        emit("branch-terminal", { step: current.id, branch: slot.branch.id, outcome, ...(slot.branch.kind === "data" ? { ...dataFields(slot.branch), ...causeFields(cause), ...(slot.work.message?.response && typeof slot.work.message.response === "object" && "hit" in slot.work.message.response ? { hit: !!slot.work.message.response.hit } : {}) } : {}) }, slot.work);
         evaluate();
       });
     }

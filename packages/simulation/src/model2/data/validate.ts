@@ -23,7 +23,7 @@ export function validateData(input: DataInput) {
     const target = resources.get(step.target);
     if (step.command === "query" ? target?.kind !== "relational" : target?.kind !== "cache-aside") throw Error("Typed data target must own its declared command");
     const db = target?.kind === "cache-aside" ? resources.get(target.database) : target;
-    if (target?.kind === "cache-aside" && target.operations[step.operation] !== step.operation) throw Error("Typed cache operation must match cache-aside policy");
+    if (target?.kind === "cache-aside" && (target.operations[step.operation] !== step.operation || !target.invalidateWrites)) throw Error("Typed cache operation must match cache-aside policy");
     if (db?.kind !== "relational") throw Error("Typed data requires a relational database");
     const plan = db.plans[step.operation];
     if (!plan || plan.statements.some(s => step.operation === "read" ? s.kind !== "snapshot-read" : !["snapshot-read", "write"].includes(s.kind))) throw Error("Typed data read/write must match existing snapshot-read/write plans");

@@ -9,7 +9,7 @@ export function canvasDataFlow(cache = false): SavedProductDesign {
     { id: "db", type: "Database", x: 1, y: 0 },
     ...(cache ? [{ id: "cache", type: "Cache" as const, x: 1, y: 1 }] : []),
   ], connections: [
-    { id: "app-db", sourceId: "app", targetId: "db", sourceType: "Virtual Machine", targetType: "Database", port: 5432 },
+    ...(!cache ? [{ id: "app-db", sourceId: "app", targetId: "db", sourceType: "Virtual Machine", targetType: "Database", port: 5432 }] : []),
     ...(cache ? [
       { id: "app-cache", sourceId: "app", targetId: "cache", sourceType: "Virtual Machine", targetType: "Cache", port: 6379 },
       { id: "cache-db", sourceId: "cache", targetId: "db", sourceType: "Cache", targetType: "Database", port: 5432 },

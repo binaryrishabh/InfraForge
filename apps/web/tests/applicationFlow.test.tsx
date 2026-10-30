@@ -97,3 +97,31 @@ test("production worker flow evidence omits bytes before 1,000 rows for long nes
     expect(evidence.events.some(row => row.work && JSON.parse(row.work.callId).filter((v: unknown) => v === "flow").length >= 3)).toBe(true);
   }
 });
+
+
+test("data inspector picks attached DB/cache targets with explicit operations and missing-edge feedback",()=>{
+  const resource:Resource={id:"app",type:"Virtual Machine",x:0,y:0,applicationFlow:{schema:"application-flow/2",operations:{read:{steps:[{id:"data",kind:"data",edge:"missing-data",operation:"read"}]}}}};
+  useCanvasStore.setState({resources:[resource,{id:"db",type:"Database",name:"Orders DB",x:1,y:0},{id:"cache",type:"Cache",name:"Orders cache",x:1,y:1}],connectionLines:[{id:"app-db",sourceId:"app",targetId:"db",sourceType:"Virtual Machine",targetType:"Database",port:5432},{id:"app-cache",sourceId:"app",targetId:"cache",sourceType:"Virtual Machine",targetType:"Cache",port:6379}]});
+  // Server rendering reads Zustand's initial snapshot rather than the live store.
+  const initial=useCanvasStore.getInitialState(),previous={...initial};
+  Object.assign(initial,useCanvasStore.getState());
+  let html:string;
+  try { html=renderToStaticMarkup(<FlowSection resource={resource} disabled/>); } finally { Object.assign(initial,previous); }
+  for(const text of ["Data target data","Data operation data","Orders DB","Orders cache","Missing data edge: missing-data","database fallback and fill","never retried by the flow","Add data","disabled"])expect(html).toContain(text);
+  useCanvasStore.setState({undoStack:[],redoStack:[],liveLocked:false,isDeploying:false});
+  const updated=structuredClone(resource.applicationFlow!);updated.operations.read!.steps=[{id:"data",kind:"data",edge:"app-cache",operation:"read"}];
+  updateResource("app",{applicationFlow:updated});undo();expect(useCanvasStore.getState().resources[0]!.applicationFlow).toEqual(resource.applicationFlow);redo();expect(useCanvasStore.getState().resources[0]!.applicationFlow).toEqual(updated);
+});
+
+test("worker messages and live renderer retain /2 data target, operation and outcome",()=>{
+  const messages:FromWorker[]=[],queue:Array<()=>void>=[];
+  const resources:Resource[]=[{id:"app",type:"Virtual Machine",x:0,y:0,applicationFlow:{schema:"application-flow/2",operations:{read:{steps:[{id:"read-db",kind:"data",edge:"app-db",operation:"read"}]}}}},{id:"db",type:"Database",x:1,y:0}];
+  const host=createRunHost(message=>messages.push(structuredClone(message)),{set:run=>{queue.push(run);return run;},clear:()=>{queue.length=0;}});
+  host.handle({type:"start",start:{input:{resources,connectionLines:[{id:"app-db",sourceId:"app",targetId:"db",sourceType:"Virtual Machine",targetType:"Database",port:5432}],workloadProfile:resolveWorkload({targetThroughput:60,throughputUnit:"per-minute",trafficShape:"steady",readWriteRatio:1,payloadSize:"light"}),seed:"data-worker",adapterProfiles:["application-flow/2"]},horizonSeconds:2,stopAtSecond:2,speed:1}});
+  while(queue.length)queue.shift()!();
+  expect(messages.some(m=>m.type==="error")).toBe(false);
+  const seconds=messages.filter(m=>m.type==="second");expect(seconds).toHaveLength(2);
+  const evidence=seconds.at(-1)!.applicationFlow!;expect(evidence.profile).toBe("application-flow/2");
+  expect(evidence.events.find(e=>e.kind==="flow-branch-terminal")!.detail).toMatchObject({target:"db",operation:"read",outcome:"completed",command:"query"});
+  const html=renderToStaticMarkup(<ApplicationFlowLog evidence={evidence}/>);expect(html).toContain("target: db");expect(html).toContain("operation: read");
+});

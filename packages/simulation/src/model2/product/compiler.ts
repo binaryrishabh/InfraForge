@@ -175,8 +175,11 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       const owner = materialized.get(ref(`$self/${contract.nodes[r.id]!.primary}`, instance));
       if (r.applicationFlow.schema === "application-flow/2") {
         const attached = design.connections.filter(e => e.sourceId === r.id).map(e => nodes.get(e.targetId)!);
+        for (const edge of design.connections.filter(e => e.sourceId === r.id && ["Database", "Cache"].includes(nodes.get(e.targetId)!.type))) {
+          if (!Object.values(r.applicationFlow.operations).some(flow => flow.steps.some(s => s.kind === "data" && s.edge === edge.id))) throw Error(`Data connection ${edge.id} needs an exact typed step on its source flow`);
+        }
         const dbs = attached.filter(n => n.type === "Database"), caches = attached.filter(n => n.type === "Cache");
-        if (dbs.length > 1 || caches.length > 1 || (caches.length && (dbs.length !== 1 || !design.connections.some(e => e.sourceId === caches[0]!.id && e.targetId === dbs[0]!.id)))) throw Error("Flow /2 needs at most one database and one cache drawn to the same attached database");
+        if (dbs.length > 1 || caches.length > 1 || (caches.length && (!design.connections.some(e => e.sourceId === caches[0]!.id && nodes.get(e.targetId)?.type === "Database") || (dbs.length === 1 && !design.connections.some(e => e.sourceId === caches[0]!.id && e.targetId === dbs[0]!.id))))) throw Error("Flow /2 needs at most one database and one cache drawn to the same attached database");
       }
       if (owner?.kind !== "compute" || owner.applicationFlow || owner.downstream || owner.downstreamByOperation) throw Error("Flow requires an exclusive compute owner without downstream routing");
       const call = (c: import("@infraforge/domain/resource").FlowCall) => {
@@ -196,7 +199,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
         const target = ref(`$${drawn.targetId}/${binding.targetRole}`), targetOwner = materialized.get(target);
         if (command === "query" ? targetOwner?.kind !== "relational" : targetOwner?.kind !== "cache-aside") throw Error("Data step target command owner mismatch");
         if (targetOwner?.kind === "cache-aside") {
-          const attachedDb = design.connections.find(e => e.sourceId === r.id && nodes.get(e.targetId)?.type === "Database");
+          const attachedDb = design.connections.find(e => e.sourceId === drawn.targetId && nodes.get(e.targetId)?.type === "Database");
           if (!attachedDb || targetOwner.cache !== ref(`$${drawn.targetId}`) || targetOwner.database !== ref(`$${attachedDb.targetId}`) || targetOwner.keys.length !== 1 || targetOwner.keys[0] !== "key") throw Error("Typed cache must use the attached cache and database with the assumed key");
         }
         if (command === "query" && c.operation === "write" && design.connections.some(e => e.sourceId === r.id && nodes.get(e.targetId)?.type === "Cache")) throw Error("Use a cache write to update the database and invalidate the attached cache");

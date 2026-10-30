@@ -73,7 +73,7 @@ test("reject unsafe data targets, read writes, parallel data, stale direct write
     d => { const s = d.resources[0]!.applicationFlow!.operations.read!.steps[1]!; if(s.kind === "data") s.edge="missing"; },
     d => { const s = d.resources[0]!.applicationFlow!.operations.read!.steps[1]!; if(s.kind === "data") s.operation="write"; },
     d => { d.resources[0]!.applicationFlow!.operations.read!.steps = [{id:"p",kind:"parallel",wait:"all",branches:[{id:"a",kind:"data",edge:"app-db",operation:"read"},{id:"b",kind:"call",edge:"app-cache"}]}] as never; },
-    d => { const s = d.resources[0]!.applicationFlow!.operations.write!.steps[0]!; if(s.kind === "data") s.edge="app-db"; },
+    d => { const s = d.resources[0]!.applicationFlow!.operations.write!.steps[0]!; if(s.kind === "data") s.edge="app-db"; d.connections.push({id:"app-db",sourceId:"app",targetId:"db",sourceType:"Virtual Machine",targetType:"Database",port:5432}); },
     d => { d.connections = d.connections.filter(e=>e.id!=="cache-db"); },
     d => { d.resources.push({id:"db2",type:"Database",x:0,y:0});d.connections.push({...d.connections[0]!,id:"extra",targetId:"db2"}); },
   ];

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { applicationFlowError, FLOW_OPERATIONS, type Resource, type FlowStep, type FlowCall, type FlowOperation } from "@infraforge/domain/resource";
+import { applicationFlowError, FLOW_OPERATIONS, type Resource, type FlowStep, type FlowCall, type FlowData, type FlowOperation } from "@infraforge/domain/resource";
 import { updateResource } from "../../actions";
 import { useCanvasStore } from "../../store/canvasStore";
 import { InspectorSection } from "./InspectorSection";
@@ -9,11 +9,12 @@ export function FlowSection({ resource, disabled }: { resource: Resource; disabl
   const edges = useCanvasStore(s => s.connectionLines);
   const resources = useCanvasStore(s => s.resources);
   const connected = edges.filter(e => e.sourceId === resource.id && resources.some(r => r.id === e.targetId && ["Virtual Machine", "Load Balancer"].includes(r.type)));
+  const dataEdges = edges.filter(e => e.sourceId === resource.id && resources.some(r => r.id === e.targetId && ["Database", "Cache"].includes(r.type)));
   const flow = resource.applicationFlow, steps = flow?.operations[operation]?.steps;
   const commit = (rows: FlowStep[] | undefined) => {
     const operations = { ...flow?.operations };
     if (rows) operations[operation] = { steps: rows }; else delete operations[operation];
-    updateResource(resource.id, { applicationFlow: Object.keys(operations).length ? { schema: "application-flow/1", operations } : undefined });
+    updateResource(resource.id, { applicationFlow: Object.keys(operations).length ? { schema: flow?.schema === "application-flow/2" || Object.values(operations).some(f => f.steps.some(s => s.kind === "data")) ? "application-flow/2" : "application-flow/1", operations } : undefined });
   };
   const patch = (index: number, row: FlowStep) => commit(steps!.map((s, i) => i === index ? row : s));
   const call = (): FlowCall => ({ id: crypto.randomUUID(), kind: "call", edge: connected[0]?.id ?? "" });
@@ -27,6 +28,17 @@ export function FlowSection({ resource, disabled }: { resource: Resource; disabl
       <option value="">Same operation</option>{FLOW_OPERATIONS.map(op => <option key={op}>{op}</option>)}
     </select>
   </>;
+  const dataPicker = (row: FlowData, change: (c: FlowData) => void) => <>
+    <select aria-label={`Data target ${row.id}`} value={row.edge} onChange={e => change({ ...row, edge: e.target.value })}>
+      <option value="">Choose an attached database or cache</option>
+      {!dataEdges.some(e => e.id === row.edge) && row.edge && <option value={row.edge}>Missing data edge: {row.edge}</option>}
+      {dataEdges.map(e => <option key={e.id} value={e.id}>{resources.find(r => r.id === e.targetId)?.name || e.targetId} ({e.id})</option>)}
+    </select>
+    <select aria-label={`Data operation ${row.id}`} value={row.operation} onChange={e => change({ ...row, operation: e.target.value as FlowOperation })}>
+      {FLOW_OPERATIONS.map(op => <option key={op}>{op}</option>)}
+    </select>
+    <p className="text-xs text-ink-3">Database: read or write the assumed key. Cache: read with database fallback and fill; write updates the database and invalidates. Connect the cache to the same attached database. Data steps run sequentially and are never retried by the flow.</p>
+  </>;
   const error = applicationFlowError(resource.type, flow);
   const dangling = steps?.flatMap(s => s.kind === "call" ? [s] : s.kind === "parallel" ? s.branches : []).find(c => !connected.some(e => e.id === c.edge));
   return <InspectorSection title="Application flow">
@@ -37,6 +49,7 @@ export function FlowSection({ resource, disabled }: { resource: Resource; disabl
       {steps?.map((s, i) => <div key={s.id} className="border border-line p-2">
         <p>{i + 1}. {s.kind}</p>
         {s.kind === "call" && picker(s, c => patch(i, c))}
+        {s.kind === "data" && dataPicker(s, c => patch(i, c))}
         {s.kind === "parallel" && <>
           {s.branches.map((b, j) => <div key={b.id}>{picker(b, c => patch(i, { ...s, branches: s.branches.map((v, n) => n === j ? c : v) }))}
             <button type="button" onClick={() => patch(i, { ...s, branches: s.branches.filter((_, n) => n !== j) })}>Remove branch</button></div>)}
@@ -47,12 +60,14 @@ export function FlowSection({ resource, disabled }: { resource: Resource; disabl
         <button type="button" disabled={i === 0} onClick={() => { const rows = [...steps]; [rows[i - 1], rows[i]] = [rows[i]!, rows[i - 1]!]; commit(rows); }}>Move up</button>
         <button type="button" onClick={() => commit(steps.filter((_, n) => n !== i))}>Remove step</button>
       </div>)}
-      {steps && (["compute", "call", "parallel"] as const).map(kind => <button key={kind} type="button" disabled={steps.length >= 32} onClick={() => commit([...steps, kind === "compute" ? { id: crypto.randomUUID(), kind } : kind === "call" ? call() : { id: crypto.randomUUID(), kind, branches: [call(), call()], wait: "all" }])}>Add {kind}</button>)}
+      {steps && (["compute", "call", "data", "parallel"] as const).map(kind => <button key={kind} type="button" disabled={steps.length >= 32} onClick={() => commit([...steps, kind === "compute" ? { id: crypto.randomUUID(), kind } : kind === "call" ? call() : kind === "data" ? { id: crypto.randomUUID(), kind, edge: dataEdges[0]?.id ?? "", operation: "read" } : { id: crypto.randomUUID(), kind, branches: [call(), call()], wait: "all" }])}>Add {kind}</button>)}
     </fieldset>
     {error && <p role="alert">{error}</p>}
     {dangling && <p role="alert">Call {dangling.id}: choose an existing connected service edge.</p>}
+    {steps?.filter(s => s.kind === "data").map(s => !dataEdges.some(e => e.id === s.edge) && <p key={s.id} role="alert">Data {s.id}: choose an existing attached database or cache edge.</p>)}
     {steps?.some(s => s.kind === "parallel" && new Set(s.branches.map(b => b.edge)).size !== s.branches.length) && <p role="alert">Parallel siblings must use distinct service paths.</p>}
     {steps?.some(s => s.kind === "parallel" && s.branches.some(b => (b.operation ?? operation) === "write")) && <p role="alert">Parallel calls must be read-only or idempotent; canvas writes are non-idempotent.</p>}
-    {operation === "read" && steps?.some(s => s.kind === "call" && s.operation === "write") && <p role="alert">A read-only flow cannot call the write operation.</p>}
+    {steps?.some(s => s.kind === "data" && s.operation === "write" && dataEdges.some(e => e.id === s.edge && resources.find(r => r.id === e.targetId)?.type === "Database") && dataEdges.some(e => resources.find(r => r.id === e.targetId)?.type === "Cache")) && <p role="alert">Use a cache write to update the database and invalidate the attached cache.</p>}
+    {operation === "read" && steps?.some(s => (s.kind === "call" || s.kind === "data") && s.operation === "write") && <p role="alert">A read-only flow cannot call the write operation.</p>}
   </InspectorSection>;
 }

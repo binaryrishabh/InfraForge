@@ -36,3 +36,28 @@ test("service edges preserve the pre-flow invalid verdict until the source flow 
     expect(validateConnection(source.type, type, { source: target, connectionId: edge.id }).valid).toBe(false);
   }
 });
+
+
+test("data edges preserve implicit wiring and require exact typed use only for /2", () => {
+  for (const type of ["Database", "Cache"] as const) {
+    const source: Resource={id:"app",type:"Virtual Machine",x:0,y:0};
+    const target: Resource={id:"data",type,x:1,y:0};
+    const edge={id:"data-edge",sourceId:"app",targetId:"data",sourceType:"Virtual Machine",targetType:type,port:type==="Cache"?6379:5432};
+    const resources = type === "Cache" ? [source,target,{id:"db",type:"Database" as const,x:2,y:0}] : [source,target];
+    const connections = type === "Cache" ? [edge,{id:"backing",sourceId:"data",targetId:"db",sourceType:"Cache",targetType:"Database",port:5432}] : [edge];
+    expect(validateConnection(source.type,type).valid).toBe(true);
+    expect(validateConnection(source.type,type,"draw").valid).toBe(true);
+    expect(validateDeploymentReadiness(resources,connections).valid).toBe(true);
+    source.applicationFlow={schema:"application-flow/1",operations:{read:{steps:[{id:"cpu",kind:"compute"}]}}};
+    expect(validateDeploymentReadiness(resources,connections).valid).toBe(true);
+    source.applicationFlow.schema="application-flow/2";
+    expect(validateDeploymentReadiness(resources,connections).valid).toBe(false);
+    source.applicationFlow.operations.read!.steps=[{id:"d",kind:"data",edge:"wrong",operation:"read"}];
+    expect(validateConnection(source.type,type,{source,connectionId:edge.id}).valid).toBe(false);
+    source.applicationFlow.operations.read!.steps=[{id:"d",kind:"data",edge:edge.id,operation:"read"}];
+    expect(validateDeploymentReadiness(resources,connections).valid).toBe(true);
+    expect(applicationFlowError(source.type,source.applicationFlow)).toBeUndefined();
+    source.applicationFlow.schema="application-flow/1";
+    expect(applicationFlowError(source.type,source.applicationFlow)).toBeDefined();
+  }
+});

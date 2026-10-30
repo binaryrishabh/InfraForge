@@ -2,6 +2,7 @@ import type { DataInput } from "./contracts";
 
 /** /2 checks actual downstream effects, including calls through service and LB owners. */
 export function validateDataFlowEffects(input: DataInput) {
+  if (!input.resources.some(r => r.kind === "compute" && r.applicationFlow?.schema === "application-flow/2")) return;
   const resources = new Map(input.resources.map(r => [r.id, r]));
   const memo = new Map<string, boolean>();
   const mutates = (id: string, op: string, seen = new Set<string>()): boolean => {
