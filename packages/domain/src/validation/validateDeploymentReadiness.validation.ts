@@ -15,12 +15,12 @@ export function validateConnection(sourceType: ResourceType, targetType: Resourc
     }
     const rule = allowed.find(rule => (typeof rule === "string" ? rule : rule.target) === targetType);
     if (!rule) { // If the sepcified sourceType can't make connection with the defined targetType
-        return { valid: false, message: `${sourceType} cannot connect to ${targetType}. Allowed: ${allowed.filter(rule => context === "draw" || typeof rule === "string").map(rule => typeof rule === "string" ? rule : rule.target).join(", ")}` };
+        return { valid: false, message: `${sourceType} cannot connect to ${targetType}. Allowed: ${allowed.filter(rule => context === "draw" || typeof rule === "string" || rule.requires === "application-flow/2").map(rule => typeof rule === "string" ? rule : rule.target).join(", ")}` };
     }
-    if (typeof rule !== "string" && context !== "draw") {
+    if (typeof rule !== "string" && context !== "draw" && (rule.requires === "application-flow" || context?.source.applicationFlow?.schema === "application-flow/2")) {
         const usesConnection = context && Object.values(context.source.applicationFlow?.operations ?? {}).some(flow =>
-            flow.steps.some(step => step.kind === "call" ? step.edge === context.connectionId :
-                step.kind === "parallel" && step.branches.some(branch => branch.edge === context.connectionId)));
+            flow.steps.some(step => step.kind === (rule.requires === "application-flow/2" ? "data" : "call") && "edge" in step ? step.edge === context.connectionId :
+                rule.requires === "application-flow" && step.kind === "parallel" && step.branches.some(branch => branch.edge === context.connectionId)));
         if (!usesConnection) return { valid: false, message: "This connection is used only by an Application Flow: author a flow on the source VM that calls it" };
     }
     return { valid: true, message: "Connection valid" };

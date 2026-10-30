@@ -6,10 +6,10 @@ import { utf8Bytes } from "../time";
 export const APPLICATION_FLOW_MAX_BYTES = 1024 * 1024;
 
 /** Byte accounting includes the entire flow object, not just event payloads. */
-export function applicationFlowEvidence(rowLimit: number, byteLimit = Infinity) {
+export function applicationFlowEvidence(rowLimit: number, byteLimit = Infinity, profile: "application-flow/1" | "application-flow/2" = "application-flow/1") {
   const events: CausalEvent[] = [], totals: Record<string, number> = {};
   let omitted = 0, retainedBytes = 0;
-  const envelope = () => ({ profile: "application-flow/1" as const, events: [] as CausalEvent[], totals, retained: events.length, omitted });
+  const envelope = () => ({ profile, events: [] as CausalEvent[], totals, retained: events.length, omitted });
   function trim() {
     if (byteLimit === Infinity) return;
     // Totals/counts can grow after the last retained row. Recheck their overhead
@@ -45,6 +45,6 @@ export function applicationFlowEvidence(rowLimit: number, byteLimit = Infinity) 
       events.push(row);
       trim();
     },
-    measure() { return { profile: "application-flow/1" as const, events: events.map(e => ({ ...e, ...(e.work ? { work: { ...e.work } } : {}), detail: { ...e.detail } })), totals: { ...totals }, retained: events.length, omitted }; },
+    measure() { return { profile, events: events.map(e => ({ ...e, ...(e.work ? { work: { ...e.work } } : {}), detail: { ...e.detail } })), totals: { ...totals }, retained: events.length, omitted }; },
   };
 }

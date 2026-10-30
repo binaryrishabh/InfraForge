@@ -1,3 +1,4 @@
+import { validateDataFlowEffects } from "./flowEffects";
 import { requireKnown, type Quantity, type Unit } from "../../reality/quantity";
 import { micros } from "../time";
 import type { NetworkInput } from "../network/contracts";
@@ -8,6 +9,7 @@ import { validateComputeInput } from "../compute/run";
 export const isData = (r: DataInput["resources"][number]): r is DataResource => ["relational", "cache", "cache-aside"].includes(r.kind);
 export const networkAdapter = (input: DataInput): NetworkInput => ({ ...input, workloadVersion: "m2d/1", resources: input.resources.map((r) => isData(r) ? { ...r.execution, id: r.id, downstream: undefined } : r) });
 export function validateData(input: DataInput) {
+  validateDataFlowEffects(input);
   const adapter = networkAdapter(input); validateNetwork(adapter); validateComputeInput(computeAdapter(adapter));
   if (!["m2e/1", "m2e-pg/1", "m2e-pg/2"].includes(input.workloadVersion) || input.dataInterventions.length > caps.interventions) throw new Error("Invalid data revision/budget");
   const ledger = new Map(input.ledger.map((e) => [e.id, e.quantity])), horizon = requireKnown(input.horizon, "us");
@@ -17,6 +19,15 @@ export function validateData(input: DataInput) {
   };
   const resources = new Map(input.resources.map((r) => [r.id, r])), pairs = new Set(input.paths.map((p) => JSON.stringify([p.source, p.target])));
   const validKey = (key: string) => typeof key === "string" && key.length > 0 && key.length <= caps.keyCharacters;
+  for (const r of input.resources) if (r.kind === "compute" && r.applicationFlow) for (const flow of Object.values(r.applicationFlow.operations)) for (const step of flow.steps) if (step.kind === "data") {
+    const target = resources.get(step.target);
+    if (step.command === "query" ? target?.kind !== "relational" : target?.kind !== "cache-aside") throw Error("Typed data target must own its declared command");
+    const db = target?.kind === "cache-aside" ? resources.get(target.database) : target;
+    if (target?.kind === "cache-aside" && target.operations[step.operation] !== step.operation) throw Error("Typed cache operation must match cache-aside policy");
+    if (db?.kind !== "relational") throw Error("Typed data requires a relational database");
+    const plan = db.plans[step.operation];
+    if (!plan || plan.statements.some(s => step.operation === "read" ? s.kind !== "snapshot-read" : !["snapshot-read", "write"].includes(s.kind))) throw Error("Typed data read/write must match existing snapshot-read/write plans");
+  }
   for (const r of input.resources) if (isData(r)) {
     if (r.execution.id !== r.id || r.execution.downstream || r.execution.quota || input.interventions.some((i) => i.target === r.id) || input.faults.some((f) => f.target === r.id)) throw new Error("Data resource owns its execution/fault policy; unsupported generic intervention");
     if (r.execution.memory.coverage !== "partial" || r.execution.memory.policy !== "observe" || Object.keys(r.execution.memory).some((key) => !["coverage", "policy"].includes(key))) throw new Error("Data process memory is Unknown; generic compute memory policy is unsupported");

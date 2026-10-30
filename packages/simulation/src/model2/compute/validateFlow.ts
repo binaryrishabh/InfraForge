@@ -5,7 +5,7 @@ export function validateFlows(input: ComputeInput) {
   const resources = new Map(input.resources.map(r => [r.id, r])), operations = new Map(input.operations.map(o => [o.id, o]));
   const safe = (operation: string) => ["read-only", "idempotent"].includes(operations.get(operation)?.idempotency ?? "unknown");
   for (const r of input.resources) if (r.kind === "compute" && r.applicationFlow) {
-    if (Object.keys(r.applicationFlow).some(k => !["schema", "operations"].includes(k)) || r.applicationFlow.schema !== "application-flow/1" || !Object.keys(r.applicationFlow.operations).length) throw Error("Invalid application-flow/1 operations");
+    if (Object.keys(r.applicationFlow).some(k => !["schema", "operations"].includes(k)) || !["application-flow/1", "application-flow/2"].includes(r.applicationFlow.schema) || !Object.keys(r.applicationFlow.operations).length) throw Error("Invalid application-flow/1 operations");
     if (r.downstream || r.downstreamByOperation) throw Error("An operation flow cannot coexist with downstream routing");
     for (const [operation, flow] of Object.entries(r.applicationFlow.operations)) {
       if (Object.keys(flow).some(k => k !== "steps") || !operations.has(operation) || !flow.steps.length || flow.steps.length > 32) throw Error("Flow needs a known operation and 1–32 steps");
@@ -21,6 +21,11 @@ export function validateFlows(input: ComputeInput) {
       };
       for (const s of flow.steps) {
         if (s.kind === "call") call(s, false);
+        else if (s.kind === "data") {
+          unique(s.id);
+          if (r.applicationFlow.schema !== "application-flow/2" || Object.keys(s).some(k => !["id", "kind", "target", "operation", "command"].includes(k)) || !["query", "cache-aside"].includes(s.command) || !["read", "write"].includes(s.operation) || !resources.has(s.target) || !operations.has(s.operation)) throw Error("Invalid typed data step");
+          if (safe(operation) && s.operation === "write") throw Error("Read-only/idempotent flow cannot contain a data write");
+        }
         else if (s.kind === "compute") { unique(s.id); if (Object.keys(s).some(k => !["id", "kind"].includes(k))) throw Error("Compute step takes no parameters"); }
         else if (s.kind === "parallel") {
           unique(s.id);
@@ -44,7 +49,7 @@ export function validateFlows(input: ComputeInput) {
       if (!r.profiles[op] || !input.profiles.some(p => p.id === r.profiles[op] && p.operation === op)) throw Error("Missing target operation profile");
       const flow = r.kind === "compute" ? r.applicationFlow?.operations[op] : undefined;
       if (flow) for (const s of flow.steps) {
-        if (s.kind === "call") visit(s.target, s.operation ?? op);
+        if (s.kind === "call" || s.kind === "data") visit(s.target, s.operation ?? op);
         if (s.kind === "parallel") for (const b of s.branches) visit(b.target, b.operation ?? op);
       }
       else { const target = r.kind === "compute" ? r.downstreamByOperation?.[op] ?? r.downstream : r.downstream; if (target) visit(target, op); }

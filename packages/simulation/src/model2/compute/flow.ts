@@ -1,12 +1,13 @@
 import type { EventClock } from "../time";
 import type { Invocation, Receipt, RemoteCompletion, RemoteOutcome } from "../workload/contracts";
 import type { Cause } from "../workload/cause";
-import { carryCause } from "../workload/cause";
+import { carryCause, causeFields } from "../workload/cause";
 import type { CausalObserver } from "../workload/causal";
 import { identity } from "../workload/arrivals";
 
 export interface RuntimeFlowCall { id: string; kind: "call"; target: string; operation?: string }
-export type RuntimeFlowStep = { id: string; kind: "compute" } | RuntimeFlowCall | {
+export interface RuntimeFlowData { id: string; kind: "data"; target: string; operation: "read" | "write"; command: "query" | "cache-aside" }
+export type RuntimeFlowStep = { id: string; kind: "compute" } | RuntimeFlowCall | RuntimeFlowData | {
   id: string; kind: "parallel"; branches: RuntimeFlowCall[]; wait: "all" | number;
 };
 export interface RuntimeFlow { steps: RuntimeFlowStep[] }
@@ -15,7 +16,7 @@ export interface RuntimeFlow { steps: RuntimeFlowStep[] }
 export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFlow, clock: EventClock,
   send: (target: string, work: Invocation, done: RemoteCompletion) => Receipt,
   compute: (step: string, done: () => void) => void, finish: RemoteCompletion, causal?: CausalObserver) {
-  type Slot = { branch: RuntimeFlowCall; work: Invocation; receipt?: Receipt; outcome?: RemoteOutcome; cause?: Cause };
+  type Slot = { branch: RuntimeFlowCall | RuntimeFlowData; work: Invocation; receipt?: Receipt; outcome?: RemoteOutcome; cause?: Cause };
   let cursor = 0, terminal = false, paused = false, parked: (() => void) | undefined, cancelContinuation: (() => boolean) | undefined;
   let slots: Slot[] = [], step: RuntimeFlowStep | undefined, stepSettled = false;
   const emit = (kind: string, detail: Record<string, string | number | boolean | null>, child = work) => causal?.({ atUs: clock.now, resource: owner, work: child, kind: `flow-${kind}`, detail });
@@ -54,11 +55,12 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
       compute(step.id, () => { if (!terminal) { settleStep("completed"); schedule("computed", next); } });
       return;
     }
-    const current = step, branches = current.kind === "call" ? [current] : current.branches;
-    const threshold = current.kind === "call" || current.wait === "all" ? branches.length : current.wait;
+    const current = step, branches = current.kind !== "parallel" ? [current] : current.branches;
+    const threshold = current.kind !== "parallel" || current.wait === "all" ? branches.length : current.wait;
     slots = branches.map(branch => ({ branch, work: {
       rootId: work.rootId, attempt: work.attempt, offeredAt: work.offeredAt, parentCallId: work.callId,
       callId: identity(...JSON.parse(work.callId), "flow", owner, work.operation, current.id, branch.id), operation: branch.operation ?? work.operation,
+      ...(branch.kind === "data" ? { message: { request: { kind: "query", key: "key" } } } : {}),
     } }));
     let dispatching = true, joined = false;
     const evaluate = () => {
@@ -83,7 +85,7 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
         // Actual remote-after-stop outcomes are observed by transport, never this callback.
         if (terminal || joined || slot.outcome) return;
         slot.outcome = outcome; slot.cause = cause;
-        emit("branch-terminal", { step: current.id, branch: slot.branch.id, outcome }, slot.work);
+        emit("branch-terminal", { step: current.id, branch: slot.branch.id, outcome, ...(slot.branch.kind === "data" ? { target: slot.branch.target, operation: slot.branch.operation, command: slot.branch.command, ...causeFields(cause), ...(slot.work.message?.response && typeof slot.work.message.response === "object" && "hit" in slot.work.message.response ? { hit: !!slot.work.message.response.hit } : {}) } : {}) }, slot.work);
         evaluate();
       });
     }

@@ -37,9 +37,9 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
   try {
     boundedProduct(design); boundedProduct(contract);
     design = savedPoolPolicies(design);
-    if (contract.applicationFlowProfile !== undefined && contract.applicationFlowProfile !== "application-flow/1") error("UNKNOWN_FLOW_PROFILE", "applicationFlowProfile", "Unsupported flow profile");
-    if (design.resources.some(r => r.applicationFlow) !== (contract.applicationFlowProfile === "application-flow/1")) error("FLOW_PROFILE", "applicationFlowProfile", "Saved flow requires the application-flow/1 adapter");
-    if (contract.applicationFlowProfile && !contract.version.endsWith("/application-flow/1")) error("FLOW_VERSION", "version", "Flow semantic version must identify application-flow/1");
+    if (contract.applicationFlowProfile !== undefined && !["application-flow/1", "application-flow/2"].includes(contract.applicationFlowProfile)) error("UNKNOWN_FLOW_PROFILE", "applicationFlowProfile", "Unsupported flow profile");
+    if ((design.resources.some(r => r.applicationFlow?.schema === "application-flow/2") ? "application-flow/2" : design.resources.some(r => r.applicationFlow) ? "application-flow/1" : undefined) !== contract.applicationFlowProfile) error("FLOW_PROFILE", "applicationFlowProfile", "Saved flow requires the application-flow/1 adapter");
+    if (contract.applicationFlowProfile && !contract.version.endsWith(`/${contract.applicationFlowProfile}`)) error("FLOW_VERSION", "version", "Flow semantic version must identify application-flow/1");
     if (contract.failureCauseProfile !== undefined && contract.failureCauseProfile !== "failure-cause/1") error("UNKNOWN_CAUSE_PROFILE", "failureCauseProfile", "Unsupported failure cause profile");
     if (design.schema !== "infraforge-saved-design/1" || contract.schema !== "infraforge-product-model2/1" || !contract.version || !contract.designVersion || !contract.catalogVersion || contract.workloadVersion !== "product-arrivals/1") error("VERSION_REQUIRED", "versions", "Explicit design/compiler/application/catalog/workload versions required");
     if (!contract.application) error("MISSING_APPLICATION_PROFILE", "application", "Missing application execution profile; provider hardware cannot supply operation demand");
@@ -173,6 +173,11 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     }
     for (const r of resources) if (r.applicationFlow) for (const instance of expansion.get(r.id)!) {
       const owner = materialized.get(ref(`$self/${contract.nodes[r.id]!.primary}`, instance));
+      if (r.applicationFlow.schema === "application-flow/2") {
+        const attached = design.connections.filter(e => e.sourceId === r.id).map(e => nodes.get(e.targetId)!);
+        const dbs = attached.filter(n => n.type === "Database"), caches = attached.filter(n => n.type === "Cache");
+        if (dbs.length > 1 || caches.length > 1 || (caches.length && (dbs.length !== 1 || !design.connections.some(e => e.sourceId === caches[0]!.id && e.targetId === dbs[0]!.id)))) throw Error("Flow /2 needs at most one database and one cache drawn to the same attached database");
+      }
       if (owner?.kind !== "compute" || owner.applicationFlow || owner.downstream || owner.downstreamByOperation) throw Error("Flow requires an exclusive compute owner without downstream routing");
       const call = (c: import("@infraforge/domain/resource").FlowCall) => {
         const drawn = design.connections.find(e => e.id === c.edge && e.sourceId === r.id), binding = contract.edges[c.edge];
@@ -182,7 +187,22 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
         if (targetOwner?.kind !== "compute" && targetOwner?.kind !== "load-balancer") throw Error("Flow v1 targets must be compute or load balancer service owners; async workers are unsupported");
         return { id: c.id, kind: "call" as const, target, ...(c.operation ? { operation: c.operation } : {}) };
       };
-      owner.applicationFlow = { schema: "application-flow/1", operations: Object.fromEntries(Object.entries(r.applicationFlow.operations).map(([op, flow]) => [op, { steps: flow.steps.map(s => s.kind === "compute" ? s : s.kind === "call" ? call(s) : { ...s, branches: s.branches.map(call) }) }])) };
+      const data = (c: import("@infraforge/domain/resource").FlowData) => {
+        if (r.applicationFlow!.schema !== "application-flow/2" || contract.applicationFlowProfile !== "application-flow/2") throw Error("Data steps require application-flow/2");
+        const drawn = design.connections.find(e => e.id === c.edge && e.sourceId === r.id), binding = contract.edges[c.edge];
+        const targetNode = drawn && nodes.get(drawn.targetId), targetSpec = targetNode && contract.nodes[targetNode.id];
+        const command = targetNode?.type === "Database" ? "query" as const : targetNode?.type === "Cache" ? "cache-aside" as const : undefined;
+        if (!drawn || !binding || !targetNode || !targetSpec || !command || binding.purpose !== "dependency" || binding.sourceRole !== contract.nodes[r.id]!.primary || binding.targetRole !== (command === "query" ? targetSpec.primary : "aside")) throw Error("Data step needs an attached database or database-backed cache edge");
+        const target = ref(`$${drawn.targetId}/${binding.targetRole}`), targetOwner = materialized.get(target);
+        if (command === "query" ? targetOwner?.kind !== "relational" : targetOwner?.kind !== "cache-aside") throw Error("Data step target command owner mismatch");
+        if (targetOwner?.kind === "cache-aside") {
+          const attachedDb = design.connections.find(e => e.sourceId === r.id && nodes.get(e.targetId)?.type === "Database");
+          if (!attachedDb || targetOwner.cache !== ref(`$${drawn.targetId}`) || targetOwner.database !== ref(`$${attachedDb.targetId}`) || targetOwner.keys.length !== 1 || targetOwner.keys[0] !== "key") throw Error("Typed cache must use the attached cache and database with the assumed key");
+        }
+        if (command === "query" && c.operation === "write" && design.connections.some(e => e.sourceId === r.id && nodes.get(e.targetId)?.type === "Cache")) throw Error("Use a cache write to update the database and invalidate the attached cache");
+        return { id: c.id, kind: "data" as const, target, operation: c.operation, command };
+      };
+      owner.applicationFlow = { schema: r.applicationFlow.schema, operations: Object.fromEntries(Object.entries(r.applicationFlow.operations).map(([op, flow]) => [op, { steps: flow.steps.map(s => s.kind === "compute" ? s : s.kind === "call" ? call(s) : s.kind === "data" ? data(s) : { ...s, branches: s.branches.map(call) }) }])) };
     }
     const entry = ref(contract.caller.entry); path("external-entry", "$caller", entry, { purpose: "dependency", sourceRole: "external", targetRole: "entry", ...contract.caller });
     for (const e of contract.caller.dependencies) path(`external/${e.id}`, "$caller", ref(e.target), { ...e, sourceRole: "external", targetRole: "target" });
@@ -201,7 +221,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
         if (r.kind !== "compute") return 1;
         const flow = r.applicationFlow?.operations[operation];
         if (!flow) { const target = r.downstreamByOperation?.[operation] ?? r.downstream; return 1 + (target ? calls(target, operation, chain) : 0); }
-        const total = 1 + flow.steps.reduce((sum, s) => sum + (s.kind === "compute" ? 1 : s.kind === "call" ? calls(s.target, s.operation ?? operation, chain) : s.branches.reduce((n, b) => n + calls(b.target, b.operation ?? operation, chain), 0)), 0);
+        const total = 1 + flow.steps.reduce((sum, s) => sum + (s.kind === "compute" ? 1 : s.kind === "data" ? (s.command === "cache-aside" ? 4 : 1) : s.kind === "call" ? calls(s.target, s.operation ?? operation, chain) : s.branches.reduce((n, b) => n + calls(b.target, b.operation ?? operation, chain), 0)), 0);
         memo.set(key, total); return total;
       };
       const factor = Math.max(...runtime.operations.map(op => calls(op.entry, op.id)));

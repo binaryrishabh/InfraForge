@@ -1,11 +1,12 @@
 export const FLOW_OPERATIONS = ["read", "write"] as const;
 export type FlowOperation = typeof FLOW_OPERATIONS[number];
 export interface FlowCall { id: string; kind: "call"; edge: string; operation?: FlowOperation }
-export type FlowStep = { id: string; kind: "compute" } | FlowCall | {
+export interface FlowData { id: string; kind: "data"; edge: string; operation: FlowOperation }
+export type FlowStep = { id: string; kind: "compute" } | FlowCall | FlowData | {
   id: string; kind: "parallel"; branches: FlowCall[]; wait: "all" | number;
 };
 export interface ApplicationFlow {
-  schema: "application-flow/1";
+  schema: "application-flow/1" | "application-flow/2";
   operations: Partial<Record<FlowOperation, { steps: FlowStep[] }>>;
 }
 /** Shared structural validator. Connectivity, profiles and effect safety belong to compilation. */
@@ -15,7 +16,7 @@ export function applicationFlowError(type: string, value: unknown): string | und
   const keys = (v: Record<string, unknown>, allowed: string[]) => Object.keys(v).every(k => allowed.includes(k));
   const id = (v: unknown) => typeof v === "string" && /^[a-zA-Z0-9_-]{1,64}$/.test(v);
   if (type !== "Virtual Machine") return "Application flows require a Virtual Machine.";
-  if (!object(value) || !keys(value, ["schema", "operations"]) || value.schema !== "application-flow/1" || !object(value.operations)) return "Expected application-flow/1 operations.";
+  if (!object(value) || !keys(value, ["schema", "operations"]) || !["application-flow/1", "application-flow/2"].includes(String(value.schema)) || !object(value.operations)) return "Expected application-flow/1 operations.";
   if (!Object.keys(value.operations).length || !keys(value.operations, [...FLOW_OPERATIONS])) return "Choose read or write for each flow.";
   for (const [operation, flow] of Object.entries(value.operations)) {
     if (!object(flow) || !keys(flow, ["steps"]) || !Array.isArray(flow.steps) || !flow.steps.length || flow.steps.length > 32) return `${operation}: use 1–32 ordered steps.`;
@@ -25,6 +26,10 @@ export function applicationFlowError(type: string, value: unknown): string | und
     for (const step of flow.steps) {
       if (!object(step)) return `${operation}: invalid step.`;
       if (step.kind === "call") { if (!call(step)) return `${operation}: calls need unique IDs and a connected edge.`; }
+      else if (step.kind === "data") {
+        if (value.schema !== "application-flow/2" || !keys(step, ["id", "kind", "edge", "operation"]) || !unique(step.id) || typeof step.edge !== "string" || !step.edge.length || step.edge.length > 256 || !FLOW_OPERATIONS.includes(step.operation as FlowOperation)) return `${operation}: data needs application-flow/2, a unique ID, connected edge and explicit read/write.`;
+        if (operation === "read" && step.operation === "write") return "A read-only flow cannot contain a data write.";
+      }
       else if (step.kind === "compute") { if (!keys(step, ["id", "kind"]) || !unique(step.id)) return `${operation}: compute takes no parameters and needs a unique ID.`; }
       else if (step.kind === "parallel") {
         if (!keys(step, ["id", "kind", "branches", "wait"]) || !unique(step.id) || !Array.isArray(step.branches) || step.branches.length < 2 || step.branches.length > 8) return `${operation}: parallel needs 2–8 single-call branches and a unique ID.`;

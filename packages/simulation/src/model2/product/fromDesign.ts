@@ -16,7 +16,7 @@ const operations = ["read", "write", "health"] as const;
 
 // Only new captures select current implicit profiles. Historical builds use their recorded list.
 export function currentAdapterProfiles(resources: SavedProductDesign["resources"]): AdapterProfile[] {
-  return resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1"] : [];
+  return [...(resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1" as const] : []), ...(resources.some(r => r.applicationFlow?.schema === "application-flow/2") ? ["application-flow/2" as const] : [])];
 }
 
 /** Canvas intent is preserved; missing application and service settings are visible assumptions.
@@ -29,10 +29,13 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const design = savedPoolPolicies(saved), resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
     // New canvas runs with retry/breaker intent record observational cause evidence; no learner control, and no decision depends on it.
     const profiles = history && "adapterProfiles" in history ? history.adapterProfiles : history ? [] : currentAdapterProfiles(resources);
-    if (profiles.some(p => p !== "failure-cause/1") || profiles.length > 1) error("adapterProfiles", "Unsupported adapter profile selection.");
+    if (profiles.some(p => !["failure-cause/1", "application-flow/2"].includes(p)) || new Set(profiles).size !== profiles.length) error("adapterProfiles", "Unsupported adapter profile selection.");
     const failureCause = profiles.includes("failure-cause/1");
     const hasSecurity = resources.some(r => r.listenerSettings !== undefined || r.firewallSettings !== undefined);
     const hasFlow = resources.some(r => r.applicationFlow !== undefined);
+    const flow2 = resources.some(r => r.applicationFlow?.schema === "application-flow/2");
+    if (flow2 !== profiles.includes("application-flow/2")) error("adapterProfiles", "Application Flow /2 requires its captured application-flow/2 adapter profile and matching saved intent.");
+    const flowProfile = flow2 ? "application-flow/2" as const : "application-flow/1" as const;
     const byId = new Map(resources.map((r) => [r.id, r]));
     const connections = [...design.connections].sort((a, b) => a.id < b.id ? -1 : 1);
     const outgoing = (id: string) => connections.filter((e) => e.sourceId === id).map((e) => byId.get(e.targetId)!);
@@ -46,7 +49,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       if (securityError) error(`resources.${r.id}.security`, securityError);
       const flowError = applicationFlowError(r.type, r.applicationFlow);
       if (flowError) error(`resources.${r.id}.applicationFlow`, flowError);
-      if (r.applicationFlow && (r.asyncWorker?.enabled || outgoing(r.id).some(t => !["Virtual Machine", "Load Balancer"].includes(t.type)))) error(`resources.${r.id}.applicationFlow`, "Flow v1 calls connected VM or load balancer services only; async/data/publish bindings are unsupported.");
+      if (r.applicationFlow && (r.asyncWorker?.enabled || outgoing(r.id).some(t => !(r.applicationFlow?.schema === "application-flow/2" ? ["Virtual Machine", "Load Balancer", "Database", "Cache"] : ["Virtual Machine", "Load Balancer"]).includes(t.type)))) error(`resources.${r.id}.applicationFlow`, "Flow v1 calls connected VM or load balancer services only; async/data/publish bindings are unsupported.");
       const asyncError = asyncSettingsError(r.type, r.asyncQueue, r.asyncWorker);
       if (asyncError) error(`resources.${r.id}.async`, asyncError);
       const breakerError = circuitBreakerSettingsError(r.type, r.circuitBreaker);
@@ -145,10 +148,14 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
           }
           const data = outgoing(id).filter((t) => ["Database", "Cache"].includes(t.type));
           const cache = data.find((t) => t.type === "Cache"), database = data.find((t) => t.type === "Database");
-          if (data.length > 1 && !(data.length === 2 && cache && database && !outgoing(cache.id).length)) { error(`resources.${id}`, "Connect the app to one database, one database-backed cache, or one cache and one database; other combinations need an authored operation plan."); break; }
+          if (r.applicationFlow?.schema === "application-flow/2") {
+            if (data.filter(t => t.type === "Database").length > 1 || data.filter(t => t.type === "Cache").length > 1 || (cache && (!database || outgoing(cache.id).length !== 1 || outgoing(cache.id)[0]?.id !== database.id))) { error(`resources.${id}`, "Flow /2 supports one attached database and one optional cache drawn to that same database."); break; }
+          }
+          else if (data.length > 1 && !(data.length === 2 && cache && database && !outgoing(cache.id).length)) { error(`resources.${id}`, "Connect the app to one database, one database-backed cache, or one cache and one database; other combinations need an authored operation plan."); break; }
           const config = execution(r, "main");
           config.memory.limit = q(`${id}.memory.limit`, memory.get(id)! * 1073741824, "bytes", "The memory label is interpreted as GiB for this partial observation only; total memory use remains unknown.");
-          if (cache && database) {
+          if (r.applicationFlow?.schema === "application-flow/2") { /* The authored steps own every data dependency. */ }
+          else if (cache && database) {
             config.downstream = "$self/aside";
             add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: `$${cache.id}`, database: `$${database.id}`, keys: ["key"], access: "cycle", coalesce: note(`${id}.cache.singleFlight`, false, "policy", "Plain cache-aside has no single-flight: concurrent misses independently call the database."), onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "main", "aside");
           } else if (data[0]) config.downstream = `$${data[0].id}${data[0].type === "Cache" ? "/aside" : ""}`;
@@ -249,7 +256,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       if (s.type === "Virtual Machine" && (s.asyncWorker?.enabled || producerQueue(s.id)) && ["Message Queue", "Object Storage"].includes(t.type)) { edges[e.id] = edge(t, `edge.${e.id}`, s.asyncWorker?.enabled ? "main" : "publisher", "main", "consumer", e.port, true); continue; }
       if (s.type === "Firewall") purpose = "policy-attachment";
       else if (s.type === "Load Balancer" && t.type === "Virtual Machine") purpose = "routing";
-      else if (s.type === "Virtual Machine" && s.applicationFlow && ["Virtual Machine", "Load Balancer"].includes(t.type)) purpose = "dependency";
+      else if (s.type === "Virtual Machine" && s.applicationFlow && ["Virtual Machine", "Load Balancer", ...(s.applicationFlow.schema === "application-flow/2" ? ["Database", "Cache"] : [])].includes(t.type)) { purpose = "dependency"; targetRole = t.type === "Cache" ? "aside" : "main"; }
       else if (s.type === "Monitoring Agent" && t.type !== "Firewall") purpose = "monitor-target";
       else if (["CDN", "Container Registry"].includes(s.type) && t.type === "Object Storage") purpose = "origin";
       else if (s.type === "Cache" && t.type === "Database") sourceRole = "aside";
@@ -305,9 +312,9 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const assumedTransport: ProductContract["transports"][string] = { version: "canvas-assumptions/2", ownership: "per-path", provenance: [SOURCE], links: ["request", "response"].map((id) => ({ id, from: id === "request" ? "$source" : "$target", to: id === "request" ? "$target" : "$source", policy: "fifo-message/1", bandwidth: q(`link.${id}.bandwidth`, 125000000, "bytes/s"), propagation: q(`link.${id}.propagation`, 100, "us"), bufferBytes: q(`link.${id}.buffer`, 16777216, "bytes") })), pool: { mode: "serial", reuse: true, maxConnections: q("pool.connections", 32, "count"), streams: q("pool.streams", 1, "count"), pending: q("pool.pending", 256, "count"), establish: q("pool.establish", 100, "us"), acquireTimeout: q("pool.acquireTimeout", 1000000, "us"), connectTimeout: q("pool.connectTimeout", 1000000, "us"), responseTimeout: q("pool.responseTimeout", 4000000, "us"), remoteCancellation: "request-cancellation" }, bytes: Object.fromEntries(operations.map((id) => [id, { request: payload, response: payload }])) };
     const contract: ProductContract = {
       ...(hasSecurity ? { securityProfile: "canvas-security/1" as const } : {}),
-      ...(hasFlow ? { applicationFlowProfile: "application-flow/1" as const } : {}),
+      ...(hasFlow ? { applicationFlowProfile: flowProfile } : {}),
       ...(failureCause ? { failureCauseProfile: "failure-cause/1" as const } : {}),
-      schema: "infraforge-product-model2/1", version: (failureCause ? "canvas-assumptions/2/failure-cause/1" : "canvas-assumptions/2") + (hasFlow ? "/application-flow/1" : ""), designVersion: "saved-domain/1", catalogVersion: CATALOG_SNAPSHOT_DATE, workloadVersion: "product-arrivals/1", ledger, nodes, edges, capabilities,
+      schema: "infraforge-product-model2/1", version: (failureCause ? "canvas-assumptions/2/failure-cause/1" : "canvas-assumptions/2") + (hasFlow ? `/${flowProfile}` : ""), designVersion: "saved-domain/1", catalogVersion: CATALOG_SNAPSHOT_DATE, workloadVersion: "product-arrivals/1", ledger, nodes, edges, capabilities,
       application: { schema: "infraforge-application/1", id: "canvas-default", version: "1", provenance: [SOURCE], validityDomain: SCOPE, controlOperation: "health", readOperation: "read", writeOperation: "write", payloads, operations: operations.map((id) => ({ id, callerTimeout: q(`application.${id}.timeout`, 5000000, "us"), onCallerStop: "request-cancellation", idempotency: id === "write" ? "non-idempotent" : "read-only" })), demands: operations.map((op) => ({ schema: "infraforge-compute-demand/1", id: `canvas.${op}`, version: "1", application: "canvas-default", operation: op, stage: "compute", method: "synthetic", cpu: q(`application.${op}.cpu`, op === "health" ? 100 : op === "write" ? 6000 : 3000, "cpu-us"), blockingWait: q(`application.${op}.wait`, 0, "us"), maxCpuParallelism: q(`application.${op}.parallelism`, 1, "cores"), residentCoverage: "partial", obtainedBy: "Explicit educational defaults", evidence: [SOURCE], date: "2026-10-27", validity: { exact: { environment: "canvas-assumptions" }, ranges: {} }, uncertainty: [SCOPE], freeMode: "forbidden" })) },
       transports: { assumed: assumedTransport, caller: { ...assumedTransport, pool: { ...assumedTransport.pool, maxConnections: q("pool.caller.connections", 512, "count", "Authored open-loop load-generator allowance of 512 concurrent serial connections; this is separate from each app-to-database pool and is not a browser client default.") } }, cache: { ...assumedTransport, pool: { ...assumedTransport.pool, connectTimeout: q("pool.cache.connectTimeout", 10000, "us", "Authored 10 ms cache connect timeout: an unavailable optional cache falls back promptly rather than throttling database demand for a second."), responseTimeout: q("pool.cache.responseTimeout", 10000, "us", "Authored 10 ms cache response timeout for prompt cache-aside fallback, not a Redis/provider default; no retry is added.") } }, database: { ...assumedTransport, pool: { ...assumedTransport.pool, evidenceProfile: "postgresql-pools/2", maxConnections: q("pool.database.connections", 10, "count", "Authored assumption modelled on node-postgres-style pooling: lazy open, at most 10 connections per source replica and database path; the acquire timeout is an authored assumption."), idleTimeout: q("pool.database.idleTimeout", 10000000, "us", "Authored node-postgres-style idle close after 10 seconds.") } } },
       caller: { address: "198.51.100.1", entry: `$${entry.id}`, transport: "caller", request: ["request"], response: ["response"], security: security(entry, RESOURCE_PORTS[entry.type], "caller"), dependencies: [] },
@@ -322,7 +329,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     }
     for (const target of [...new Set(resources.filter((r) => r.type === "Monitoring Agent").flatMap((r) => outgoing(r.id).map((t) => t.id)))].sort()) contract.instrumentation.push({ target: `$${target}`, bytes: q(`instrumentation.${target}`, 128, "bytes") });
     for (const r of resources.filter(r => r.applicationFlow)) {
-      nodes[r.id]!.profileVersion += "/application-flow/1";
+      nodes[r.id]!.profileVersion += `/${r.applicationFlow!.schema}`;
       nodes[r.id]!.provenance.push(`saved-design:${r.id}.applicationFlow`);
       note(`${r.id}.applicationFlow.worker`, "thread-per-request: worker held while waiting", "policy", "Authored assumption: thread-per-request: worker held while waiting; waiting consumes no CPU.");
     }

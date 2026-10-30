@@ -10,9 +10,10 @@ const FlowCallSchema = z.object({ id: z.string(), kind: z.literal("call"), edge:
 const FlowStepsSchema = z.object({ steps: z.array(z.union([
   z.object({ id: z.string(), kind: z.literal("compute") }).strict(),
   FlowCallSchema,
+  z.object({ id: z.string(), kind: z.literal("data"), edge: z.string(), operation: z.enum(["read", "write"]) }).strict(),
   z.object({ id: z.string(), kind: z.literal("parallel"), branches: z.array(FlowCallSchema), wait: z.union([z.literal("all"), z.number()]) }).strict(),
 ])) }).strict();
-const ApplicationFlowSchema = z.object({ schema: z.literal("application-flow/1"), operations: z.object({
+const ApplicationFlowSchema = z.object({ schema: z.enum(["application-flow/1", "application-flow/2"]), operations: z.object({
   read: FlowStepsSchema.optional(), write: FlowStepsSchema.optional(),
 }).strict() }).strict();
 
