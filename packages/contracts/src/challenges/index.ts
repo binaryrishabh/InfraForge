@@ -1,5 +1,8 @@
 import type { ChaosType, ConnectionLine, Resource, ResourceType } from "@infraforge/domain/resource";
 import type { ResolvedWorkloadProfile } from "@infraforge/domain/workload";
+import type { InterventionRequest } from "@infraforge/domain/resource";
+import type { InterventionReceipt } from "../actions";
+import type { AdapterProfile } from "../run-inputs";
 export * from "./learning";
 
 export type ChallengeDifficulty = "starter" | "core" | "advanced";
@@ -17,6 +20,7 @@ export type ChallengeCriterion =
   | { id: string; kind: "monthly-budget"; label: string; maxUsd: number }
   | { id: string; kind: "overall-health"; label: string; allowed: OverallHealth[] }
   | { id: string; kind: "no-saturation"; label: string }
+  | { id: string; kind: "terminal-p95"; label: string; maxMs: number }
   | { id: string; kind: "database-healthy"; label: string }
   | { id: string; kind: "database-connections"; label: string; requireSpare?: boolean }
   // Every resource except the experiment's target stays out of saturation and failure.
@@ -92,6 +96,19 @@ export interface RecordedExperiment {
   targetType: ResourceType;
 }
 
+export interface ChallengeScenario {
+  version: 1;
+  visibility: "revealed" | "debrief";
+  steps: Array<{ id: string; atSecond: number; request: InterventionRequest }>;
+}
+export interface RecordedScenario extends ChallengeScenario {
+  definitionHash: string;
+  simulationModelVersion: "2";
+  catalogSnapshot: string;
+  adapterProfiles: AdapterProfile[];
+  receipts: InterventionReceipt[];
+}
+
 export interface ChallengeDefinition {
   // Omitted on historical Model 1 versions.
   engine?: "2";
@@ -114,6 +131,7 @@ export interface ChallengeDefinition {
   starter: ChallengeStarter | null;
   // Present only on resilience challenges. Optional so earlier definitions keep their exact spec hash.
   experiment?: ChallengeExperiment;
+  scenario?: ChallengeScenario;
 }
 
 export interface ChallengeAttemptSummary {

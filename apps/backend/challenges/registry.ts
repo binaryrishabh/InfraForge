@@ -50,7 +50,7 @@ export const findChallenge = (id: string, version: number) => REGISTRY.find(id, 
 export const latestChallenge = (id: string) => REGISTRY.latest(id);
 export const listLatestChallenges = () => REGISTRY.listLatest();
 
-export const categoryOf = (definition: ChallengeDefinition): ChallengeCategory => definition.experiment ? "resilience" : "design";
+export const categoryOf = (definition: ChallengeDefinition): ChallengeCategory => definition.experiment || definition.scenario ? "resilience" : "design";
 
 // Each version's evaluation uses one fixed seed so two attempts of the same design are reproducible.
 export function challengeSeed(definition: ChallengeDefinition) { return `challenge:${definition.id}:v${definition.version}`; }

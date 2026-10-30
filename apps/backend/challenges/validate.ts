@@ -8,6 +8,9 @@ import { buildRegistry, specHash } from "./registry";
 import { experimentReadiness } from "./experiment";
 import { experimentWindow, EXPERIMENT_MAX_POINTS } from "@infraforge/contracts/reports";
 import { recordedExperiment } from "./experiment";
+import { scenarioError } from "@infraforge/simulation/model2-run";
+import { recordedScenario } from "./scenario";
+import { captureRunInputs } from "../deployments/runInputs";
 
 /* Authoring checks for source-controlled challenges. Everything here is static and
 deterministic; calibration (the starter fails, a hidden reference passes) runs the
@@ -34,10 +37,11 @@ const definition = z.object({
   experiment: z.object({ fault: z.enum(DeploymentChaosNames), atSimulatedSecond: z.number().int(), hypothesis: text(240),
     postFaultObservationSeconds: z.number().int().min(1).max(60).optional(),
     target: z.object({ resourceId: z.string().min(1).max(64), type: z.enum(types) }).strict() }).strict().optional(),
+  scenario: z.unknown().optional(),
 }).strict();
 
 const CRITERIA = ["deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
-  "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated"];
+  "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95"];
 const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
 
@@ -46,10 +50,21 @@ function checkDefinition(d: ChallengeDefinition): string[] {
   const parsed = definition.safeParse(d);
   if (!parsed.success) return parsed.error.issues.map((issue) => `${where}: ${issue.path.join(".") || "definition"} ${issue.message}`);
   const problems: string[] = [];
+  if (d.scenario) {
+    const error = scenarioError(d.scenario, d.evaluationSeconds);
+    if (error) problems.push(`${where}: ${error}`);
+    if (d.experiment || d.engine !== "2") problems.push(`${where}: scenarios require Model 2 and exclude experiments`);
+    if (!d.starter) problems.push(`${where}: a scenario needs a runnable starter`);
+    if (!error && d.starter) {
+      try { recordedScenario(d, captureRunInputs(d.starter, d.workload, `challenge:${d.id}:v${d.version}`)); }
+      catch (error) { problems.push(`${where}: scenario: ${(error as Error).message}`); }
+    }
+  }
   const unique = (label: string, ids: string[]) => { if (new Set(ids).size !== ids.length) problems.push(`${where}: ${label} ids must be unique`); };
   unique("criterion", d.criteria.map((c) => c.id));
   unique("prediction", d.predictions.map((p) => p.id));
   for (const c of d.criteria) {
+    if (c.kind === "terminal-p95" && (!d.scenario || !Number.isFinite(c.maxMs) || c.maxMs <= 0)) problems.push(`${where}: terminal-p95 needs a scenario and a positive finite maxMs`);
     if (c.kind === "database-connections" && c.requireSpare !== undefined && typeof c.requireSpare !== "boolean") problems.push(`${where}: criterion ${c.id} requireSpare must be boolean`);
     if (!CRITERIA.includes(c.kind)) problems.push(`${where}: criterion ${c.id} has unsupported kind ${c.kind}`);
     if (NEEDS_EXPERIMENT.has(c.kind) && !d.experiment) problems.push(`${where}: criterion ${c.id} needs an experiment`);

@@ -3,6 +3,9 @@ import type { ChallengeDefinition, ChallengePreflight, PreflightCheck } from "@i
 import { runCostEstimation } from "../stages/costEstimation.stages";
 import { appServersBehindBalancer, genericSized, list, type Topology } from "./criteria";
 import { experimentReadiness } from "./experiment";
+import { recordedScenario } from "./scenario";
+import { captureRunInputs } from "../deployments/runInputs";
+import { challengeSeed } from "./registry";
 
 /* Advisory readiness for the challenge workspace. It uses the same gate code the
 worker runs, and it never reveals what the run itself will measure, including the
@@ -34,7 +37,12 @@ export function preflight(definition: ChallengeDefinition, topology: Topology): 
     }
   });
   const experiment = definition.experiment ? experimentReadiness(definition.experiment, topology, definition.engine) : null;
-  return { valid: readiness.valid && experiment?.ready !== false, errors: [...readiness.errors, ...(experiment && !experiment.ready ? [experiment.detail] : [])],
+  let scenarioProblem: string | null = null;
+  if (definition.scenario) {
+    try { recordedScenario(definition, captureRunInputs(topology, definition.workload, challengeSeed(definition))); }
+    catch (error) { scenarioProblem = (error as Error).message; }
+  }
+  return { valid: readiness.valid && experiment?.ready !== false && !scenarioProblem, errors: [...readiness.errors, ...(experiment && !experiment.ready ? [experiment.detail] : []), ...(scenarioProblem ? [scenarioProblem] : [])],
     warnings: readiness.warnings, monthlyEstimateUsd: monthly.monthlyEstimate, checks,
     resourceTypes: [...new Set(topology.resources.map((r) => r.type))], experiment };
 }
