@@ -35,17 +35,18 @@ export function resolveIntervention(design: SavedProductDesign, contract: Produc
       const source = binding.purpose === "queue-poll" ? p.target : p.source, destination = binding.purpose === "queue-poll" ? p.source : p.target;
       return p.id === `${edge.id}:${instance(source, edge.sourceId, binding.sourceRole)}:${instance(destination, edge.targetId, binding.targetRole)}`;
     });
-    resolvedTargets = [...new Set(paths.flatMap(p => target.direction === "both" ? [...p.request, ...p.response] : p[target.direction]))].sort();
-    if (!resolvedTargets.length || resolvedTargets.some(id => !input.links.some(l => l.id === id))) throw Error("INTERVENTION_PATH: edge has no materialized transport links");
+    if (d.id === "pool-reset" && [edge.sourceId, edge.targetId].some(id => contract.nodes[id]?.controller)) throw Error("INTERVENTION_GENERATION: fixed endpoint generations required");
+    resolvedTargets = d.id === "pool-reset" ? paths.map(p => p.id).sort() : [...new Set(paths.flatMap(p => target.direction === "both" ? [...p.request, ...p.response] : p[target.direction]))].sort();
+    if (!resolvedTargets.length || resolvedTargets.some(id => !(d.id === "pool-reset" ? input.paths : input.links).some(l => l.id === id))) throw Error("INTERVENTION_PATH: edge has no materialized transport links");
   }
-  const affectedPaths = input.paths.filter(p => d.id === "deny-port" ? input.systems.connections.some(c => c.path === p.id && requireKnown(c.port, "count") === Number(request.parameters.port) && c.firewalls.some(id => resolvedTargets.includes(id))) : [...p.request, ...p.response].some(id => resolvedTargets.includes(id))).map(p => p.id).sort();
+  const affectedPaths = input.paths.filter(p => d.id === "deny-port" ? input.systems.connections.some(c => c.path === p.id && requireKnown(c.port, "count") === Number(request.parameters.port) && c.firewalls.some(id => resolvedTargets.includes(id))) : d.id === "pool-reset" ? resolvedTargets.includes(p.id) : [...p.request, ...p.response].some(id => resolvedTargets.includes(id))).map(p => p.id).sort();
   if (resolvedTargets.length > 2048 || affectedPaths.length > 2048) throw Error("INTERVENTION_BUDGET: resolved blast radius exceeds receipt budget");
   return {interventionId: d.id, revision: d.revision, target, ...(authoredBaseline === undefined ? {} : {authoredBaseline}), resolvedTargets, affectedPaths};
 }
 export function interventionOptions(design: SavedProductDesign, contract: ProductContract, input: SystemsInput): InterventionOption[] {
   const result: InterventionOption[] = [];
   for (const d of INTERVENTIONS) {
-    const targets: InterventionTarget[] = d.targetKind === "edge" ? design.connections.flatMap(e => (["request", "response", "both"] as const).map(direction => ({edgeId: e.id, direction})))
+    const targets: InterventionTarget[] = d.targetKind === "edge" ? design.connections.flatMap(e => (d.directions ?? ["request", "response", "both"] as const).map(direction => ({edgeId: e.id, direction})))
       : design.resources.filter(r => r.type === d.targetKind).map(r => ({resourceId: r.id}));
     for (const target of targets) {
       const sample = {interventionId: d.id, revision: d.revision, target, parameters: Object.fromEntries(d.parameters.map(p => [p.name, p.min ?? (p.kind === "boolean" ? false : p.values?.[0] ?? 0)]))};
@@ -73,7 +74,14 @@ export function compileInterventions(design: SavedProductDesign, contract: Produ
     if (error) throw Error(error);
     if (row.atUs > requireKnown(input.horizon, "us")) throw Error("INTERVENTION_HORIZON: action is outside the run");
     const {interventionId: kind, parameters} = row.request;
-    const durationUs = kind === "flush" ? undefined : Number(parameters.duration) * SECOND, endUs = durationUs === undefined ? null : row.atUs + durationUs;
+    const durationUs = INTERVENTIONS.find(d => d.id === kind)!.endPolicy === "one-shot" ? undefined : Number(parameters.duration) * SECOND, endUs = durationUs === undefined ? null : row.atUs + durationUs;
+    if (kind === "pool-reset") {
+      const paths = input.paths.filter(p => option.resolvedTargets.includes(p.id));
+      const owns = (endpoint: string, node: string) => endpoint === node || endpoint.startsWith(`${node}/`) || endpoint.startsWith(`${node}#`);
+      if (contract.faults.some(f => f.kind === "Crash" && paths.some(p => owns(p.source, f.target) || owns(p.target, f.target)) && requireKnown(f.at, "us") <= row.atUs && requireKnown(f.at, "us") + requireKnown(f.duration, "us") + (f.restart ? requireKnown(f.restart, "us") : 0) >= row.atUs)
+        || input.networkInterventions.some(i => i.kind === "service-state" && !i.alive && paths.some(p => p.source === i.target || p.target === i.target) && requireKnown(i.at, "us") <= row.atUs && requireKnown(i.at, "us") + requireKnown(i.duration, "us") >= row.atUs)) throw Error("INTERVENTION_GENERATION: pool reset overlaps endpoint replacement");
+      if (input.networkInterventions.some(i => i.kind === "reset" && option.resolvedTargets.includes(i.target) && requireKnown(i.at, "us") === row.atUs)) throw Error("INTERVENTION_OVERLAP: duplicate pool reset at one timestamp");
+    }
     // Includes physical sharing, direction aliases and legacy network controls.
     for (const old of receipts) if (old.interventionId === kind && old.resolvedTargets.some(id => option.resolvedTargets.includes(id)) && old.endUs !== null && endUs !== null && row.atUs < old.endUs && endUs > old.atUs) throw Error("INTERVENTION_OVERLAP: same mechanism and materialized target");
     if (endUs !== null && input.networkInterventions.some(i => i.kind === "service-state" && !i.alive && option.resolvedTargets.includes(i.target) && requireKnown(i.at, "us") < endUs && requireKnown(i.at, "us") + requireKnown(i.duration, "us") > row.atUs)) throw Error("INTERVENTION_GENERATION: capacity control overlaps a process restart");
@@ -96,6 +104,7 @@ export function compileInterventions(design: SavedProductDesign, contract: Produ
           fromPort: q("port", Number(parameters.port), "count"), toPort: q("portEnd", Number(parameters.port), "count"), priority: provenance.q(`intervention.${row.id}.priority`, -1, "count", ["deny-port@1: reserved priority ahead of nonnegative baseline rules"], "implementation-policy"), action: "deny",
         }]}, {...common, id: `${common.id}:restore`, at: q("restore", endUs!, "us"), kind: "firewall-rules", restore: true, rules: baseline.rules});
       }
+      else if (kind === "pool-reset") input.networkInterventions.push({...common, kind: "reset", evidenceActionId: row.id});
       else if (kind === "flush") input.dataInterventions.push({...common, kind});
       else if (kind === "session-capacity") input.dataInterventions.push({...common, kind, duration: duration!, sessions: q("sessions", Number(parameters.sessions), "count")});
       else if (kind === "cpu-capacity") input.dataInterventions.push({...common, kind, duration: duration!, cores: q("cores", Number(parameters.cores), "cores")});

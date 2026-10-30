@@ -6,10 +6,13 @@ export interface InterventionParameter {
 export interface InterventionDescriptor {
   id: string; revision: number; label: string; targetKind: "Database" | "Cache" | "Firewall" | "edge";
   mechanism: "relational" | "cache" | "firewall" | "transport"; parameters: InterventionParameter[];
+  directions?: Array<"request" | "response" | "both">;
   reversible: boolean; endPolicy: "timed" | "one-shot"; requires: string[];
 }
 const duration: InterventionParameter = { name: "duration", kind: "integer", unit: "s", min: 1, max: "remaining-seconds" };
 export const INTERVENTIONS: readonly InterventionDescriptor[] = [
+  { id: "pool-reset", revision: 1, label: "Reset connection pool", targetKind: "edge", mechanism: "transport", directions: ["both"],
+    parameters: [], reversible: false, endPolicy: "one-shot", requires: ["fixed materialized transport pools"] },
   { id: "deny-port", revision: 1, label: "Deny TCP port", targetKind: "Firewall", mechanism: "firewall",
     parameters: [{ name: "port", kind: "integer", unit: "TCP port", min: 1, max: 65535 }, duration], reversible: true, endPolicy: "timed", requires: ["fixed firewall policy"] },
   { id: "session-capacity", revision: 1, label: "Session capacity", targetKind: "Database", mechanism: "relational",
@@ -45,7 +48,7 @@ export function interventionError(value: unknown, bounds: InterventionBounds = {
   if (!d || d.revision !== value.revision) return "INTERVENTION_REVISION: unavailable intervention or revision";
   const t = value.target;
   if (!object(t)) return "INTERVENTION_TARGET: semantic target required";
-  if (d.targetKind === "edge" ? Object.keys(t).sort().join() !== "direction,edgeId" || !simpleId(t.edgeId) || !["request", "response", "both"].includes(t.direction as string)
+  if (d.targetKind === "edge" ? Object.keys(t).sort().join() !== "direction,edgeId" || !simpleId(t.edgeId) || !(d.directions ?? ["request", "response", "both"]).includes(t.direction as "request" | "response" | "both")
     : Object.keys(t).join() !== "resourceId" || !simpleId(t.resourceId)) return "INTERVENTION_TARGET: target kind or direction is unsupported";
   const p = value.parameters;
   if (!object(p) || Object.keys(p).sort().join() !== d.parameters.map(p => p.name).sort().join()) return "INTERVENTION_PARAMETERS: exact declared parameters required";

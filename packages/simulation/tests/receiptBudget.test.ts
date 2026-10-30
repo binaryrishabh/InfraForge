@@ -32,3 +32,12 @@ test("a receipt cut to fit keeps the first sorted IDs and the real counts; a sma
   const small = { ...full, resolvedTargets: ["a"], affectedPaths: [] };
   expect(capReceipt(small)).toBe(small);
 });
+
+test("pool-reset receipts retain path identities and real counts within the stored outcome cap", () => {
+  const paths = Array.from({length: 2048}, (_,i) => `edge-${i}:${"s".repeat(100)}:${"t".repeat(100)}`);
+  const receipt = capReceipt({interventionId: "pool-reset", revision: 1, target: {edgeId: "edge", direction: "both"}, parameters: {}, actionId: "reset", resolvedTargets: paths, affectedPaths: paths, atUs: 1, endUs: null});
+  expect(bytes(receipt)).toBeLessThanOrEqual(RECEIPT_BYTES);
+  expect(receipt).toMatchObject({resolvedTargetCount: 2048, affectedPathCount: 2048, endUs: null});
+  expect(receipt.resolvedTargets).toEqual(paths.slice(0, receipt.resolvedTargets.length));
+  expect(receipt.affectedPaths).toEqual(receipt.resolvedTargets);
+});
