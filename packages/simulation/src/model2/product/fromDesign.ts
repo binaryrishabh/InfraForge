@@ -16,7 +16,8 @@ const operations = ["read", "write", "health"] as const;
 
 // Only new captures select current implicit profiles. Historical builds use their recorded list.
 export function currentAdapterProfiles(resources: SavedProductDesign["resources"]): AdapterProfile[] {
-  return [...(resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1" as const] : []), ...(resources.some(r => r.applicationFlow?.schema === "application-flow/2") ? ["application-flow/2" as const] : [])];
+  const dataFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/2");
+  return [...(dataFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : [])];
 }
 
 /** Canvas intent is preserved; missing application and service settings are visible assumptions.

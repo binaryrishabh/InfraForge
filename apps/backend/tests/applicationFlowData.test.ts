@@ -21,9 +21,9 @@ const workload={targetThroughput:60,throughputUnit:"per-minute" as const,traffic
 test("/2 data steps save/reload with captured profile, strict validation and comparison identity",()=>{
   const d=design();
   expect(validateDeploymentReadiness(d.resources,d.connectionLines).valid).toBe(true);
-  for(const schema of [LayoutSchema,LiveTopologySchema])expect(schema.parse(JSON.parse(JSON.stringify(d))).resources).toEqual(d.resources);
+  for(const schema of [LayoutSchema,LiveTopologySchema])expect<Resource[]>(schema.parse(JSON.parse(JSON.stringify(d))).resources).toEqual(d.resources);
   const input=readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(d,workload,"data-parity"))));
-  expect(input.adapterProfiles).toEqual(["application-flow/2"]);
+  expect(input.adapterProfiles).toEqual(["failure-cause/1","application-flow/2"]);
   expect(buildContractFromRunInputs({...input,adapterProfiles:undefined},4)).toHaveProperty("refused");
   const old=structuredClone(d);old.resources[0]!.applicationFlow!.schema="application-flow/1";
   expect(LayoutSchema.safeParse(old).success).toBe(false);
@@ -37,7 +37,7 @@ test("/2 data steps save/reload with captured profile, strict validation and com
 
 for(const cause of [false,true])test(`browser/server data evidence and terminal capture are equal, cause=${cause}`,()=>{
   const d=design(),input=readRunInputs(captureRunInputs(d,workload,"data-parity"));
-  if(cause)input.adapterProfiles!.unshift("failure-cause/1");
+  input.adapterProfiles=cause?["failure-cause/1","application-flow/2"]:["application-flow/2"];
   const browser=createModel2Run(input,4),server=createModel2Engine(input,4,buildModel2Contract);
   for(let i=0;i<4;i++) {browser.advance();server.advance();expect(browser.applicationFlowEvidence()).toEqual(server.applicationFlowEvidence());}
   const instance:SimulationInstance={model2:server,tickCount:4,pendingLogs:[],speed:1,lastCheckpointAt:0,accumulatedCostUsd:0,topology:d,topologyRevision:0,actions:new Map(),acknowledge:null,metricsComputedAt:null,metricsTopologyRevision:0};

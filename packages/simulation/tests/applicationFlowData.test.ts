@@ -68,7 +68,7 @@ test("database CPU slowdown is reflected in flow latency, session refusal retain
 
 test("captured /2 is explicit and /1 cannot acquire data semantics", () => {
   const d = canvasDataFlow();
-  expect(currentAdapterProfiles(d.resources)).toEqual(["application-flow/2"]);
+  expect(currentAdapterProfiles(d.resources)).toEqual(["failure-cause/1","application-flow/2"]);
   expect(contractFromDesign(d,{adapterProfiles:[]})).toHaveProperty("refused");
   expect(contractFromDesign(d,{adapterProfiles:["application-flow/2"]})).toHaveProperty("contract");
   d.resources[0]!.applicationFlow!.schema = "application-flow/1";
