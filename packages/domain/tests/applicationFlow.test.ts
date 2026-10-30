@@ -1,11 +1,16 @@
 import { test, expect } from "bun:test";
 import { applicationFlowError, type ApplicationFlow } from "../src/resource";
 const valid = (): ApplicationFlow => ({ schema: "application-flow/1", operations: { read: { steps: [{ id: "cpu", kind: "compute" }, { id: "join", kind: "parallel", wait: 2, branches: [{ id: "a", kind: "call", edge: "edge-a" }, { id: "b", kind: "call", edge: "edge-b" }] }] } } });
-test("/3 inherits typed data validation and queue edges require exact publish use", () => {
+test("/3 inherits typed data validation and enabled queue edges require exact publish use", () => {
   const source: Resource = { id: "app", type: "Virtual Machine", x: 0, y: 0, applicationFlow: { schema: "application-flow/3", operations: { write: { steps: [{ id: "p", kind: "publish", edge: "queue-edge" }] } } } };
   expect(applicationFlowError(source.type, source.applicationFlow)).toBeUndefined();
-  expect(validateConnection(source.type, "Message Queue", { source, connectionId: "queue-edge" }).valid).toBe(true);
-  expect(validateConnection(source.type, "Message Queue", { source, connectionId: "other" }).valid).toBe(false);
+  const target: Resource = { id: "queue", type: "Message Queue", x: 0, y: 0, asyncQueue: { enabled: true } };
+  expect(validateConnection(source.type, "Message Queue", { source, target, connectionId: "queue-edge" }).valid).toBe(true);
+  expect(validateConnection(source.type, "Message Queue", { source, target, connectionId: "other" }).valid).toBe(false);
+  target.asyncQueue = { enabled: false };
+  expect(validateConnection(source.type, "Message Queue", { source, target, connectionId: "other" }).valid).toBe(true);
+  delete target.asyncQueue;
+  expect(validateConnection(source.type, "Message Queue", { source, target, connectionId: "other" }).valid).toBe(true);
   expect(validateConnection(source.type, "Message Queue", "draw").valid).toBe(true);
   source.applicationFlow!.operations.write!.steps = [{ id: "d", kind: "data", edge: "db-edge", operation: "write" }];
   expect(applicationFlowError(source.type, source.applicationFlow)).toBeUndefined();
