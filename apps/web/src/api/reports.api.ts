@@ -1,6 +1,7 @@
 import type { RunHistory, RunReport, RunComparison, RunSummary, RerunOptions, RerunMode, RunFamily } from "@infraforge/contracts/reports";
 import type { Deployment } from "@infraforge/contracts/deployment";
 import { API_URL, http } from "../client/httpClient";
+import { requireRunCompatibility } from "@/features/model2Run/compatibility";
 
 export type RunKind = "all" | "challenge" | "freeform";
 export async function getRunHistory(limit = 50, before?: string, kind: RunKind = "all"): Promise<RunHistory> {
@@ -26,6 +27,7 @@ export async function previewCanvasRerun(id: string, layout: object): Promise<Re
   return (await http.post(`${API_URL}/deployments/${id}/rerun-preview`, { layout })).data.options;
 }
 export async function createRerun(id: string, mode: RerunMode, matchedStop: boolean, expectedInputHash?: string): Promise<Deployment> {
+  await requireRunCompatibility();
   return (await http.post(`${API_URL}/deployments/${encodeURIComponent(id)}/reruns`, { mode, matchedStop, expectedInputHash })).data.createdDeployment;
 }
 export async function getRunFamily(id: string): Promise<RunFamily> {
