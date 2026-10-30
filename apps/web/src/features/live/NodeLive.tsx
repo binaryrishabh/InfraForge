@@ -7,7 +7,6 @@ import { AsyncQueueReadings } from "@/features/canvas/components/inspector/Async
 import { SecurityReadings } from "@/features/canvas/components/inspector/SecuritySection";
 import { CHAOS_LABELS } from "@/features/monitoring/chaosLabels";
 import { FaultControl } from "./controls/FaultControl";
-import { ResizeControl } from "./controls/ResizeControl";
 import { PoolControl } from "./controls/PoolControl";
 import { plural } from "@/lib/format";
 
@@ -43,7 +42,7 @@ export function NodeLive({ deploymentId, resource, resources, controls, ended = 
       <section aria-label="Security measurements" className="border-b border-line px-4 py-4 text-sm"><SecurityReadings metrics={metric?.security} /></section>
       {controls && <>
         {resource.type === RESOURCE_TYPES.LoadBalancer && <PoolControl deploymentId={deploymentId} only={resource.id} />}
-        {(resource.type === RESOURCE_TYPES.VirtualMachine || resource.type === RESOURCE_TYPES.Database) && <ResizeControl deploymentId={deploymentId} resources={resources} fixedTarget={resource.id} />}
+        {(resource.type === RESOURCE_TYPES.VirtualMachine || resource.type === RESOURCE_TYPES.Database) && <p className="px-4 py-3 text-sm text-ink-3">Resizing during a Model 2 run is unavailable. Stop, change the size in the designer and start a new run.</p>}
         <FaultControl deploymentId={deploymentId} resources={resources} fixedTarget={resource.id} />
       </>}
     </div>

@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChartGantt, PanelRight, Plus } from "lucide-react";
+import { ChartGantt, PanelRight } from "lucide-react";
 import { DeploymentStatus } from "@infraforge/contracts/deployment";
 import { useDeploymentSocket } from "@/features/deployment/hooks/useDeploymentSocket";
 import { useCanvasStore } from "@/features/canvas/store/canvasStore";
-import { useLiveTopologySync } from "@/features/canvas/hooks/useLiveTopologySync";
 import { CanvasDnd } from "@/features/canvas/components/CanvasDnd";
 import { CanvasBoard } from "@/features/canvas/components/CanvasBoard";
 import { fitCanvasView } from "@/features/canvas/hooks/useCanvasViewport";
-import { PalettePanel } from "@/features/canvas/components/palette/PalettePanel";
 import { ZoomControls } from "@/features/canvas/components/ZoomControls";
 import { useChallengeBrief } from "@/features/challenges/useChallengeBrief";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
@@ -45,7 +43,6 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
   const wide = useMediaQuery("(min-width: 768px)");
   const [tab, setTab] = useState<LiveTab>("controls");
   const [panelOpen, setPanelOpen] = useState(false);
-  const [paletteOpen, setPaletteOpen] = useState(false);
   const roomy = useMediaQuery("(min-height: 720px)");
   const [timetable, setTimetable] = useState<boolean | null>(null);
   const showTimetable = (timetable ?? (wide && roomy)) && !!deployment?.liveTopology;
@@ -66,9 +63,11 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
     useExperimentPlan.getState().setPlan(planKey ? recordedPlan(JSON.parse(planKey)) : null);
     return () => useExperimentPlan.getState().setPlan(null);
   }, [planKey]);
-  // Challenge attempts are read-only for the whole run; freeform runs sync accepted canvas edits.
-  useEffect(() => { useCanvasStore.getState().setLiveLocked(!!challenge); }, [challenge]);
-  useLiveTopologySync(isLive && deployment !== null && !challenge, deploymentId);
+  // Model 2 runs use a fixed design. The existing lock blocks pointer, keyboard and inspector edits.
+  useEffect(() => {
+    useCanvasStore.getState().setLiveLocked(true);
+    return () => useCanvasStore.getState().setLiveLocked(false);
+  }, []);
   useEffect(() => {
     const store = useCanvasStore.getState();
     store.setLiveMode(isLive);
@@ -94,9 +93,6 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
               <div className="pointer-events-auto flex items-center gap-2 rounded-md border border-line bg-surface/95 px-3 py-1.5 shadow-e2">
                 <span className="text-xs text-ink-3">Overall</span>{overall ? <HealthMark value={overall} /> : <span className="text-sm text-ink-3">no measurement yet</span>}
               </div>
-              {isLive && !challenge && (
-                <Button className="pointer-events-auto" size="sm" variant="secondary" icon={<Plus size={14} aria-hidden="true" />} onClick={() => setPaletteOpen(true)}>Add resource</Button>
-              )}
             </div>
             {(phase === "starting" || phase === "connection" || (phase === "failed" && !deployment?.liveTopology)) && (
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-scrim/40 p-4">
@@ -120,7 +116,7 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
             )}
             {showTimetable && <LiveTimetable deploymentId={deploymentId} resources={resources} seconds={seconds} plan={plan} evaluation={deployment?.evaluationStopAtSimulatedSeconds ?? null} />}
             <div className="flex h-10 shrink-0 items-center justify-between border-t border-line bg-surface px-3 text-xs text-ink-3">
-              <span className="min-w-0 truncate"><span className="if-num">{plural(resources.length, "resource")} · revision {deployment?.topologyRevision ?? 0}{challenge ? " · design locked for this attempt" : ""}</span>
+              <span className="min-w-0 truncate" title="Design edits are unavailable during a Model 2 run. Stop and return to the designer to make changes."><span className="if-num">{plural(resources.length, "resource")} · revision {deployment?.topologyRevision ?? 0}{challenge ? " · design locked for this attempt" : " · design locked for this run"}</span>
                 {isLive && <span className="max-md:hidden"> · Lines are declared connections, not measured traffic.</span>}</span>
               <div className="flex items-center gap-1">
                 {deployment?.liveTopology && <Button size="sm" variant="ghost" aria-pressed={!!showTimetable} icon={<ChartGantt size={14} aria-hidden="true" />} onClick={() => setTimetable(!showTimetable)}>Timetable</Button>}
@@ -132,9 +128,6 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
           {wide && <aside className="w-[360px] shrink-0 border-l border-line bg-surface" aria-label="Run details">{panel}</aside>}
         </div>
         {!wide && <Dialog open={panelOpen} onOpenChange={setPanelOpen} title="Run details" size="md"><div className="-mx-5 -my-4 h-[70dvh]">{panel}</div></Dialog>}
-        <Dialog open={paletteOpen} onOpenChange={setPaletteOpen} title="Add a resource to the live run" description="Accepted edits are sent to the running simulation." size="sm">
-          <div className="-mx-5 -my-4 h-[60dvh]"><PalettePanel draggable={false} onAdded={() => setPaletteOpen(false)} /></div>
-        </Dialog>
       </CanvasDnd>
     </div>
   );

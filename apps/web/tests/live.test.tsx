@@ -10,6 +10,10 @@ import { runPhase, stopTarget } from "../src/features/live/runState";
 import { FAULTS } from "../src/features/live/faults";
 import { useSimulationStore } from "../src/features/monitoring/store/simulationStore";
 import { brief } from "./fixtures";
+import { NodeLive } from "../src/features/live/NodeLive";
+import { LiveWorkspace } from "../src/features/live/LiveWorkspace";
+import { useCanvasStore } from "../src/features/canvas/store/canvasStore";
+import { addResource, connectResources, deleteResource, updateResource } from "../src/features/canvas/actions";
 
 afterEach(() => useSimulationStore.getState().reset());
 const run: Deployment = { id: "run", infrastructureId: "design", runName: "Cache matters", status: DeploymentStatus.LIVE, resourceCount: 2,
@@ -28,10 +32,39 @@ test("a challenge attempt explains its fixed conditions and offers no load, faul
   for (const control of ["Apply an intervention", "Target share of the workload", "Resize", "Pools"]) expect(html).not.toContain(control);
 });
 
-test("a freeform live run keeps its full durable controls", () => {
+test("a freeform live run offers supported controls and explains unavailable size and design edits", () => {
   const html = panel(run);
-  for (const control of ["Load", "Target share of the workload", "Apply an intervention", "Resize", "Pools"]) expect(html).toContain(control);
+  for (const control of ["Load", "Target share of the workload", "Apply an intervention", "Pools"]) expect(html).toContain(control);
+  expect(html).toContain("Resizing and design edits during a Model 2 run are unavailable");
+  expect(html).not.toContain("New size");
+  expect(html).not.toContain(">Resize</button>");
   expect(panel(run, false)).toContain("Controls are available while the run is live.");
+});
+
+test("selected live resource has no resize form and the workspace has no add-resource entry point", () => {
+  const html = renderToStaticMarkup(<NodeLive deploymentId="run" resource={resources[0]} resources={resources} controls />);
+  expect(html).toContain("Resizing during a Model 2 run is unavailable");
+  expect(html).not.toContain("New size");
+  expect(html).toContain("Apply an intervention");
+  const workspace = renderToStaticMarkup(<MemoryRouter><LiveWorkspace deploymentId="run" /></MemoryRouter>);
+  expect(workspace).not.toContain("Add resource");
+  expect(workspace).not.toContain("Accepted edits are sent");
+  expect(workspace).toContain("design locked for this run");
+});
+
+test("the existing live design lock blocks adding, connecting, deleting and editing resources", () => {
+  const store = useCanvasStore.getState();
+  try {
+    store.clearCanvas();
+    useCanvasStore.setState({ resources, liveLocked: true, isDeploying: false });
+    expect(addResource("Database")).toBeNull();
+    expect(connectResources("lb", "vm1")).toBe(false);
+    deleteResource("vm1");
+    updateResource("vm1", { name: "Changed" });
+    expect(useCanvasStore.getState().resources).toEqual(resources);
+    expect(useCanvasStore.getState().connectionLines).toEqual([]);
+    expect(useCanvasStore.getState().undoStack).toEqual([]);
+  } finally { store.clearCanvas(); }
 });
 
 test("run phase and the automatic stop come from recorded run state", () => {

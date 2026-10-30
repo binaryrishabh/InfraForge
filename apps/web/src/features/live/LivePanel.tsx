@@ -9,7 +9,6 @@ import { Tabs, TabPanel } from "@/ui/Tabs";
 import { RequirementList } from "@/features/challenges/components/RequirementList";
 import { LoadControl } from "./controls/LoadControl";
 import { PoolControl } from "./controls/PoolControl";
-import { ResizeControl } from "./controls/ResizeControl";
 import { FaultControl } from "./controls/FaultControl";
 import { NodeLive } from "./NodeLive";
 import { GatesPanel } from "./GatesPanel";
@@ -64,7 +63,7 @@ export function LivePanel({ tab, onTab, deploymentId, run, status, completed, ti
                 {run.rerunMode === "exact" ? "Exact rerun" : "Rerun with the current design"} of <Link className="font-medium text-accent hover:underline" to={`/runs/${run.sourceRunId}`}>its source run</Link>. Source actions are not replayed.</p>}
               <LoadControl deploymentId={deploymentId} />
               <PoolControl deploymentId={deploymentId} />
-              <ResizeControl deploymentId={deploymentId} resources={resources} />
+              <p className="border-b border-line px-4 py-3 text-sm text-ink-3">Resizing and design edits during a Model 2 run are unavailable. Stop, edit in the designer and start a new run.</p>
               <FaultControl deploymentId={deploymentId} resources={resources} />
             </>
           ))}
