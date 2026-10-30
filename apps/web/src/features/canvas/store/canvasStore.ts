@@ -48,7 +48,6 @@ interface CanvasStoreState {
   pendingConnection: PendingConnection | null;
   activeDeploymentId: string | null;
   topologyRevision: number | null;
-  liveTopologyDirty: boolean;
   isDeploying: boolean;
   liveMode: boolean;
   emptyCanvasStateDismissed: boolean;
@@ -103,7 +102,6 @@ interface CanvasStoreState {
   loadLayout: (resources: Resource[], connectionLines: ConnectionLine[], id: string | null, name: string | null, challengeId?: string | null, challengeVersion?: number | null) => void;
   loadRunTopology: (deploymentId: string, topology: RunTopology, revision: number, layoutId: string | null, name: string | null) => void;
   applyLiveTopology: (deploymentId: string, topology: RunTopology, revision: number) => void;
-  acknowledgeLiveTopology: (deploymentId: string, topology: RunTopology, revision: number) => void;
   clearCanvas: () => void;
 }
 
@@ -122,7 +120,6 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   pendingConnection: null,
   activeDeploymentId: null,
   topologyRevision: null,
-  liveTopologyDirty: false,
   isDeploying: false,
   liveMode: false,
   emptyCanvasStateDismissed: false,
@@ -139,10 +136,8 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
   undoStack: [],
   redoStack: [],
   isInitialized: false,
-  setResources: (updater) => set((s) => ({ resources: typeof updater === "function" ? updater(s.resources) : updater,
-    liveTopologyDirty: s.activeDeploymentId !== null })),
-  setConnectionLines: (updater) => set((s) => ({ connectionLines: typeof updater === "function" ? updater(s.connectionLines) : updater,
-    liveTopologyDirty: s.activeDeploymentId !== null })),
+  setResources: (updater) => set((s) => ({ resources: typeof updater === "function" ? updater(s.resources) : updater })),
+  setConnectionLines: (updater) => set((s) => ({ connectionLines: typeof updater === "function" ? updater(s.connectionLines) : updater })),
   setCurrentLayoutId: (id) => set({ currentLayoutId: id }),
   setCurrentLayoutName: (name) => set({ currentLayoutName: name }),
   setCurrentLayoutSaved: (saved) => set({ currentLayoutSaved: saved }),
@@ -164,7 +159,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
     }),
   movePendingConnection: (cursorX, cursorY) => set((s) => s.pendingConnection ? ({ pendingConnection: { ...s.pendingConnection, cursorX, cursorY } }) : {}),
   cancelPendingConnection: () => set({ pendingConnection: null }),
-  setActiveDeploymentId: (id) => set({ activeDeploymentId: id, topologyRevision: null, liveTopologyDirty: false }),
+  setActiveDeploymentId: (id) => set({ activeDeploymentId: id, topologyRevision: null }),
   setIsDeploying: (deploying) => set({ isDeploying: deploying }),
   setLiveMode: (live) => set({ liveMode: live }),
   setEmptyCanvasStateDismissed: (dismissed) => set({ emptyCanvasStateDismissed: dismissed }),
@@ -198,19 +193,15 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
     undoStack: [], redoStack: [],
   }),
   loadRunTopology: (deploymentId, topology, revision, layoutId, name) => set({
-    ...topology, activeDeploymentId: deploymentId, topologyRevision: revision, liveTopologyDirty: false,
+    ...topology, activeDeploymentId: deploymentId, topologyRevision: revision,
     currentLayoutId: layoutId, currentLayoutName: name, currentLayoutSaved: false,
     selectedResourceId: null, selectedResourceForConfigId: null, selectedConnectionId: null,
     pendingConnection: null, undoStack: [], redoStack: [], replicaPositions: {}, cardHeights: {},
     isInitialized: true, isDeploying: false,
   }),
   applyLiveTopology: (deploymentId, topology, revision) => set((s) => {
-    if (s.activeDeploymentId !== deploymentId || s.liveTopologyDirty || revision <= (s.topologyRevision ?? -1)) return {};
-    return { ...topology, topologyRevision: revision, currentLayoutSaved: false };
-  }),
-  acknowledgeLiveTopology: (deploymentId, topology, revision) => set((s) => {
     if (s.activeDeploymentId !== deploymentId || revision <= (s.topologyRevision ?? -1)) return {};
-    return { topologyRevision: revision, liveTopologyDirty: s.resources !== topology.resources || s.connectionLines !== topology.connectionLines };
+    return { ...topology, topologyRevision: revision, currentLayoutSaved: false };
   }),
   clearCanvas: () => set({
     resources: [], connectionLines: [], currentLayoutId: null, currentLayoutName: null, currentChallengeId: null, currentChallengeVersion: null, liveLocked: false,
@@ -218,7 +209,7 @@ export const useCanvasStore = create<CanvasStoreState>()((set) => ({
     selectedConnectionId: null, pendingConnection: null,
     scale: 1, translateX: 0, translateY: 0,
     activeDeploymentId: null, isDeploying: false, liveMode: false, activeDrag: null,
-    topologyRevision: null, liveTopologyDirty: false,
+    topologyRevision: null,
     replicaPositions: {}, cardHeights: {}, undoStack: [], redoStack: [],
   }),
 }));

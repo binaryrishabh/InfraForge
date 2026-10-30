@@ -1,8 +1,6 @@
 import { http as axios } from "../client/httpClient";
 import type { Deployment } from "@infraforge/contracts/deployment";
 import type { WorkloadProfile } from "@infraforge/domain/workload";
-import type { Resource } from "@infraforge/domain/resource";
-import type { ConnectionLine } from "@infraforge/domain/resource";
 import { API_URL } from "../client/httpClient";
 import type { RunAction } from "@infraforge/contracts/actions";
 import { actInBrowser, browserRunFor, browserStopStatus, isBrowserStop, stopBrowserRun } from "@/features/model2Run/browserRuns";
@@ -77,15 +75,6 @@ export const injectChaos = async(deploymentId: string, type: string, resourceId:
   return response.data.message;
 }
 
-// Vertical scaling — swap a resource's SKU with realistic restart downtime
-export const scaleVertical = async(deploymentId: string, resourceId: string, skuId: string): Promise<string> => {
-  const response = await axios.post(`${API_URL}/deployments/${deploymentId}/scale-vertical`, {
-    resourceId,
-    skuId
-  });
-  return response.data.message;
-}
-
 // Manual horizontal scale — nudge a VM pool's replica count up or down on a LIVE deployment
 export const scalePool = async(deploymentId: string, lbId: string, delta: number): Promise<string> => {
   if (browserRunFor(deploymentId)) return actInBrowser(deploymentId, { kind: "pool-scale", parameters: { lbId, delta: delta as 1 | -1 } });
@@ -102,22 +91,6 @@ export const setDeploymentSpeed = async (deploymentId: string, speed: number): P
   const response = await axios.post(`${API_URL}/deployments/${deploymentId}/speed`, { speed });
   return response.data.message;
 };
-
-// Push a live topology edit to the running simulator. The simulator reconciles
-// reachability and pools without pausing; the saved infrastructure layout is
-// untouched (that only changes on explicit Save/Update).
-export const syncDeploymentTopology = async (
-  deploymentId: string,
-  resources: Resource[],
-  connectionLines: ConnectionLine[],
-  expectedRevision: number,
-): Promise<number> => {
-  const response = await axios.post(
-    `${API_URL}/deployments/${deploymentId}/sync-topology`,
-    { resources, connectionLines, expectedRevision }
-  );
-  return response.data.topologyRevision;
-}
 
 export const applyIntervention = async (deploymentId: string, parameters: import("@infraforge/domain/resource").InterventionRequest): Promise<string> => {
   if (browserRunFor(deploymentId)) return actInBrowser(deploymentId, {kind: "intervention", parameters});
