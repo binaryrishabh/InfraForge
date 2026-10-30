@@ -7,6 +7,10 @@ import { classifyComparison } from "../comparison/classify";
 import { compareInputs } from "../comparison/inputs";
 import { readRunInputs } from "../deployments/runInputs";
 import { EXPERIMENT_MAX_POINTS } from "@infraforge/contracts/reports";
+import type { Prisma } from "../lib/generated/prisma/client";
+
+const summaryActionWhere = {OR: [{kind: "chaos", parameters: {path: ["trigger"], equals: "challenge-experiment"}},
+  {deployment: {challengeScenario: {path: ["version"], equals: 1}}}]} satisfies Prisma.RunActionWhereInput;
 
 export const reportRouter = Router();
 export const reportSelection = { id: true, infrastructureId: true, runName: true, runtimeActive: true,
@@ -16,8 +20,7 @@ export const reportSelection = { id: true, infrastructureId: true, runName: true
   improvementSourceId: true, learningHypothesis: true, learningIntent: true,
   // Scenarios need every action for receipt integrity, including detection of unreadable or extra rows.
   // Earlier attempts retain the scheduled-fault projection.
-  actions: { where: { OR: [{kind: "chaos", parameters: {path: ["trigger"], equals: "challenge-experiment"}},
-    {deployment: {challengeScenario: {path: ["version"], equals: 1}}}] }, orderBy: { sequence: "asc" }, take: 501 },
+  actions: { where: summaryActionWhere, orderBy: { sequence: "asc" }, take: 501 },
   status: true, createdAt: true, updatedAt: true, resourceCount: true, workloadProfile: true,
   seed: true, runInputs: true, liveTopology: true, topologyRevision: true, stages: true,
   timeline: true, chaosEvents: true, simulationState: true, terminalSnapshot: true, _count: { select: { actions: true } } } as const;

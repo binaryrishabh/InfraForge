@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { readFile } from "node:fs/promises";
 import { boundRetriesDuringSlowdownV1 as d } from "../challenges/definitions/bound-retries-during-slowdown/v1";
 import { recordedScenario } from "../challenges/scenario";
@@ -53,7 +54,7 @@ test("preflight refuses missing and unsupported targets, and authoring rejects e
   expect(() => recordedScenario(d, captureRunInputs(missing, d.workload))).toThrow();
   const wrong = structuredClone(d.starter!); wrong.resources.find(r => r.id === "db")!.type = "Cache";
   expect(() => recordedScenario(d, captureRunInputs(wrong, d.workload))).toThrow();
-  const mixed = {...d, experiment: {fault: "crash" as const, atSimulatedSecond: 2, target: {resourceId: "db", type: "Database" as const}, hypothesis: "Observe"}};
+  const mixed = {...d, experiment: {fault: DeploymentChaosNames.Crash, atSimulatedSecond: 2, target: {resourceId: "db", type: "Database" as const}, hypothesis: "Observe"}};
   expect(validateChallengeVersions([mixed], {}).some(p => p.includes("exclude experiments"))).toBe(true);
 });
 test("history preserves scenario scoring and improvement requires the exact stored source plan", () => {

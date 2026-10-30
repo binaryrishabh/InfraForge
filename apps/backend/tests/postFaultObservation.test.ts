@@ -36,7 +36,7 @@ function recorded(design = d.starter!, last = 135): StoredRun {
   };
   const evidenceSamples = Array.from({ length: last - 29 }, (_, i) => sample(30 + i));
   const now = new Date(), parameters = { type: plan.fault, resourceId: plan.targetResourceId, trigger: "challenge-experiment" };
-  const fault = { id: "fault", deploymentId: row.id, sequence: 1, kind: "chaos", parameters, status: last >= 90 ? "completed" : "running", requestedAt: now, appliedAt: now,
+  const fault = { id: "fault", deploymentId: row.id, sequence: 1, scenarioStepId: null, kind: "chaos", parameters, status: last >= 90 ? "completed" : "running", requestedAt: now, appliedAt: now,
     appliedSimulatedSeconds: 60, completedAt: last >= 90 ? now : null, completedSimulatedSeconds: last >= 90 ? 90 : null, failureReason: null,
     outcome: { durationSimulatedSeconds: 30, baselineOverallHealth: "healthy", ...(last >= 90 ? { faultEnded: true, observedOverallHealth: "critical" } : {}) } };
   const final = evidenceSamples.at(-1)!.payload;

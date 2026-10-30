@@ -159,7 +159,7 @@ test("scripted browser steps and official reconstruction have identical per-seco
     expect(h.host.actions()).toEqual(server.actions);
   }
   expect(h.host.evidence()).toEqual(server.evidence());
-  expect(server.evidence().product.interventions.map(({phase, ...receipt}) => {expect(phase).toBe("completed"); return receipt;})).toEqual(expected);
+  expect(server.evidence().product.interventions?.map(({phase, ...receipt}) => {expect(phase).toBe("completed"); return receipt;})).toEqual(expected);
   expect(h.messages.at(-1)).toEqual({type: "done", submission: {stopAtSecond: 7, actions: []}});
   expect(h.seconds().flatMap(s => s.logs).filter(l => l.message.startsWith("Scenario step applied:")).map(l => l.message)).toEqual([
     "Scenario step applied: cpu at second 2.", "Scenario step applied: sessions at second 2.", "Scenario step applied: edge at second 5.",
