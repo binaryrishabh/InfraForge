@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ChallengeScenario } from "@infraforge/contracts/challenges";
 import type { RunAction } from "@infraforge/contracts/actions";
+import type { SimulationLog } from "@infraforge/contracts/telemetry";
 import { DeploymentStatus, type Deployment } from "@infraforge/contracts/deployment";
 import { ScenarioSchedule } from "../src/features/live/ScenarioSchedule";
 import { LivePanel } from "../src/features/live/LivePanel";
@@ -14,13 +15,45 @@ const scenario: ChallengeScenario = { version: 1, visibility: "revealed", steps:
 const resources = [{ id: "db", type: "Database" as const, name: "Orders database", x: 0, y: 0 }];
 const schedule = (value = scenario) => renderToStaticMarkup(<ScenarioSchedule deploymentId="run" scenario={value} resources={resources} />);
 
-test("scenario schedule names the step, target and time without inferring application or end from the clock", () => {
-  const sim = useSimulationStore.getInitialState(), previous = { deploymentId: sim.deploymentId, simulatedSeconds: sim.simulatedSeconds, logs: sim.logs };
+test("scenario application survives log eviction, ignores other runs and clears for a new run", () => {
+  const sim = useSimulationStore.getInitialState();
+  const previous = { deploymentId: sim.deploymentId, logs: sim.logs, appliedScenarioSteps: sim.appliedScenarioSteps };
+  const snapshot = (logs: SimulationLog[], deploymentId = "run") => ({ deploymentId, timestamp: "", simulatedSeconds: 10, loadFraction: 1, health: "healthy" as const, metrics: {}, logs });
+  const applied: SimulationLog = { timestamp: "", source: "model-2", severity: "info", message: "Scenario step applied: db-slowdown at second 2." };
+  const view = () => {
+    const current = useSimulationStore.getState();
+    Object.assign(sim, { deploymentId: current.deploymentId, logs: current.logs, appliedScenarioSteps: current.appliedScenarioSteps });
+    return schedule();
+  };
   try {
-    Object.assign(sim, { deploymentId: "run", simulatedSeconds: 10, logs: [] });
+    useSimulationStore.getState().prepareRun("run");
+    useSimulationStore.getState().applySnapshot(snapshot([{ ...applied, source: "other" }]));
+    expect(view()).toContain("Application: Unknown");
+    useSimulationStore.getState().applySnapshot(snapshot([applied], "another-run"));
+    expect(view()).toContain("Application: Unknown");
+    useSimulationStore.getState().applySnapshot(snapshot([applied]));
+    useSimulationStore.getState().applySnapshot(snapshot(Array.from({ length: 151 }, (_, i) => ({ ...applied, message: `Unrelated event ${i}` }))));
+    expect(useSimulationStore.getState().logs).toHaveLength(150);
+    expect(useSimulationStore.getState().logs.some(log => log.message === applied.message)).toBe(false);
+    expect(view()).toContain("Applied at simulated second 2 (worker event)");
+    expect(view()).toContain("Ended: Unknown");
+    useSimulationStore.getState().prepareRun("run");
+    expect(view()).toContain("Applied at simulated second 2 (worker event)");
+    useSimulationStore.getState().prepareRun("new-run");
+    expect(view()).toContain("Application: Unknown");
+    expect(useSimulationStore.getState().appliedScenarioSteps).toEqual({});
+    useSimulationStore.getState().reset();
+    expect(useSimulationStore.getState().appliedScenarioSteps).toEqual({});
+  } finally { Object.assign(sim, previous); useSimulationStore.getState().reset(); }
+});
+
+test("scenario schedule names the step, target and time without inferring application or end from the clock", () => {
+  const sim = useSimulationStore.getInitialState(), previous = { deploymentId: sim.deploymentId, simulatedSeconds: sim.simulatedSeconds, appliedScenarioSteps: sim.appliedScenarioSteps };
+  try {
+    Object.assign(sim, { deploymentId: "run", simulatedSeconds: 10, appliedScenarioSteps: {} });
     const html = schedule();
     for (const text of ["db-slowdown", "Orders database", "Scheduled at simulated second 2", "Scheduled duration: 2 simulated seconds", "Application: Unknown", "Ended: Unknown"]) expect(html).toContain(text);
-    sim.logs = [{ timestamp: "", source: "model-2", severity: "info", message: "Scenario step applied: db-slowdown at second 2." }];
+    sim.appliedScenarioSteps = { "db-slowdown": 2 };
     expect(schedule()).toContain("Applied at simulated second 2 (worker event)");
     expect(schedule()).toContain("Ended: Unknown");
     sim.deploymentId = "another-run";

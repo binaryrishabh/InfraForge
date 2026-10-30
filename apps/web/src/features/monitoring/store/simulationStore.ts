@@ -15,6 +15,7 @@ interface SimulationStoreState {
   deploymentId: string | null;
   metrics: Record<string, ResourceMetrics>;
   logs: SimulationLog[];
+  appliedScenarioSteps: Record<string, number>;
   health: SimulationSnapshot["health"] | null;
   loadFraction: number;
   simulatedSeconds: number;
@@ -38,6 +39,7 @@ const initialState = {
   deploymentId: null as string | null,
   metrics: {} as Record<string, ResourceMetrics>,
   logs: [] as SimulationLog[],
+  appliedScenarioSteps: {} as Record<string, number>,
   health: null as SimulationSnapshot["health"] | null,
   loadFraction: 0,
   simulatedSeconds: 0,
@@ -57,6 +59,12 @@ export const useSimulationStore = create<SimulationStoreState>()((set, get) => (
   applySnapshot: (snapshot) =>
     set((prev) => {
       if (prev.deploymentId && prev.deploymentId !== snapshot.deploymentId) return prev;
+      // Keep worker application facts independently of the bounded event log.
+      let appliedScenarioSteps = prev.appliedScenarioSteps;
+      for (const log of snapshot.logs) {
+        const match = log.source === "model-2" && /^Scenario step applied: ([A-Za-z0-9_-]+) at second (\d+)\.$/.exec(log.message);
+        if (match && Number.isSafeInteger(Number(match[2]))) appliedScenarioSteps = { ...appliedScenarioSteps, [match[1]!]: Number(match[2]) };
+      }
       const nextCpuHistory: Record<string, number[]> = { ...prev.cpuHistory };
       const metricKeys = Object.keys(snapshot.metrics);
       
@@ -97,6 +105,7 @@ export const useSimulationStore = create<SimulationStoreState>()((set, get) => (
         deploymentId: snapshot.deploymentId,
         metrics: snapshot.metrics,
         logs: [...prev.logs, ...snapshot.logs].slice(-MAX_LOGS),
+        appliedScenarioSteps,
         health: snapshot.health,
         loadFraction: snapshot.loadFraction,
         simulatedSeconds: snapshot.simulatedSeconds,
@@ -130,6 +139,7 @@ export const useSimulationStore = create<SimulationStoreState>()((set, get) => (
       ...initialState,
       metrics: {},
       logs: [],
+      appliedScenarioSteps: {},
       pools: {},
       spawnedVms: [],
       restarting: [],

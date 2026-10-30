@@ -4,7 +4,7 @@ import { useSimulationStore } from "@/features/monitoring/store/simulationStore"
 
 // The revealed schedule comes from the exact-version brief. Only worker events establish application.
 export function ScenarioSchedule({ deploymentId, scenario, resources }: { deploymentId: string; scenario?: ChallengeScenario; resources: Resource[] }) {
-  const logs = useSimulationStore(s => s.deploymentId === deploymentId ? s.logs : null);
+  const appliedSteps = useSimulationStore(s => s.deploymentId === deploymentId ? s.appliedScenarioSteps : null);
   if (!scenario || scenario.visibility !== "revealed") return null;
   const name = (id: string) => resources.find(r => r.id === id)?.name || id;
   return <div aria-label="Challenge scenario schedule" className="text-sm text-ink-2">
@@ -13,7 +13,7 @@ export function ScenarioSchedule({ deploymentId, scenario, resources }: { deploy
       const request = step.request;
       const label = INTERVENTIONS.find(d => d.id === request.interventionId && d.revision === request.revision)?.label ?? request.interventionId;
       const target = "resourceId" in request.target ? name(request.target.resourceId) : `${request.target.edgeId} (${request.target.direction})`;
-      const applied = logs?.some(log => log.source === "model-2" && log.message === `Scenario step applied: ${step.id} at second ${step.atSecond}.`);
+      const applied = appliedSteps?.[step.id] === step.atSecond;
       return <li key={step.id}>
         <p>{step.id}: {label} on {target}. Scheduled at simulated second {step.atSecond}.</p>
         {request.parameters.duration !== undefined && <p>Scheduled duration: {request.parameters.duration} simulated seconds.</p>}
