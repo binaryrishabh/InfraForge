@@ -8,6 +8,11 @@ import { createModel2Engine } from '../simulator/model2Engine';
 import { buildModel2Contract } from '../simulator/contractBuilder';
 import { designDifference } from '../comparison/design';
 import { evidencePayload, sampleHash } from '../evidence/contract';
+import { checkSubmission } from '../browserRuns/submission';
+import { applyAction } from '../simulator/actionApplication';
+import { actionCompletion } from '../simulator/actionCompletion';
+import { actionDto } from '../actions/contract';
+import type { RunAction as StoredAction } from '../lib/generated/prisma/client';
 
 // Keep replay fixtures inside the backend workspace; only public packages cross boundaries.
 function design(enabled = true) {
@@ -17,6 +22,33 @@ function design(enabled = true) {
  if(enabled) {resources.find(r=>r.id==="queue")!.asyncQueue={...DEFAULT_ASYNC_QUEUE_SETTINGS};resources.find(r=>r.id==="worker")!.asyncWorker={...DEFAULT_ASYNC_WORKER_SETTINGS};}
  return {resources,connections:links.map(([sourceId,targetId],i)=>({id:`e${i}`,sourceId:sourceId!,targetId:targetId!,sourceType:types[sourceId!]!,targetType:types[targetId!]!,port:RESOURCE_PORTS[types[targetId!]!]})),workload:{targetThroughput:480,throughputUnit:"per-minute" as const,trafficShape:"steady" as const,readWriteRatio:0.8,payloadSize:"light" as const}};
 }
+
+test('consumer outage wire, durable timing, receipt and exact server replay stay consistent',()=>{
+ const d=design();d.workload.targetThroughput=210;
+ const input=readRunInputs(captureRunInputs({resources:d.resources,connectionLines:d.connections},d.workload,'async-proof'));
+ const request={kind:'intervention' as const,parameters:{interventionId:'consumer-outage',revision:1,target:{resourceId:'worker'},parameters:{duration:5}}};
+ const submission={stopAtSecond:3,actions:[{atSecond:1,request}]};
+ expect(checkSubmission(JSON.parse(JSON.stringify(submission)),{horizonSeconds:70,challenge:false})).toEqual(submission);
+ for(const parameters of [{...request.parameters,revision:2},{...request.parameters,parameters:{duration:0}},{...request.parameters,parameters:{duration:1,available:false}}])
+  expect(()=>checkSubmission({...submission,actions:[{atSecond:1,request:{...request,parameters}}]},{horizonSeconds:70,challenge:false})).toThrow();
+ expect(()=>checkSubmission(submission,{horizonSeconds:70,challenge:true})).toThrow('challenge');
+ expect(()=>checkSubmission({stopAtSecond:70,actions:[{atSecond:69,request}]},{horizonSeconds:70,challenge:false})).toThrow('BOUNDS');
+ const browser=createModel2Run(input,70),server=createModel2Engine(JSON.parse(JSON.stringify(input)),70,buildModel2Contract);
+ browser.advance();server.advance();
+ const instance={model2:server,actions:new Map(),pendingLogs:[]} as unknown as SimulationInstance;
+ const applied=applyAction(instance,'durable',request);expect(applied.outcome).toEqual(browser.apply(request).outcome);
+ const running=instance.actions.get('durable')!;
+ for(let second=2;second<=7;second++) {
+  browser.advance();server.advance();expect(browser.view()).toEqual(server.view());expect(browser.evidence()).toEqual(server.evidence());
+  expect(actionCompletion(instance,running)===null).toBe(second<7);
+ }
+ const done=actionCompletion(instance,running)!;expect(done.outcome).toMatchObject({interventionEnded:true});
+ const now=new Date(), row={id:'durable',deploymentId:'run',sequence:1,...request,status:'completed',requestedAt:now,appliedAt:now,completedAt:now,appliedSimulatedSeconds:1,completedSimulatedSeconds:7,outcome:done.outcome,failureReason:null} as unknown as StoredAction;
+ expect(actionDto(row).outcome?.intervention).toEqual(applied.outcome.intervention);
+ expect(()=>actionDto({...row,completedSimulatedSeconds:6})).toThrow('precedes');
+ expect(()=>actionDto({...row,outcome:{...done.outcome,intervention:{...done.outcome.intervention!,endUs:6_000_000}}} as unknown as StoredAction)).toThrow('timing');
+ expect(Buffer.byteLength(JSON.stringify(done.outcome),'utf8')).toBeLessThan(24*1024);
+});
 
 test('async intent survives saving, capture and comparison without defaults',()=>{
  const d=design();const layout={resources:d.resources,connectionLines:d.connections};
