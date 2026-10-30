@@ -143,7 +143,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       }
     }
     const links = new Map<string, SystemsInput["links"][number]>();
-    const path = (id: string, source: string, target: string, edge: EdgeContract, internal = false) => {
+    const path = (id: string, source: string, target: string, edge: EdgeContract) => {
       if (!edge.transport || !edge.security || !edge.request?.length || !edge.response?.length) throw Error(`Missing transport/listener/security for ${id}; physical bandwidth/propagation remain Unknown`);
       const t = contract.transports[edge.transport]; if (!t?.version || !t.provenance.length || !["per-path", "shared"].includes(t.ownership)) throw Error(`Missing versioned transport/link ownership ${edge.transport}`);
       const prefix = t.ownership === "shared" ? `transport:${edge.transport}` : id;
@@ -154,12 +154,12 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       }
       const breaker = edge.purpose === "routing" ? contract.nodes[source.split("#")[0]!]!.circuitBreaker : undefined;
       runtime.paths.push({ ...(breaker ? { circuitBreaker: breaker } : {}), id, source, target, request: edge.request.map((l) => `${prefix}/${l}`), response: edge.response.map((l) => `${prefix}/${l}`), pool: t.pool, bytes: t.bytes });
-      runtime.systems.connections.push({ ...rewriteReferences(edge.security, (v) => ref(v)), ...(internal ? { internal: true as const } : {}), path: id });
+      runtime.systems.connections.push({ ...rewriteReferences(edge.security, (v) => ref(v)), path: id });
     };
     phase = "topology";
     const materialized = new Map(runtime.resources.map((r) => [r.id, r]));
     const semanticEdges: SemanticSpec["edges"] = [];
-    for (const r of resources) for (const instance of expansion.get(r.id)!) for (const e of [...contract.nodes[r.id]!.internalEdges].sort((a, b) => a.id < b.id ? -1 : 1)) path(`${instance}/internal/${e.id}`, ref(`$self/${e.sourceRole}`, instance), ref(`$self/${e.targetRole}`, instance), e, true);
+    for (const r of resources) for (const instance of expansion.get(r.id)!) for (const e of [...contract.nodes[r.id]!.internalEdges].sort((a, b) => a.id < b.id ? -1 : 1)) path(`${instance}/internal/${e.id}`, ref(`$self/${e.sourceRole}`, instance), ref(`$self/${e.targetRole}`, instance), e);
     for (const e of [...design.connections].sort((a, b) => a.id < b.id ? -1 : 1)) {
       const intent = contract.edges[e.id]!; semanticEdges.push({ id: e.id, source: e.sourceId, target: e.targetId, purpose: intent.purpose });
       if (intent.purpose === "policy-attachment") { if (nodes.get(e.sourceId)!.type !== "Firewall") throw Error("Policy attachment source must be Firewall"); continue; }

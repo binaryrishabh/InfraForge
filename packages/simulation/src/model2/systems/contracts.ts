@@ -28,8 +28,6 @@ export interface FirewallConfig { id: string; profile: "ordered-stateful/1"; def
 export interface Listener { resource: string; protocol: "tcp"; port: Quantity<"count">; tls: "plaintext" | "required" | "optional"; certificate?: { names: string[]; issuer: string; notBefore: Quantity<"us">; notAfter: Quantity<"us"> } }
 export interface DialConfig {
   path: string; port: Quantity<"count">; protocol: "tcp"; firewalls: string[];
-  /** A call between roles of one resource: in-process, so no firewall or listener applies. */
-  internal?: true;
   tls: { mode: "plaintext" | "authenticated"; serverName?: string; trustedIssuers: string[] };
   dns?: { name: string; resolver: string; routes: Array<{ address: string; path: string }> };
 }

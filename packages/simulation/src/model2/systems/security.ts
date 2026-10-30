@@ -19,7 +19,9 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
   const opted = input.securityProfile === "canvas-security/1";
   type Admission = { at: number; connectionId: string; path: string; source: string; target: string; port: number; reason: string; allowed: boolean; firewall?: string; rule?: string; direction?: string; generation?: number; defaultAction?: string };
   const admissions: Admission[] = []; let omitted = 0, admissionBytes = 0;
-  const internalPaths = new Set(input.systems.connections.filter(c => c.internal).map(c => c.path));
+  // A call between two roles of one resource instance (ids look like "app#0/main") is in-process: canvas-built ones carry no firewall (fromDesign) and skip the listener check.
+  const inProcess = (p: { source: string; target: string }) => p.source !== p.target && p.source.split("/")[0] === p.target.split("/")[0];
+  const internalPaths = new Set(input.paths.filter(inProcess).map(p => p.id));
   const edgeCounts = new Map(input.paths.filter(p => !internalPaths.has(p.id)).map(p => [p.id, { path: p.id, source: p.source, target: p.target, admitted: 0, denied: 0, noListener: 0, backendDeliveries: 0, lastDenial: undefined as Admission | undefined, policyDenied: {} as Record<string, number> }]));
   const record = (row: Admission) => {
     const c = edgeCounts.get(row.path) ?? { admitted: 0, denied: 0, noListener: 0, lastDenial: undefined as Admission | undefined, policyDenied: {} as Record<string, number> }; // internal hops are not counted
@@ -49,14 +51,14 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
   };
   const inspect = (dial: DialConfig, path: PathConfig, count: boolean) => {
     const port = requireKnown(dial.port, "count");
-    for (const id of dial.internal ? [] : dial.firewalls) {
+    for (const id of dial.firewalls) {
       const p = policies.get(id)!, decision = ruleDecision(p, path.source, path.target, port, count);
       if (count) { p.evaluated++; if (decision.allowed) p.allowed++; else p.denied++; }
       if (!decision.allowed) return { ok: false, reason: `policy-denied:${id}:${decision.rule}`, firewall: id, direction: decision.direction, rule: decision.matchedRule, generation: p.generation, ...(decision.matchedRule === undefined ? { defaultAction: p.config.default } : {}) };
       if (count && p.flows.size >= requireKnown(p.config.maxFlows, "count")) return { ok: false, reason: `flow-capacity:${id}` };
     }
     const listener = listeners.get(JSON.stringify([path.target, dial.protocol, port]));
-    if (!listener && !dial.internal) return { ok: false, reason: "no-listener" };
+    if (!listener && !inProcess(path)) return { ok: false, reason: "no-listener" };
     const endpoint = context.endpoint(path.target); if (!endpoint.alive || !endpoint.ready) return { ok: false, reason: "endpoint-not-ready" };
     if (!context.reachable(path.id)) return { ok: false, reason: "route-unavailable" };
     if (!listener) return { ok: true, reason: "plaintext" };
