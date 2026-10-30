@@ -30,11 +30,20 @@ test("selected live resource shows queue and security consequences from a snapsh
   } finally { initial.metrics = previous; useSimulationStore.getState().reset(); }
 });
 
-test("live queue readings stay Unknown without measurements, including after the run ends", () => {
-  const html = render();
+test("live enabled queue readings stay Unknown without measurements, including after the run ends", () => {
+  const enabled = { ...queue, asyncQueue: { enabled: true } };
+  const html = render(enabled);
   expect(html.match(/<dd>Unknown<\/dd>/g)).toHaveLength(10);
-  expect(html).toContain("Security measurements: Unknown");
-  const ended = renderToStaticMarkup(<NodeLive deploymentId="run" resource={queue} resources={[queue]} controls={false} ended />);
+  const ended = renderToStaticMarkup(<NodeLive deploymentId="run" resource={enabled} resources={[enabled]} controls={false} ended />);
   expect(ended).toContain("This run has ended");
   expect(ended.match(/<dd>Unknown<\/dd>/g)).toHaveLength(10);
+});
+
+test("unconfigured resources omit irrelevant Unknown blocks, explicit security still shows Unknown", () => {
+  expect(render()).not.toContain("Live upload journey");
+  expect(render()).not.toContain("Security measurements: Unknown");
+  const db: Resource = { id: "db", type: "Database", x: 0, y: 0 };
+  expect(render(db)).not.toContain("Security measurements: Unknown");
+  expect(render({ ...db, listenerSettings: { version: 1, ports: [5432] } })).toContain("Security measurements: Unknown");
+  expect(render({ id: "fw", type: "Firewall", x: 0, y: 0 })).toContain("Security measurements: Unknown");
 });

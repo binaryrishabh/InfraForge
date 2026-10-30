@@ -14,6 +14,8 @@ import { NodeLive } from "../src/features/live/NodeLive";
 import { LiveWorkspace } from "../src/features/live/LiveWorkspace";
 import { useCanvasStore } from "../src/features/canvas/store/canvasStore";
 import { addResource, connectResources, deleteResource, updateResource } from "../src/features/canvas/actions";
+import { spyOn } from "bun:test";
+import { toast } from "sonner";
 
 afterEach(() => useSimulationStore.getState().reset());
 const run: Deployment = { id: "run", infrastructureId: "design", runName: "Cache matters", status: DeploymentStatus.LIVE, resourceCount: 2,
@@ -65,6 +67,15 @@ test("the existing live design lock blocks adding, connecting, deleting and edit
     expect(useCanvasStore.getState().connectionLines).toEqual([]);
     expect(useCanvasStore.getState().undoStack).toEqual([]);
   } finally { store.clearCanvas(); }
+});
+
+test("locked design guidance does not ask a finished run to stop again", () => {
+  const warning = spyOn(toast, "warning").mockImplementation(() => "warning");
+  try {
+    useCanvasStore.setState({ liveLocked: true });
+    addResource("Database");
+    expect(warning).toHaveBeenCalledWith("This run's design is locked. Return to the designer to make changes.");
+  } finally { warning.mockRestore(); useCanvasStore.getState().clearCanvas(); }
 });
 
 test("run phase and the automatic stop come from recorded run state", () => {

@@ -38,8 +38,8 @@ export function NodeLive({ deploymentId, resource, resources, controls, ended = 
         {effects.map((chaos, index) => <p key={chaos.intervention?.actionId ?? index} className="if-num mt-1 text-xs font-semibold text-fail">Fault active: {(chaos.intervention ? `${chaos.intervention.label} ${JSON.stringify(chaos.intervention.parameters)}; restores at ${chaos.intervention.restoreAtUs} us` : CHAOS_LABELS[chaos.chaosType!])} · {chaos.remainingTicks} s left</p>)}
         {restarting && <p className="if-num mt-1 text-xs font-semibold text-warn">Restarting on a new size</p>}
       </div>
-      {(resource.type === RESOURCE_TYPES.MessageQueue || metric?.asyncQueue) && <section aria-label="Upload queue measurements" className="border-b border-line px-4 py-4"><AsyncQueueReadings metrics={metric?.asyncQueue} /></section>}
-      <section aria-label="Security measurements" className="border-b border-line px-4 py-4 text-sm"><SecurityReadings metrics={metric?.security} /></section>
+      {(resource.asyncQueue?.enabled || metric?.asyncQueue) && <section aria-label="Upload queue measurements" className="border-b border-line px-4 py-4"><AsyncQueueReadings metrics={metric?.asyncQueue} /></section>}
+      {(resource.type === RESOURCE_TYPES.Firewall || resource.listenerSettings || metric?.security) && <section aria-label="Security measurements" className="border-b border-line px-4 py-4 text-sm"><SecurityReadings metrics={metric?.security} /></section>}
       {controls && <>
         {resource.type === RESOURCE_TYPES.LoadBalancer && <PoolControl deploymentId={deploymentId} only={resource.id} />}
         {(resource.type === RESOURCE_TYPES.VirtualMachine || resource.type === RESOURCE_TYPES.Database) && <p className="px-4 py-3 text-sm text-ink-3">Resizing during a Model 2 run is unavailable. Stop, change the size in the designer and start a new run.</p>}

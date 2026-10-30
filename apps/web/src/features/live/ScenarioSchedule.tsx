@@ -7,7 +7,7 @@ export function ScenarioSchedule({ deploymentId, scenario, resources }: { deploy
   const appliedSteps = useSimulationStore(s => s.deploymentId === deploymentId ? s.appliedScenarioSteps : null);
   if (!scenario || scenario.visibility !== "revealed") return null;
   const name = (id: string) => resources.find(r => r.id === id)?.name || id;
-  return <div aria-label="Challenge scenario schedule" className="text-sm text-ink-2">
+  return <div role="group" aria-label="Challenge scenario schedule" className="text-sm text-ink-2">
     <p className="font-semibold">Challenge schedule</p>
     <ul className="mt-1 space-y-2">{scenario.steps.map(step => {
       const request = step.request;

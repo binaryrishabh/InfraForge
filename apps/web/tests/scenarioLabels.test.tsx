@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, spyOn, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ChallengeScenario } from "@infraforge/contracts/challenges";
@@ -10,6 +10,10 @@ import { LivePanel } from "../src/features/live/LivePanel";
 import { ActionTimeline } from "../src/features/reports/components/ActionTimeline";
 import { useSimulationStore } from "../src/features/monitoring/store/simulationStore";
 import { brief } from "./fixtures";
+import { LiveWorkspace } from "../src/features/live/LiveWorkspace";
+import * as deploymentSocket from "../src/features/deployment/hooks/useDeploymentSocket";
+import * as challengeBrief from "../src/features/challenges/useChallengeBrief";
+import * as media from "../src/lib/useMediaQuery";
 
 const scenario: ChallengeScenario = { version: 1, visibility: "revealed", steps: [{ id: "db-slowdown", atSecond: 2, request: { interventionId: "cpu-capacity", revision: 1, target: { resourceId: "db" }, parameters: { cores: 0.5, duration: 2 } } }] };
 const resources = [{ id: "db", type: "Database" as const, name: "Orders database", x: 0, y: 0 }];
@@ -64,6 +68,18 @@ test("scenario schedule names the step, target and time without inferring applic
 test("unrevealed and unavailable schedules do not expose step details", () => {
   expect(schedule({ ...scenario, visibility: "debrief" })).toBe("");
   expect(renderToStaticMarkup(<ScenarioSchedule deploymentId="run" resources={resources} />)).toBe("");
+});
+
+test("wide live workspace exposes the schedule once in an accessible group", () => {
+  const run: Deployment = { id: "run", infrastructureId: null, runName: null, status: DeploymentStatus.BROWSER, resourceCount: 1, stages: [], timeline: [], chaosEvents: [], runInputs: null, liveTopology: { resources, connectionLines: [] }, topologyRevision: 0, createdAt: "", updatedAt: "", challengeId: brief.id, challengeVersion: brief.version };
+  const socket = spyOn(deploymentSocket, "useDeploymentSocket").mockReturnValue({ deployment: run, status: DeploymentStatus.LIVE, completedStages: [], timeline: [] });
+  const read = spyOn(challengeBrief, "useChallengeBrief").mockReturnValue({ data: { ...brief, scenario }, error: null, loading: false, retry: () => {} });
+  const width = spyOn(media, "useMediaQuery").mockImplementation(query => query.includes("min-width"));
+  try {
+    const html = renderToStaticMarkup(<MemoryRouter><LiveWorkspace deploymentId="run" /></MemoryRouter>);
+    expect(html.match(/Challenge schedule/g)).toHaveLength(1);
+    expect(html).toContain('role="group" aria-label="Challenge scenario schedule"');
+  } finally { socket.mockRestore(); read.mockRestore(); width.mockRestore(); }
 });
 
 test("live Attempt tab uses only the matching challenge version's revealed schedule", () => {

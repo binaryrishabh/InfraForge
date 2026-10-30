@@ -17,7 +17,7 @@ function obstacles(store: Store) {
   ];
 }
 function editable(store: Store, quiet = false) {
-  if (store.liveLocked) { if (!quiet) toast.warning("This run's design is locked. Stop and return to the designer to make changes."); return false; }
+  if (store.liveLocked) { if (!quiet) toast.warning("This run's design is locked. Return to the designer to make changes."); return false; }
   if (store.isDeploying) { if (!quiet) toast.warning("Editing is paused while the run starts."); return false; }
   return true;
 }

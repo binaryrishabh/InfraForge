@@ -25,7 +25,6 @@ import { LiveTimetable } from "./LiveTimetable";
 import { useExperimentPlan } from "@/features/challenges/experimentPlanStore";
 import { recordedPlan } from "@/features/challenges/experiment";
 import { plural } from "@/lib/format";
-import { ScenarioSchedule } from "./ScenarioSchedule";
 
 /* The live run: always in the ink theme so it reads as an instrument. The architecture
 stays in the middle, the run so far grows along the timetable beneath it, and state and
@@ -86,7 +85,6 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
     <div data-theme="ink" className="flex h-dvh flex-col overflow-hidden bg-bg text-ink">
       <RunBar run={deployment} deploymentId={deploymentId} phase={phase} challengeTitle={brief?.data?.title ?? null} onStop={stop} stopping={stopping} />
       {plan && deployment?.evaluationStopAtSimulatedSeconds != null && <ExperimentStrip plan={plan} evaluationSeconds={deployment.evaluationStopAtSimulatedSeconds} compact={!!showTimetable} />}
-      {brief?.data?.id === challenge && brief.data.version === deployment?.challengeVersion && brief.data.scenario?.visibility === "revealed" && <section className="shrink-0 border-b border-line bg-surface px-3 py-2 sm:px-4"><ScenarioSchedule deploymentId={deploymentId} scenario={brief.data.scenario} resources={deployment.runInputs?.resources ?? resources} /></section>}
       <CanvasDnd>
         <div className="relative flex min-h-0 flex-1">
           <main id="main" tabIndex={-1} className="relative flex min-w-0 flex-1 flex-col outline-none" aria-label="Live architecture">
