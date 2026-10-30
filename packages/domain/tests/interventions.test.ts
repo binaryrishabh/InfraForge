@@ -1,9 +1,21 @@
 import { expect, test } from "bun:test";
 import { INTERVENTIONS, interventionError } from "../src/resource";
 const request = { interventionId: "session-capacity", revision: 1, target: { resourceId: "db" }, parameters: { sessions: 0, duration: 1 } };
+test("consumer outage is duration-only, timed and reversible for a background worker", () => {
+  expect(INTERVENTIONS.find(d => d.id === "consumer-outage")).toMatchObject({revision: 1, targetKind: "Virtual Machine", mechanism: "async-worker", reversible: true, endPolicy: "timed"});
+  const request = {interventionId: "consumer-outage", revision: 1, target: {resourceId: "worker"}, parameters: {duration: 1}};
+  expect(interventionError(request)).toBeNull();
+  expect(interventionError({...request, parameters: {duration: 300}}, {remainingSeconds: 300})).toBeNull();
+  for (const duration of [0, -1, 0.5, 301, Infinity]) expect(interventionError({...request, parameters: {duration}})).toContain("BOUNDS");
+  expect(interventionError(request, {remainingSeconds: 0})).toContain("BOUNDS");
+  expect(interventionError({...request, parameters: {duration: 2}}, {remainingSeconds: 1})).toContain("BOUNDS");
+  expect(interventionError({...request, revision: 2})).toContain("REVISION");
+  expect(interventionError({...request, parameters: {duration: 1, available: true}})).toContain("PARAMETERS");
+  expect(interventionError({...request, target: {edgeId: "poll", direction: "both"}})).toContain("TARGET");
+});
 test("capabilities round-trip as data and enforce product policy at contextual boundaries", () => {
   expect(JSON.parse(JSON.stringify(INTERVENTIONS))).toEqual(INTERVENTIONS);
-  expect(INTERVENTIONS.map(d => d.id)).toEqual(["pool-reset", "deny-port", "session-capacity", "cpu-capacity", "flush", "delay", "bandwidth", "partition"]);
+  expect(INTERVENTIONS.map(d => d.id)).toEqual(["consumer-outage", "pool-reset", "deny-port", "session-capacity", "cpu-capacity", "flush", "delay", "bandwidth", "partition"]);
   expect(interventionError(request, { remainingSeconds: 1 })).toBeNull();
   for (const parameters of [{sessions: -1, duration: 1}, {sessions: 513, duration: 1}, {sessions: 0.5, duration: 1}, {sessions: Infinity, duration: 1}, {sessions: 0, duration: 301}, {sessions: 0}, {sessions: 0, duration: 1, extra: true}])
     expect(interventionError({...request, parameters}, {authoredBaseline: 512})).toContain("INTERVENTION_");
