@@ -4,6 +4,10 @@ import { contractFromDesign, currentAdapterProfiles } from "../src/model2/produc
 import { compileProduct } from "../src/model2/product/compiler";
 import { createProductModel2 } from "../src/model2/product/run";
 import { dataKeys } from "../src/model2/product/keyspace";
+import { EventKernel } from "../src/model2/time";
+import { relationalDatabase } from "../src/model2/data/database";
+import type { Invocation } from "../src/model2/workload/contracts";
+import type { DataReply } from "../src/model2/data/contracts";
 
 // Captured on unmodified 1c0629195c34806a5164d7ff385b96b20e487900. Never regenerate.
 const historical = {
@@ -142,4 +146,19 @@ test("maximum learner keyspace compiles and runs within the product budgets", ()
   const f = prepareKeyspace(keyspaceDesign(1000)); f.runtime.advanceTo(1000000);
   expect(f.runtime.evidence().data.databases[0]!.rows).toHaveLength(1000);
   expect(f.runtime.evidence().counts.completed).toBeGreaterThan(0);
+});
+
+test("uniform DB selection preserves supplied keys, including invalid keys that must refuse", () => {
+  const config = prepareKeyspace(keyspaceDesign(10)).compiled.input.resources.find(r => r.kind === "relational")!;
+  if (config.kind !== "relational") throw Error("Expected relational");
+  const clock = new EventKernel(1000), db = relationalDatabase(config, clock, undefined, undefined, undefined, "selected");
+  expect(db.openSession("proof")).toBe(true);
+  for (const [i, key] of ["key-7", "", "outside"].entries()) {
+    const work: Invocation = { rootId: JSON.stringify(["root", i]), callId: JSON.stringify(["proof", i]), sessionId: "proof", operation: "read", attempt: 0, offeredAt: clock.now, message: { request: { kind: "query", key } } };
+    db.accept(work, () => {}); clock.advanceTo((i + 1) * 10000);
+    const reply = work.message!.response as DataReply;
+    expect(reply.ok).toBe(key === "key-7");
+    if (reply.ok) expect(reply.rows?.map(r => r.key)).toEqual(["key-7"]);
+    else expect(reply.reason).toBe("key-outside-dataset");
+  }
 });

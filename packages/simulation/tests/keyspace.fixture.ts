@@ -9,7 +9,7 @@ export function keyspaceDesign(count?: number): SavedProductDesign {
   const resources: Resource[] = [
     { id: "app", type: "Virtual Machine", x: 0, y: 0 },
     { id: "cache", type: "Cache", x: 0, y: 0 },
-    { id: "db", type: "Database", x: 0, y: 0, ...(count === undefined ? {} : { dataKeyspace: { version: 1, count } }) },
+    { id: "db", type: "Database", x: 0, y: 0, ...(count === undefined ? {} : { dataKeyspace: { version: 1 as const, count } }) },
   ];
   return { schema: "infraforge-saved-design/1", resources,
     connections: [["app", "cache"], ["cache", "db"]].map(([s, t], i) => ({ id: `edge-${i}`, sourceId: s!, targetId: t!, sourceType: resources.find(r => r.id === s)!.type, targetType: resources.find(r => r.id === t)!.type, port: RESOURCE_PORTS[resources.find(r => r.id === t)!.type] })),

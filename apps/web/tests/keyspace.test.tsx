@@ -37,7 +37,7 @@ test("the actual save payload and store reload preserve the optional keyspace", 
   useAuthStore.setState({ user: { id: "owner", name: "Owner", username: null, email: "owner@infraforge.test", emailVerified: true, createdAt: new Date(0).toISOString() }, status: "authenticated" });
   useCanvasStore.getState().loadLayout([db], [], "layout", "Data");
   updateResource("db", { dataKeyspace: { version: 1, count: 100 } });
-  const saved = spyOn(http, "put").mockResolvedValue({ data: { infrastructure: { id: "layout", name: "Data" } } });
+  const saved = spyOn(http, "put").mockResolvedValue({ data: { updatedInfrastructure: { id: "layout", name: "Data" } } });
   try {
     await saveDesign();
     const payload = JSON.parse(JSON.stringify(saved.mock.calls[0]![1])) as { layout: { resources: Resource[]; connectionLines: [] } };

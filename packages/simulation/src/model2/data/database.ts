@@ -128,7 +128,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     openSession,
     sessionAlive: (id: string) => sessions.has(id),
     accept(work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt {
-      if (config.access === "keyed-uniform" && !(work.message?.request as DataRequest | undefined)?.key) {
+      if (config.access === "keyed-uniform" && (work.message?.request as DataRequest | undefined)?.key === undefined) {
         const key = config.keys[Math.floor(keyedUniform(seed, config.id, work.rootId, "data-key") * config.keys.length)]!;
         work.message ??= { request: { kind: "query", key } };
         work.message.request = { kind: "query", key };

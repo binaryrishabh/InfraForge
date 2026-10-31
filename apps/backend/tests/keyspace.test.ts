@@ -13,7 +13,7 @@ import type { StoredRun } from "../reports/report";
 const workload = { targetThroughput: 600, throughputUnit: "per-minute" as const, trafficShape: "steady" as const, readWriteRatio: 0.8, payloadSize: "light" as const };
 function layout(count?: number) {
   const resources: Resource[] = [{ id: "app", type: "Virtual Machine", x: 0, y: 0 }, { id: "cache", type: "Cache", x: 1, y: 0 },
-    { id: "db", type: "Database", x: 2, y: 0, ...(count === undefined ? {} : { dataKeyspace: { version: 1, count } }) }];
+    { id: "db", type: "Database", x: 2, y: 0, ...(count === undefined ? {} : { dataKeyspace: { version: 1 as const, count } }) }];
   return { resources, connectionLines: [
     { id: "app-cache", sourceId: "app", targetId: "cache", sourceType: "Virtual Machine", targetType: "Cache", port: 6379 },
     { id: "cache-db", sourceId: "cache", targetId: "db", sourceType: "Cache", targetType: "Database", port: 5432 },
