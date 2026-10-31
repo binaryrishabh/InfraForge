@@ -50,7 +50,9 @@ test("only new captures with changed compiled cache behavior select the cache po
     expect(buildContractFromRunInputs(saved, 5)).toEqual(buildContractFromRunInputs(old, 5));
   }
   for (const policy of [{ version: 1 as const, ttlSeconds: 1 }, { version: 1 as const, singleFlight: true }, { version: 1 as const, ttlSeconds: 120, singleFlight: true }]) {
-    const saved = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout(policy), workload, "capture-cache"))));
+    const captured = captureRunInputs(layout(policy), workload, "capture-cache");
+    const saved = readRunInputs(JSON.parse(JSON.stringify(captured)));
+    expect(JSON.stringify(saved)).toBe(JSON.stringify(captured));
     expect(saved.adapterProfiles).toEqual(["data-cache-policy/1"]); expect(saved.resources[1]!.cachePolicy).toEqual(policy);
     expect(buildContractFromRunInputs(saved, 5)).toHaveProperty("contract");
     for (const adapterProfiles of [undefined, []]) expect(buildContractFromRunInputs({ ...saved, adapterProfiles }, 5)).toHaveProperty("refused");
@@ -79,11 +81,17 @@ test("browser-target bundle and server replay cache TTL and single-flight settin
     const browserModule = await import(pathToFileURL(browserPath).href);
     const createBrowserRun: typeof createModel2Run = browserModule.createModel2Run;
     for (const singleFlight of [false, true]) for (const hot of [false, true]) {
-      const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout({ version: 1, ttlSeconds: 1, singleFlight }, hot), workload, "compiled-cache-parity"))));
+      const d = layout({ version: 1, ttlSeconds: 1, singleFlight }, hot); d.resources[0]!.size = "large";
+      const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(d, { ...workload, targetThroughput: 60000 }, "compiled-cache-parity"))));
       const browser = createBrowserRun(input, 5), server = createModel2Engine(input, 5, buildModel2Contract);
       for (let i = 0; i < 5; i++) {
         browser.advance(); server.advance(); expect(browser.evidence()).toEqual(server.evidence()); expect(browser.view()).toEqual(server.view());
       }
+      const e = browser.evidence();
+      expect(e.data.caches[0]!.expirations).toBeGreaterThan(0);
+      if (singleFlight) expect(e.data.applications[0]!.coalescedWaiters).toBeGreaterThan(0);
+      else expect(e.data.applications[0]!.coalescedWaiters).toBe(0);
+      console.info("compiled-cache-parity", JSON.stringify({ hot, singleFlight, dbReads: e.data.databases[0]!.logicalReads, waiters: e.data.applications[0]!.coalescedWaiters, expirations: e.data.caches[0]!.expirations }));
     }
   } finally { await unlink(browserPath); }
 });

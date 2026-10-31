@@ -103,3 +103,26 @@ test("changed policies require a matching captured profile and matching compiled
   expect(compileProduct(d, h.contract).ok).toBe(false);
   expect(contractFromDesign(keyspaceDesign(), { adapterProfiles: ["data-cache-policy/1"] })).toHaveProperty("refused");
 });
+
+test("short TTL and single-flight preserve selected-key writes and invalidate only that key", () => {
+  const d = policyDesign(1, true, 10, true); d.workload.readWriteRatio = 0.8;
+  const f = prepareKeyspace(d, "cache-keyed-writes"); let previous = f.runtime.evidence(), writes = 0;
+  for (let i = 0; i < 100; i++) {
+    f.runtime.advanceTo(i * 100000 + 50000); const e = f.runtime.evidence(), result = e.data.applications[0]!.results.at(-1)!;
+    expect(result.ok).toBe(true);
+    for (const row of e.data.databases[0]!.rows) expect(row.version).toBe(previous.data.databases[0]!.rows.find(r => r.key === row.key)!.version + Number(result.source === "write-invalidated" && result.key === row.key));
+    if (result.source === "write-invalidated") {
+      writes++; expect(e.data.caches[0]!.entries).toEqual(previous.data.caches[0]!.entries.filter(r => r.key !== result.key));
+    } else expect(result.version).toBe(e.data.databases[0]!.rows.find(r => r.key === result.key)!.version);
+    previous = e;
+  }
+  expect(writes).toBe(20); expect(previous.data.databases[0]!.logicalWrites).toBe(writes);
+});
+
+test("canvas adapter and compiler reject cache policy outside its bounded schema", () => {
+  const valid = policyDesign(1, true), f = prepareKeyspace(valid);
+  for (const value of [null, {}, { version: 2 }, { version: 1, ttlSeconds: 0 }, { version: 1, ttlSeconds: 1.5 }, { version: 1, ttlSeconds: 3601 }, { version: 1, singleFlight: "on" }, { version: 1, eviction: "lru" }]) {
+    const d = structuredClone(valid); Object.assign(d.resources[1]!, { cachePolicy: value });
+    expect(contractFromDesign(d)).toHaveProperty("refused"); expect(compileProduct(d, f.contract).ok).toBe(false);
+  }
+});
