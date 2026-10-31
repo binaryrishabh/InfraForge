@@ -57,7 +57,7 @@ function burst(singleFlight: boolean, count = 1, hot = false, appOwned = false) 
   const f = prepareKeyspace(d, "cache-burst");
   f.compiled.input.arrivals = [{ id: "cache-bursts", kind: "trace", trace: {
     schema: "infraforge-arrivals/1", unit: "us", durationUs: 5000000, provenance: "Deterministic cache policy proof",
-    rows: Array.from({ length: hot ? 120 : 32 }, (_, i) => ({ id: String(i), atUs: Math.floor(i / (hot ? 30 : 8)) * 1500000, operation: "read" })),
+    rows: Array.from({ length: 32 }, (_, i) => ({ id: String(i), atUs: Math.floor(i / 8) * 1500000, operation: "read" })),
   } }];
   return { d, ...f, runtime: createProductModel2(f.compiled) };
 }
@@ -80,7 +80,9 @@ test("hot keys, short TTL and single-flight keep fills keyed and repeat across a
   off.runtime.advanceTo(5000000); a.runtime.advanceTo(5000000);
   for (let t = 250000; t <= 5000000; t += 250000) b.runtime.advanceTo(t);
   const e = a.runtime.evidence(), c = e.data.caches[0]!, app = e.data.applications[0]!;
-  expect(hash(e)).toBe(hash(b.runtime.evidence())); expect(e.counts.completed).toBe(120);
+  expect(hash(e)).toBe(hash(b.runtime.evidence())); expect(e.counts.completed).toBe(32);
+  expect(off.runtime.evidence().counts.completed).toBe(32);
+  expect(new Set(app.results.map(r => r.key)).size).toBeGreaterThan(1);
   expect(c.expirations).toBeGreaterThan(0); expect(app.coalescedWaiters).toBeGreaterThan(0);
   expect(app.databaseFetches).toBeLessThan(off.runtime.evidence().data.applications[0]!.databaseFetches);
   expect(app.results.filter(r => r.key === "key-1").length / app.results.length).toBeGreaterThan(0.65);

@@ -73,11 +73,14 @@ for (const hot of [false, true]) for (const flow of [false, true]) test(`saved c
 });
 
 test("browser-target bundle and server replay cache TTL and single-flight settings", async () => {
-  const built = await Bun.build({ entrypoints: [resolve(import.meta.dir, "../../../packages/simulation/src/model2Run.ts")], target: "browser" });
-  expect(built.success).toBe(true);
   const browserPath = resolve(import.meta.dir, `../../../.cache/cache-policy-browser-${process.pid}.mjs`);
-  await mkdir(dirname(browserPath), { recursive: true }); await Bun.write(browserPath, built.outputs[0]!);
+  await mkdir(dirname(browserPath), { recursive: true });
   try {
+    // Keep the new build isolated from other suites' in-process Bun resolver state on Windows.
+    const build = Bun.spawn([process.execPath, "--no-env-file", "build", resolve(import.meta.dir, "../../../packages/simulation/src/model2Run.ts"), "--target=browser", "--outfile", browserPath], { stdout: "ignore", stderr: "pipe" });
+    const diagnostics = await new Response(build.stderr).text(), exitCode = await build.exited;
+    if (exitCode !== 0) throw Error(`Browser build failed: ${diagnostics}`);
+    expect(exitCode).toBe(0);
     const browserModule = await import(pathToFileURL(browserPath).href);
     const createBrowserRun: typeof createModel2Run = browserModule.createModel2Run;
     for (const singleFlight of [false, true]) for (const hot of [false, true]) {
@@ -93,7 +96,7 @@ test("browser-target bundle and server replay cache TTL and single-flight settin
       else expect(e.data.applications[0]!.coalescedWaiters).toBe(0);
       console.info("compiled-cache-parity", JSON.stringify({ hot, singleFlight, dbReads: e.data.databases[0]!.logicalReads, waiters: e.data.applications[0]!.coalescedWaiters, expirations: e.data.caches[0]!.expirations }));
     }
-  } finally { await unlink(browserPath); }
+  } finally { if (await Bun.file(browserPath).exists()) await unlink(browserPath); }
 });
 
 test("comparison includes cache settings without upgrading descriptive profile comparisons", () => {
