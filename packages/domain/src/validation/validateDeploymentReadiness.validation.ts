@@ -38,9 +38,8 @@ export function validateConnection(sourceType: ResourceType, targetType: Resourc
     return { valid: true, message: "Connection valid" };
 }
 
-/* Readiness of the current canvas: type-presence rules PLUS real graph
-traversal (Quality Backlog L2 closed). Isolated nodes are hard errors;
-unreachable resources and dead-end VMs are warnings. */
+/* Generic canvas structure and conditional drawing rules only. The engine's
+contract builder decides whether a connected design can execute. */
 export function validateDeploymentReadiness(resources: Array<Resource>, connections: Array<ConnectionLine>): { valid: boolean, errors: string[], warnings: string[] } {
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -79,43 +78,19 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
             if (!verdict.valid) errors.push(`${line.id}: ${verdict.message}`);
         }
     }
-    const types = resources.map(resource => resource.type); // Here type is resource name
-    /* ------------------HARD ERRORS block deployment-------------------- */
-    if (types.includes(RESOURCE_TYPES.LoadBalancer) && !types.includes(RESOURCE_TYPES.VirtualMachine)) {
-        errors.push("Load balancer required at least one Virtual Machine as backend");
-    }
-    if (types.includes(RESOURCE_TYPES.CDN) && !types.includes(RESOURCE_TYPES.LoadBalancer)) {
-        errors.push("CDN requires Load Balancer as origin");
-    }
-    if (types.includes(RESOURCE_TYPES.DNS) && !types.includes(RESOURCE_TYPES.CDN) && !types.includes(RESOURCE_TYPES.LoadBalancer)) {
-        errors.push("DNS requires a target (CDN or Load Balancer)");
-    }
-    if (types.includes(RESOURCE_TYPES.Cache) && !types.includes(RESOURCE_TYPES.Database)) {
-        errors.push("Cache requires a database to cache data from");
-    }
-    if (types.includes(RESOURCE_TYPES.MessageQueue) && !types.includes(RESOURCE_TYPES.VirtualMachine) && !types.includes(RESOURCE_TYPES.Database)) {
-        errors.push("Message Queue requires a consumer (Virtual Machine or Database)");
-    }
-    if (types.includes(RESOURCE_TYPES.ContainerRegistry) && !types.includes(RESOURCE_TYPES.VirtualMachine)) {
-        errors.push("Container Registry requires at least one Virtual Machine");
-    }
-    const deployableTypes: ResourceType[] = [
-        RESOURCE_TYPES.VirtualMachine,
-        RESOURCE_TYPES.Database,
-        RESOURCE_TYPES.ObjectStorage
-    ];
-    const hasDeployable = resources.some(resource => deployableTypes.includes(resource.type));
-    if (!hasDeployable) {
-        errors.push("Infrastructure must contain at least one deployable resource (Virtual Machine, Database, or Object Storage)");
-    }
+    const types = resources.map(resource => resource.type);
+    if (!resources.length) errors.push("Infrastructure must contain at least one resource");
     /* ------------------GRAPH TRAVERSAL (L2)-------------------- */
     const connectedIds = new Set<string>();
     for (const line of connections) {
+        if (!resources.some(resource => resource.id === line.sourceId) || !resources.some(resource => resource.id === line.targetId)) {
+            errors.push(`${line.id} must connect resources that exist on the canvas`);
+        }
         connectedIds.add(line.sourceId);
         connectedIds.add(line.targetId);
     }
     for (const resource of resources) {
-        if (!connectedIds.has(resource.id)) {
+        if (!connectedIds.has(resource.id) && !(resources.length === 1 && resource.type === RESOURCE_TYPES.VirtualMachine)) {
             errors.push(`${resource.id} is isolated — connect it or remove it`);
         }
     }

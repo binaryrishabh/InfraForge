@@ -6,6 +6,7 @@ export { createActionableLiveModel2, createLiveModel2 } from "./model2/product/l
 export { createModel2Run, ActionRefused, FAULT_DURATIONS, MAX_RUN_ACTIONS } from "./model2/product/liveRun";
 export { buildModel2Contract, buildContractFromRunInputs, withRunLength } from "./model2/product/runContract";
 export { contractFromDesign, currentAdapterProfiles } from "./model2/product/fromDesign";
+export { validateModel2Readiness } from "./model2/product/readiness";
 export { WORKLOAD_LIMITS } from "./model2/workload/policy";
 export { boundedProduct } from "./model2/product/bounds";
 export { canonical } from "./model2/product/provenance";

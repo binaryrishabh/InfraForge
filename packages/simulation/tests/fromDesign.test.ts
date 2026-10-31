@@ -33,12 +33,10 @@ const minimal: Array<[Resource["type"], SavedProductDesign]> = [
   ["Message Queue", design({ app: "Virtual Machine", queue: "Message Queue" }, [["app", "queue"]])],
   ["Monitoring Agent", design({ monitor: "Monitoring Agent", app: "Virtual Machine" }, [["monitor", "app"]])],
 ];
-test("executable legacy wiring preserves shipped readiness errors and warnings", () => {
+test("generic readiness permits supported DNS and registry wiring and preserves warnings", () => {
   const dns = minimal.find(([type]) => type === "DNS")![1];
-  // The exact DNS fixture already failed this presence rule on shipped main.
-  // It must not gain an edge-type error just because DNS -> VM is not drawable.
   expect(validateDeploymentReadiness(dns.resources, dns.connections)).toEqual({
-    valid: false, errors: ["DNS requires a target (CDN or Load Balancer)"],
+    valid: true, errors: [],
     warnings: ["app has no downstream data path — data requests will fail"],
   });
   const registry = minimal.find(([type]) => type === "Container Registry")![1];

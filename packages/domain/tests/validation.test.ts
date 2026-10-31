@@ -12,7 +12,7 @@ describe("connection eligibility", () => {
   test("preserves allowed, forbidden, terminal and unknown-source results", () => {
     expect(validateConnection(RESOURCE_TYPES.DNS, RESOURCE_TYPES.CDN)).toEqual({ valid: true, message: "Connection valid" });
     expect(validateConnection(RESOURCE_TYPES.DNS, RESOURCE_TYPES.Database)).toEqual({
-      valid: false, message: "DNS cannot connect to Database. Allowed: CDN, Load Balancer",
+      valid: false, message: "DNS cannot connect to Database. Allowed: CDN, Load Balancer, Virtual Machine",
     });
     expect(validateConnection(RESOURCE_TYPES.ObjectStorage, RESOURCE_TYPES.Database)).toEqual({
       valid: false, message: "Object Storage cannot connect to any resource",
@@ -33,21 +33,18 @@ describe("deployment readiness", () => {
     });
   });
 
-  test("rejects empty input with the existing deployable requirement", () => {
+  test("rejects empty input", () => {
     expect(validateDeploymentReadiness([], [])).toEqual({
-      valid: false, errors: ["Infrastructure must contain at least one deployable resource (Virtual Machine, Database, or Object Storage)"], warnings: [],
+      valid: false, errors: ["Infrastructure must contain at least one resource"], warnings: [],
     });
   });
 
-  test("preserves presence errors before isolation errors and monitoring warnings", () => {
+  test("reports isolation without engine-specific type-presence prerequisites", () => {
     expect(validateDeploymentReadiness([
       resource("dns", RESOURCE_TYPES.DNS), resource("cache", RESOURCE_TYPES.Cache),
       resource("queue", RESOURCE_TYPES.MessageQueue), resource("registry", RESOURCE_TYPES.ContainerRegistry),
     ], [])).toEqual({
       valid: false, errors: [
-        "DNS requires a target (CDN or Load Balancer)", "Cache requires a database to cache data from",
-        "Message Queue requires a consumer (Virtual Machine or Database)", "Container Registry requires at least one Virtual Machine",
-        "Infrastructure must contain at least one deployable resource (Virtual Machine, Database, or Object Storage)",
         "dns is isolated — connect it or remove it", "cache is isolated — connect it or remove it",
         "queue is isolated — connect it or remove it", "registry is isolated — connect it or remove it",
       ], warnings: [],
@@ -57,14 +54,11 @@ describe("deployment readiness", () => {
     ]);
   });
 
-  test("preserves load-balancer/CDN prerequisites and database backup warning", () => {
+  test("leaves origin/backend eligibility to the engine and preserves database backup warnings", () => {
     expect(validateDeploymentReadiness([
       resource("lb", RESOURCE_TYPES.LoadBalancer), resource("cdn", RESOURCE_TYPES.CDN),
-    ], [line("cdn", "lb")]).errors).toEqual([
-      "Load balancer required at least one Virtual Machine as backend",
-      "Infrastructure must contain at least one deployable resource (Virtual Machine, Database, or Object Storage)",
-    ]);
-    expect(validateDeploymentReadiness([resource("cdn", RESOURCE_TYPES.CDN)], []).errors[0]).toBe("CDN requires Load Balancer as origin");
+    ], [line("cdn", "lb")]).errors).toEqual([]);
+    expect(validateDeploymentReadiness([resource("cdn", RESOURCE_TYPES.CDN)], []).errors).toEqual(["cdn is isolated — connect it or remove it"]);
     expect(validateDeploymentReadiness([
       resource("vm", RESOURCE_TYPES.VirtualMachine), resource("db", RESOURCE_TYPES.Database),
     ], [line("vm", "db")])).toEqual({
@@ -74,6 +68,11 @@ describe("deployment readiness", () => {
         "Database should have Object Storage for backup",
       ],
     });
+  });
+
+  test("permits a standalone VM and rejects dangling endpoints", () => {
+    expect(validateDeploymentReadiness([resource("app", RESOURCE_TYPES.VirtualMachine)], []).valid).toBe(true);
+    expect(validateDeploymentReadiness([resource("app", RESOURCE_TYPES.VirtualMachine)], [line("app", "missing")]).errors).toContain("app-missing must connect resources that exist on the canvas");
   });
 
   test("reports isolated nodes as errors and reachable VM dead ends as warnings", () => {
