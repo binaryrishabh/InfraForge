@@ -37,14 +37,14 @@ test("generic readiness permits supported DNS and registry wiring and preserves 
   const dns = minimal.find(([type]) => type === "DNS")![1];
   expect(validateDeploymentReadiness(dns.resources, dns.connections)).toEqual({
     valid: true, errors: [],
-    warnings: ["app has no downstream data path — data requests will fail"],
+    warnings: ["app has no downstream connections"],
   });
   const registry = minimal.find(([type]) => type === "Container Registry")![1];
   expect(validateDeploymentReadiness(registry.resources, registry.connections)).toEqual({
     valid: true, errors: [], warnings: [
-      "app cannot be reached from any entry point (DNS, CDN, Firewall, or Load Balancer)",
-      "registry cannot be reached from any entry point (DNS, CDN, Firewall, or Load Balancer)",
-      "store cannot be reached from any entry point (DNS, CDN, Firewall, or Load Balancer)",
+      "app is not downstream of DNS, CDN, Firewall, or Load Balancer",
+      "registry is not downstream of DNS, CDN, Firewall, or Load Balancer",
+      "store is not downstream of DNS, CDN, Firewall, or Load Balancer",
     ],
   });
   const withLb = design({ dns: "DNS", lb: "Load Balancer", app: "Virtual Machine" }, [["dns", "app"], ["lb", "app"]]);

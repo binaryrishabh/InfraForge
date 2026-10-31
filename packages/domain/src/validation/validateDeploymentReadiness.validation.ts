@@ -97,16 +97,13 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
     const topology = computeTopology(resources, connections);
     for (const id of topology.idle) {
         if (connectedIds.has(id)) {
-            warnings.push(`${id} cannot be reached from any entry point (DNS, CDN, Firewall, or Load Balancer)`);
+            warnings.push(`${id} is not downstream of DNS, CDN, Firewall, or Load Balancer`);
         }
     }
     for (const id of topology.deadEnds) {
-        warnings.push(`${id} has no downstream data path — data requests will fail`);
+        warnings.push(`${id} has no downstream connections`);
     }
     /* ----------------------------------SOFT WARNINGS do not block---------------------------- */
-    if (types.includes(RESOURCE_TYPES.Database) && !types.includes(RESOURCE_TYPES.ObjectStorage)) {
-        warnings.push("Database should have Object Storage for backup");
-    }
     if (types.includes(RESOURCE_TYPES.MonitoringAgent)) {
         const monitoredTypes: ResourceType[] = [
             RESOURCE_TYPES.VirtualMachine,

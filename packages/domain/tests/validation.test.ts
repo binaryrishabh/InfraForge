@@ -24,11 +24,19 @@ describe("connection eligibility", () => {
 });
 
 describe("deployment readiness", () => {
-  test("preserves sample warning wording and ordering", () => {
+  test("structural warnings do not predict failed requests or unsupported database backups", () => {
+    expect(validateDeploymentReadiness([
+      resource("lb", RESOURCE_TYPES.LoadBalancer), resource("vm", RESOURCE_TYPES.VirtualMachine),
+    ], [line("lb", "vm")]).warnings).toEqual(["vm has no downstream connections"]);
+    expect(validateDeploymentReadiness([
+      resource("vm", RESOURCE_TYPES.VirtualMachine), resource("db", RESOURCE_TYPES.Database),
+    ], [line("vm", "db")]).warnings).not.toContain("Database should have Object Storage for backup");
+  });
+  test("reports sample structural warnings in traversal order", () => {
     expect(validateDeploymentReadiness(SAMPLE_ARCHITECTURE.resources, SAMPLE_ARCHITECTURE.connectionLines)).toEqual({
       valid: true, errors: [], warnings: [
-        "monitor-1 cannot be reached from any entry point (DNS, CDN, Firewall, or Load Balancer)",
-        "vm-2 has no downstream data path — data requests will fail",
+        "monitor-1 is not downstream of DNS, CDN, Firewall, or Load Balancer",
+        "vm-2 has no downstream connections",
       ],
     });
   });
@@ -54,7 +62,7 @@ describe("deployment readiness", () => {
     ]);
   });
 
-  test("leaves origin/backend eligibility to the engine and preserves database backup warnings", () => {
+  test("leaves origin/backend eligibility to the engine", () => {
     expect(validateDeploymentReadiness([
       resource("lb", RESOURCE_TYPES.LoadBalancer), resource("cdn", RESOURCE_TYPES.CDN),
     ], [line("cdn", "lb")]).errors).toEqual([]);
@@ -63,9 +71,8 @@ describe("deployment readiness", () => {
       resource("vm", RESOURCE_TYPES.VirtualMachine), resource("db", RESOURCE_TYPES.Database),
     ], [line("vm", "db")])).toEqual({
       valid: true, errors: [], warnings: [
-        "vm cannot be reached from any entry point (DNS, CDN, Firewall, or Load Balancer)",
-        "db cannot be reached from any entry point (DNS, CDN, Firewall, or Load Balancer)",
-        "Database should have Object Storage for backup",
+        "vm is not downstream of DNS, CDN, Firewall, or Load Balancer",
+        "db is not downstream of DNS, CDN, Firewall, or Load Balancer",
       ],
     });
   });
@@ -81,7 +88,7 @@ describe("deployment readiness", () => {
       resource("orphan", RESOURCE_TYPES.ObjectStorage),
     ], [line("lb", "vm")])).toEqual({
       valid: false, errors: ["orphan is isolated — connect it or remove it"],
-      warnings: ["vm has no downstream data path — data requests will fail"],
+      warnings: ["vm has no downstream connections"],
     });
   });
 });
