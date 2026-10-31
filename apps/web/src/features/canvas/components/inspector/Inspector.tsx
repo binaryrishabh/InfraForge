@@ -1,5 +1,6 @@
 import { SecuritySection } from "./SecuritySection";
 import { DataKeyspaceSection } from "./DataKeyspaceSection";
+import { CachePolicySection } from "./CachePolicySection";
 import { FlowSection } from "./FlowSection";
 import { AsyncSection } from "./AsyncSection";
 import { CircuitBreakerSection } from "./CircuitBreakerSection";
@@ -51,6 +52,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
       </div>
       {sizeable && <InstanceSection key={`size-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Database" && <DataKeyspaceSection key={`keyspace-${resource.id}`} resource={resource} disabled={locked} />}
+      {resource.type === "Cache" && <CachePolicySection key={`cache-policy-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <AutoscalingSection key={`pool-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <RetrySection key={`retry-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <CircuitBreakerSection key={`breaker-${resource.id}`} resource={resource} disabled={locked} />}
