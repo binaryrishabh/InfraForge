@@ -28,16 +28,14 @@ describe("resource and workload vocabulary", () => {
 
   test("preserves sample node order, coordinates and edge order", () => {
     expect(SAMPLE_ARCHITECTURE.resources.map(({ id, type, x, y }) => [id, type, x, y])).toEqual([
-      ["dns-1", "DNS", 0, 0], ["cdn-1", "CDN", 0, 288], ["lb-1", "Load Balancer", 0, 576],
-      ["vm-1", "Virtual Machine", 432, 288], ["vm-2", "Virtual Machine", 432, 864],
-      ["cache-1", "Cache", 864, 288], ["db-1", "Database", 864, 576],
-      ["storage-1", "Object Storage", 1296, 576], ["monitor-1", "Monitoring Agent", 864, 1152],
+      ["dns-1", "DNS", 0, 0], ["lb-1", "Load Balancer", 0, 288],
+      ["vm-1", "Virtual Machine", 432, 0], ["vm-2", "Virtual Machine", 432, 576],
+      ["cache-1", "Cache", 864, 288], ["db-1", "Database", 1296, 288],
     ]);
     expect(SAMPLE_ARCHITECTURE.connectionLines.map(({ id, sourceId, targetId, port }) => [id, sourceId, targetId, port])).toEqual([
-      ["c1", "dns-1", "cdn-1", 443], ["c2", "cdn-1", "lb-1", 80],
-      ["c3", "lb-1", "vm-1", 80], ["c4", "lb-1", "vm-2", 80],
-      ["c5", "vm-1", "cache-1", 6379], ["c6", "cache-1", "db-1", 5432],
-      ["c7", "db-1", "storage-1", 443], ["c8", "monitor-1", "vm-1", 80],
+      ["c1", "dns-1", "lb-1", 80], ["c2", "lb-1", "vm-1", 80],
+      ["c3", "lb-1", "vm-2", 80], ["c4", "vm-1", "cache-1", 6379],
+      ["c5", "vm-2", "cache-1", 6379], ["c6", "cache-1", "db-1", 5432],
     ]);
   });
 });

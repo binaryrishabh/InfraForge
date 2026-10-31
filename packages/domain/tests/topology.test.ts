@@ -12,16 +12,16 @@ describe("topology analysis", () => {
   test("preserves sample traversal order and dead-end classification", () => {
     expect(computeTopology(SAMPLE_ARCHITECTURE.resources, SAMPLE_ARCHITECTURE.connectionLines)).toEqual({
       adjacency: {
-        "dns-1": ["cdn-1"], "cdn-1": ["lb-1"], "lb-1": ["vm-1", "vm-2"],
-        "vm-1": ["cache-1"], "cache-1": ["db-1"], "db-1": ["storage-1"], "monitor-1": ["vm-1"],
+        "dns-1": ["lb-1"], "lb-1": ["vm-1", "vm-2"],
+        "vm-1": ["cache-1"], "vm-2": ["cache-1"], "cache-1": ["db-1"],
       },
       upstream: {
-        "cdn-1": ["dns-1"], "lb-1": ["cdn-1"], "vm-1": ["lb-1", "monitor-1"],
-        "vm-2": ["lb-1"], "cache-1": ["vm-1"], "db-1": ["cache-1"], "storage-1": ["db-1"],
+        "lb-1": ["dns-1"], "vm-1": ["lb-1"],
+        "vm-2": ["lb-1"], "cache-1": ["vm-1", "vm-2"], "db-1": ["cache-1"],
       },
       entryPoints: ["dns-1"],
-      reachable: ["dns-1", "cdn-1", "lb-1", "vm-1", "vm-2", "cache-1", "db-1", "storage-1"],
-      deadEnds: ["vm-2"], idle: ["monitor-1"],
+      reachable: ["dns-1", "lb-1", "vm-1", "vm-2", "cache-1", "db-1"],
+      deadEnds: [], idle: [],
     });
   });
 

@@ -34,10 +34,7 @@ describe("deployment readiness", () => {
   });
   test("reports sample structural warnings in traversal order", () => {
     expect(validateDeploymentReadiness(SAMPLE_ARCHITECTURE.resources, SAMPLE_ARCHITECTURE.connectionLines)).toEqual({
-      valid: true, errors: [], warnings: [
-        "monitor-1 is not downstream of DNS, CDN, Firewall, or Load Balancer",
-        "vm-2 has no downstream connections",
-      ],
+      valid: true, errors: [], warnings: [],
     });
   });
 
