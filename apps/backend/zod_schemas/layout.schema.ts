@@ -24,7 +24,7 @@ const ResourceSchema = z.object({
   x: z.number(),
   y: z.number(),
   skuId: z.string().optional(),
-  dataKeyspace: z.object({ version: z.literal(1), count: z.number().int().min(1).max(DATA_KEYSPACE_MAX) }).strict().optional(),
+  dataKeyspace: z.object({ version: z.literal(1), count: z.number().int().min(1).max(DATA_KEYSPACE_MAX), accessPattern: z.enum(["uniform", "hot-key"]).optional() }).strict().optional(),
   autoscaling: z.object({
     enabled: z.boolean().optional(),
     minReplicas: z.number().int().positive().optional(),

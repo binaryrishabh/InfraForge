@@ -20,6 +20,26 @@ function layout(count?: number) {
   ] };
 }
 
+test("hot-key layout/capture schemas retain explicit intent and bound the optional pattern", () => {
+  for (const schema of [LayoutSchema, LiveTopologySchema]) for (const accessPattern of ["uniform", "hot-key"] as const) {
+    const d = layout(100); d.resources[2]!.dataKeyspace!.accessPattern = accessPattern;
+    expect(schema.parse(JSON.parse(JSON.stringify(d))).resources[2]!.dataKeyspace).toEqual({ version: 1, count: 100, accessPattern });
+  }
+  for (const accessPattern of [null, "zipf", "", 80, {}, []]) {
+    const d = layout(100); Object.assign(d.resources[2]!.dataKeyspace!, { accessPattern });
+    for (const schema of [LayoutSchema, LiveTopologySchema]) expect(schema.safeParse(d).success).toBe(false);
+  }
+  const d = layout(100); d.resources[2]!.dataKeyspace!.accessPattern = "hot-key";
+  const input = captureRunInputs(d, workload, "hot-capture"), stored = readRunInputs(JSON.parse(JSON.stringify(input)));
+  expect(input.adapterProfiles).toEqual(["data-keyspace/1", "data-hot-key/1"]);
+  expect(JSON.stringify(stored)).toBe(JSON.stringify(input));
+  expect(buildContractFromRunInputs({ ...stored, adapterProfiles: ["data-keyspace/1"] }, 5)).toHaveProperty("refused");
+  expect(buildContractFromRunInputs({ ...stored, adapterProfiles: undefined }, 5)).toHaveProperty("refused");
+  d.resources[2]!.dataKeyspace!.count = 1;
+  const one = captureRunInputs(d, workload, "hot-capture"), historical = captureRunInputs(layout(), workload, "hot-capture");
+  expect(one.adapterProfiles).toEqual([]); expect(buildContractFromRunInputs(one, 5)).toEqual(buildContractFromRunInputs(historical, 5));
+});
+
 test("layout and live topology schemas retain strict versioned DB keyspaces and refuse invalid bounds", () => {
   for (const schema of [LayoutSchema, LiveTopologySchema]) {
     for (const count of [1, 10, 1000]) expect(schema.parse(JSON.parse(JSON.stringify(layout(count)))).resources[2]!.dataKeyspace).toEqual({ version: 1, count });
@@ -46,8 +66,9 @@ test("only new multi-key captures persist data-keyspace/1; old inputs remain wit
   expect(buildContractFromRunInputs({ ...old, adapterProfiles: ["data-keyspace/1"] }, 5)).toHaveProperty("refused");
 });
 
-for (const flow of [false, true]) test(`saved multi-key browser/server contracts, evidence and views agree, flow=${flow}`, () => {
+for (const pattern of [undefined, "uniform", "hot-key"] as const) for (const flow of [false, true]) test(`saved multi-key browser/server contracts, evidence and views agree, flow=${flow}, pattern=${pattern}`, () => {
   const d = layout(10);
+  if (pattern) d.resources[2]!.dataKeyspace!.accessPattern = pattern;
   if (flow) d.resources[0]!.applicationFlow = { schema: "application-flow/2", operations: {
     read: { steps: [{ id: "read", kind: "data", edge: "app-cache", operation: "read" }] },
     write: { steps: [{ id: "write", kind: "data", edge: "app-cache", operation: "write" }] },
@@ -65,6 +86,12 @@ for (const flow of [false, true]) test(`saved multi-key browser/server contracts
   expect(new Set(e.data.applications[0]!.results.map(r => r.key)).size).toBeGreaterThan(1);
   expect(e.data.databases[0]!.rows).toHaveLength(10);
   expect(browser.view().metrics.db!.memory).toBeNull();
+  if (pattern === "hot-key") {
+    const keys = e.data.applications[0]!.results.map(r => r.key);
+    expect(keys.filter(k => k === "key-1").length / keys.length).toBeGreaterThan(0.65);
+    const repeated = createModel2Run(input, 5); for (let i = 0; i < 5; i++) repeated.advance();
+    expect(repeated.evidence()).toEqual(e);
+  }
 });
 
 test("comparison retains keyspace edits and treats replay profile changes as descriptive only", () => {

@@ -9,9 +9,16 @@ export function DataKeyspaceSection({ resource, disabled }: { resource: Resource
   return <InspectorSection title="Application data">
     <Field label="Data keyspace" hint="Number of distinct application data keys used by this workload.">
       {({ id, describedBy }) => <Select id={id} aria-describedby={describedBy} value={count} disabled={disabled}
-        onChange={event => updateResource(resource.id, { dataKeyspace: { version: 1, count: Number(event.target.value) } })}>
+        onChange={event => updateResource(resource.id, { dataKeyspace: { ...resource.dataKeyspace, version: 1, count: Number(event.target.value) } })}>
         {choices.map(value => <option key={value} value={value}>{value.toLocaleString("en-US")}</option>)}
       </Select>}
     </Field>
+    {count > 1 && <Field label="Access pattern" hint="About 80% of accesses use one stable key; the rest use the remaining keys.">
+      {({ id, describedBy }) => <Select id={id} aria-describedby={describedBy} value={resource.dataKeyspace?.accessPattern ?? "uniform"} disabled={disabled}
+        onChange={event => updateResource(resource.id, { dataKeyspace: { version: 1, count, accessPattern: event.target.value === "hot-key" ? "hot-key" : "uniform" } })}>
+        <option value="uniform">Uniform</option>
+        <option value="hot-key">Hot-key</option>
+      </Select>}
+    </Field>}
   </InspectorSection>;
 }
