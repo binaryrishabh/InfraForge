@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DeploymentChaosNames, RESOURCE_TYPES } from "@infraforge/domain/resource";
-import { validateConnection, validateDeploymentReadiness } from "@infraforge/domain/validation";
+import { validateConnection } from "@infraforge/domain/validation";
+import { validateModel2Readiness } from "@infraforge/simulation/internal-product";
 import { SIMULATION_CONSTANTS } from "@infraforge/simulation/tuning";
 import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
 import { FAULT_DURATIONS } from "../simulator/faults";
@@ -82,7 +83,7 @@ function checkDefinition(d: ChallengeDefinition): string[] {
       if (source.type !== l.sourceType || target.type !== l.targetType) problems.push(`${where}: starter connection ${l.id} has stale types`);
       if (!validateConnection(source.type, target.type, { source, target, connectionId: l.id }).valid) problems.push(`${where}: starter connection ${l.id} breaks the connection rules`);
     }
-    const readiness = validateDeploymentReadiness(d.starter.resources, d.starter.connectionLines);
+    const readiness = validateModel2Readiness(d.starter.resources, d.starter.connectionLines, { workload: d.workload });
     if (!readiness.valid) problems.push(`${where}: the starter must be runnable: ${readiness.errors.join("; ")}`);
   }
   const e = d.experiment;

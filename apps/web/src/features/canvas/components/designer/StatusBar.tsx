@@ -17,7 +17,7 @@ export function StatusBar({ onChecks }: { onChecks: () => void }) {
       <span className="if-num whitespace-nowrap">{resources.length} {resources.length === 1 ? "resource" : "resources"} · {lines.length} {lines.length === 1 ? "link" : "links"}</span>
       {resources.length > 0 && (
         <button type="button" onClick={onChecks} className="hidden rounded-sm hover:underline sm:inline-flex">
-          <StatusMark size="sm" kind={readiness.valid ? "ok" : "problem"} label={readiness.valid ? "Ready to run" : `${readiness.errors.length} to fix`} />
+          <StatusMark size="sm" kind={readiness.valid ? "ok" : "problem"} label={readiness.valid ? "Ready for validation" : `${readiness.errors.length} to fix`} />
         </button>
       )}
       <p className="hidden min-w-0 flex-1 truncate text-ink-3 lg:block" aria-live="polite">

@@ -1,4 +1,4 @@
-import { validateDeploymentReadiness } from "@infraforge/domain/validation";
+import { validateModel2Readiness } from "@infraforge/simulation/internal-product";
 import type { ChallengeDefinition, ChallengePreflight, PreflightCheck } from "@infraforge/contracts/challenges";
 import { runCostEstimation } from "../stages/costEstimation.stages";
 import { appServersBehindBalancer, genericSized, list, type Topology } from "./criteria";
@@ -11,7 +11,7 @@ import { challengeSeed } from "./registry";
 worker runs, and it never reveals what the run itself will measure, including the
 security scan, which several challenges ask the learner to predict. */
 export function preflight(definition: ChallengeDefinition, topology: Topology): ChallengePreflight {
-  const readiness = validateDeploymentReadiness(topology.resources, topology.connectionLines);
+  const readiness = validateModel2Readiness(topology.resources, topology.connectionLines, { workload: definition.workload });
   const monthly = runCostEstimation(topology.resources).details as { monthlyEstimate: number };
   const checks: PreflightCheck[] = definition.criteria.map((c) => {
     const base = { id: c.id, label: c.label };

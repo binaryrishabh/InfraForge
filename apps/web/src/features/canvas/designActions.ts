@@ -90,7 +90,8 @@ export function loadSampleArchitecture() {
   store.setIsInitialized(true);
 }
 
-// Opens the run dialog only when the design can pass validation.
+// Checks generic structure before opening the dialog. The backend Validate gate
+// uses Model 2's compiler to decide whether the saved design can execute.
 export function requestRun() {
   const store = useCanvasStore.getState();
   if (store.isDeploying) { toast.warning("A run is already starting."); return; }

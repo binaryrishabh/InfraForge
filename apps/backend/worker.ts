@@ -31,7 +31,7 @@ import { runCostEstimation } from "./stages/costEstimation.stages";
 import { OutboxBullMQStatus } from "./types/OutboxBullMQStatus.enum";
 import { DeploymentStatus } from "@infraforge/contracts/deployment";
 import { DeploymentStageStatus } from "@infraforge/contracts/deployment";
-import { validateDeploymentReadiness } from "@infraforge/domain/validation";
+import { runValidation } from "./stages/validate.stages";
 import type { OutboxPayload } from "./types/OutboxPayload.interface";
 import type { DeploymentJob } from "./types/DeploymentJob.interface";
 import type { DeploymentStages } from "@infraforge/contracts/deployment";
@@ -344,10 +344,10 @@ const worker = new Worker(
         return true;
       };
 
-      // a. Validate — real graph traversal + type-presence rules. This gate can
+      // a. Validate — generic structure and the authoritative Model 2 compiler. This gate can
       // bite: a design error fails the deployment fast with a causal message.
       // No throw — a design error is not a transient fault, so no BullMQ retries.
-      const readiness = validateDeploymentReadiness(resources, connectionLines);
+      const readiness = runValidation(inputs);
       if (!readiness.valid) {
         const failureReason = readiness.errors.join("; ");
         const failed = await prisma.deployment.updateMany({

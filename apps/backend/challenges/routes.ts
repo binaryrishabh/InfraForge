@@ -5,7 +5,7 @@ import { Router } from "express";
 import { recordedScenario } from "./scenario";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { validateDeploymentReadiness } from "@infraforge/domain/validation";
+import { runValidation } from "../stages/validate.stages";
 import type { ChallengeAttemptSummary, ChallengeBrief, ChallengeSummary } from "@infraforge/contracts/challenges";
 import { prisma } from "../lib/prisma";
 import { ConflictError, NotFoundError, ValidationError } from "../utils/errors";
@@ -189,7 +189,7 @@ challengeRouter.post("/:id/attempts", async (req, res) => {
       if ((review.count === 0) !== (improvement.intent === "repeat")) throw new ConflictError("No simulation-relevant change requires an explicit repeat; a changed design is an improvement experiment.");
       if (review.classification === "several-changes" && !improvement.acknowledgeMultiple) throw new ConflictError("Acknowledge several changes before continuing.");
     }
-    const readiness = validateDeploymentReadiness(runInputs.resources, runInputs.connectionLines);
+    const readiness = runValidation(runInputs);
     if (!readiness.valid) throw new ValidationError(`Fix the design before starting: ${readiness.errors.join("; ")}`);
     if (definition.experiment) {
       const ready = experimentReadiness(definition.experiment, runInputs, definition.engine);
