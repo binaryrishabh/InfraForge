@@ -11,7 +11,7 @@ export interface Statement {
 export interface TransactionPlan { statements: Statement[]; statementTimeout: Quantity<"us">; lockTimeout: Quantity<"us">; transactionTimeout: Quantity<"us">; commitWait: Quantity<"us">; durability: "logical-only" | "authored-log-ack" }
 export interface RelationalConfig {
   // Opt-in selection for canvas requests without a recorded key; supplied keys always win.
-  access?: "keyed-uniform";
+  access?: "keyed-uniform" | "keyed-hot";
   id: string; kind: "relational"; semantics: "read-committed-keyed/1" | "postgresql-keyed/1" | "postgresql-keyed/2";
   execution: ComputeResource; maxSessions: Quantity<"count">; activeTransactions: Quantity<"count">; pendingQueries: Quantity<"count">;
   keys: string[]; initial: Row[]; plans: Record<string, TransactionPlan>;
@@ -24,7 +24,7 @@ export interface CacheConfig {
 export interface AsideConfig {
   recordedKeysOnly?: true;
   id: string; kind: "cache-aside"; execution: ComputeResource; cache: string; database: string;
-  keys: string[]; access: "cycle" | "keyed-uniform"; coalesce: boolean; onCacheFailure: "fail" | "database";
+  keys: string[]; access: "cycle" | "keyed-uniform" | "keyed-hot"; coalesce: boolean; onCacheFailure: "fail" | "database";
   invalidateWrites: boolean; operations: Record<string, "read" | "write">;
 }
 export type DataResource = RelationalConfig | CacheConfig | AsideConfig;

@@ -18,7 +18,7 @@ import { capReceipt } from "./receiptBudget";
 import { capabilityFacts } from "./capabilities";
 import { WORKLOAD_LIMITS } from "../workload/policy";
 import { numericOrigins } from "./origins";
-import { dataKeys, multiKey, KEYSPACE_PROFILE, validateDatabaseKeyspace } from "./keyspace";
+import { dataKeys, hotKey, HOT_KEY_PROFILE, multiKey, KEYSPACE_PROFILE, validateDatabaseKeyspace } from "./keyspace";
 // Model 1 saves a pool policy on its LB; keep fixed siblings and expand one named VM.
 export function savedPoolPolicies(design: SavedProductDesign): SavedProductDesign {
   const resources = design.resources.map((r) => ({ ...r }));
@@ -39,6 +39,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     boundedProduct(design); boundedProduct(contract);
     design = savedPoolPolicies(design);
     if (multiKey(design.resources) && !contract.version.includes(`/${KEYSPACE_PROFILE}`)) error("KEYSPACE_VERSION", "version", "Multi-key intent requires its explicit data-keyspace/1 contract version");
+    if (hotKey(design.resources) !== contract.version.includes(`/${HOT_KEY_PROFILE}`)) error("HOT_KEY_VERSION", "version", "Hot-key intent requires its explicit data-hot-key/1 contract version and matching saved intent");
     if (contract.applicationFlowProfile !== undefined && !["application-flow/1", "application-flow/2", "application-flow/3"].includes(contract.applicationFlowProfile)) error("UNKNOWN_FLOW_PROFILE", "applicationFlowProfile", "Unsupported flow profile");
     if ((design.resources.some(r => r.applicationFlow?.schema === "application-flow/3") ? "application-flow/3" : design.resources.some(r => r.applicationFlow?.schema === "application-flow/2") ? "application-flow/2" : design.resources.some(r => r.applicationFlow) ? "application-flow/1" : undefined) !== contract.applicationFlowProfile) error("FLOW_PROFILE", "applicationFlowProfile", "Saved flow requires the application-flow/1 adapter");
     if (contract.applicationFlowProfile && !contract.version.endsWith(`/${contract.applicationFlowProfile}`)) error("FLOW_VERSION", "version", "Flow semantic version must identify application-flow/1");
@@ -208,7 +209,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
           if (!attachedDb || targetOwner.cache !== ref(`$${drawn.targetId}`) || targetOwner.database !== ref(`$${attachedDb.targetId}`) || JSON.stringify(targetOwner.keys) !== JSON.stringify(dataKeys(nodes.get(attachedDb.targetId)!))) throw Error("Typed cache must use the attached cache and database with the saved keyspace");
         }
         if (command === "query" && c.operation === "write" && design.connections.some(e => e.sourceId === r.id && nodes.get(e.targetId)?.type === "Cache")) throw Error("Use a cache write to update the database and invalidate the attached cache");
-        const selectKey = targetOwner?.kind === "relational" ? targetOwner.access === "keyed-uniform" : targetOwner?.kind === "cache-aside" && targetOwner.keys.length > 1;
+        const selectKey = targetOwner?.kind === "relational" ? targetOwner.access !== undefined : targetOwner?.kind === "cache-aside" && targetOwner.keys.length > 1;
         return { id: c.id, kind: "data" as const, target, operation: c.operation, command, ...(selectKey ? { selectKey: true as const } : {}) };
       };
       const publish = (c: import("@infraforge/domain/resource").FlowPublish) => {

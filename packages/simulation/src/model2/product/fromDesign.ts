@@ -8,7 +8,7 @@ import type { ProductContract, SavedProductDesign, Diagnostic, ResourceTemplate,
 import { compileProduct, savedPoolPolicies } from "./compiler";
 import { boundedProduct } from "./bounds";
 import { canonical } from "./provenance";
-import { KEYSPACE_PROFILE, multiKey, asideKeyspace, databaseKeyspace } from "./keyspace";
+import { KEYSPACE_PROFILE, HOT_KEY_PROFILE, hotKey, multiKey, asideKeyspace, databaseKeyspace } from "./keyspace";
 
 export interface Assumption { id: string; value: unknown; unit: string; sentence: string }
 const SOURCE = "packages/simulation/src/model2/product/fromDesign.ts";
@@ -19,7 +19,7 @@ const operations = ["read", "write", "health"] as const;
 export function currentAdapterProfiles(resources: SavedProductDesign["resources"]): AdapterProfile[] {
   const dataFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/2");
   const publishFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/3");
-  return [...(dataFlow || publishFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : []), ...(publishFlow ? ["application-flow/3" as const] : []), ...(multiKey(resources) ? [KEYSPACE_PROFILE] : [])];
+  return [...(dataFlow || publishFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : []), ...(publishFlow ? ["application-flow/3" as const] : []), ...(multiKey(resources) ? [KEYSPACE_PROFILE] : []), ...(hotKey(resources) ? [HOT_KEY_PROFILE] : [])];
 }
 
 /** Canvas intent is preserved; missing application and service settings are visible assumptions.
@@ -32,10 +32,12 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const design = savedPoolPolicies(saved), resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
     // New canvas runs with retry/breaker intent record observational cause evidence; no learner control, and no decision depends on it.
     const profiles = history && "adapterProfiles" in history ? history.adapterProfiles : history ? [] : currentAdapterProfiles(resources);
-    if (profiles.some(p => !["failure-cause/1", "application-flow/2", "application-flow/3", KEYSPACE_PROFILE].includes(p)) || new Set(profiles).size !== profiles.length) error("adapterProfiles", "Unsupported adapter profile selection.");
+    if (profiles.some(p => !["failure-cause/1", "application-flow/2", "application-flow/3", KEYSPACE_PROFILE, HOT_KEY_PROFILE].includes(p)) || new Set(profiles).size !== profiles.length) error("adapterProfiles", "Unsupported adapter profile selection.");
     const failureCause = profiles.includes("failure-cause/1");
     const hasKeyspace = multiKey(resources);
     if (hasKeyspace !== profiles.includes(KEYSPACE_PROFILE)) error("adapterProfiles", "Multi-key intent requires its captured data-keyspace/1 adapter profile and matching saved intent.");
+    const hasHotKey = hotKey(resources);
+    if (hasHotKey !== profiles.includes(HOT_KEY_PROFILE)) error("adapterProfiles", "Hot-key intent requires its captured data-hot-key/1 adapter profile and matching saved intent.");
     const hasSecurity = resources.some(r => r.listenerSettings !== undefined || r.firewallSettings !== undefined);
     const hasFlow = resources.some(r => r.applicationFlow !== undefined);
     const flow2 = resources.some(r => r.applicationFlow?.schema === "application-flow/2");
@@ -133,9 +135,10 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const add = (r: Resource, role: string, config: ResourceTemplate) => nodes[r.id]!.resources.push({ role, config });
     for (const r of resources) nodes[r.id] = { type: r.type, profileVersion: "canvas-assumptions/2", provenance: [SOURCE], primary: "main", securityReplacement: "explicit-reviewed/1", resources: [], internalEdges: [], identities: [], listeners: [] };
     for (const r of resources.filter(r => (r.dataKeyspace?.count ?? 1) > 1)) {
-      nodes[r.id]!.profileVersion += `/${KEYSPACE_PROFILE}`;
+      const hot = hotKey([r]);
+      nodes[r.id]!.profileVersion += `/${KEYSPACE_PROFILE}` + (hot ? `/${HOT_KEY_PROFILE}` : "");
       nodes[r.id]!.provenance.push(`saved-design:${r.id}.dataKeyspace`);
-      q(`${r.id}.dataKeyspace.count`, r.dataKeyspace!.count, "count", "Saved finite application working set; stable synthetic keys use deterministic uniform access.", true);
+      q(`${r.id}.dataKeyspace.count`, r.dataKeyspace!.count, "count", hot ? "Saved finite application working set; the first key receives about 80% of accesses and the rest share the remaining accesses deterministically." : "Saved finite application working set; stable synthetic keys use deterministic uniform access.", true);
     }
     for (const r of resources.filter((r) => r.asyncQueue?.enabled || r.asyncWorker?.enabled || producerQueue(r.id))) {
       nodes[r.id]!.profileVersion += "/canvas-async/1";
@@ -328,7 +331,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       ...(hasSecurity ? { securityProfile: "canvas-security/1" as const } : {}),
       ...(hasFlow ? { applicationFlowProfile: flowProfile } : {}),
       ...(failureCause ? { failureCauseProfile: "failure-cause/1" as const } : {}),
-      schema: "infraforge-product-model2/1", version: (failureCause ? "canvas-assumptions/2/failure-cause/1" : "canvas-assumptions/2") + (hasKeyspace ? `/${KEYSPACE_PROFILE}` : "") + (hasFlow ? `/${flowProfile}` : ""), designVersion: "saved-domain/1", catalogVersion: CATALOG_SNAPSHOT_DATE, workloadVersion: "product-arrivals/1", ledger, nodes, edges, capabilities,
+      schema: "infraforge-product-model2/1", version: (failureCause ? "canvas-assumptions/2/failure-cause/1" : "canvas-assumptions/2") + (hasKeyspace ? `/${KEYSPACE_PROFILE}` : "") + (hasHotKey ? `/${HOT_KEY_PROFILE}` : "") + (hasFlow ? `/${flowProfile}` : ""), designVersion: "saved-domain/1", catalogVersion: CATALOG_SNAPSHOT_DATE, workloadVersion: "product-arrivals/1", ledger, nodes, edges, capabilities,
       application: { schema: "infraforge-application/1", id: "canvas-default", version: "1", provenance: [SOURCE], validityDomain: SCOPE, controlOperation: "health", readOperation: "read", writeOperation: "write", payloads, operations: operations.map((id) => ({ id, callerTimeout: q(`application.${id}.timeout`, 5000000, "us"), onCallerStop: "request-cancellation", idempotency: id === "write" ? "non-idempotent" : "read-only" })), demands: operations.map((op) => ({ schema: "infraforge-compute-demand/1", id: `canvas.${op}`, version: "1", application: "canvas-default", operation: op, stage: "compute", method: "synthetic", cpu: q(`application.${op}.cpu`, op === "health" ? 100 : op === "write" ? 6000 : 3000, "cpu-us"), blockingWait: q(`application.${op}.wait`, 0, "us"), maxCpuParallelism: q(`application.${op}.parallelism`, 1, "cores"), residentCoverage: "partial", obtainedBy: "Explicit educational defaults", evidence: [SOURCE], date: "2026-10-27", validity: { exact: { environment: "canvas-assumptions" }, ranges: {} }, uncertainty: [SCOPE], freeMode: "forbidden" })) },
       transports: { assumed: assumedTransport, caller: { ...assumedTransport, pool: { ...assumedTransport.pool, maxConnections: q("pool.caller.connections", 512, "count", "Authored open-loop load-generator allowance of 512 concurrent serial connections; this is separate from each app-to-database pool and is not a browser client default.") } }, cache: { ...assumedTransport, pool: { ...assumedTransport.pool, connectTimeout: q("pool.cache.connectTimeout", 10000, "us", "Authored 10 ms cache connect timeout: an unavailable optional cache falls back promptly rather than throttling database demand for a second."), responseTimeout: q("pool.cache.responseTimeout", 10000, "us", "Authored 10 ms cache response timeout for prompt cache-aside fallback, not a Redis/provider default; no retry is added.") } }, database: { ...assumedTransport, pool: { ...assumedTransport.pool, evidenceProfile: "postgresql-pools/2", maxConnections: q("pool.database.connections", 10, "count", "Authored assumption modelled on node-postgres-style pooling: lazy open, at most 10 connections per source replica and database path; the acquire timeout is an authored assumption."), idleTimeout: q("pool.database.idleTimeout", 10000000, "us", "Authored node-postgres-style idle close after 10 seconds.") } } },
       caller: { address: "198.51.100.1", entry: `$${entry.id}`, transport: "caller", request: ["request"], response: ["response"], security: security(entry, RESOURCE_PORTS[entry.type], "caller"), dependencies: [] },
@@ -348,7 +351,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       note(`${r.id}.applicationFlow.worker`, "thread-per-request: worker held while waiting", "policy", "Authored assumption: thread-per-request: worker held while waiting; waiting consumes no CPU.");
     }
     note("security.scope", "logical TCP admission only", "policy", "Public exposure, encryption and open ports stay saved metadata; assumed listeners and allow policies do not certify the design's security.");
-    note("application.scope", hasKeyspace ? "uniform multi-key educational application" : "one-key educational application", "policy", asyncQueues.length ? flow3 ? "An authored write publish step uploads one object, publishes once and waits for broker confirmation of logical ownership; physical durability Unknown. Worker completion is separate. No retry or rollback is implied." : "Each served producer request uploads one object and publishes one message; the worker reads it, spends authored CPU, writes a result and acknowledges. Other service edges retain their bootstrap behavior." : hasKeyspace ? "Requests select uniformly from each database's saved finite data keyspace using deterministic keyed selection; queue, object and registry edges retain explicit bootstrap commands." : "Requests use one assumed key; queue, object and registry edges receive explicit bootstrap commands rather than invented application fan-out.");
+    note("application.scope", hasHotKey ? "hot-key multi-key educational application" : hasKeyspace ? "uniform multi-key educational application" : "one-key educational application", "policy", asyncQueues.length ? flow3 ? "An authored write publish step uploads one object, publishes once and waits for broker confirmation of logical ownership; physical durability Unknown. Worker completion is separate. No retry or rollback is implied." : "Each served producer request uploads one object and publishes one message; the worker reads it, spends authored CPU, writes a result and acknowledges. Other service edges retain their bootstrap behavior." : hasHotKey ? "Requests use each database's saved access pattern: hot-key mode sends about 80% to its stable first key and distributes the rest across the remaining keys; queue, object and registry edges retain explicit bootstrap commands." : hasKeyspace ? "Requests select uniformly from each database's saved finite data keyspace using deterministic keyed selection; queue, object and registry edges retain explicit bootstrap commands." : "Requests use one assumed key; queue, object and registry edges receive explicit bootstrap commands rather than invented application fan-out.");
     note("workload.arrivals", "deterministic open-loop", "policy", "Requests begin immediately at evenly spaced intervals with a fractional read/write mixture; peak traffic occupies seconds ten through twenty.");
     for (const r of saved.resources.filter((r) => r.type === "Load Balancer" && r.autoscaling?.enabled)) note(`${r.id}.poolMapping`, resources.filter((x) => x.autoscaling?.enabled).map((x) => x.id), "policy", "The first app by ID owns the adjustable replicas while its drawn siblings stay fixed, preserving the load balancer's total replica bounds.");
     // Non-numeric policy choices are also reviewable; quantity leaves are already listed above.

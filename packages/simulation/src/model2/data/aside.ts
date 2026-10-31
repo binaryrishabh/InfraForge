@@ -1,7 +1,7 @@
 import { carryCause, type Cause } from "../workload/cause";
 import type { Deliver } from "../compute/run";
 import type { EventClock } from "../time";
-import { keyedUniform } from "../random";
+import { selectDataKey } from "./selectKey";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
 import type { AsideConfig, DataRequest, DataReply } from "./contracts";
 import { DATA_LIMITS } from "./policy";
@@ -18,7 +18,7 @@ export function cacheAside(config: AsideConfig, kernel: EventClock, send: Delive
       if (config.recordedKeysOnly && (!recorded || !config.keys.includes(recorded))) throw Error("Cache policy requires an exact recorded key; fallback is forbidden");
       received++; let childSequence = 0; const owner = { work, done, terminal: false }; live.set(work.callId, owner);
       let ordinal = 0; try { const root = JSON.parse(work.rootId) as string[]; const row = root[2]!; ordinal = /^\d+$/.test(row) ? Number(row) : Number(JSON.parse(row).at(-1)) || 0; } catch { /* Non-workload proof roots use the first cycle key. */ }
-      const key = (work.message?.request as DataRequest | undefined)?.key ?? config.keys[config.access === "cycle" ? ordinal % config.keys.length : Math.floor(keyedUniform(seed, config.id, work.rootId, "data-key") * config.keys.length)]!;
+      const key = (work.message?.request as DataRequest | undefined)?.key ?? (config.access === "cycle" ? config.keys[ordinal % config.keys.length]! : selectDataKey(config.keys, config.access, seed, config.id, work.rootId));
       const finish = (reply: DataReply | undefined, source: string, cause?: Cause) => {
         if (owner.terminal) return; owner.terminal = true; live.delete(work.callId); const ok = !!reply?.ok;
         if (ok) completed++; else failed++;

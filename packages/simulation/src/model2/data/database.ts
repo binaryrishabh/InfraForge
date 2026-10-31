@@ -1,5 +1,5 @@
 import { requireKnown } from "../../reality/quantity";
-import { keyedUniform } from "../random";
+import { selectDataKey } from "./selectKey";
 import { cpuScheduler } from "../compute/scheduler";
 import type { EventClock } from "../time";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
@@ -128,8 +128,8 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     openSession,
     sessionAlive: (id: string) => sessions.has(id),
     accept(work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt {
-      if (config.access === "keyed-uniform" && (work.message?.request as DataRequest | undefined)?.key === undefined) {
-        const key = config.keys[Math.floor(keyedUniform(seed, config.id, work.rootId, "data-key") * config.keys.length)]!;
+      if (config.access !== undefined && (work.message?.request as DataRequest | undefined)?.key === undefined) {
+        const key = selectDataKey(config.keys, config.access, seed, config.id, work.rootId);
         work.message ??= { request: { kind: "query", key } };
         work.message.request = { kind: "query", key };
       }
