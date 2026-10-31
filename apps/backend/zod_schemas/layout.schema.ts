@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { CACHE_TTL_MAX_SECONDS, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -24,6 +24,7 @@ const ResourceSchema = z.object({
   x: z.number(),
   y: z.number(),
   skuId: z.string().optional(),
+  cachePolicy: z.object({ version: z.literal(1), ttlSeconds: z.number().int().min(1).max(CACHE_TTL_MAX_SECONDS).optional(), singleFlight: z.boolean().optional() }).strict().optional(),
   dataKeyspace: z.object({ version: z.literal(1), count: z.number().int().min(1).max(DATA_KEYSPACE_MAX), accessPattern: z.enum(["uniform", "hot-key"]).optional() }).strict().optional(),
   autoscaling: z.object({
     enabled: z.boolean().optional(),
@@ -55,6 +56,8 @@ const ResourceSchema = z.object({
   region: z.string().optional(),
   name: z.string().optional(),
 }).catchall(z.json()).superRefine((resource, ctx) => {
+  const cacheMessage = cachePolicyError(resource.type, resource.cachePolicy);
+  if (cacheMessage) ctx.addIssue({ code: "custom", path: ["cachePolicy"], message: cacheMessage });
   const keyspaceMessage = dataKeyspaceError(resource.type, resource.dataKeyspace);
   if (keyspaceMessage) ctx.addIssue({ code: "custom", path: ["dataKeyspace"], message: keyspaceMessage });
   const securityMessage = securitySettingsError(resource.type, resource.listenerSettings, resource.firewallSettings);

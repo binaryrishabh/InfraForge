@@ -1,4 +1,4 @@
-import { RESOURCE_PORTS, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -19,6 +19,7 @@ import { capabilityFacts } from "./capabilities";
 import { WORKLOAD_LIMITS } from "../workload/policy";
 import { numericOrigins } from "./origins";
 import { dataKeys, hotKey, HOT_KEY_PROFILE, multiKey, KEYSPACE_PROFILE, validateDatabaseKeyspace } from "./keyspace";
+import { CACHE_POLICY_PROFILE, cachePolicyChanges, validateCachePolicyBindings } from "./cachePolicy";
 // Model 1 saves a pool policy on its LB; keep fixed siblings and expand one named VM.
 export function savedPoolPolicies(design: SavedProductDesign): SavedProductDesign {
   const resources = design.resources.map((r) => ({ ...r }));
@@ -40,6 +41,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     design = savedPoolPolicies(design);
     if (multiKey(design.resources) && !contract.version.includes(`/${KEYSPACE_PROFILE}`)) error("KEYSPACE_VERSION", "version", "Multi-key intent requires its explicit data-keyspace/1 contract version");
     if (hotKey(design.resources) !== contract.version.includes(`/${HOT_KEY_PROFILE}`)) error("HOT_KEY_VERSION", "version", "Hot-key intent requires its explicit data-hot-key/1 contract version and matching saved intent");
+    if (cachePolicyChanges(design.resources) !== contract.version.includes(`/${CACHE_POLICY_PROFILE}`)) error("CACHE_POLICY_VERSION", "version", "Changed cache intent requires its explicit data-cache-policy/1 contract version and matching saved intent");
     if (contract.applicationFlowProfile !== undefined && !["application-flow/1", "application-flow/2", "application-flow/3"].includes(contract.applicationFlowProfile)) error("UNKNOWN_FLOW_PROFILE", "applicationFlowProfile", "Unsupported flow profile");
     if ((design.resources.some(r => r.applicationFlow?.schema === "application-flow/3") ? "application-flow/3" : design.resources.some(r => r.applicationFlow?.schema === "application-flow/2") ? "application-flow/2" : design.resources.some(r => r.applicationFlow) ? "application-flow/1" : undefined) !== contract.applicationFlowProfile) error("FLOW_PROFILE", "applicationFlowProfile", "Saved flow requires the application-flow/1 adapter");
     if (contract.applicationFlowProfile && !contract.version.endsWith(`/${contract.applicationFlowProfile}`)) error("FLOW_VERSION", "version", "Flow semantic version must identify application-flow/1");
@@ -56,6 +58,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     const dialled = new Set(design.connections.map(e => `${e.targetId}/${contract.edges?.[e.id]?.targetRole}`));
     for (const d of contract.caller?.dependencies ?? []) dialled.add(d.target.slice(1));
     for (const r of design.resources) {
+      const cacheError = cachePolicyError(r.type, r.cachePolicy);
+      if (cacheError) error("INVALID_CACHE_POLICY", `resources.${r.id}.cachePolicy`, cacheError);
       const keyspaceError = dataKeyspaceError(r.type, r.dataKeyspace);
       if (keyspaceError) error("INVALID_KEYSPACE", `resources.${r.id}.dataKeyspace`, keyspaceError);
       const securityError = securitySettingsError(r.type, r.listenerSettings, r.firewallSettings, design.resources);
@@ -69,7 +73,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["id", "type", "x", "y", "skuId", "dataKeyspace", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -294,6 +298,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     phase = "numeric-provenance"; provenance.audit(runtime); for (const p of pools) provenance.audit(p); provenance.audit(crashes);
     semantic.numericOrigins = numericOrigins(runtime, pools, contract, crashes);
     runtime.ledger.sort((a, b) => a.id < b.id ? -1 : 1);
+    validateCachePolicyBindings(design.resources, runtime);
     phase = "runtime-contract"; validateMaterializedSemantics(runtime, semantic.edges, new Set(design.resources.filter(r => r.listenerSettings !== undefined).flatMap(r => [...roleIds.entries()].filter(([key]) => key.split("/")[0]!.split("#")[0] === r.id).map(([,id]) => id)))); validateSystems(runtime);
     return { ok: true, value: canonical({ schema: "infraforge-compiled-product/1", semantic, input: runtime, pools, crashes, ...(interventionReceipts.length ? {interventionReceipts} : {}) }), diagnostics };
   } catch (cause) {

@@ -1,5 +1,6 @@
 import type { ApplicationFlow } from "./ApplicationFlow.interface";
 import type { DataKeyspace } from "./DataKeyspace.interface";
+import type { CachePolicy } from "./CachePolicy.interface";
 import type { CircuitBreakerSettings } from "./CircuitBreakerSettings.interface";
 import type { ResourceType } from "./RESOURCE_TYPES.constants";
 import type { AutoscalingPolicy } from "./AutoscalingPolicy.interface";
@@ -10,6 +11,7 @@ import type { AsyncQueueSettings, AsyncWorkerSettings } from "./AsyncSettings.in
 
 export interface Resource {
   dataKeyspace?: DataKeyspace;
+  cachePolicy?: CachePolicy;
   listenerSettings?: ListenerSettings;
   firewallSettings?: FirewallSettings;
   applicationFlow?: ApplicationFlow;

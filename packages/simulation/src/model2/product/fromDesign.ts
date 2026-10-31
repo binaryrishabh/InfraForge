@@ -1,6 +1,6 @@
 import type { AdapterProfile } from "@infraforge/contracts/run-inputs";
 import { findSku, CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog";
-import { RESOURCE_PORTS, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
 import type { Quantity, Unit } from "../../reality/quantity";
 import type { ComputeResource } from "../compute/contracts";
 import type { CommandConfig } from "../async/contracts";
@@ -9,6 +9,7 @@ import { compileProduct, savedPoolPolicies } from "./compiler";
 import { boundedProduct } from "./bounds";
 import { canonical } from "./provenance";
 import { KEYSPACE_PROFILE, HOT_KEY_PROFILE, hotKey, multiKey, asideKeyspace, databaseKeyspace } from "./keyspace";
+import { CACHE_POLICY_PROFILE, cachePolicyChanges, changedCachePolicy, changedCacheTtl } from "./cachePolicy";
 
 export interface Assumption { id: string; value: unknown; unit: string; sentence: string }
 const SOURCE = "packages/simulation/src/model2/product/fromDesign.ts";
@@ -19,7 +20,7 @@ const operations = ["read", "write", "health"] as const;
 export function currentAdapterProfiles(resources: SavedProductDesign["resources"]): AdapterProfile[] {
   const dataFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/2");
   const publishFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/3");
-  return [...(dataFlow || publishFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : []), ...(publishFlow ? ["application-flow/3" as const] : []), ...(multiKey(resources) ? [KEYSPACE_PROFILE] : []), ...(hotKey(resources) ? [HOT_KEY_PROFILE] : [])];
+  return [...(dataFlow || publishFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : []), ...(publishFlow ? ["application-flow/3" as const] : []), ...(multiKey(resources) ? [KEYSPACE_PROFILE] : []), ...(hotKey(resources) ? [HOT_KEY_PROFILE] : []), ...(cachePolicyChanges(resources) ? [CACHE_POLICY_PROFILE] : [])];
 }
 
 /** Canvas intent is preserved; missing application and service settings are visible assumptions.
@@ -32,12 +33,14 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const design = savedPoolPolicies(saved), resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
     // New canvas runs with retry/breaker intent record observational cause evidence; no learner control, and no decision depends on it.
     const profiles = history && "adapterProfiles" in history ? history.adapterProfiles : history ? [] : currentAdapterProfiles(resources);
-    if (profiles.some(p => !["failure-cause/1", "application-flow/2", "application-flow/3", KEYSPACE_PROFILE, HOT_KEY_PROFILE].includes(p)) || new Set(profiles).size !== profiles.length) error("adapterProfiles", "Unsupported adapter profile selection.");
+    if (profiles.some(p => !["failure-cause/1", "application-flow/2", "application-flow/3", KEYSPACE_PROFILE, HOT_KEY_PROFILE, CACHE_POLICY_PROFILE].includes(p)) || new Set(profiles).size !== profiles.length) error("adapterProfiles", "Unsupported adapter profile selection.");
     const failureCause = profiles.includes("failure-cause/1");
     const hasKeyspace = multiKey(resources);
     if (hasKeyspace !== profiles.includes(KEYSPACE_PROFILE)) error("adapterProfiles", "Multi-key intent requires its captured data-keyspace/1 adapter profile and matching saved intent.");
     const hasHotKey = hotKey(resources);
     if (hasHotKey !== profiles.includes(HOT_KEY_PROFILE)) error("adapterProfiles", "Hot-key intent requires its captured data-hot-key/1 adapter profile and matching saved intent.");
+    const hasCachePolicy = cachePolicyChanges(resources);
+    if (hasCachePolicy !== profiles.includes(CACHE_POLICY_PROFILE)) error("adapterProfiles", "Changed cache intent requires its captured data-cache-policy/1 adapter profile and matching saved intent.");
     const hasSecurity = resources.some(r => r.listenerSettings !== undefined || r.firewallSettings !== undefined);
     const hasFlow = resources.some(r => r.applicationFlow !== undefined);
     const flow2 = resources.some(r => r.applicationFlow?.schema === "application-flow/2");
@@ -54,6 +57,8 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     for (const e of connections) if (!byId.has(e.sourceId) || !byId.has(e.targetId) || e.sourceId === e.targetId) error(`connections.${e.id}`, "Connect two different resources that both exist on the canvas.");
     if (refused.length) return { refused };
     for (const r of resources) {
+      const cacheError = cachePolicyError(r.type, r.cachePolicy);
+      if (cacheError) error(`resources.${r.id}.cachePolicy`, cacheError);
       const keyspaceError = dataKeyspaceError(r.type, r.dataKeyspace);
       if (keyspaceError) error(`resources.${r.id}.dataKeyspace`, keyspaceError);
       const securityError = securitySettingsError(r.type, r.listenerSettings, r.firewallSettings, resources);
@@ -144,6 +149,13 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       nodes[r.id]!.profileVersion += "/canvas-async/1";
       nodes[r.id]!.provenance.push(r.asyncQueue?.enabled ? `saved-design:${r.id}.asyncQueue.enabled` : r.asyncWorker?.enabled ? `saved-design:${r.id}.asyncWorker.enabled` : `saved-design:connections:${r.id}`);
     }
+    for (const r of resources.filter(changedCachePolicy)) {
+      nodes[r.id]!.profileVersion += `/${CACHE_POLICY_PROFILE}`;
+      nodes[r.id]!.provenance.push(`saved-design:${r.id}.cachePolicy`);
+    }
+    const singleFlight = (owner: string, cache: Resource) => cache.cachePolicy?.singleFlight === true
+      ? true
+      : note(`${owner}.cache.singleFlight`, false, "policy", "Plain cache-aside has no single-flight: concurrent misses independently call the database.");
     const objects = (r: Resource, role: string) => add(r, role, { kind: "object-store", profile: "atomic-current-object/1", ...command(r, role, ["put", "get", "head", "delete"]), capacity: q(`${r.id}.${role}.capacity`, memory.get(r.id)! * 1073741824, "bytes"), initial: [{ namespace: "web", key: "asset", generation: 1, bytes: q(`${r.id}.${role}.asset`, 1024, "bytes"), content: "assumed-asset" }] });
     const commands: ProductContract["commands"] = [];
     for (const r of resources) {
@@ -174,7 +186,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
           if (r.applicationFlow && r.applicationFlow.schema !== "application-flow/1") { /* The authored steps own every data dependency. */ }
           else if (cache && database) {
             config.downstream = "$self/aside";
-            add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: `$${cache.id}`, database: `$${database.id}`, ...asideKeyspace(database), coalesce: note(`${id}.cache.singleFlight`, false, "policy", "Plain cache-aside has no single-flight: concurrent misses independently call the database."), onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "main", "aside");
+            add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: `$${cache.id}`, database: `$${database.id}`, ...asideKeyspace(database), coalesce: singleFlight(id, cache), onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "main", "aside");
           } else if (data[0]) config.downstream = `$${data[0].id}${data[0].type === "Cache" ? "/aside" : ""}`;
           add(r, "main", config); break;
         }
@@ -185,9 +197,9 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
         }
         case "Cache":
           if (target && target.type !== "Database") { error(`resources.${id}`, "Connect the cache to one database for cache-aside reads and write invalidation."); break; }
-          add(r, "main", { kind: "cache", semantics: "keyed-cache/1", execution: execution(r, "main"), capacity: q(`${id}.capacity`, memory.get(id)! * 1073741824, "bytes"), entryOverhead: q(`${id}.overhead`, 64, "bytes"), policy: "lru", ttl: q(`${id}.ttl`, 60000000, "us"), initial: [], commandCpu: q(`${id}.cpu`, 100, "cpu-us") });
+          add(r, "main", { kind: "cache", semantics: "keyed-cache/1", execution: execution(r, "main"), capacity: q(`${id}.capacity`, memory.get(id)! * 1073741824, "bytes"), entryOverhead: q(`${id}.overhead`, 64, "bytes"), policy: "lru", ttl: changedCacheTtl(r) ? q(`${id}.ttl`, r.cachePolicy!.ttlSeconds! * 1000000, "us", "Saved cache TTL in seconds converted to microseconds; expiry is measured from each successful fill.", true) : q(`${id}.ttl`, 60000000, "us"), initial: [], commandCpu: q(`${id}.cpu`, 100, "cpu-us") });
           if (!target) break;
-          add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: "$self", database: `$${target.id}`, ...asideKeyspace(target), coalesce: note(`${id}.cache.singleFlight`, false, "policy", "Plain cache-aside has no single-flight: concurrent misses independently call the database."), onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "aside", "main"); break;
+          add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: "$self", database: `$${target.id}`, ...asideKeyspace(target), coalesce: singleFlight(id, r), onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "aside", "main"); break;
         case "Object Storage": objects(r, "main"); break;
         case "CDN":
           if (target?.type !== "Object Storage") { error(`resources.${id}`, "Connect the CDN to one object store; dynamic app origins need an authored HTTP plan."); break; }
@@ -331,7 +343,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       ...(hasSecurity ? { securityProfile: "canvas-security/1" as const } : {}),
       ...(hasFlow ? { applicationFlowProfile: flowProfile } : {}),
       ...(failureCause ? { failureCauseProfile: "failure-cause/1" as const } : {}),
-      schema: "infraforge-product-model2/1", version: (failureCause ? "canvas-assumptions/2/failure-cause/1" : "canvas-assumptions/2") + (hasKeyspace ? `/${KEYSPACE_PROFILE}` : "") + (hasHotKey ? `/${HOT_KEY_PROFILE}` : "") + (hasFlow ? `/${flowProfile}` : ""), designVersion: "saved-domain/1", catalogVersion: CATALOG_SNAPSHOT_DATE, workloadVersion: "product-arrivals/1", ledger, nodes, edges, capabilities,
+      schema: "infraforge-product-model2/1", version: (failureCause ? "canvas-assumptions/2/failure-cause/1" : "canvas-assumptions/2") + (hasKeyspace ? `/${KEYSPACE_PROFILE}` : "") + (hasHotKey ? `/${HOT_KEY_PROFILE}` : "") + (hasCachePolicy ? `/${CACHE_POLICY_PROFILE}` : "") + (hasFlow ? `/${flowProfile}` : ""), designVersion: "saved-domain/1", catalogVersion: CATALOG_SNAPSHOT_DATE, workloadVersion: "product-arrivals/1", ledger, nodes, edges, capabilities,
       application: { schema: "infraforge-application/1", id: "canvas-default", version: "1", provenance: [SOURCE], validityDomain: SCOPE, controlOperation: "health", readOperation: "read", writeOperation: "write", payloads, operations: operations.map((id) => ({ id, callerTimeout: q(`application.${id}.timeout`, 5000000, "us"), onCallerStop: "request-cancellation", idempotency: id === "write" ? "non-idempotent" : "read-only" })), demands: operations.map((op) => ({ schema: "infraforge-compute-demand/1", id: `canvas.${op}`, version: "1", application: "canvas-default", operation: op, stage: "compute", method: "synthetic", cpu: q(`application.${op}.cpu`, op === "health" ? 100 : op === "write" ? 6000 : 3000, "cpu-us"), blockingWait: q(`application.${op}.wait`, 0, "us"), maxCpuParallelism: q(`application.${op}.parallelism`, 1, "cores"), residentCoverage: "partial", obtainedBy: "Explicit educational defaults", evidence: [SOURCE], date: "2026-10-27", validity: { exact: { environment: "canvas-assumptions" }, ranges: {} }, uncertainty: [SCOPE], freeMode: "forbidden" })) },
       transports: { assumed: assumedTransport, caller: { ...assumedTransport, pool: { ...assumedTransport.pool, maxConnections: q("pool.caller.connections", 512, "count", "Authored open-loop load-generator allowance of 512 concurrent serial connections; this is separate from each app-to-database pool and is not a browser client default.") } }, cache: { ...assumedTransport, pool: { ...assumedTransport.pool, connectTimeout: q("pool.cache.connectTimeout", 10000, "us", "Authored 10 ms cache connect timeout: an unavailable optional cache falls back promptly rather than throttling database demand for a second."), responseTimeout: q("pool.cache.responseTimeout", 10000, "us", "Authored 10 ms cache response timeout for prompt cache-aside fallback, not a Redis/provider default; no retry is added.") } }, database: { ...assumedTransport, pool: { ...assumedTransport.pool, evidenceProfile: "postgresql-pools/2", maxConnections: q("pool.database.connections", 10, "count", "Authored assumption modelled on node-postgres-style pooling: lazy open, at most 10 connections per source replica and database path; the acquire timeout is an authored assumption."), idleTimeout: q("pool.database.idleTimeout", 10000000, "us", "Authored node-postgres-style idle close after 10 seconds.") } } },
       caller: { address: "198.51.100.1", entry: `$${entry.id}`, transport: "caller", request: ["request"], response: ["response"], security: security(entry, RESOURCE_PORTS[entry.type], "caller"), dependencies: [] },
