@@ -1,4 +1,7 @@
 import { expect, test } from "bun:test";
+import { mkdir, unlink } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import type { Resource } from "@infraforge/domain/resource";
 import { createModel2Run } from "@infraforge/simulation/model2-run";
 import { buildContractFromRunInputs } from "@infraforge/simulation/internal-product";
@@ -92,6 +95,27 @@ for (const pattern of [undefined, "uniform", "hot-key"] as const) for (const flo
     const repeated = createModel2Run(input, 5); for (let i = 0; i < 5; i++) repeated.advance();
     expect(repeated.evidence()).toEqual(e);
   }
+});
+
+test("browser-target compiled runtime replays saved uniform and hot-key inputs like the server", async () => {
+  const built = await Bun.build({ entrypoints: [resolve(import.meta.dir, "../../../packages/simulation/src/model2Run.ts")], target: "browser" });
+  expect(built.success).toBe(true);
+  // Windows Bun treats large data URLs as paths; load the browser bundle from the ignored worktree cache.
+  const browserPath = resolve(import.meta.dir, `../../../.cache/hot-key-browser-${process.pid}.mjs`);
+  await mkdir(dirname(browserPath), { recursive: true }); await Bun.write(browserPath, built.outputs[0]!);
+  try {
+    const browserModule = await import(pathToFileURL(browserPath).href);
+    const createBrowserRun: typeof createModel2Run = browserModule.createModel2Run;
+    for (const accessPattern of ["uniform", "hot-key"] as const) {
+      const d = layout(100); d.resources[2]!.dataKeyspace!.accessPattern = accessPattern;
+      const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(d, workload, "compiled-hot-parity"))));
+      const browser = createBrowserRun(input, 5), server = createModel2Engine(input, 5, buildModel2Contract);
+      for (let i = 0; i < 5; i++) {
+        browser.advance(); server.advance();
+        expect(browser.evidence()).toEqual(server.evidence()); expect(browser.view()).toEqual(server.view());
+      }
+    }
+  } finally { await unlink(browserPath); }
 });
 
 test("comparison retains keyspace edits and treats replay profile changes as descriptive only", () => {

@@ -13,7 +13,7 @@ export function DataKeyspaceSection({ resource, disabled }: { resource: Resource
         {choices.map(value => <option key={value} value={value}>{value.toLocaleString("en-US")}</option>)}
       </Select>}
     </Field>
-    {count > 1 && <Field label="Access pattern" hint="About 80% of accesses use one stable key; the rest use the remaining keys.">
+    {count > 1 && <Field label="Access pattern" hint="Hot-key sends about 80% of accesses to one stable key; the rest use the remaining keys.">
       {({ id, describedBy }) => <Select id={id} aria-describedby={describedBy} value={resource.dataKeyspace?.accessPattern ?? "uniform"} disabled={disabled}
         onChange={event => updateResource(resource.id, { dataKeyspace: { version: 1, count, accessPattern: event.target.value === "hot-key" ? "hot-key" : "uniform" } })}>
         <option value="uniform">Uniform</option>
