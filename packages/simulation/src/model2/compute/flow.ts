@@ -7,7 +7,7 @@ import { identity } from "../workload/arrivals";
 import type { FlowPublishReply } from "./publishReply";
 
 export interface RuntimeFlowCall { id: string; kind: "call"; target: string; operation?: string }
-export interface RuntimeFlowData { id: string; kind: "data"; target: string; operation: "read" | "write"; command: "query" | "cache-aside" }
+export interface RuntimeFlowData { id: string; kind: "data"; target: string; operation: "read" | "write"; command: "query" | "cache-aside"; selectKey?: true }
 export interface RuntimeFlowPublish { id: string; kind: "publish"; target: string; edge: string; operation: "write" }
 export type RuntimeFlowStep = { id: string; kind: "compute" } | RuntimeFlowCall | RuntimeFlowData | RuntimeFlowPublish | {
   id: string; kind: "parallel"; branches: RuntimeFlowCall[]; wait: "all" | number;
@@ -70,7 +70,7 @@ export function applicationFlow(owner: string, work: Invocation, flow: RuntimeFl
     slots = branches.map(branch => ({ branch, work: {
       rootId: work.rootId, attempt: work.attempt, offeredAt: work.offeredAt, parentCallId: work.callId,
       callId: identity(...JSON.parse(work.callId), "flow", owner, work.operation, current.id, branch.id), operation: branch.operation ?? work.operation,
-      ...(branch.kind === "data" ? { message: { request: { kind: "query", key: "key" } } } : {}),
+      ...(branch.kind === "data" ? { message: { request: { kind: "query", ...(branch.selectKey ? {} : { key: "key" }) } } } : {}),
       ...(branch.kind === "publish" ? { message: { request: { kind: "flow-publish", edge: branch.edge } } } : {}),
     } }));
     let dispatching = true, joined = false;

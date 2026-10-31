@@ -1,4 +1,5 @@
 import { requireKnown } from "../../reality/quantity";
+import { keyedUniform } from "../random";
 import { cpuScheduler } from "../compute/scheduler";
 import type { EventClock } from "../time";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
@@ -8,7 +9,7 @@ import type { CausalObserver } from "../workload/causal";
 import type { DatabaseIo } from "./io";
 
 interface Tx { orphaned?: boolean; work: Invocation; plan: TransactionPlan; step: number; phase: "queued" | "lock" | "cpu" | "io" | "wait" | "commit"; terminal: boolean; phaseAt: number; writes: Map<string, { version: number; bytes: number }>; rows: DataReply["rows"]; cancelTx?: () => boolean; cancelStatement?: () => boolean; cancelLock?: () => boolean; cancelWait?: () => boolean; cancelIo?: () => void; done(outcome: RemoteOutcome): void; session: string }
-export function relationalDatabase(config: RelationalConfig, kernel: EventClock, causal?: CausalObserver, ownedCpu?: ReturnType<typeof cpuScheduler>, io?: DatabaseIo) {
+export function relationalDatabase(config: RelationalConfig, kernel: EventClock, causal?: CausalObserver, ownedCpu?: ReturnType<typeof cpuScheduler>, io?: DatabaseIo, seed = "") {
   const pg2 = config.semantics === "postgresql-keyed/2", pg = pg2 || config.semantics === "postgresql-keyed/1";
   if (io && !pg) throw Error("Finite IO requires PostgreSQL session semantics");
   const cpu = ownedCpu ?? cpuScheduler(config.id, requireKnown(config.execution.cores, "cores"), kernel), locks = lockManager();
@@ -127,6 +128,11 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     openSession,
     sessionAlive: (id: string) => sessions.has(id),
     accept(work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt {
+      if (config.access === "keyed-uniform" && !(work.message?.request as DataRequest | undefined)?.key) {
+        const key = config.keys[Math.floor(keyedUniform(seed, config.id, work.rootId, "data-key") * config.keys.length)]!;
+        work.message ??= { request: { kind: "query", key } };
+        work.message.request = { kind: "query", key };
+      }
       io?.resolve(work);
       received++; const session = work.sessionId ?? work.callId;
       if (paused || (pg && !sessions.has(session)) || (!sessions.has(session) && sessions.size >= sessionLimit) || sessions.get(session) || (active.size >= requireKnown(config.activeTransactions, "count") && queue.size >= requireKnown(config.pendingQueries, "count"))) {

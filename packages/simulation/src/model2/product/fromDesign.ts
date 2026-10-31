@@ -1,6 +1,6 @@
 import type { AdapterProfile } from "@infraforge/contracts/run-inputs";
 import { findSku, CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog";
-import { RESOURCE_PORTS, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
 import type { Quantity, Unit } from "../../reality/quantity";
 import type { ComputeResource } from "../compute/contracts";
 import type { CommandConfig } from "../async/contracts";
@@ -8,6 +8,7 @@ import type { ProductContract, SavedProductDesign, Diagnostic, ResourceTemplate,
 import { compileProduct, savedPoolPolicies } from "./compiler";
 import { boundedProduct } from "./bounds";
 import { canonical } from "./provenance";
+import { KEYSPACE_PROFILE, multiKey, asideKeyspace, databaseKeyspace } from "./keyspace";
 
 export interface Assumption { id: string; value: unknown; unit: string; sentence: string }
 const SOURCE = "packages/simulation/src/model2/product/fromDesign.ts";
@@ -18,7 +19,7 @@ const operations = ["read", "write", "health"] as const;
 export function currentAdapterProfiles(resources: SavedProductDesign["resources"]): AdapterProfile[] {
   const dataFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/2");
   const publishFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/3");
-  return [...(dataFlow || publishFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : []), ...(publishFlow ? ["application-flow/3" as const] : [])];
+  return [...(dataFlow || publishFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : []), ...(publishFlow ? ["application-flow/3" as const] : []), ...(multiKey(resources) ? [KEYSPACE_PROFILE] : [])];
 }
 
 /** Canvas intent is preserved; missing application and service settings are visible assumptions.
@@ -31,8 +32,10 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const design = savedPoolPolicies(saved), resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
     // New canvas runs with retry/breaker intent record observational cause evidence; no learner control, and no decision depends on it.
     const profiles = history && "adapterProfiles" in history ? history.adapterProfiles : history ? [] : currentAdapterProfiles(resources);
-    if (profiles.some(p => !["failure-cause/1", "application-flow/2", "application-flow/3"].includes(p)) || new Set(profiles).size !== profiles.length) error("adapterProfiles", "Unsupported adapter profile selection.");
+    if (profiles.some(p => !["failure-cause/1", "application-flow/2", "application-flow/3", KEYSPACE_PROFILE].includes(p)) || new Set(profiles).size !== profiles.length) error("adapterProfiles", "Unsupported adapter profile selection.");
     const failureCause = profiles.includes("failure-cause/1");
+    const hasKeyspace = multiKey(resources);
+    if (hasKeyspace !== profiles.includes(KEYSPACE_PROFILE)) error("adapterProfiles", "Multi-key intent requires its captured data-keyspace/1 adapter profile and matching saved intent.");
     const hasSecurity = resources.some(r => r.listenerSettings !== undefined || r.firewallSettings !== undefined);
     const hasFlow = resources.some(r => r.applicationFlow !== undefined);
     const flow2 = resources.some(r => r.applicationFlow?.schema === "application-flow/2");
@@ -49,6 +52,8 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     for (const e of connections) if (!byId.has(e.sourceId) || !byId.has(e.targetId) || e.sourceId === e.targetId) error(`connections.${e.id}`, "Connect two different resources that both exist on the canvas.");
     if (refused.length) return { refused };
     for (const r of resources) {
+      const keyspaceError = dataKeyspaceError(r.type, r.dataKeyspace);
+      if (keyspaceError) error(`resources.${r.id}.dataKeyspace`, keyspaceError);
       const securityError = securitySettingsError(r.type, r.listenerSettings, r.firewallSettings, resources);
       if (securityError) error(`resources.${r.id}.security`, securityError);
       const flowError = applicationFlowError(r.type, r.applicationFlow);
@@ -127,6 +132,11 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const internal = (r: Resource, sourceRole: string, targetRole: string, purpose: EdgeContract["purpose"] = "dependency") => { const e = edge(r, `${r.id}.internal.${sourceRole}-${targetRole}`, sourceRole, targetRole, purpose); nodes[r.id]!.internalEdges.push({ id: `${sourceRole}-${targetRole}`, ...e, security: { ...e.security!, firewalls: [] } }); };
     const add = (r: Resource, role: string, config: ResourceTemplate) => nodes[r.id]!.resources.push({ role, config });
     for (const r of resources) nodes[r.id] = { type: r.type, profileVersion: "canvas-assumptions/2", provenance: [SOURCE], primary: "main", securityReplacement: "explicit-reviewed/1", resources: [], internalEdges: [], identities: [], listeners: [] };
+    for (const r of resources.filter(r => (r.dataKeyspace?.count ?? 1) > 1)) {
+      nodes[r.id]!.profileVersion += `/${KEYSPACE_PROFILE}`;
+      nodes[r.id]!.provenance.push(`saved-design:${r.id}.dataKeyspace`);
+      q(`${r.id}.dataKeyspace.count`, r.dataKeyspace!.count, "count", "Saved finite application working set; stable synthetic keys use deterministic uniform access.", true);
+    }
     for (const r of resources.filter((r) => r.asyncQueue?.enabled || r.asyncWorker?.enabled || producerQueue(r.id))) {
       nodes[r.id]!.profileVersion += "/canvas-async/1";
       nodes[r.id]!.provenance.push(r.asyncQueue?.enabled ? `saved-design:${r.id}.asyncQueue.enabled` : r.asyncWorker?.enabled ? `saved-design:${r.id}.asyncWorker.enabled` : `saved-design:connections:${r.id}`);
@@ -161,20 +171,20 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
           if (r.applicationFlow && r.applicationFlow.schema !== "application-flow/1") { /* The authored steps own every data dependency. */ }
           else if (cache && database) {
             config.downstream = "$self/aside";
-            add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: `$${cache.id}`, database: `$${database.id}`, keys: ["key"], access: "cycle", coalesce: note(`${id}.cache.singleFlight`, false, "policy", "Plain cache-aside has no single-flight: concurrent misses independently call the database."), onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "main", "aside");
+            add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: `$${cache.id}`, database: `$${database.id}`, ...asideKeyspace(database), coalesce: note(`${id}.cache.singleFlight`, false, "policy", "Plain cache-aside has no single-flight: concurrent misses independently call the database."), onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "main", "aside");
           } else if (data[0]) config.downstream = `$${data[0].id}${data[0].type === "Cache" ? "/aside" : ""}`;
           add(r, "main", config); break;
         }
         case "Load Balancer": add(r, "main", { kind: "load-balancer", backends: [], policy: note(`${id}.policy`, "round-robin" as const, "policy", "The load balancer sends requests to its app servers in turn (round robin), the default of common cloud load balancers."), maxOutstanding: q(`${id}.outstanding`, 1024 * cores.get(id)!, "count"), maxPending: q(`${id}.pending`, 256, "count"), pendingTimeout: q(`${id}.timeout`, 1000000, "us"), health: { interval: q(`${id}.health.interval`, 5000000, "us"), timeout: q(`${id}.health.timeout`, 1000000, "us"), healthy: q(`${id}.healthy`, 1, "count"), unhealthy: q(`${id}.unhealthy`, 1, "count"), operation: "health", initial: "eligible" } }); break;
         case "Database": {
-          const plan = (op: string) => ({ statements: [{ kind: op === "write" ? "write" as const : "snapshot-read" as const, keys: ["key"], cpu: q(`${id}.${op}.cpu`, op === "write" ? 2000 : 1000, "cpu-us"), parallelism: q(`${id}.${op}.parallelism`, 1, "cores"), blockingWait: q(`${id}.${op}.wait`, 0, "us"), logBytes: q(`${id}.${op}.log`, 0, "bytes") }], statementTimeout: q(`${id}.${op}.statementTimeout`, 1000000, "us"), lockTimeout: q(`${id}.${op}.lockTimeout`, 1000000, "us"), transactionTimeout: q(`${id}.${op}.transactionTimeout`, 2000000, "us"), commitWait: q(`${id}.${op}.commitWait`, 0, "us"), durability: "logical-only" as const });
-          add(r, "main", { kind: "relational", semantics: "postgresql-keyed/2", execution: execution(r, "main"), maxSessions: q(`${id}.sessions`, r.skuId ? findSku(r.skuId)!.maxConnections! : 100, "count", r.skuId ? "The selected catalog maxConnections is an approximation (owner verify), not a provider guarantee. Each open connection holds one session; a full database refuses new connections." : "Generic PostgreSQL default max_connections is 100. Each open connection holds one session; a full database refuses new connections."), activeTransactions: q(`${id}.active`, 16 * cores.get(id)!, "count"), pendingQueries: q(`${id}.pending`, 256, "count"), keys: ["key"], initial: [{ key: "key", version: 1, bytes: q(`${id}.row`, 1024, "bytes") }], plans: Object.fromEntries(operations.map((op) => [op, plan(op)])) }); break;
+          const plan = (op: string) => ({ statements: [{ kind: op === "write" ? "write" as const : "snapshot-read" as const, keys: (r.dataKeyspace?.count ?? 1) > 1 ? ["$key"] : ["key"], cpu: q(`${id}.${op}.cpu`, op === "write" ? 2000 : 1000, "cpu-us"), parallelism: q(`${id}.${op}.parallelism`, 1, "cores"), blockingWait: q(`${id}.${op}.wait`, 0, "us"), logBytes: q(`${id}.${op}.log`, 0, "bytes") }], statementTimeout: q(`${id}.${op}.statementTimeout`, 1000000, "us"), lockTimeout: q(`${id}.${op}.lockTimeout`, 1000000, "us"), transactionTimeout: q(`${id}.${op}.transactionTimeout`, 2000000, "us"), commitWait: q(`${id}.${op}.commitWait`, 0, "us"), durability: "logical-only" as const });
+          add(r, "main", { kind: "relational", semantics: "postgresql-keyed/2", execution: execution(r, "main"), maxSessions: q(`${id}.sessions`, r.skuId ? findSku(r.skuId)!.maxConnections! : 100, "count", r.skuId ? "The selected catalog maxConnections is an approximation (owner verify), not a provider guarantee. Each open connection holds one session; a full database refuses new connections." : "Generic PostgreSQL default max_connections is 100. Each open connection holds one session; a full database refuses new connections."), activeTransactions: q(`${id}.active`, 16 * cores.get(id)!, "count"), pendingQueries: q(`${id}.pending`, 256, "count"), ...databaseKeyspace(r, q(`${id}.row`, 1024, "bytes")), plans: Object.fromEntries(operations.map((op) => [op, plan(op)])) }); break;
         }
         case "Cache":
           if (target && target.type !== "Database") { error(`resources.${id}`, "Connect the cache to one database for cache-aside reads and write invalidation."); break; }
           add(r, "main", { kind: "cache", semantics: "keyed-cache/1", execution: execution(r, "main"), capacity: q(`${id}.capacity`, memory.get(id)! * 1073741824, "bytes"), entryOverhead: q(`${id}.overhead`, 64, "bytes"), policy: "lru", ttl: q(`${id}.ttl`, 60000000, "us"), initial: [], commandCpu: q(`${id}.cpu`, 100, "cpu-us") });
           if (!target) break;
-          add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: "$self", database: `$${target.id}`, keys: ["key"], access: "cycle", coalesce: note(`${id}.cache.singleFlight`, false, "policy", "Plain cache-aside has no single-flight: concurrent misses independently call the database."), onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "aside", "main"); break;
+          add(r, "aside", { kind: "cache-aside", execution: execution(r, "aside"), cache: "$self", database: `$${target.id}`, ...asideKeyspace(target), coalesce: note(`${id}.cache.singleFlight`, false, "policy", "Plain cache-aside has no single-flight: concurrent misses independently call the database."), onCacheFailure: "database", invalidateWrites: true, operations: { read: "read", write: "write", health: "read" } }); internal(r, "aside", "main"); break;
         case "Object Storage": objects(r, "main"); break;
         case "CDN":
           if (target?.type !== "Object Storage") { error(`resources.${id}`, "Connect the CDN to one object store; dynamic app origins need an authored HTTP plan."); break; }
@@ -318,7 +328,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       ...(hasSecurity ? { securityProfile: "canvas-security/1" as const } : {}),
       ...(hasFlow ? { applicationFlowProfile: flowProfile } : {}),
       ...(failureCause ? { failureCauseProfile: "failure-cause/1" as const } : {}),
-      schema: "infraforge-product-model2/1", version: (failureCause ? "canvas-assumptions/2/failure-cause/1" : "canvas-assumptions/2") + (hasFlow ? `/${flowProfile}` : ""), designVersion: "saved-domain/1", catalogVersion: CATALOG_SNAPSHOT_DATE, workloadVersion: "product-arrivals/1", ledger, nodes, edges, capabilities,
+      schema: "infraforge-product-model2/1", version: (failureCause ? "canvas-assumptions/2/failure-cause/1" : "canvas-assumptions/2") + (hasKeyspace ? `/${KEYSPACE_PROFILE}` : "") + (hasFlow ? `/${flowProfile}` : ""), designVersion: "saved-domain/1", catalogVersion: CATALOG_SNAPSHOT_DATE, workloadVersion: "product-arrivals/1", ledger, nodes, edges, capabilities,
       application: { schema: "infraforge-application/1", id: "canvas-default", version: "1", provenance: [SOURCE], validityDomain: SCOPE, controlOperation: "health", readOperation: "read", writeOperation: "write", payloads, operations: operations.map((id) => ({ id, callerTimeout: q(`application.${id}.timeout`, 5000000, "us"), onCallerStop: "request-cancellation", idempotency: id === "write" ? "non-idempotent" : "read-only" })), demands: operations.map((op) => ({ schema: "infraforge-compute-demand/1", id: `canvas.${op}`, version: "1", application: "canvas-default", operation: op, stage: "compute", method: "synthetic", cpu: q(`application.${op}.cpu`, op === "health" ? 100 : op === "write" ? 6000 : 3000, "cpu-us"), blockingWait: q(`application.${op}.wait`, 0, "us"), maxCpuParallelism: q(`application.${op}.parallelism`, 1, "cores"), residentCoverage: "partial", obtainedBy: "Explicit educational defaults", evidence: [SOURCE], date: "2026-10-27", validity: { exact: { environment: "canvas-assumptions" }, ranges: {} }, uncertainty: [SCOPE], freeMode: "forbidden" })) },
       transports: { assumed: assumedTransport, caller: { ...assumedTransport, pool: { ...assumedTransport.pool, maxConnections: q("pool.caller.connections", 512, "count", "Authored open-loop load-generator allowance of 512 concurrent serial connections; this is separate from each app-to-database pool and is not a browser client default.") } }, cache: { ...assumedTransport, pool: { ...assumedTransport.pool, connectTimeout: q("pool.cache.connectTimeout", 10000, "us", "Authored 10 ms cache connect timeout: an unavailable optional cache falls back promptly rather than throttling database demand for a second."), responseTimeout: q("pool.cache.responseTimeout", 10000, "us", "Authored 10 ms cache response timeout for prompt cache-aside fallback, not a Redis/provider default; no retry is added.") } }, database: { ...assumedTransport, pool: { ...assumedTransport.pool, evidenceProfile: "postgresql-pools/2", maxConnections: q("pool.database.connections", 10, "count", "Authored assumption modelled on node-postgres-style pooling: lazy open, at most 10 connections per source replica and database path; the acquire timeout is an authored assumption."), idleTimeout: q("pool.database.idleTimeout", 10000000, "us", "Authored node-postgres-style idle close after 10 seconds.") } } },
       caller: { address: "198.51.100.1", entry: `$${entry.id}`, transport: "caller", request: ["request"], response: ["response"], security: security(entry, RESOURCE_PORTS[entry.type], "caller"), dependencies: [] },
@@ -338,7 +348,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       note(`${r.id}.applicationFlow.worker`, "thread-per-request: worker held while waiting", "policy", "Authored assumption: thread-per-request: worker held while waiting; waiting consumes no CPU.");
     }
     note("security.scope", "logical TCP admission only", "policy", "Public exposure, encryption and open ports stay saved metadata; assumed listeners and allow policies do not certify the design's security.");
-    note("application.scope", "one-key educational application", "policy", asyncQueues.length ? flow3 ? "An authored write publish step uploads one object, publishes once and waits for broker confirmation of logical ownership; physical durability Unknown. Worker completion is separate. No retry or rollback is implied." : "Each served producer request uploads one object and publishes one message; the worker reads it, spends authored CPU, writes a result and acknowledges. Other service edges retain their bootstrap behavior." : "Requests use one assumed key; queue, object and registry edges receive explicit bootstrap commands rather than invented application fan-out.");
+    note("application.scope", hasKeyspace ? "uniform multi-key educational application" : "one-key educational application", "policy", asyncQueues.length ? flow3 ? "An authored write publish step uploads one object, publishes once and waits for broker confirmation of logical ownership; physical durability Unknown. Worker completion is separate. No retry or rollback is implied." : "Each served producer request uploads one object and publishes one message; the worker reads it, spends authored CPU, writes a result and acknowledges. Other service edges retain their bootstrap behavior." : hasKeyspace ? "Requests select uniformly from each database's saved finite data keyspace using deterministic keyed selection; queue, object and registry edges retain explicit bootstrap commands." : "Requests use one assumed key; queue, object and registry edges receive explicit bootstrap commands rather than invented application fan-out.");
     note("workload.arrivals", "deterministic open-loop", "policy", "Requests begin immediately at evenly spaced intervals with a fractional read/write mixture; peak traffic occupies seconds ten through twenty.");
     for (const r of saved.resources.filter((r) => r.type === "Load Balancer" && r.autoscaling?.enabled)) note(`${r.id}.poolMapping`, resources.filter((x) => x.autoscaling?.enabled).map((x) => x.id), "policy", "The first app by ID owns the adjustable replicas while its drawn siblings stay fixed, preserving the load balancer's total replica bounds.");
     // Non-numeric policy choices are also reviewable; quantity leaves are already listed above.

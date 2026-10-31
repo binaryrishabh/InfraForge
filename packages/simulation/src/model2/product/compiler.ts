@@ -1,4 +1,4 @@
-import { RESOURCE_PORTS, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -18,6 +18,7 @@ import { capReceipt } from "./receiptBudget";
 import { capabilityFacts } from "./capabilities";
 import { WORKLOAD_LIMITS } from "../workload/policy";
 import { numericOrigins } from "./origins";
+import { dataKeys, multiKey, KEYSPACE_PROFILE, validateDatabaseKeyspace } from "./keyspace";
 // Model 1 saves a pool policy on its LB; keep fixed siblings and expand one named VM.
 export function savedPoolPolicies(design: SavedProductDesign): SavedProductDesign {
   const resources = design.resources.map((r) => ({ ...r }));
@@ -37,6 +38,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
   try {
     boundedProduct(design); boundedProduct(contract);
     design = savedPoolPolicies(design);
+    if (multiKey(design.resources) && !contract.version.includes(`/${KEYSPACE_PROFILE}`)) error("KEYSPACE_VERSION", "version", "Multi-key intent requires its explicit data-keyspace/1 contract version");
     if (contract.applicationFlowProfile !== undefined && !["application-flow/1", "application-flow/2", "application-flow/3"].includes(contract.applicationFlowProfile)) error("UNKNOWN_FLOW_PROFILE", "applicationFlowProfile", "Unsupported flow profile");
     if ((design.resources.some(r => r.applicationFlow?.schema === "application-flow/3") ? "application-flow/3" : design.resources.some(r => r.applicationFlow?.schema === "application-flow/2") ? "application-flow/2" : design.resources.some(r => r.applicationFlow) ? "application-flow/1" : undefined) !== contract.applicationFlowProfile) error("FLOW_PROFILE", "applicationFlowProfile", "Saved flow requires the application-flow/1 adapter");
     if (contract.applicationFlowProfile && !contract.version.endsWith(`/${contract.applicationFlowProfile}`)) error("FLOW_VERSION", "version", "Flow semantic version must identify application-flow/1");
@@ -53,6 +55,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     const dialled = new Set(design.connections.map(e => `${e.targetId}/${contract.edges?.[e.id]?.targetRole}`));
     for (const d of contract.caller?.dependencies ?? []) dialled.add(d.target.slice(1));
     for (const r of design.resources) {
+      const keyspaceError = dataKeyspaceError(r.type, r.dataKeyspace);
+      if (keyspaceError) error("INVALID_KEYSPACE", `resources.${r.id}.dataKeyspace`, keyspaceError);
       const securityError = securitySettingsError(r.type, r.listenerSettings, r.firewallSettings, design.resources);
       if (securityError) error("INVALID_SECURITY", `resources.${r.id}.security`, securityError);
       const flowError = applicationFlowError(r.type, r.applicationFlow);
@@ -64,11 +68,12 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["id", "type", "x", "y", "skuId", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["id", "type", "x", "y", "skuId", "dataKeyspace", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
       if (!spec) { error("MISSING_RESOURCE_PROFILE", `nodes.${r.id}`, TRANSLATION_OWNERS[r.type].requires); continue; }
+      if (r.type === "Database") validateDatabaseKeyspace(r, spec);
       validateSecurityBinding(r, spec, dialled);
       if (spec.type !== r.type || !spec.profileVersion || !spec.provenance.length) error("RESOURCE_PROFILE", `nodes.${r.id}`, "Matching versioned resource profile/provenance required");
       if (r.circuitBreaker?.enabled && !spec.circuitBreaker) error("MISSING_BREAKER_PROFILE", `nodes.${r.id}.circuitBreaker`, "Enabled circuit breaker requires a reviewed path policy");
@@ -121,7 +126,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (spec.firewall) runtime.systems.firewalls.push({ ...spec.firewall, ...(r.firewallSettings ? { rules: expandFirewallRules(spec.firewall.rules, roleIds) } : {}), id: r.id });
       for (const instance of expansion.get(r.id)!) for (const resource of [...spec.resources].sort((a, b) => a.role < b.role ? -1 : 1)) {
         const id = roleIds.get(`${instance}/${resource.role}`)!;
-        const material = { ...rewriteReferences(resource.config, (value) => ref(value, instance)), id } as SystemsInput["resources"][number];
+        const material = { ...rewriteReferences(resource.config, (value) => resource.config.kind === "relational" && value === "$key" ? value : ref(value, instance)), id } as SystemsInput["resources"][number];
         if (material.kind === "compute" && material.applicationFlow) throw Error("Application flows must be compiled from saved per-operation edge references");
         if ("execution" in material) material.execution.id = id;
         runtime.resources.push(material); runtime.endpoints[id] = { alive: true, ready: true };
@@ -200,10 +205,11 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
         if (command === "query" ? targetOwner?.kind !== "relational" : targetOwner?.kind !== "cache-aside") throw Error("Data step target command owner mismatch");
         if (targetOwner?.kind === "cache-aside") {
           const attachedDb = design.connections.find(e => e.sourceId === drawn.targetId && nodes.get(e.targetId)?.type === "Database");
-          if (!attachedDb || targetOwner.cache !== ref(`$${drawn.targetId}`) || targetOwner.database !== ref(`$${attachedDb.targetId}`) || targetOwner.keys.length !== 1 || targetOwner.keys[0] !== "key") throw Error("Typed cache must use the attached cache and database with the assumed key");
+          if (!attachedDb || targetOwner.cache !== ref(`$${drawn.targetId}`) || targetOwner.database !== ref(`$${attachedDb.targetId}`) || JSON.stringify(targetOwner.keys) !== JSON.stringify(dataKeys(nodes.get(attachedDb.targetId)!))) throw Error("Typed cache must use the attached cache and database with the saved keyspace");
         }
         if (command === "query" && c.operation === "write" && design.connections.some(e => e.sourceId === r.id && nodes.get(e.targetId)?.type === "Cache")) throw Error("Use a cache write to update the database and invalidate the attached cache");
-        return { id: c.id, kind: "data" as const, target, operation: c.operation, command };
+        const selectKey = targetOwner?.kind === "relational" ? targetOwner.access === "keyed-uniform" : targetOwner?.kind === "cache-aside" && targetOwner.keys.length > 1;
+        return { id: c.id, kind: "data" as const, target, operation: c.operation, command, ...(selectKey ? { selectKey: true as const } : {}) };
       };
       const publish = (c: import("@infraforge/domain/resource").FlowPublish) => {
         const drawn = design.connections.find(e => e.id === c.edge && e.sourceId === r.id), binding = contract.edges[c.edge];

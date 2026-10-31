@@ -10,6 +10,8 @@ export interface Statement {
 }
 export interface TransactionPlan { statements: Statement[]; statementTimeout: Quantity<"us">; lockTimeout: Quantity<"us">; transactionTimeout: Quantity<"us">; commitWait: Quantity<"us">; durability: "logical-only" | "authored-log-ack" }
 export interface RelationalConfig {
+  // Opt-in selection for canvas requests without a recorded key; supplied keys always win.
+  access?: "keyed-uniform";
   id: string; kind: "relational"; semantics: "read-committed-keyed/1" | "postgresql-keyed/1" | "postgresql-keyed/2";
   execution: ComputeResource; maxSessions: Quantity<"count">; activeTransactions: Quantity<"count">; pendingQueries: Quantity<"count">;
   keys: string[]; initial: Row[]; plans: Record<string, TransactionPlan>;

@@ -1,4 +1,5 @@
 import type { ApplicationFlow } from "./ApplicationFlow.interface";
+import type { DataKeyspace } from "./DataKeyspace.interface";
 import type { CircuitBreakerSettings } from "./CircuitBreakerSettings.interface";
 import type { ResourceType } from "./RESOURCE_TYPES.constants";
 import type { AutoscalingPolicy } from "./AutoscalingPolicy.interface";
@@ -8,6 +9,7 @@ import type { ListenerSettings, FirewallSettings } from "./SecuritySettings.inte
 import type { AsyncQueueSettings, AsyncWorkerSettings } from "./AsyncSettings.interface";
 
 export interface Resource {
+  dataKeyspace?: DataKeyspace;
   listenerSettings?: ListenerSettings;
   firewallSettings?: FirewallSettings;
   applicationFlow?: ApplicationFlow;

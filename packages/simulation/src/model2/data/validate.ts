@@ -25,6 +25,7 @@ export function validateData(input: DataInput) {
     const db = target?.kind === "cache-aside" ? resources.get(target.database) : target;
     if (target?.kind === "cache-aside" && (target.operations[step.operation] !== step.operation || !target.invalidateWrites)) throw Error("Typed cache operation must match cache-aside policy");
     if (db?.kind !== "relational") throw Error("Typed data requires a relational database");
+    if (step.selectKey && !(target?.kind === "relational" ? target.access === "keyed-uniform" : target?.kind === "cache-aside" && target.access === "keyed-uniform")) throw Error("Typed key selection needs a uniform keyed target");
     const plan = db.plans[step.operation];
     if (!plan || plan.statements.some(s => step.operation === "read" ? s.kind !== "snapshot-read" : !["snapshot-read", "write"].includes(s.kind))) throw Error("Typed data read/write must match existing snapshot-read/write plans");
   }
@@ -34,6 +35,8 @@ export function validateData(input: DataInput) {
     if (r.kind === "cache-aside") {
       if (!r.keys.length || r.keys.length > caps.keys || r.keys.some((k) => !validKey(k)) || new Set(r.keys).size !== r.keys.length || !["cycle", "keyed-uniform"].includes(r.access) || !["fail", "database"].includes(r.onCacheFailure) || typeof r.coalesce !== "boolean" || typeof r.invalidateWrites !== "boolean") throw new Error("Invalid cache-aside key/policy");
       if (resources.get(r.cache)?.kind !== "cache" || resources.get(r.database)?.kind !== "relational" || !pairs.has(JSON.stringify([r.id, r.cache])) || !pairs.has(JSON.stringify([r.id, r.database]))) throw new Error("Missing cache-aside resource/path");
+      const database = resources.get(r.database);
+      if (database?.kind === "relational" && database.access === "keyed-uniform" && (r.access !== "keyed-uniform" || JSON.stringify(r.keys) !== JSON.stringify(database.keys))) throw Error("Uniform cache-aside must share its database keyspace");
       for (const op of input.operations) if (!["read", "write"].includes(r.operations[op.id]!)) throw new Error("Missing authored cache-aside operation");
       if (input.networkInterventions.some((i) => i.target === r.id)) throw new Error("Cache-aside suspension/restart policy is unmodeled");
     } else {
@@ -44,6 +47,7 @@ export function validateData(input: DataInput) {
         if (r.semantics !== "keyed-cache/1" || !["lru", "no-eviction"].includes(r.policy) || r.initial.reduce((n, x) => n + num(x.bytes, "bytes") + overhead, 0) > size) throw new Error("Invalid initial cache budget/policy");
         micros(horizon + num(r.ttl, "us", 1)); num(r.commandCpu, "cpu-us", Number.MIN_VALUE, false);
       } else {
+        if (r.access !== undefined && r.access !== "keyed-uniform") throw Error("Unsupported database key access");
         const dataset = new Set(r.keys);
         if (!r.keys.length || r.keys.length > caps.keys || r.keys.some((k) => !validKey(k)) || dataset.size !== r.keys.length || r.initial.some((row) => !dataset.has(row.key))) throw new Error("Invalid bounded database dataset");
         if (r.semantics !== (input.workloadVersion === "m2e-pg/2" ? "postgresql-keyed/2" : input.workloadVersion === "m2e-pg/1" ? "postgresql-keyed/1" : "read-committed-keyed/1") || num(r.maxSessions, "count", 1) > (r.semantics.startsWith("postgresql-keyed/") ? POSTGRES_SESSION_CAP : caps.sessions) || num(r.activeTransactions, "count", 1) > caps.activeTransactions) throw new Error("Invalid relational policy/budget");

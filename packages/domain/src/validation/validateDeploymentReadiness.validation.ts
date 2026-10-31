@@ -3,6 +3,7 @@ import type { ConnectionLine } from "../resource/ConnectionLine.interface";
 import type { Resource } from "../resource/Resource.interface";
 import { CONNECTION_RULES } from "../topology/CONNECTION_RULES.constants";
 import { computeTopology } from "../topology/computeTopology";
+import { dataKeyspaceError } from "../resource/DataKeyspace.interface";
 
 // Function to validete the above defined rules
 export function validateConnection(sourceType: ResourceType, targetType: ResourceType, context?: "draw" | { source: Resource; target?: Resource; connectionId: string }): { valid: boolean, message: string } {
@@ -33,6 +34,10 @@ unreachable resources and dead-end VMs are warnings. */
 export function validateDeploymentReadiness(resources: Array<Resource>, connections: Array<ConnectionLine>): { valid: boolean, errors: string[], warnings: string[] } {
     const errors: string[] = [];
     const warnings: string[] = [];
+    for (const resource of resources) {
+        const message = dataKeyspaceError(resource.type, resource.dataKeyspace);
+        if (message) errors.push(`${resource.id}: ${message}`);
+    }
     for (const line of connections) {
         const source = resources.find(resource => resource.id === line.sourceId);
         const target = resources.find(resource => resource.id === line.targetId);

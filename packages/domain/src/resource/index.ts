@@ -4,6 +4,7 @@ export { RESOURCE_PORTS, type ResourcePortsType } from "./RESOURCE_PORTS.constan
 export { DeploymentChaosNames, type DeploymentChaosNamesType } from "./DeploymentChaosNames.enum";
 export { ResourceHealth, type ResourceHealthType } from "./ResourceHealth.enum";
 export type { Resource } from "./Resource.interface";
+export { DATA_KEYSPACE_MAX, dataKeyspaceError, type DataKeyspace } from "./DataKeyspace.interface";
 export { securitySettingsError, SECURITY_SETTINGS_LIMITS, type ListenerSettings, type FirewallSettings } from "./SecuritySettings.interface";
 export { RETRY_GROUPS, DEFAULT_RETRY_SETTINGS, retrySettingsError, type RetrySettings, type RetryGroup } from "./RetrySettings.interface";
 export type { ConnectionLine } from "./ConnectionLine.interface";

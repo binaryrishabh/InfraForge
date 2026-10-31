@@ -24,7 +24,8 @@ export function validateFlows(input: ComputeInput) {
         if (s.kind === "call") call(s, false);
         else if (s.kind === "data") {
           unique(s.id);
-          if (r.applicationFlow.schema === "application-flow/1" || Object.keys(s).some(k => !["id", "kind", "target", "operation", "command"].includes(k)) || !["query", "cache-aside"].includes(s.command) || !["read", "write"].includes(s.operation) || !resources.has(s.target) || !operations.has(s.operation)) throw Error("Invalid typed data step");
+          if (r.applicationFlow.schema === "application-flow/1" || Object.keys(s).some(k => !["id", "kind", "target", "operation", "command", "selectKey"].includes(k)) || !["query", "cache-aside"].includes(s.command) || !["read", "write"].includes(s.operation) || !resources.has(s.target) || !operations.has(s.operation)) throw Error("Invalid typed data step");
+          if (s.selectKey !== undefined && s.selectKey !== true) throw Error("Invalid typed data key selection");
           if (safe(operation) && s.operation === "write") throw Error("Read-only/idempotent flow cannot contain a data write");
         }
         else if (s.kind === "publish") {
