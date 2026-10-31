@@ -54,6 +54,21 @@ function Assert-DevelopmentResources {
         [Parameter(Mandatory)][string]$DockerPath
     )
 
+    # Resolve the exact repository pins without loading env files or interpolating secrets.
+    $nullEnv = if ($IsWindows) { 'NUL' } else { '/dev/null' }
+    $rawCompose = & $DockerPath compose --env-file $nullEnv -f (Join-Path $repositoryRoot 'ops/compose.dev.yml') config --no-interpolate --format json
+    if ($LASTEXITCODE -ne 0) { throw 'Could not resolve local development Compose configuration.' }
+    $compose = $rawCompose | ConvertFrom-Json
+    $expectedImages = @{}
+    foreach ($service in @('postgres', 'redis')) {
+        $tag = if ($service -eq 'postgres') { 'postgres:18-alpine' } else { 'redis:8-alpine' }
+        $image = $compose.services.$service.image
+        if ($image -cnotmatch ('^{0}@sha256:[a-f0-9]{{64}}$' -f [regex]::Escape($tag))) {
+            throw "Local Compose service '$service' must use its expected digest-pinned image."
+        }
+        $expectedImages[$service] = $image
+    }
+
     $runningPorts = @{}
     foreach ($resource in @(
         @{ Kind = 'container'; Name = 'infraforge-dev-postgres' },
@@ -74,7 +89,7 @@ function Assert-DevelopmentResources {
             $port = if ($service -eq 'postgres') { '5432/tcp' } else { '6379/tcp' }
             $hostPort = if ($service -eq 'postgres') { '55432' } else { '56379' }
             $bindings = @($item.HostConfig.PortBindings.$port)
-            if ($item.Config.Image -ne $(if ($service -eq 'postgres') { 'postgres:18-alpine' } else { 'redis:8-alpine' }) -or
+            if ($item.Config.Image -cne $expectedImages[$service] -or
                 $labels.'com.docker.compose.project' -ne 'infraforge-dev' -or
                 $labels.'com.docker.compose.service' -ne $service -or
                 $bindings.Count -ne 1 -or $bindings[0].HostIp -ne '127.0.0.1' -or $bindings[0].HostPort -ne $hostPort) {
