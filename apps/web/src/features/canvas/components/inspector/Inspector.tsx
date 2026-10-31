@@ -1,4 +1,5 @@
 import { SecuritySection } from "./SecuritySection";
+import { DataKeyspaceSection } from "./DataKeyspaceSection";
 import { FlowSection } from "./FlowSection";
 import { AsyncSection } from "./AsyncSection";
 import { CircuitBreakerSection } from "./CircuitBreakerSection";
@@ -49,6 +50,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
         </Field>
       </div>
       {sizeable && <InstanceSection key={`size-${resource.id}`} resource={resource} disabled={locked} />}
+      {resource.type === "Database" && <DataKeyspaceSection key={`keyspace-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <AutoscalingSection key={`pool-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <RetrySection key={`retry-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <CircuitBreakerSection key={`breaker-${resource.id}`} resource={resource} disabled={locked} />}

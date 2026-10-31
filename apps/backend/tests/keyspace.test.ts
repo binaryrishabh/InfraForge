@@ -1,0 +1,79 @@
+import { expect, test } from "bun:test";
+import type { Resource } from "@infraforge/domain/resource";
+import { createModel2Run } from "@infraforge/simulation/model2-run";
+import { buildContractFromRunInputs } from "@infraforge/simulation/internal-product";
+import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
+import { LayoutSchema, LiveTopologySchema } from "../zod_schemas/layout.schema";
+import { createModel2Engine } from "../simulator/model2Engine";
+import { buildModel2Contract } from "../simulator/contractBuilder";
+import { compareInputs } from "../comparison/inputs";
+import { classifyComparison } from "../comparison/classify";
+import type { StoredRun } from "../reports/report";
+
+const workload = { targetThroughput: 600, throughputUnit: "per-minute" as const, trafficShape: "steady" as const, readWriteRatio: 0.8, payloadSize: "light" as const };
+function layout(count?: number) {
+  const resources: Resource[] = [{ id: "app", type: "Virtual Machine", x: 0, y: 0 }, { id: "cache", type: "Cache", x: 1, y: 0 },
+    { id: "db", type: "Database", x: 2, y: 0, ...(count === undefined ? {} : { dataKeyspace: { version: 1, count } }) }];
+  return { resources, connectionLines: [
+    { id: "app-cache", sourceId: "app", targetId: "cache", sourceType: "Virtual Machine", targetType: "Cache", port: 6379 },
+    { id: "cache-db", sourceId: "cache", targetId: "db", sourceType: "Cache", targetType: "Database", port: 5432 },
+  ] };
+}
+
+test("layout and live topology schemas retain strict versioned DB keyspaces and refuse invalid bounds", () => {
+  for (const schema of [LayoutSchema, LiveTopologySchema]) {
+    for (const count of [1, 10, 1000]) expect(schema.parse(JSON.parse(JSON.stringify(layout(count)))).resources[2]!.dataKeyspace).toEqual({ version: 1, count });
+    for (const count of [0, -1, 1.1, 1001, NaN, Infinity]) expect(schema.safeParse(layout(count)).success).toBe(false);
+    for (const value of [null, {}, { version: 2, count: 10 }, { version: 1, count: 10, skew: "hot" }]) {
+      const bad = layout(); Object.assign(bad.resources[2]!, { dataKeyspace: value }); expect(schema.safeParse(bad).success).toBe(false);
+    }
+    const wrongOwner = layout(); wrongOwner.resources[1]!.dataKeyspace = { version: 1, count: 10 };
+    expect(schema.safeParse(wrongOwner).success).toBe(false);
+  }
+});
+
+test("only new multi-key captures persist data-keyspace/1; old inputs remain without implicit profiles", () => {
+  const old = captureRunInputs(layout(), workload, "keyspace-parity"), one = captureRunInputs(layout(1), workload, "keyspace-parity");
+  expect(old.adapterProfiles).toEqual([]); expect(one.adapterProfiles).toEqual([]);
+  expect(buildContractFromRunInputs(old, 5)).toEqual(buildContractFromRunInputs(one, 5));
+  const historical = { ...old, adapterProfiles: undefined };
+  expect(readRunInputs(JSON.parse(JSON.stringify(historical))).adapterProfiles).toBeUndefined();
+  expect(buildContractFromRunInputs(historical, 5)).toEqual(buildContractFromRunInputs(old, 5));
+  const captured = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout(10), workload, "keyspace-parity"))));
+  expect(captured.adapterProfiles).toEqual(["data-keyspace/1"]);
+  expect(captured.resources[2]!.dataKeyspace).toEqual({ version: 1, count: 10 });
+  expect(buildContractFromRunInputs({ ...captured, adapterProfiles: undefined }, 5)).toHaveProperty("refused");
+  expect(buildContractFromRunInputs({ ...old, adapterProfiles: ["data-keyspace/1"] }, 5)).toHaveProperty("refused");
+});
+
+for (const flow of [false, true]) test(`saved multi-key browser/server contracts, evidence and views agree, flow=${flow}`, () => {
+  const d = layout(10);
+  if (flow) d.resources[0]!.applicationFlow = { schema: "application-flow/2", operations: {
+    read: { steps: [{ id: "read", kind: "data", edge: "app-cache", operation: "read" }] },
+    write: { steps: [{ id: "write", kind: "data", edge: "app-cache", operation: "write" }] },
+  } };
+  const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(d, workload, "keyspace-parity"))));
+  const browserContract = buildContractFromRunInputs(input, 5), serverContract = buildContractFromRunInputs(input, 5, buildModel2Contract);
+  expect(browserContract).toHaveProperty("contract"); expect(browserContract).toEqual(serverContract);
+  const browser = createModel2Run(input, 5), server = createModel2Engine(input, 5, buildModel2Contract);
+  for (let i = 0; i < 5; i++) {
+    browser.advance(); server.advance();
+    expect(browser.evidence()).toEqual(server.evidence());
+    expect(browser.view()).toEqual(server.view());
+  }
+  const e = browser.evidence();
+  expect(new Set(e.data.applications[0]!.results.map(r => r.key)).size).toBeGreaterThan(1);
+  expect(e.data.databases[0]!.rows).toHaveLength(10);
+  expect(browser.view().metrics.db!.memory).toBeNull();
+});
+
+test("comparison retains keyspace edits and treats replay profile changes as descriptive only", () => {
+  const old = captureRunInputs(layout(), workload, "same"), ten = captureRunInputs(layout(10), workload, "same"), hundred = captureRunInputs(layout(100), workload, "same");
+  expect(compareInputs(old, ten)).toMatchObject({ grade: "side-by-side-only", facets: { adapterProfiles: "different", topology: "different" } });
+  expect(compareInputs(ten, hundred)).toMatchObject({ grade: "one-change-design", design: { reconfigured: [{ id: "db", fields: [{ field: "dataKeyspace" }] }] } });
+  const at = new Date("2026-11-01T00:00:00Z");
+  const row = (id: string, runInputs: typeof old): StoredRun => ({ id, infrastructureId: "design", runName: id, status: "torn-down", resourceCount: 3,
+    createdAt: at, updatedAt: at, topologyRevision: 0, stages: [], timeline: [], chaosEvents: [], workloadProfile: runInputs.workloadProfile, seed: runInputs.seed,
+    simulationState: null, runInputs, liveTopology: layout(), terminalSnapshot: null, actions: [], actionCount: 0 });
+  expect(classifyComparison(row("a", old), row("b", ten)).headline).toBe("descriptive-only");
+});

@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -24,6 +24,7 @@ const ResourceSchema = z.object({
   x: z.number(),
   y: z.number(),
   skuId: z.string().optional(),
+  dataKeyspace: z.object({ version: z.literal(1), count: z.number().int().min(1).max(DATA_KEYSPACE_MAX) }).strict().optional(),
   autoscaling: z.object({
     enabled: z.boolean().optional(),
     minReplicas: z.number().int().positive().optional(),
@@ -54,6 +55,8 @@ const ResourceSchema = z.object({
   region: z.string().optional(),
   name: z.string().optional(),
 }).catchall(z.json()).superRefine((resource, ctx) => {
+  const keyspaceMessage = dataKeyspaceError(resource.type, resource.dataKeyspace);
+  if (keyspaceMessage) ctx.addIssue({ code: "custom", path: ["dataKeyspace"], message: keyspaceMessage });
   const securityMessage = securitySettingsError(resource.type, resource.listenerSettings, resource.firewallSettings);
   if (securityMessage) ctx.addIssue({ code: "custom", path: ["security"], message: securityMessage });
   const flowMessage = applicationFlowError(resource.type, resource.applicationFlow);
