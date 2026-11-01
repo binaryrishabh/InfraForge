@@ -1,5 +1,6 @@
 import { SecuritySection } from "./SecuritySection";
 import { DataKeyspaceSection } from "./DataKeyspaceSection";
+import { VmExecutionSection } from "./VmExecutionSection";
 import { DbConcurrencySection } from "./DbConcurrencySection";
 import { LbAdmissionSection } from "./LbAdmissionSection";
 import { LbHealthSection } from "./LbHealthSection";
@@ -42,7 +43,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
         <div className="min-w-0">
           <p className="if-eyebrow">{resource.type}</p>
           <p className="truncate text-[16px] font-semibold text-ink">{resource.name || resource.id}</p>
-          <p className="if-num truncate text-xs text-ink-3">{resource.id} · {resource.type === "Firewall" ? "policy attachment" : resource.listenerSettings ? `TCP listeners: ${resource.listenerSettings.ports.join(", ") || "none"}` : `inferred TCP :${RESOURCE_PORTS[resource.type]}`}</p>
+          <p className="if-num truncate text-xs text-ink-3">{resource.id} Â· {resource.type === "Firewall" ? "policy attachment" : resource.listenerSettings ? `TCP listeners: ${resource.listenerSettings.ports.join(", ") || "none"}` : `inferred TCP :${RESOURCE_PORTS[resource.type]}`}</p>
         </div>
       </div>
       <div className="px-4 pb-4">
@@ -53,6 +54,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
           )}
         </Field>
       </div>
+      {resource.type === "Virtual Machine" && <VmExecutionSection key={`vm-execution-${resource.id}`} resource={resource} disabled={locked} />}
       {sizeable && <InstanceSection key={`size-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Database" && <DataKeyspaceSection key={`keyspace-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Database" && <DbConcurrencySection key={`db-concurrency-${resource.id}`} resource={resource} disabled={locked} />}
