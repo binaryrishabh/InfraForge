@@ -1,6 +1,7 @@
 import type { ApplicationFlow } from "./ApplicationFlow.interface";
 import type { DataKeyspace } from "./DataKeyspace.interface";
 import type { CachePolicy } from "./CachePolicy.interface";
+import type { CdnCachePolicy } from "./CdnCachePolicy.interface";
 import type { VmCpuQuota } from "./VmCpuQuota.interface";
 import type { VmExecution } from "./VmExecution.interface";
 import type { DbConcurrency } from "./DbConcurrency.interface";
@@ -17,6 +18,7 @@ import type { AsyncQueueSettings, AsyncWorkerSettings } from "./AsyncSettings.in
 export interface Resource {
   dataKeyspace?: DataKeyspace;
   cachePolicy?: CachePolicy;
+  cdnCachePolicy?: CdnCachePolicy;
   dbConcurrency?: DbConcurrency;
   vmExecution?: VmExecution;
   vmCpuQuota?: VmCpuQuota;
