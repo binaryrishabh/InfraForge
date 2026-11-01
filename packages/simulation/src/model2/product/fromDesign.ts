@@ -9,6 +9,7 @@ import { compileProduct, savedPoolPolicies } from "./compiler";
 import { boundedProduct } from "./bounds";
 import { canonical } from "./provenance";
 import { KEYSPACE_PROFILE, HOT_KEY_PROFILE, hotKey, multiKey, asideKeyspace, databaseKeyspace } from "./keyspace";
+import { CDN_COALESCING_PROFILE, changedCdnCoalescing, cdnCoalescingChanges, cdnCoalescing } from "./cdnCoalescing";
 import { CDN_TTL_PROFILE, cdnTtlChanges, cdnTtl } from "./cdnTtl";
 import { CACHE_POLICY_PROFILE, cachePolicyChanges, changedCachePolicy, changedCacheTtl } from "./cachePolicy";
 import { CACHE_CAPACITY_PROFILE, cacheCapacityChanges, changedCacheCapacity, MODELED_ROW_BYTES, MODELED_CACHE_ENTRY_OVERHEAD_BYTES } from "./cacheCapacity";
@@ -29,7 +30,7 @@ const operations = ["read", "write", "health"] as const;
 export function currentAdapterProfiles(resources: SavedProductDesign["resources"]): AdapterProfile[] {
   const dataFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/2");
   const publishFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/3");
-  return [...(dataFlow || publishFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : []), ...(publishFlow ? ["application-flow/3" as const] : []), ...(multiKey(resources) ? [KEYSPACE_PROFILE] : []), ...(hotKey(resources) ? [HOT_KEY_PROFILE] : []), ...(cachePolicyChanges(resources) ? [CACHE_POLICY_PROFILE] : []), ...(cacheCapacityChanges(resources) ? [CACHE_CAPACITY_PROFILE] : []), ...(dbConcurrencyChanges(resources) ? [DB_CONCURRENCY_PROFILE] : []), ...(vmExecutionChanges(resources) ? [VM_EXECUTION_PROFILE] : []), ...(vmCpuQuotaChanges(resources) ? [VM_CPU_QUOTA_PROFILE] : []), ...(lbAdmissionChanges(resources) ? [LB_ADMISSION_PROFILE] : []), ...(lbHealthChanges(resources) ? [LB_HEALTH_PROFILE] : []), ...(queueCapacityChanges(resources) ? [QUEUE_CAPACITY_PROFILE] : []), ...(queueIdempotencyChanges(resources) ? [QUEUE_IDEMPOTENCY_PROFILE] : []), ...(cdnTtlChanges(resources) ? [CDN_TTL_PROFILE] : [])];
+  return [...(dataFlow || publishFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : []), ...(publishFlow ? ["application-flow/3" as const] : []), ...(multiKey(resources) ? [KEYSPACE_PROFILE] : []), ...(hotKey(resources) ? [HOT_KEY_PROFILE] : []), ...(cachePolicyChanges(resources) ? [CACHE_POLICY_PROFILE] : []), ...(cacheCapacityChanges(resources) ? [CACHE_CAPACITY_PROFILE] : []), ...(dbConcurrencyChanges(resources) ? [DB_CONCURRENCY_PROFILE] : []), ...(vmExecutionChanges(resources) ? [VM_EXECUTION_PROFILE] : []), ...(vmCpuQuotaChanges(resources) ? [VM_CPU_QUOTA_PROFILE] : []), ...(lbAdmissionChanges(resources) ? [LB_ADMISSION_PROFILE] : []), ...(lbHealthChanges(resources) ? [LB_HEALTH_PROFILE] : []), ...(queueCapacityChanges(resources) ? [QUEUE_CAPACITY_PROFILE] : []), ...(queueIdempotencyChanges(resources) ? [QUEUE_IDEMPOTENCY_PROFILE] : []), ...(cdnTtlChanges(resources) ? [CDN_TTL_PROFILE] : []), ...(cdnCoalescingChanges(resources) ? [CDN_COALESCING_PROFILE] : [])];
 }
 
 /** Canvas intent is preserved; missing application and service settings are visible assumptions.
@@ -42,12 +43,14 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const design = savedPoolPolicies(saved), resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
     // New canvas runs with retry/breaker intent record observational cause evidence; no learner control, and no decision depends on it.
     const profiles = history && "adapterProfiles" in history ? history.adapterProfiles : history ? [] : currentAdapterProfiles(resources);
-    if (profiles.some(p => !["failure-cause/1", "application-flow/2", "application-flow/3", KEYSPACE_PROFILE, HOT_KEY_PROFILE, CACHE_POLICY_PROFILE, CACHE_CAPACITY_PROFILE, DB_CONCURRENCY_PROFILE, VM_EXECUTION_PROFILE, VM_CPU_QUOTA_PROFILE, LB_ADMISSION_PROFILE, LB_HEALTH_PROFILE, QUEUE_CAPACITY_PROFILE, QUEUE_IDEMPOTENCY_PROFILE, CDN_TTL_PROFILE].includes(p)) || new Set(profiles).size !== profiles.length) error("adapterProfiles", "Unsupported adapter profile selection.");
+    if (profiles.some(p => !["failure-cause/1", "application-flow/2", "application-flow/3", KEYSPACE_PROFILE, HOT_KEY_PROFILE, CACHE_POLICY_PROFILE, CACHE_CAPACITY_PROFILE, DB_CONCURRENCY_PROFILE, VM_EXECUTION_PROFILE, VM_CPU_QUOTA_PROFILE, LB_ADMISSION_PROFILE, LB_HEALTH_PROFILE, QUEUE_CAPACITY_PROFILE, QUEUE_IDEMPOTENCY_PROFILE, CDN_TTL_PROFILE, CDN_COALESCING_PROFILE].includes(p)) || new Set(profiles).size !== profiles.length) error("adapterProfiles", "Unsupported adapter profile selection.");
     const failureCause = profiles.includes("failure-cause/1");
     const hasKeyspace = multiKey(resources);
     if (hasKeyspace !== profiles.includes(KEYSPACE_PROFILE)) error("adapterProfiles", "Multi-key intent requires its captured data-keyspace/1 adapter profile and matching saved intent.");
     const hasHotKey = hotKey(resources);
     if (hasHotKey !== profiles.includes(HOT_KEY_PROFILE)) error("adapterProfiles", "Hot-key intent requires its captured data-hot-key/1 adapter profile and matching saved intent.");
+    const hasCdnCoalescing = cdnCoalescingChanges(resources);
+    if (hasCdnCoalescing !== profiles.includes(CDN_COALESCING_PROFILE)) error("adapterProfiles", "CDN coalescing requires its captured cdn-coalescing/1 adapter profile and matching saved intent.");
     const hasCdnTtl = cdnTtlChanges(resources);
     if (hasCdnTtl !== profiles.includes(CDN_TTL_PROFILE)) error("adapterProfiles", "CDN TTL requires its captured cdn-ttl/1 adapter profile and matching saved intent.");
     const hasCachePolicy = cachePolicyChanges(resources);
@@ -196,9 +199,13 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       nodes[r.id]!.profileVersion += `/${QUEUE_CAPACITY_PROFILE}`;
       nodes[r.id]!.provenance.push(`saved-design:${r.id}.asyncQueue.capacityMessages`);
     }
-    for (const r of resources.filter(r => r.cdnCachePolicy !== undefined)) {
+    for (const r of resources.filter(r => r.cdnCachePolicy?.ttlSeconds !== undefined)) {
       nodes[r.id]!.profileVersion += `/${CDN_TTL_PROFILE}`;
       nodes[r.id]!.provenance.push(`saved-design:${r.id}.cdnCachePolicy.ttlSeconds`);
+    }
+    for (const r of resources.filter(changedCdnCoalescing)) {
+      nodes[r.id]!.profileVersion += `/${CDN_COALESCING_PROFILE}`;
+      nodes[r.id]!.provenance.push(`saved-design:${r.id}.cdnCachePolicy`);
     }
     for (const r of resources.filter(changedCachePolicy)) {
       nodes[r.id]!.profileVersion += `/${CACHE_POLICY_PROFILE}`;
@@ -287,7 +294,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
         case "Object Storage": objects(r, "main"); break;
         case "CDN":
           if (target?.type !== "Object Storage") { error(`resources.${id}`, "Connect the CDN to one object store; dynamic app origins need an authored HTTP plan."); break; }
-          add(r, "main", { kind: "cdn", ...command(r, "main", ["get"]), origin: `$${target.id}`, namespace: "web", keys: { read: "asset", write: "asset", health: "asset" }, capacity: q(`${id}.capacity`, memory.get(id)! * 1073741824, "bytes"), ttl: cdnTtl(r, q), coalesce: true, maxWaiters: q(`${id}.waiters`, 256, "count") }); break;
+          add(r, "main", { kind: "cdn", ...command(r, "main", ["get"]), origin: `$${target.id}`, namespace: "web", keys: { read: "asset", write: "asset", health: "asset" }, capacity: q(`${id}.capacity`, memory.get(id)! * 1073741824, "bytes"), ttl: cdnTtl(r, q), ...cdnCoalescing(r, q) }); break;
         case "Container Registry":
           if (target?.type !== "Object Storage") { error(`resources.${id}`, "Connect the registry to an object store for its blobs and manifests."); break; }
           add(r, "main", { kind: "registry", ...command(r, "main", ["upload", "manifest", "tag", "resolve", "blob"]), store: `$${target.id}`, namespace: "registry" }); break;
@@ -427,7 +434,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       ...(hasSecurity ? { securityProfile: "canvas-security/1" as const } : {}),
       ...(hasFlow ? { applicationFlowProfile: flowProfile } : {}),
       ...(failureCause ? { failureCauseProfile: "failure-cause/1" as const } : {}),
-      schema: "infraforge-product-model2/1", version: (failureCause ? "canvas-assumptions/2/failure-cause/1" : "canvas-assumptions/2") + (hasKeyspace ? `/${KEYSPACE_PROFILE}` : "") + (hasHotKey ? `/${HOT_KEY_PROFILE}` : "") + (hasCachePolicy ? `/${CACHE_POLICY_PROFILE}` : "") + (hasCacheCapacity ? `/${CACHE_CAPACITY_PROFILE}` : "") + (hasVmExecution ? `/${VM_EXECUTION_PROFILE}` : "") + (hasVmCpuQuota ? `/${VM_CPU_QUOTA_PROFILE}` : "") + (hasDbConcurrency ? `/${DB_CONCURRENCY_PROFILE}` : "") + (hasLbAdmission ? `/${LB_ADMISSION_PROFILE}` : "") + (hasLbHealth ? `/${LB_HEALTH_PROFILE}` : "") + (hasQueueIdempotency ? `/${QUEUE_IDEMPOTENCY_PROFILE}` : "") + (hasQueueCapacity ? `/${QUEUE_CAPACITY_PROFILE}` : "") + (hasCdnTtl ? `/${CDN_TTL_PROFILE}` : "") + (hasFlow ? `/${flowProfile}` : ""), designVersion: "saved-domain/1", catalogVersion: CATALOG_SNAPSHOT_DATE, workloadVersion: "product-arrivals/1", ledger, nodes, edges, capabilities,
+      schema: "infraforge-product-model2/1", version: (failureCause ? "canvas-assumptions/2/failure-cause/1" : "canvas-assumptions/2") + (hasKeyspace ? `/${KEYSPACE_PROFILE}` : "") + (hasHotKey ? `/${HOT_KEY_PROFILE}` : "") + (hasCachePolicy ? `/${CACHE_POLICY_PROFILE}` : "") + (hasCacheCapacity ? `/${CACHE_CAPACITY_PROFILE}` : "") + (hasVmExecution ? `/${VM_EXECUTION_PROFILE}` : "") + (hasVmCpuQuota ? `/${VM_CPU_QUOTA_PROFILE}` : "") + (hasDbConcurrency ? `/${DB_CONCURRENCY_PROFILE}` : "") + (hasLbAdmission ? `/${LB_ADMISSION_PROFILE}` : "") + (hasLbHealth ? `/${LB_HEALTH_PROFILE}` : "") + (hasQueueIdempotency ? `/${QUEUE_IDEMPOTENCY_PROFILE}` : "") + (hasQueueCapacity ? `/${QUEUE_CAPACITY_PROFILE}` : "") + (hasCdnTtl ? `/${CDN_TTL_PROFILE}` : "") + (hasCdnCoalescing ? `/${CDN_COALESCING_PROFILE}` : "") + (hasFlow ? `/${flowProfile}` : ""), designVersion: "saved-domain/1", catalogVersion: CATALOG_SNAPSHOT_DATE, workloadVersion: "product-arrivals/1", ledger, nodes, edges, capabilities,
       application: { schema: "infraforge-application/1", id: "canvas-default", version: "1", provenance: [SOURCE], validityDomain: SCOPE, controlOperation: "health", readOperation: "read", writeOperation: "write", payloads, operations: operations.map((id) => ({ id, callerTimeout: q(`application.${id}.timeout`, 5000000, "us"), onCallerStop: "request-cancellation", idempotency: id === "write" ? "non-idempotent" : "read-only" })), demands: operations.map((op) => ({ schema: "infraforge-compute-demand/1", id: `canvas.${op}`, version: "1", application: "canvas-default", operation: op, stage: "compute", method: "synthetic", cpu: q(`application.${op}.cpu`, op === "health" ? 100 : op === "write" ? 6000 : 3000, "cpu-us"), blockingWait: q(`application.${op}.wait`, 0, "us"), maxCpuParallelism: q(`application.${op}.parallelism`, 1, "cores"), residentCoverage: "partial", obtainedBy: "Explicit educational defaults", evidence: [SOURCE], date: "2026-10-27", validity: { exact: { environment: "canvas-assumptions" }, ranges: {} }, uncertainty: [SCOPE], freeMode: "forbidden" })) },
       transports: { assumed: assumedTransport, caller: { ...assumedTransport, pool: { ...assumedTransport.pool, maxConnections: q("pool.caller.connections", 512, "count", "Authored open-loop load-generator allowance of 512 concurrent serial connections; this is separate from each app-to-database pool and is not a browser client default.") } }, cache: { ...assumedTransport, pool: { ...assumedTransport.pool, connectTimeout: q("pool.cache.connectTimeout", 10000, "us", "Authored 10 ms cache connect timeout: an unavailable optional cache falls back promptly rather than throttling database demand for a second."), responseTimeout: q("pool.cache.responseTimeout", 10000, "us", "Authored 10 ms cache response timeout for prompt cache-aside fallback, not a Redis/provider default; no retry is added.") } }, database: { ...assumedTransport, pool: { ...assumedTransport.pool, evidenceProfile: "postgresql-pools/2", maxConnections: q("pool.database.connections", 10, "count", "Authored assumption modelled on node-postgres-style pooling: lazy open, at most 10 connections per source replica and database path; the acquire timeout is an authored assumption."), idleTimeout: q("pool.database.idleTimeout", 10000000, "us", "Authored node-postgres-style idle close after 10 seconds.") } } },
       caller: { address: "198.51.100.1", entry: `$${entry.id}`, transport: "caller", request: ["request"], response: ["response"], security: security(entry, RESOURCE_PORTS[entry.type], "caller"), dependencies: [] },

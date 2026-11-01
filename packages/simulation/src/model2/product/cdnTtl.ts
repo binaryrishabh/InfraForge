@@ -11,9 +11,9 @@ export function cdnTtl(r: Resource, q: QuantityBuilder) {
     : q(`${r.id}.ttl`, seconds * 1000000, "us", "Saved educational CDN cache TTL in seconds converted to microseconds; freshness starts at each successful origin fill, not at a hit. This is not a provider guarantee.", true);
 }
 export function validateCdnTtlBindings(resources: readonly Resource[], input: SystemsInput) {
-  for (const r of resources.filter(r => r.cdnCachePolicy !== undefined)) {
+  for (const r of resources.filter(r => r.cdnCachePolicy?.ttlSeconds !== undefined)) {
     const cdn = input.resources.find(d => d.id === r.id);
     if (r.type !== "CDN" || cdn?.kind !== "cdn") throw Error("Cache TTL requires its owned CDN engine");
-    if (requireKnown(cdn.ttl, "us") !== r.cdnCachePolicy!.ttlSeconds * 1000000) throw Error("CDN TTL must match saved intent");
+    if (requireKnown(cdn.ttl, "us") !== r.cdnCachePolicy!.ttlSeconds! * 1000000) throw Error("CDN TTL must match saved intent");
   }
 }

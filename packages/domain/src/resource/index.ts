@@ -6,7 +6,7 @@ export { ResourceHealth, type ResourceHealthType } from "./ResourceHealth.enum";
 export type { Resource } from "./Resource.interface";
 export { DATA_KEYSPACE_MAX, dataKeyspaceError, type DataKeyspace } from "./DataKeyspace.interface";
 export { CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, type CachePolicy } from "./CachePolicy.interface";
-export { CDN_TTL_MAX_SECONDS, CDN_TTL_HELP, CDN_TTL_SCOPE, cdnCachePolicyError, type CdnCachePolicy } from "./CdnCachePolicy.interface";
+export { CDN_MAX_WAITERS, CDN_COALESCING_HELP, CDN_WAITERS_HELP, CDN_TTL_MAX_SECONDS, CDN_TTL_HELP, CDN_TTL_SCOPE, cdnCachePolicyError, type CdnCachePolicy } from "./CdnCachePolicy.interface";
 export { VM_CPU_LIMIT_MAX, VM_CPU_QUOTA_PERIOD_US, VM_CPU_QUOTA_HELP, vmCpuQuotaError, type VmCpuQuota } from "./VmCpuQuota.interface";
 export { VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, type VmExecution } from "./VmExecution.interface";
 export { DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, dbConcurrencyError, type DbConcurrency } from "./DbConcurrency.interface";
