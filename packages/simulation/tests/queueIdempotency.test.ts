@@ -1,16 +1,31 @@
 import { expect, test } from "bun:test";
 import { asyncSettingsError } from "@infraforge/domain/resource";
 import { capacityDesign } from "./queueCapacity.fixture";
-import { prepare } from "./asyncCanvas.fixture";
+import { design, prepare } from "./asyncCanvas.fixture";
 import { contractFromDesign, currentAdapterProfiles } from "../src/model2/product/fromDesign";
 import { compileProduct } from "../src/model2/product/compiler";
 import { idempotencySetup } from "./queueIdempotency.fixture";
 import { createProductModel2 } from "../src/model2/product/run";
+import { createAsyncModel2 } from "../src/model2/async/run";
+import { asyncFixture } from "./asyncFixture";
 
 test("learners can select idempotent result writes on a worker", () => {
   const saved = capacityDesign(), worker = saved.resources.find(r => r.id === "worker")!;
   Object.assign(worker.asyncWorker!, { idempotentResults: true });
   expect(asyncSettingsError(worker.type, undefined, worker.asyncWorker)).toBeUndefined();
+});
+
+test("the existing engine still refuses idempotent worker database effects", () => {
+  expect(() => createAsyncModel2(asyncFixture({ idempotent: true, database: true }))).toThrow("Cross-resource idempotent transaction is unmodeled");
+});
+
+test("disabled worker intent is retained for re-enable without creating a worker effect", () => {
+  const saved = design(false);
+  saved.resources.find(r => r.id === "app")!.asyncWorker = { enabled: false, idempotentResults: true };
+  const adapted = prepare(saved);
+  expect(saved.resources.find(r => r.id === "app")!.asyncWorker!.idempotentResults).toBe(true);
+  expect(currentAdapterProfiles(saved.resources)).toEqual(["queue-idempotency/1"]);
+  expect(adapted.compiled.input.resources.some(r => r.kind === "async-worker")).toBe(false);
 });
 
 test("absent and explicit Off preserve the entire legacy contract, input and evidence", () => {
