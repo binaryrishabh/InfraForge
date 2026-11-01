@@ -32,7 +32,7 @@ test("captured profile is required exactly when numeric intent exists", () => {
 
 test("compiler refuses saved TTL versus materialized config and version mismatch", () => {
   const f = cdnSetup("repeated", 1);
-  const config = f.contract.nodes.cdn!.resources[0]!.config; if (config.kind !== "cdn") throw Error("Expected CDN");
+  const config = f.contract.nodes.cdn!.resources[0]!.config; if (config.kind !== "cdn" || config.ttl.kind !== "known") throw Error("Expected known CDN TTL");
   config.ttl = { ...config.ttl, value: 60_000_000 };
   const row = f.contract.ledger.find(r => r.id === "cdn.ttl")!;
   row.quantity = { ...config.ttl }; row.formula = "60000000";
