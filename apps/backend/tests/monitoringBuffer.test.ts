@@ -11,7 +11,7 @@ const policy = { version: 2 as const, bufferSamples: 8, batchSamples: 4, exportA
 test("buffer boundary capture, comparison, composed cadence and replay", () => {
   for (const cadence of [false, true]) {
     const p = { ...policy, ...(cadence ? { collectionIntervalSeconds: 2 } : {}) }, layout = monitoringLayout(p);
-    for (const schema of [LayoutSchema, LiveTopologySchema]) expect(schema.parse(layout).resources).toEqual(layout.resources);
+    for (const schema of [LayoutSchema, LiveTopologySchema]) expect(layout.resources).toEqual(schema.parse(layout).resources);
     expect(validateDeploymentReadiness(layout.resources, layout.connectionLines).errors).toEqual([]);
     const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, monitoringWorkload, "monitor-buffer"))));
     const expectedProfiles: AdapterProfile[] = cadence ? ["monitor-cadence/1", "monitor-buffer/1"] : ["monitor-buffer/1"];

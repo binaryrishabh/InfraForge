@@ -30,7 +30,7 @@ test("inspector exposes bounded buffer, batch and attempts beside cadence with h
 test("buffer edits preserve cadence, reject overflow without clamping, reset defaults and undo/redo", () => {
   useCanvasStore.getState().loadLayout([monitor], [], "layout", "Monitoring");
   number("2", 0, true); number("4", 1); number("8"); number("3", 2);
-  const expected = { version: 2, collectionIntervalSeconds: 2, bufferSamples: 8, batchSamples: 4, exportAttempts: 3 };
+  const expected = { version: 2 as const, collectionIntervalSeconds: 2, bufferSamples: 8, batchSamples: 4, exportAttempts: 3 };
   expect(resource().monitoringPolicy).toEqual(expected);
   for (const [index, value] of [[0, "3"], [1, "9"], [0, "8193"], [2, "11"], [0, "0"], [1, "1.5"], [2, "NaN"]] as const) number(value, index);
   expect(resource().monitoringPolicy).toEqual(expected);
