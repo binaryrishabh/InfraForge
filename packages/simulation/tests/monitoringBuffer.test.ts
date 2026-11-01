@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import type { AdapterProfile } from "@infraforge/contracts/run-inputs";
 import { bufferSetup } from "./monitoringBuffer.fixture";
 import { monitoringDesign } from "./monitoringCadence.fixture";
 import { contractFromDesign, currentAdapterProfiles } from "../src/model2/product/fromDesign";
@@ -8,7 +9,8 @@ const policy = { version: 2 as const, bufferSamples: 8, batchSamples: 4, exportA
 test("buffer intent owns profile, authored quantities and composes with cadence", () => {
   for (const cadence of [false, true]) {
     const p = { ...policy, ...(cadence ? { collectionIntervalSeconds: 2, exportIntervalSeconds: 3 } : {}) }, f = bufferSetup("vm", p);
-    expect(currentAdapterProfiles(f.saved.resources)).toEqual([...(cadence ? ["monitor-cadence/1"] : []), "monitor-buffer/1"]);
+    const expectedProfiles: AdapterProfile[] = cadence ? ["monitor-cadence/1", "monitor-buffer/1"] : ["monitor-buffer/1"];
+    expect(currentAdapterProfiles(f.saved.resources)).toEqual(expectedProfiles);
     expect(f.contract.nodes.monitor!.profileVersion).toContain("/monitor-buffer/1");
     expect(f.compiled.input.resources.find(r => r.kind === "monitor")).toMatchObject({ bufferSamples: { value: 8 }, batchSamples: { value: 4 }, attempts: { value: 3 }, bufferBytes: { value: 1048576 }, sampleBytes: { value: 128 } });
     for (const id of ["monitor.bufferSamples", "monitor.batch", "monitor.attempts"]) expect(f.contract.ledger.find(e => e.id === id)?.classification).toBe("user-input");

@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import type { AdapterProfile } from "@infraforge/contracts/run-inputs";
 import { validateDeploymentReadiness } from "@infraforge/domain/validation";
 import { buildContractFromRunInputs } from "@infraforge/simulation/internal-product";
 import { monitoringLayout, monitoringWorkload } from "./monitoringCadence.fixture";
@@ -13,7 +14,8 @@ test("buffer boundary capture, comparison, composed cadence and replay", () => {
     for (const schema of [LayoutSchema, LiveTopologySchema]) expect(schema.parse(layout).resources).toEqual(layout.resources);
     expect(validateDeploymentReadiness(layout.resources, layout.connectionLines).errors).toEqual([]);
     const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, monitoringWorkload, "monitor-buffer"))));
-    expect(input.adapterProfiles).toEqual([...(cadence ? ["monitor-cadence/1"] : []), "monitor-buffer/1"]);
+    const expectedProfiles: AdapterProfile[] = cadence ? ["monitor-cadence/1", "monitor-buffer/1"] : ["monitor-buffer/1"];
+    expect(input.adapterProfiles).toEqual(expectedProfiles);
     expect(buildContractFromRunInputs(input, 65)).not.toHaveProperty("refused");
     for (const adapterProfiles of [undefined, [], ["monitor-cadence/1"]] as const) expect(buildContractFromRunInputs({ ...input, adapterProfiles: adapterProfiles === undefined ? undefined : [...adapterProfiles] }, 65)).toHaveProperty("refused");
     expect(() => readRunInputs({ ...input, adapterProfiles: ["monitor-buffer/1", "monitor-buffer/1"] })).toThrow();
