@@ -15,6 +15,7 @@ test("buffer intent owns profile, authored quantities and composes with cadence"
     for (const adapterProfiles of [[], ["monitor-buffer/1", "monitor-buffer/1"], ["monitor-cadence/1"]] as const) expect(contractFromDesign(f.saved, { adapterProfiles })).toHaveProperty("refused");
   }
   expect(contractFromDesign(monitoringDesign(), { adapterProfiles: ["monitor-buffer/1"] })).toHaveProperty("refused");
+  expect(currentAdapterProfiles(bufferSetup("vm", { version: 2, bufferSamples: 1000, batchSamples: 100, exportAttempts: 2 }).saved.resources)).toEqual(["monitor-buffer/1"]);
 });
 test("compiler refuses missing, duplicate, mismatched global and owned buffer profiles", () => {
   for (const version of ["canvas-assumptions/2", "canvas-assumptions/2/monitor-buffer/1/monitor-buffer/1", "canvas-assumptions/2/monitor-buffer/2", "canvas-assumptions/2/monitor-buffer/10"]) for (const owned of [true, false]) {
@@ -25,9 +26,10 @@ test("compiler refuses missing, duplicate, mismatched global and owned buffer pr
 test("compiler binds saved buffer, batch, attempts, cadence and fixed byte assumptions", () => {
   for (const field of ["bufferSamples", "batchSamples", "attempts", "sampleBytes", "bufferBytes", "interval", "exportInterval", "freshFor"] as const) {
     const f = bufferSetup("vm", policy), c = f.contract.nodes.monitor!.resources[0]!.config;
-    if (c.kind !== "monitor" || c[field].kind !== "known") throw Error("Expected monitor");
-    c[field] = { ...c[field], value: c[field].value + 1 };
-    const row = f.contract.ledger.find(e => e.id === c[field].provenance[0])!; row.quantity = c[field]; row.formula = String(c[field].value);
+    if (c.kind !== "monitor") throw Error("Expected monitor");
+    const quantity = c[field]; if (quantity.kind !== "known") throw Error("Expected known quantity");
+    quantity.value++;
+    const row = f.contract.ledger.find(e => e.id === quantity.provenance[0])!; row.quantity = quantity; row.formula = String(quantity.value);
     const result = compileProduct(f.saved, f.contract); expect(result.ok).toBe(false);
     if (!result.ok) expect(JSON.stringify(result.diagnostics)).toContain("must match saved intent");
   }
