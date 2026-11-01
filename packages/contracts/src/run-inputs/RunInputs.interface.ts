@@ -6,7 +6,7 @@ export interface RunTopology {
   connectionLines: ConnectionLine[];
 }
 
-export type AdapterProfile = "failure-cause/1" | "application-flow/2" | "application-flow/3" | "data-keyspace/1" | "data-hot-key/1" | "data-cache-policy/1" | "data-cache-capacity/1" | "data-db-concurrency/1" | "lb-admission/1";
+export type AdapterProfile = "failure-cause/1" | "application-flow/2" | "application-flow/3" | "data-keyspace/1" | "data-hot-key/1" | "data-cache-policy/1" | "data-cache-capacity/1" | "data-db-concurrency/1" | "lb-admission/1" | "lb-health/1";
 
 // Missing profiles identify inputs captured before implicit adapter profiles were recorded.
 export interface RunProfileSelection { adapterProfiles?: AdapterProfile[] }

@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -29,6 +29,7 @@ const ResourceSchema = z.object({
   y: z.number(),
   skuId: z.string().optional(),
   cachePolicy: CachePolicySchema.optional(),
+  lbHealth: z.object({ version: z.literal(1), intervalSeconds: z.number().int().min(1).max(LB_HEALTH_SECONDS_MAX).optional(), timeoutSeconds: z.number().int().min(1).max(LB_HEALTH_SECONDS_MAX).optional(), unhealthyAfter: z.number().int().min(1).max(LB_HEALTH_THRESHOLD_MAX).optional(), healthyAfter: z.number().int().min(1).max(LB_HEALTH_THRESHOLD_MAX).optional() }).strict().optional(),
   lbAdmission: z.object({ version: z.literal(1), maxActive: z.number().int().min(1).max(LB_ACTIVE_MAX).optional(), maxQueued: z.number().int().min(0).max(LB_QUEUED_MAX).optional(), queueWaitMs: z.number().int().min(1).max(LB_QUEUE_WAIT_MAX_MS).optional() }).strict().optional(),
   dbConcurrency: z.object({ version: z.literal(1), activeQueries: z.number().int().min(1).max(DB_ACTIVE_QUERIES_MAX).optional(), queuedQueries: z.number().int().min(0).max(DB_QUEUED_QUERIES_MAX).optional() }).strict().optional(),
   dataKeyspace: z.object({ version: z.literal(1), count: z.number().int().min(1).max(DATA_KEYSPACE_MAX), accessPattern: z.enum(["uniform", "hot-key"]).optional() }).strict().optional(),
@@ -62,6 +63,8 @@ const ResourceSchema = z.object({
   region: z.string().optional(),
   name: z.string().optional(),
 }).catchall(z.json()).superRefine((resource, ctx) => {
+  const healthMessage = lbHealthError(resource.type, resource.lbHealth);
+  if (healthMessage) ctx.addIssue({ code: "custom", path: ["lbHealth"], message: healthMessage });
   const lbMessage = lbAdmissionError(resource.type, resource.lbAdmission);
   if (lbMessage) ctx.addIssue({ code: "custom", path: ["lbAdmission"], message: lbMessage });
   const dbMessage = dbConcurrencyError(resource.type, resource.dbConcurrency);

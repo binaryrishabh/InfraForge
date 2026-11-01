@@ -1,4 +1,4 @@
-import { RESOURCE_PORTS, lbAdmissionError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, lbHealthError, lbAdmissionError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -22,6 +22,7 @@ import { dataKeys, hotKey, HOT_KEY_PROFILE, multiKey, KEYSPACE_PROFILE, validate
 import { CACHE_POLICY_PROFILE, cachePolicyChanges, validateCachePolicyBindings } from "./cachePolicy";
 import { CACHE_CAPACITY_PROFILE, cacheCapacityChanges, validateCacheCapacityBindings } from "./cacheCapacity";
 import { DB_CONCURRENCY_PROFILE, dbConcurrencyChanges, validateDbConcurrencyBindings } from "./dbConcurrency";
+import { LB_HEALTH_PROFILE, lbHealthChanges, validateLbHealthBindings } from "./lbHealth";
 import { LB_ADMISSION_PROFILE, lbAdmissionChanges, validateLbAdmissionBindings } from "./lbAdmission";
 // Model 1 saves a pool policy on its LB; keep fixed siblings and expand one named VM.
 export function savedPoolPolicies(design: SavedProductDesign): SavedProductDesign {
@@ -47,6 +48,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (cachePolicyChanges(design.resources) !== contract.version.includes(`/${CACHE_POLICY_PROFILE}`)) error("CACHE_POLICY_VERSION", "version", "Changed cache intent requires its explicit data-cache-policy/1 contract version and matching saved intent");
     if (cacheCapacityChanges(design.resources) !== contract.version.includes(`/${CACHE_CAPACITY_PROFILE}`)) error("CACHE_CAPACITY_VERSION", "version", "Logical cache capacity requires its explicit data-cache-capacity/1 contract version and matching saved intent");
     if (dbConcurrencyChanges(design.resources) !== contract.version.includes(`/${DB_CONCURRENCY_PROFILE}`)) error("DB_CONCURRENCY_VERSION", "version", "Database concurrency requires its explicit data-db-concurrency/1 contract version and matching saved intent");
+    if (lbHealthChanges(design.resources) !== contract.version.includes(`/${LB_HEALTH_PROFILE}`)) error("LB_HEALTH_VERSION", "version", "Load balancer health requires its explicit lb-health/1 contract version and matching saved intent");
     if (lbAdmissionChanges(design.resources) !== contract.version.includes(`/${LB_ADMISSION_PROFILE}`)) error("LB_ADMISSION_VERSION", "version", "Load balancer admission requires its explicit lb-admission/1 contract version and matching saved intent");
     if (contract.applicationFlowProfile !== undefined && !["application-flow/1", "application-flow/2", "application-flow/3"].includes(contract.applicationFlowProfile)) error("UNKNOWN_FLOW_PROFILE", "applicationFlowProfile", "Unsupported flow profile");
     if ((design.resources.some(r => r.applicationFlow?.schema === "application-flow/3") ? "application-flow/3" : design.resources.some(r => r.applicationFlow?.schema === "application-flow/2") ? "application-flow/2" : design.resources.some(r => r.applicationFlow) ? "application-flow/1" : undefined) !== contract.applicationFlowProfile) error("FLOW_PROFILE", "applicationFlowProfile", "Saved flow requires the application-flow/1 adapter");
@@ -64,6 +66,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     const dialled = new Set(design.connections.map(e => `${e.targetId}/${contract.edges?.[e.id]?.targetRole}`));
     for (const d of contract.caller?.dependencies ?? []) dialled.add(d.target.slice(1));
     for (const r of design.resources) {
+      const healthError = lbHealthError(r.type, r.lbHealth);
+      if (healthError) error("INVALID_LB_HEALTH", `resources.${r.id}.lbHealth`, healthError);
       const lbError = lbAdmissionError(r.type, r.lbAdmission);
       if (lbError) error("INVALID_LB_ADMISSION", `resources.${r.id}.lbAdmission`, lbError);
       const dbError = dbConcurrencyError(r.type, r.dbConcurrency);
@@ -83,7 +87,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dbConcurrency", "lbAdmission", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dbConcurrency", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -312,6 +316,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateCacheCapacityBindings(design.resources, runtime);
     validateDbConcurrencyBindings(design.resources, runtime);
     validateLbAdmissionBindings(design.resources, runtime);
+    validateLbHealthBindings(design.resources, runtime);
     phase = "runtime-contract"; validateMaterializedSemantics(runtime, semantic.edges, new Set(design.resources.filter(r => r.listenerSettings !== undefined).flatMap(r => [...roleIds.entries()].filter(([key]) => key.split("/")[0]!.split("#")[0] === r.id).map(([,id]) => id)))); validateSystems(runtime);
     return { ok: true, value: canonical({ schema: "infraforge-compiled-product/1", semantic, input: runtime, pools, crashes, ...(interventionReceipts.length ? {interventionReceipts} : {}) }), diagnostics };
   } catch (cause) {

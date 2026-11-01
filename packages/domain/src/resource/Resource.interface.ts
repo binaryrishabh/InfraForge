@@ -3,6 +3,7 @@ import type { DataKeyspace } from "./DataKeyspace.interface";
 import type { CachePolicy } from "./CachePolicy.interface";
 import type { DbConcurrency } from "./DbConcurrency.interface";
 import type { LbAdmission } from "./LbAdmission.interface";
+import type { LbHealth } from "./LbHealth.interface";
 import type { CircuitBreakerSettings } from "./CircuitBreakerSettings.interface";
 import type { ResourceType } from "./RESOURCE_TYPES.constants";
 import type { AutoscalingPolicy } from "./AutoscalingPolicy.interface";
@@ -16,6 +17,7 @@ export interface Resource {
   cachePolicy?: CachePolicy;
   dbConcurrency?: DbConcurrency;
   lbAdmission?: LbAdmission;
+  lbHealth?: LbHealth;
   listenerSettings?: ListenerSettings;
   firewallSettings?: FirewallSettings;
   applicationFlow?: ApplicationFlow;

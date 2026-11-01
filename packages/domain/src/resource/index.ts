@@ -8,6 +8,7 @@ export { DATA_KEYSPACE_MAX, dataKeyspaceError, type DataKeyspace } from "./DataK
 export { CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, type CachePolicy } from "./CachePolicy.interface";
 export { DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, dbConcurrencyError, type DbConcurrency } from "./DbConcurrency.interface";
 export { LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, lbAdmissionError, type LbAdmission } from "./LbAdmission.interface";
+export { LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbHealthError, type LbHealth } from "./LbHealth.interface";
 export { securitySettingsError, SECURITY_SETTINGS_LIMITS, type ListenerSettings, type FirewallSettings } from "./SecuritySettings.interface";
 export { RETRY_GROUPS, DEFAULT_RETRY_SETTINGS, retrySettingsError, type RetrySettings, type RetryGroup } from "./RetrySettings.interface";
 export type { ConnectionLine } from "./ConnectionLine.interface";
