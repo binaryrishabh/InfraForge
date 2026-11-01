@@ -1,6 +1,7 @@
 import type { ApplicationFlow } from "./ApplicationFlow.interface";
 import type { DataKeyspace } from "./DataKeyspace.interface";
 import type { CachePolicy } from "./CachePolicy.interface";
+import type { VmCpuQuota } from "./VmCpuQuota.interface";
 import type { VmExecution } from "./VmExecution.interface";
 import type { DbConcurrency } from "./DbConcurrency.interface";
 import type { LbAdmission } from "./LbAdmission.interface";
@@ -18,6 +19,7 @@ export interface Resource {
   cachePolicy?: CachePolicy;
   dbConcurrency?: DbConcurrency;
   vmExecution?: VmExecution;
+  vmCpuQuota?: VmCpuQuota;
   lbAdmission?: LbAdmission;
   lbHealth?: LbHealth;
   listenerSettings?: ListenerSettings;

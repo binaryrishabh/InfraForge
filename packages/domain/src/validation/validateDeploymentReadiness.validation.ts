@@ -5,6 +5,7 @@ import { CONNECTION_RULES } from "../topology/CONNECTION_RULES.constants";
 import { computeTopology } from "../topology/computeTopology";
 import { dataKeyspaceError } from "../resource/DataKeyspace.interface";
 import { cachePolicyError } from "../resource/CachePolicy.interface";
+import { vmCpuQuotaError } from "../resource/VmCpuQuota.interface";
 import { vmExecutionError } from "../resource/VmExecution.interface";
 import { dbConcurrencyError } from "../resource/DbConcurrency.interface";
 import { lbAdmissionError } from "../resource/LbAdmission.interface";
@@ -44,6 +45,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
         if (message) errors.push(`${resource.id}: ${message}`);
         const cacheMessage = cachePolicyError(resource.type, resource.cachePolicy);
         if (cacheMessage) errors.push(`${resource.id}: ${cacheMessage}`);
+        const quotaMessage = vmCpuQuotaError(resource.type, resource.vmCpuQuota, resource.asyncWorker?.enabled);
+        if (quotaMessage) errors.push(`${resource.id}: ${quotaMessage}`);
         const executionMessage = vmExecutionError(resource.type, resource.vmExecution, resource.asyncWorker?.enabled);
         if (executionMessage) errors.push(`${resource.id}: ${executionMessage}`);
         const concurrencyMessage = dbConcurrencyError(resource.type, resource.dbConcurrency);

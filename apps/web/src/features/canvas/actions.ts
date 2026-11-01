@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { validateConnection } from "@infraforge/domain/validation";
-import { RESOURCE_PORTS, vmExecutionError, lbHealthError, lbAdmissionError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, type Resource, type ResourceType } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, vmCpuQuotaError, vmExecutionError, lbHealthError, lbAdmissionError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, type Resource, type ResourceType } from "@infraforge/domain/resource";
 import { useCanvasStore } from "./store/canvasStore";
 import { positionIsOccupied } from "./utils/cardFootprint";
 import { NODE_CARD_WIDTH, DESIGN_CARD_HEIGHT, GRID_SIZE } from "./utils/nodeGeometry";
@@ -114,7 +114,7 @@ export function deleteConnection(connectionId: string) {
   toast("Connection removed", { action: { label: "Undo", onClick: undo }, duration: 5000 });
 }
 
-const TRACKED = ["name", "skuId", "dataKeyspace", "cachePolicy", "dbConcurrency", "vmExecution", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts"] as const;
+const TRACKED = ["name", "skuId", "dataKeyspace", "cachePolicy", "dbConcurrency", "vmExecution", "vmCpuQuota", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts"] as const;
 export function updateResource(resourceId: string, patch: Partial<Resource>) {
   const store = useCanvasStore.getState();
   if (!editable(store)) return;
@@ -123,6 +123,7 @@ export function updateResource(resourceId: string, patch: Partial<Resource>) {
   const candidate = { ...resource, ...patch };
   if (lbAdmissionError(candidate.type, candidate.lbAdmission)) return;
   if (lbHealthError(candidate.type, candidate.lbHealth)) return;
+  if (vmCpuQuotaError(candidate.type, candidate.vmCpuQuota, candidate.asyncWorker?.enabled)) return;
   if (vmExecutionError(candidate.type, candidate.vmExecution, candidate.asyncWorker?.enabled)) return;
   if (dbConcurrencyError(candidate.type, candidate.dbConcurrency)) return;
   if (cachePolicyError(candidate.type, candidate.cachePolicy)) return;

@@ -1,5 +1,5 @@
 import type { AsyncQueueMetrics } from "@infraforge/contracts/telemetry";
-import { vmExecutionError, DEFAULT_ASYNC_QUEUE_SETTINGS, DEFAULT_ASYNC_WORKER_SETTINGS, asyncSettingsError, type Resource } from "@infraforge/domain/resource";
+import { vmCpuQuotaError, vmExecutionError, DEFAULT_ASYNC_QUEUE_SETTINGS, DEFAULT_ASYNC_WORKER_SETTINGS, asyncSettingsError, type Resource } from "@infraforge/domain/resource";
 import { Switch } from "@/ui/Switch";
 import { Field, Input } from "@/ui/Field";
 import { updateResource } from "../../actions";
@@ -15,7 +15,7 @@ export function AsyncSection({ resource, disabled }: { resource: Resource; disab
     : { asyncWorker: { ...resource.asyncWorker, enabled: policy?.enabled ?? false, ...patch } });
   const fields = queue ? [["visibilityTimeoutSeconds", "Visibility timeout (seconds)", 1, 3600], ["maxReceives", "Maximum deliveries before dead-lettering", 1, 10], ["retentionSeconds", "Message retention (seconds)", 1, 86400], ["deadLetterCapacity", "Dead-letter list size", 0, 1000]] as const
     : [["concurrency", "Jobs in parallel", 1, 64], ["prefetch", "Prefetch credit (leased jobs)", 1, 64], ["cpuMsPerJob", "CPU milliseconds per job (authored assumption)", 1, 120000], ["badJobPercent", "Share of arriving uploads that can never be processed", 0, 100]] as const;
-  const executionError = queue ? undefined : vmExecutionError(resource.type, resource.vmExecution, true);
+  const executionError = queue ? undefined : vmExecutionError(resource.type, resource.vmExecution, true) ?? vmCpuQuotaError(resource.type, resource.vmCpuQuota, true);
   const error = asyncSettingsError(resource.type, resource.asyncQueue, resource.asyncWorker);
   return <InspectorSection title={queue ? "Upload queue" : "Background worker"}>
     <Switch label={queue ? "Process uploads asynchronously" : "Use this VM as a worker"} checked={policy?.enabled === true} disabled={disabled || (!policy?.enabled && !!executionError)}

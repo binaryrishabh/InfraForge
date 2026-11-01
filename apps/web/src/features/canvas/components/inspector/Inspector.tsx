@@ -1,5 +1,6 @@
 import { SecuritySection } from "./SecuritySection";
 import { DataKeyspaceSection } from "./DataKeyspaceSection";
+import { VmCpuQuotaSection } from "./VmCpuQuotaSection";
 import { VmExecutionSection } from "./VmExecutionSection";
 import { DbConcurrencySection } from "./DbConcurrencySection";
 import { LbAdmissionSection } from "./LbAdmissionSection";
@@ -54,6 +55,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
           )}
         </Field>
       </div>
+      {resource.type === "Virtual Machine" && <VmCpuQuotaSection key={`vm-cpu-quota-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Virtual Machine" && <VmExecutionSection key={`vm-execution-${resource.id}`} resource={resource} disabled={locked} />}
       {sizeable && <InstanceSection key={`size-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Database" && <DataKeyspaceSection key={`keyspace-${resource.id}`} resource={resource} disabled={locked} />}
