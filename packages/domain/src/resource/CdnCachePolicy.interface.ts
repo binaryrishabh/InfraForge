@@ -15,7 +15,7 @@ export function cdnCachePolicyError(type: string, value: unknown): string | unde
   if (v.version !== 1 && v.version !== 2) return "Cache TTL requires version 1 or 2.";
   if (v.version === 2) {
     if (Object.keys(v).some(k => !["version", "ttlSeconds", "coalesce", "maxWaiters"].includes(k))) return "CDN policy contains unsupported settings.";
-    if (typeof v.coalesce !== "boolean") return "CDN coalescing requires On or Off.";
+    if (typeof v.coalesce !== "boolean") return "Cache TTL policy version 2 requires coalescing On or Off.";
     if (v.maxWaiters !== undefined && (!v.coalesce || typeof v.maxWaiters !== "number" || !Number.isSafeInteger(v.maxWaiters) || v.maxWaiters < 1 || v.maxWaiters > CDN_MAX_WAITERS)) return `Shared-fill request limit requires coalescing On and an integer from 1 to ${CDN_MAX_WAITERS}.`;
     if (v.ttlSeconds === undefined) return;
   }
