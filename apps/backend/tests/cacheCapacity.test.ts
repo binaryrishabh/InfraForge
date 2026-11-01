@@ -2,10 +2,9 @@ import { expect, test } from "bun:test";
 import { mkdir, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import type { CachePolicy } from "@infraforge/domain/resource";
+import type { Resource, CachePolicy } from "@infraforge/domain/resource";
 import { createModel2Run } from "@infraforge/simulation/model2-run";
 import { buildContractFromRunInputs } from "@infraforge/simulation/internal-product";
-import { keyspaceDesign } from "../../../packages/simulation/tests/keyspace.fixture";
 import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
 import { LayoutSchema, LiveTopologySchema } from "../zod_schemas/layout.schema";
 import { createModel2Engine } from "../simulator/model2Engine";
@@ -13,13 +12,18 @@ import { buildModel2Contract } from "../simulator/contractBuilder";
 import { compareInputs } from "../comparison/inputs";
 
 function layout(policy?: CachePolicy, hot = false, flow = false) {
-  const d = keyspaceDesign(10);
-  if (policy) d.resources[1]!.cachePolicy = policy;
-  if (hot) d.resources[2]!.dataKeyspace!.accessPattern = "hot-key";
-  if (flow) d.resources[0]!.applicationFlow = { schema: "application-flow/2", operations: { read: { steps: [{ id: "read", kind: "data", edge: "edge-0", operation: "read" }] } } };
-  return { resources: d.resources, connectionLines: d.connections };
+  const resources: Resource[] = [
+    { id: "app", type: "Virtual Machine", x: 0, y: 0 },
+    { id: "cache", type: "Cache", x: 0, y: 0, ...(policy ? { cachePolicy: policy } : {}) },
+    { id: "db", type: "Database", x: 0, y: 0, dataKeyspace: { version: 1, count: 10, ...(hot ? { accessPattern: "hot-key" } : {}) } },
+  ];
+  if (flow) resources[0]!.applicationFlow = { schema: "application-flow/2", operations: { read: { steps: [{ id: "read", kind: "data", edge: "edge-0", operation: "read" }] } } };
+  return { resources, connectionLines: [
+    { id: "edge-0", sourceId: "app", targetId: "cache", sourceType: "Virtual Machine", targetType: "Cache", port: 6379 },
+    { id: "edge-1", sourceId: "cache", targetId: "db", sourceType: "Cache", targetType: "Database", port: 5432 },
+  ] };
 }
-const workload = { ...keyspaceDesign().workload, readWriteRatio: 1 };
+const workload = { targetThroughput: 600, throughputUnit: "per-minute" as const, trafficShape: "steady" as const, readWriteRatio: 1, payloadSize: "light" as const };
 
 test("layout/live/captured schemas retain bounded version 2 capacity and reject version 1 extensions", () => {
   for (const schema of [LayoutSchema, LiveTopologySchema]) {
