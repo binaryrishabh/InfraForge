@@ -9,6 +9,7 @@ test("saved database query slots and queue capacity replace the frozen canvas bu
   Object.assign(d.resources[2]!, { dbConcurrency: { version: 1, activeQueries: 1, queuedQueries: 2 } });
   const f = prepareKeyspace(d);
   expect(f.compiled.input.resources.find(r => r.kind === "relational")).toMatchObject({ activeTransactions: { value: 1 }, pendingQueries: { value: 2 }, maxSessions: { value: 100 } });
+  expect(f.contract.transports.database!.pool).toEqual(prepareKeyspace(keyspaceDesign(10)).contract.transports.database!.pool);
 });
 
 test("partial settings retain the other authored budget and empty settings retain historical bytes", () => {
@@ -31,9 +32,11 @@ test("query concurrency requires matching captured intent, profile and materiali
   expect(compileProduct(d, missing.contract).ok).toBe(false);
   for (const field of ["activeTransactions", "pendingQueries"] as const) {
     const f = prepareKeyspace(d), db = f.contract.nodes.db!.resources.find(r => r.config.kind === "relational")!.config;
-    if (db.kind !== "relational" || db[field].kind !== "known") throw Error("Expected database budget");
-    db[field].value++;
-    const fact = f.contract.ledger.find(r => r.id === db[field].provenance[0])!.quantity;
+    if (db.kind !== "relational") throw Error("Expected database");
+    const budget = db[field];
+    if (budget.kind !== "known") throw Error("Expected database budget");
+    budget.value++;
+    const fact = f.contract.ledger.find(r => r.id === budget.provenance[0])!.quantity;
     if (fact.kind !== "known") throw Error("Expected numeric database fact"); fact.value++;
     const result = compileProduct(d, f.contract);
     expect(result.ok).toBe(false); expect(result.diagnostics.some(r => r.message.includes("Database query budgets must match"))).toBe(true);
@@ -64,6 +67,7 @@ function observe(f: ReturnType<typeof burst>) {
   }
   const e = f.runtime.evidence(), db = e.data.databases[0]!;
   const times = e.results.filter(r => r.outcome === "completed").map(r => r.responseUs).sort((a,b) => a-b);
+  expect(e.resultRetention.omitted).toBe(0); expect(times).toHaveLength(e.counts.completed);
   return { maxQueued, maxActive, sampledQueueUs: queueAreaUs, p95Us: times[Math.ceil(times.length * 0.95) - 1], reads: db.logicalReads, writes: db.logicalWrites, refusals: db.reasons["query-queue-full"] ?? 0, completed: e.counts.completed, rejected: e.counts.rejected, evictions: e.data.caches[0]?.evictions, hits: e.data.caches[0]?.hits, coalesced: e.data.applications[0]?.coalescedWaiters };
 }
 

@@ -88,3 +88,19 @@ test("saved concurrency changes remain visible in one-change comparisons", () =>
   const a = captureRunInputs(layout({ version: 1, activeQueries: 1, queuedQueries: 2 }), workload, "same"), b = captureRunInputs(layout({ version: 1, activeQueries: 8, queuedQueries: 2 }), workload, "same");
   expect(compareInputs(a, b)).toMatchObject({ grade: "one-change-design", design: { reconfigured: [{ id: "db", fields: [{ field: "dbConcurrency" }] }] } });
 });
+
+test("saved canvas query slots change real DB waiting and live latency under the same steady load", () => {
+  const outcomes = [1, 8].map(activeQueries => {
+    const input = captureRunInputs(layout({ version: 1, activeQueries, queuedQueries: 32 }), workload, "query-live-comparison");
+    const run = createModel2Run(input, 3);
+    for (let i = 0; i < 3; i++) run.advance();
+    const e = run.evidence(), db = e.data.databases[0]!, view = run.view();
+    return { activeQueries, queued: db.queued, completed: e.counts.completed, p95Ms: view.traffic.latencyMs.p95, refusals: db.reasons["query-queue-full"] ?? 0, sessionRefusals: db.sessionEvents?.refused };
+  });
+  expect(outcomes[0]!.queued).toBeGreaterThan(0); expect(outcomes[1]!.queued).toBe(0);
+  expect(outcomes[0]!.p95Ms).not.toBeNull(); expect(outcomes[1]!.p95Ms).not.toBeNull();
+  expect(outcomes[0]!.p95Ms!).toBeGreaterThan(outcomes[1]!.p95Ms!);
+  expect(outcomes[1]!.completed).toBeGreaterThan(outcomes[0]!.completed);
+  for (const result of outcomes) { expect(result.refusals).toBe(0); expect(result.sessionRefusals).toBe(0); }
+  console.info("db-query-live-comparison", JSON.stringify(outcomes));
+});
