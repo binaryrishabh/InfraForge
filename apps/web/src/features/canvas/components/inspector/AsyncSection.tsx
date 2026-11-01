@@ -20,7 +20,7 @@ export function AsyncSection({ resource, disabled }: { resource: Resource; disab
   return <InspectorSection title={queue ? "Upload queue" : "Background worker"}>
     <Switch label={queue ? "Process uploads asynchronously" : "Use this VM as a worker"} checked={policy?.enabled === true} disabled={disabled || (!policy?.enabled && !!executionError)}
       onChange={(enabled) => commit(enabled ? { ...(queue ? DEFAULT_ASYNC_QUEUE_SETTINGS : DEFAULT_ASYNC_WORKER_SETTINGS), ...policy, enabled: true } : { enabled: false })}
-      description={executionError ?? (queue ? "Connect app â†’ queue â†’ worker. Connect both VMs to the same Object Storage." : "Enable the connected queue; this VM polls for jobs, reads uploads, spends CPU, writes results and acknowledges.")} />
+      description={executionError ?? (queue ? "Connect app → queue → worker. Connect both VMs to the same Object Storage." : "Enable the connected queue; this VM polls for jobs, reads uploads, spends CPU, writes results and acknowledges.")} />
     {policy?.enabled && <div className="mt-4 flex flex-col gap-4">
       {fields.map(([key, label, min, max]) => <Field key={key} label={label}>{({ id }) => <Input id={id} type="number" min={min} max={max} step={1} disabled={disabled}
         value={(policy as unknown as Record<string, number>)[key] ?? ""} placeholder="Unknown"
