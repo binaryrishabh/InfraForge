@@ -1,6 +1,7 @@
 import { SecuritySection } from "./SecuritySection";
 import { DataKeyspaceSection } from "./DataKeyspaceSection";
 import { DbConcurrencySection } from "./DbConcurrencySection";
+import { LbAdmissionSection } from "./LbAdmissionSection";
 import { CachePolicySection } from "./CachePolicySection";
 import { FlowSection } from "./FlowSection";
 import { AsyncSection } from "./AsyncSection";
@@ -56,6 +57,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
       {resource.type === "Database" && <DbConcurrencySection key={`db-concurrency-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Cache" && <CachePolicySection key={`cache-policy-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <AutoscalingSection key={`pool-${resource.id}`} resource={resource} disabled={locked} />}
+      {resource.type === RESOURCE_TYPES.LoadBalancer && <LbAdmissionSection key={`admission-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <RetrySection key={`retry-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <CircuitBreakerSection key={`breaker-${resource.id}`} resource={resource} disabled={locked} />}
       {(resource.type === "Message Queue" || resource.type === "Virtual Machine") && <AsyncSection key={`async-${resource.id}`} resource={resource} disabled={locked} />}
