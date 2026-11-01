@@ -13,7 +13,7 @@ import { http } from "../src/client/httpClient";
 const cache: Resource = { id: "cache", type: "Cache", x: 0, y: 0 };
 afterEach(() => { useCanvasStore.getState().clearCanvas(); useAuthStore.setState({ user: null, status: "guest" }); });
 
-test("Cache inspector exposes only bounded TTL and single-flight with exact explanatory text", () => {
+test("Cache inspector exposes bounded TTL and single-flight with exact explanatory text", () => {
   const html = renderToStaticMarkup(<Inspector resource={cache} />);
   expect(html).toContain("Cache TTL"); expect(html).toContain('type="number"');
   expect(html).toContain('min="1"'); expect(html).toContain('max="3600"'); expect(html).toContain('step="1"'); expect(html).toContain('value="60"');
@@ -27,7 +27,7 @@ for (const lock of ["liveLocked", "isDeploying"] as const) test(`Cache controls 
   useCanvasStore.setState({ [lock]: true });
   const configured: Resource = { ...cache, cachePolicy: { version: 1, ttlSeconds: 120, singleFlight: true } };
   const html = renderToStaticMarkup(<CachePolicySection resource={configured} disabled />);
-  expect(html).toContain('value="120"'); expect(html).toContain('aria-checked="true"'); expect(html.match(/disabled=""/g)).toHaveLength(2);
+  expect(html).toContain('value="120"'); expect(html).toContain('aria-checked="true"'); expect(html.match(/disabled=""/g)).toHaveLength(3);
   useCanvasStore.getState().loadLayout([configured], [], "layout", "Cache"); useCanvasStore.setState({ [lock]: true });
   updateResource("cache", { cachePolicy: { version: 1, ttlSeconds: 1, singleFlight: false } });
   expect(useCanvasStore.getState().resources[0]!.cachePolicy).toEqual(configured.cachePolicy);

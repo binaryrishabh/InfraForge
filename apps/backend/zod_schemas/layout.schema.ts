@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { CACHE_TTL_MAX_SECONDS, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -17,6 +17,10 @@ const FlowStepsSchema = z.object({ steps: z.array(z.union([
 const ApplicationFlowSchema = z.object({ schema: z.enum(["application-flow/1", "application-flow/2", "application-flow/3"]), operations: z.object({
   read: FlowStepsSchema.optional(), write: FlowStepsSchema.optional(),
 }).strict() }).strict();
+const CachePolicyV1Schema = z.object({ version: z.literal(1), ttlSeconds: z.number().int().min(1).max(CACHE_TTL_MAX_SECONDS).optional(), singleFlight: z.boolean().optional() }).strict();
+const CachePolicySchema = z.discriminatedUnion("version", [CachePolicyV1Schema, CachePolicyV1Schema.extend({
+  version: z.literal(2), capacityEntries: z.number().int().min(1).max(CACHE_CAPACITY_MAX_ENTRIES),
+}).strict()]);
 
 const ResourceSchema = z.object({
   id: ResourceIdSchema,
@@ -24,7 +28,7 @@ const ResourceSchema = z.object({
   x: z.number(),
   y: z.number(),
   skuId: z.string().optional(),
-  cachePolicy: z.object({ version: z.literal(1), ttlSeconds: z.number().int().min(1).max(CACHE_TTL_MAX_SECONDS).optional(), singleFlight: z.boolean().optional() }).strict().optional(),
+  cachePolicy: CachePolicySchema.optional(),
   dataKeyspace: z.object({ version: z.literal(1), count: z.number().int().min(1).max(DATA_KEYSPACE_MAX), accessPattern: z.enum(["uniform", "hot-key"]).optional() }).strict().optional(),
   autoscaling: z.object({
     enabled: z.boolean().optional(),

@@ -31,12 +31,22 @@ test("capacity profile must match captured intent and compiled capacity, row siz
     const g = prepareKeyspace(d), c = g.contract.nodes.cache!.resources.find(r => r.config.kind === "cache")!.config;
     if (c.kind !== "cache" || c[field].kind !== "known") throw Error("Expected keyed cache quantity");
     c[field].value!++;
-    expect(compileProduct(d, g.contract).ok).toBe(false);
+    const fact = g.contract.ledger.find(r => r.id === c[field].provenance[0])!.quantity;
+    if (fact.kind !== "known") throw Error("Expected numeric cache fact");
+    fact.value++;
+    const result = compileProduct(d, g.contract);
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics.some(r => r.message.includes("Logical capacity must equal saved entries"))).toBe(true);
   }
   const g = prepareKeyspace(d), db = g.contract.nodes.db!.resources.find(r => r.config.kind === "relational")!.config;
   if (db.kind !== "relational" || db.initial[0]!.bytes.kind !== "known") throw Error("Expected modeled row");
-  db.initial[0]!.bytes.value++;
-  expect(compileProduct(d, g.contract).ok).toBe(false);
+  for (const row of db.initial) { if (row.bytes.kind !== "known") throw Error("Expected numeric row size"); row.bytes.value++; }
+  const fact = g.contract.ledger.find(r => r.id === "db.row")!.quantity;
+  if (fact.kind !== "known") throw Error("Expected numeric row fact");
+  fact.value++;
+  const result = compileProduct(d, g.contract);
+  expect(result.ok).toBe(false);
+  expect(result.diagnostics.some(r => r.message.includes("Logical capacity must equal saved entries"))).toBe(true);
 });
 
 test("same uniform and hot-key workloads show fewer real evictions and database reads with more capacity", () => {
