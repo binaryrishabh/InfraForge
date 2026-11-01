@@ -28,10 +28,16 @@ test("compiler independently refuses policy, profile and materialized intent mis
     if (config.kind !== "cdn") throw Error("Expected CDN");
     if (field === "coalesce") config.coalesce = false;
     else {
+      if (field === "ttl") {
+        if (config.ttl.kind !== "known") throw Error("Expected known TTL");
+        config.ttl = { ...config.ttl, value: 60000000 };
+      } else {
+        if (config.maxWaiters.kind !== "known") throw Error("Expected known waiter limit");
+        config.maxWaiters = { ...config.maxWaiters, value: 256 };
+      }
       const value = config[field]; if (value.kind !== "known") throw Error("Expected known quantity");
-      config[field] = { ...value, value: field === "ttl" ? 60000000 : 256 };
       const row = f.contract.ledger.find(e => e.id === value.provenance[0])!;
-      row.quantity = config[field]; row.formula = String(config[field].kind === "known" ? config[field].value : "");
+      row.quantity = value; row.formula = String(value.value);
     }
     const result = compileProduct(f.saved, f.contract);
     expect(result.ok).toBe(false); if (!result.ok) expect(JSON.stringify(result.diagnostics)).toContain("must match saved intent");
