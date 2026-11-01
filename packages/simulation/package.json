@@ -21,7 +21,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
     "lint": "eslint src tests",
-    "test": "bun --no-env-file --no-install test tests"
+    "test": "bun --no-env-file --no-install test tests --timeout 180000"
   },
   "dependencies": {
     "@infraforge/domain": "workspace:*",

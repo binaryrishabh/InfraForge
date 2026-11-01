@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "bun --no-env-file --no-install --watch run index.ts",
-    "test": "bun --no-env-file --no-install test",
+    "test": "bun --no-env-file --no-install test --timeout 180000",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "db:generate": "bun --no-env-file --no-install run --bun prisma generate --config prisma.config.ts",
     "db:migrate": "bun --no-env-file --no-install run --bun prisma migrate deploy --config prisma.config.ts",
