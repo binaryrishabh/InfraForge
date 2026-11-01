@@ -8,7 +8,7 @@ import { configuration, designDifference } from "../comparison/design";
 
 for (const policy of [{ version: 1 as const }, { version: 1 as const, collectionIntervalSeconds: 1 }, { version: 1 as const, exportIntervalSeconds: 60 }, { version: 1 as const, collectionIntervalSeconds: 60, exportIntervalSeconds: 1 }]) test(`cadence boundary capture, comparison and replay: ${JSON.stringify(policy)}`, () => {
   const layout = monitoringLayout(policy), changed = "collectionIntervalSeconds" in policy || "exportIntervalSeconds" in policy;
-  for (const schema of [LayoutSchema, LiveTopologySchema]) expect(schema.parse(layout).resources).toEqual(layout.resources);
+  for (const schema of [LayoutSchema, LiveTopologySchema]) expect(layout.resources).toEqual(schema.parse(layout).resources);
   expect(validateDeploymentReadiness(layout.resources, layout.connectionLines)).toEqual(validateDeploymentReadiness(monitoringLayout().resources, layout.connectionLines));
   const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, monitoringWorkload, "monitor-cadence"))));
   expect(input.adapterProfiles).toEqual(changed ? ["monitor-cadence/1"] : []);
