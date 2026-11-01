@@ -15,7 +15,7 @@ test("buffer boundary capture, comparison, composed cadence and replay", () => {
     const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, monitoringWorkload, "monitor-buffer"))));
     expect(input.adapterProfiles).toEqual([...(cadence ? ["monitor-cadence/1"] : []), "monitor-buffer/1"]);
     expect(buildContractFromRunInputs(input, 65)).not.toHaveProperty("refused");
-    for (const adapterProfiles of [undefined, [], ["monitor-cadence/1"]] as const) expect(buildContractFromRunInputs({ ...input, adapterProfiles }, 65)).toHaveProperty("refused");
+    for (const adapterProfiles of [undefined, [], ["monitor-cadence/1"]] as const) expect(buildContractFromRunInputs({ ...input, adapterProfiles: adapterProfiles === undefined ? undefined : [...adapterProfiles] }, 65)).toHaveProperty("refused");
     expect(() => readRunInputs({ ...input, adapterProfiles: ["monitor-buffer/1", "monitor-buffer/1"] })).toThrow();
     expect(configuration(layout.resources[1]!)).toHaveProperty("monitoringPolicy", p);
     expect(designDifference(monitoringLayout(), layout).reconfigured[0]!.fields).toEqual([{ field: "monitoringPolicy", earlier: null, later: p }]);
