@@ -14,7 +14,7 @@ test("save/live/capture/replay/comparison preserve optional object capacity with
     const layout = capacityLayout(3), policy = { version: 1 as const, capacityMiB };
     layout.resources[3]!.objectStoragePolicy = policy;
     layout.resources[2]!.asyncWorker!.idempotentResults = true;
-    for (const schema of [LayoutSchema, LiveTopologySchema]) expect(schema.parse(layout).resources).toEqual(layout.resources);
+    for (const schema of [LayoutSchema, LiveTopologySchema]) expect(layout.resources).toEqual(schema.parse(layout).resources);
     expect(validateDeploymentReadiness(layout.resources, layout.connectionLines).errors).toEqual([]);
     const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, capacityWorkload, "object-capacity"))));
     expect(input.adapterProfiles).toEqual(["queue-capacity/1", "queue-idempotency/1", "object-capacity/1"]);

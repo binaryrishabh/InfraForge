@@ -13,7 +13,7 @@ test("save/live/capture/replay/comparison preserve optional firewall capacity", 
   for (const maxFlows of [1, 2, 100000]) {
     const layout = firewallLayout(3), policy = { version: 1 as const, maxFlows };
     layout.resources[2]!.firewallCapacity = policy;
-    for (const schema of [LayoutSchema, LiveTopologySchema]) expect(schema.parse(layout).resources).toEqual(layout.resources);
+    for (const schema of [LayoutSchema, LiveTopologySchema]) expect(layout.resources).toEqual(schema.parse(layout).resources);
     expect(validateDeploymentReadiness(layout.resources, layout.connectionLines).errors).toEqual([]);
     const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, firewallWorkload, "firewall-flow-capacity"))));
     expect(input.adapterProfiles).toEqual(["firewall-flow-capacity/1"]);
