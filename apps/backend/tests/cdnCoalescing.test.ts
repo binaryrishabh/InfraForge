@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import type { AdapterProfile } from "@infraforge/contracts/run-inputs";
 import type { CdnCachePolicy } from "@infraforge/domain/resource";
 import { validateDeploymentReadiness } from "@infraforge/domain/validation";
 import { buildContractFromRunInputs } from "@infraforge/simulation/internal-product";
@@ -15,7 +16,7 @@ for (const coalesce of [true, false]) for (const ttlSeconds of [undefined, 1, 36
   const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, cdnWorkload, "cdn-coalescing"))));
   expect(input.adapterProfiles).toEqual([...(ttlSeconds === undefined ? [] : ["cdn-ttl/1"]), "cdn-coalescing/1"]);
   expect(buildContractFromRunInputs(input, 12)).not.toHaveProperty("refused");
-  for (const adapterProfiles of [undefined, [], ["cdn-ttl/1"]] as const) expect(buildContractFromRunInputs({ ...input, adapterProfiles }, 12)).toHaveProperty("refused");
+  for (const adapterProfiles of [undefined, [], ["cdn-ttl/1"]] as (AdapterProfile[] | undefined)[]) expect(buildContractFromRunInputs({ ...input, adapterProfiles }, 12)).toHaveProperty("refused");
   expect(() => readRunInputs({ ...input, adapterProfiles: ["cdn-coalescing/1", "cdn-coalescing/1"] })).toThrow();
   expect(configuration(layout.resources[0]!)).toHaveProperty("cdnCachePolicy", policy);
   expect(designDifference(cdnLayout(), layout).reconfigured[0]!.fields).toEqual([{ field: "cdnCachePolicy", earlier: null, later: policy }]);
