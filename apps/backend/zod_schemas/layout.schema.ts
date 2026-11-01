@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT_MAX_ATTEMPTS, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { objectStoragePolicyError, OBJECT_STORAGE_CAPACITY_MAX_MIB, monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT_MAX_ATTEMPTS, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -29,6 +29,7 @@ const ResourceSchema = z.object({
   y: z.number(),
   skuId: z.string().optional(),
   cachePolicy: CachePolicySchema.optional(),
+  objectStoragePolicy: z.object({ version: z.literal(1), capacityMiB: z.number().int().min(1).max(OBJECT_STORAGE_CAPACITY_MAX_MIB) }).strict().optional(),
   monitoringPolicy: z.discriminatedUnion("version", [
     z.object({ version: z.literal(1), collectionIntervalSeconds: z.number().int().min(1).max(MONITORING_CADENCE_MAX_SECONDS).optional(), exportIntervalSeconds: z.number().int().min(1).max(MONITORING_CADENCE_MAX_SECONDS).optional() }).strict(),
     z.object({ version: z.literal(2), collectionIntervalSeconds: z.number().int().min(1).max(MONITORING_CADENCE_MAX_SECONDS).optional(), exportIntervalSeconds: z.number().int().min(1).max(MONITORING_CADENCE_MAX_SECONDS).optional(), bufferSamples: z.number().int().min(1).max(MONITORING_BUFFER_MAX_SAMPLES), batchSamples: z.number().int().min(1).max(MONITORING_BUFFER_MAX_SAMPLES), exportAttempts: z.number().int().min(1).max(MONITORING_EXPORT_MAX_ATTEMPTS) }).strict(),
@@ -73,6 +74,8 @@ const ResourceSchema = z.object({
   region: z.string().optional(),
   name: z.string().optional(),
 }).catchall(z.json()).superRefine((resource, ctx) => {
+  const objectMessage = objectStoragePolicyError(resource.type, resource.objectStoragePolicy);
+  if (objectMessage) ctx.addIssue({ code: "custom", path: ["objectStoragePolicy"], message: objectMessage });
   const monitoringMessage = monitoringPolicyError(resource.type, resource.monitoringPolicy);
   if (monitoringMessage) ctx.addIssue({ code: "custom", path: ["monitoringPolicy"], message: monitoringMessage });
   const cdnMessage = cdnCachePolicyError(resource.type, resource.cdnCachePolicy);

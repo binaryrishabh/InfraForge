@@ -5,6 +5,7 @@ import { CONNECTION_RULES } from "../topology/CONNECTION_RULES.constants";
 import { computeTopology } from "../topology/computeTopology";
 import { dataKeyspaceError } from "../resource/DataKeyspace.interface";
 import { cachePolicyError } from "../resource/CachePolicy.interface";
+import { objectStoragePolicyError } from "../resource/ObjectStoragePolicy.interface";
 import { monitoringPolicyError } from "../resource/MonitoringPolicy.interface";
 import { cdnCachePolicyError } from "../resource/CdnCachePolicy.interface";
 import { vmCpuQuotaError } from "../resource/VmCpuQuota.interface";
@@ -43,6 +44,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
     const errors: string[] = [];
     const warnings: string[] = [];
     for (const resource of resources) {
+        const objectMessage = objectStoragePolicyError(resource.type, resource.objectStoragePolicy);
+        if (objectMessage) errors.push(`${resource.id}: ${objectMessage}`);
         const monitoringMessage = monitoringPolicyError(resource.type, resource.monitoringPolicy);
         if (monitoringMessage) errors.push(`${resource.id}: ${monitoringMessage}`);
         const cdnMessage = cdnCachePolicyError(resource.type, resource.cdnCachePolicy);

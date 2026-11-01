@@ -1,4 +1,4 @@
-import { RESOURCE_PORTS, type Resource } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS } from "@infraforge/domain/resource";
 import { design, prepare } from "./asyncCanvas.fixture";
 import { cdnDesign } from "./cdnTtl.fixture";
 import { createProductModel2 } from "../src/model2/product/run";

@@ -16,7 +16,10 @@ import type { ListenerSettings, FirewallSettings } from "./SecuritySettings.inte
 
 import type { AsyncQueueSettings, AsyncWorkerSettings } from "./AsyncSettings.interface";
 
+import type { ObjectStoragePolicy } from "./ObjectStoragePolicy.interface";
+
 export interface Resource {
+  objectStoragePolicy?: ObjectStoragePolicy;
   dataKeyspace?: DataKeyspace;
   cachePolicy?: CachePolicy;
   cdnCachePolicy?: CdnCachePolicy;
