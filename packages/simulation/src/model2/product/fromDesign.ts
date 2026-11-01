@@ -272,7 +272,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const singleFlight = (owner: string, cache: Resource) => cache.cachePolicy?.singleFlight === true
       ? true
       : note(`${owner}.cache.singleFlight`, false, "policy", "Plain cache-aside has no single-flight: concurrent misses independently call the database.");
-    const objects = (r: Resource, role: string) => add(r, role, { kind: "object-store", profile: "atomic-current-object/1", ...command(r, role, ["put", "get", "head", "delete"]), capacity: objectCapacity(r, role, memory.get(r.id)!, q), initial: [{ namespace: "web", key: "asset", generation: 1, bytes: q(`${r.id}.${role}.asset`, 1024, "bytes"), content: "assumed-asset" }] });
+    const objects = (r: Resource, role: string) => add(r, role, { kind: "object-store", profile: "atomic-current-object/1", ...command(r, role, ["put", "get", "head", "delete"]), capacity: objectCapacity(r, role, memory.get(r.id)!, q, ledger), initial: [{ namespace: "web", key: "asset", generation: 1, bytes: q(`${r.id}.${role}.asset`, 1024, "bytes"), content: "assumed-asset" }] });
     const commands: ProductContract["commands"] = [];
     for (const r of resources) {
       const id = r.id, n = nodes[id]!, target = outgoing(id)[0];

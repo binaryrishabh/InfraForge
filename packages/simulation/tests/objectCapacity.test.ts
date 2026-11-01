@@ -8,6 +8,7 @@ test("explicit object capacity materializes exact bytes and captures its profile
   const f = objectSetup("upload", 1);
   expect(currentAdapterProfiles(f.saved.resources)).toEqual(["object-capacity/1"]);
   expect(f.compiled.input.resources.find(r => r.id === "store")).toMatchObject({ capacity: { value: 1048576 } });
+  expect(f.contract.ledger.find(r => r.id === "store.main.capacity")).toMatchObject({ classification: "derived", formula: "1 * 1048576", provenance: [expect.objectContaining({ source: "saved-design:store.objectStoragePolicy.capacityMiB" })] });
 });
 
 test("capacity requires exactly one matching captured and owned profile", () => {

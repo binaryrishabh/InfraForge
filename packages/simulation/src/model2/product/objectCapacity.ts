@@ -6,9 +6,13 @@ import type { SystemsInput } from "../systems/contracts";
 export const OBJECT_CAPACITY_PROFILE = "object-capacity/1" as const;
 export const changedObjectCapacity = (r: Resource) => r.objectStoragePolicy !== undefined;
 export const objectCapacityChanges = (resources: readonly Resource[]) => resources.some(changedObjectCapacity);
-export function objectCapacity(r: Resource, role: string, memoryGb: number, q: (id: string, value: number, unit: "bytes", sentence?: string, authored?: boolean) => Quantity<"bytes">) {
+export function objectCapacity(r: Resource, role: string, memoryGb: number, q: (id: string, value: number, unit: "bytes", sentence?: string, authored?: boolean) => Quantity<"bytes">, ledger: ProductContract["ledger"]) {
   const p = r.objectStoragePolicy;
-  return p === undefined ? q(`${r.id}.${role}.capacity`, memoryGb * 1073741824, "bytes") : q(`${r.id}.${role}.capacity`, p.capacityMiB * 1048576, "bytes", "Saved educational modeled byte ownership limit in whole MiB converted exactly to bytes; no provider storage capacity claim.", true);
+  if (p === undefined) return q(`${r.id}.${role}.capacity`, memoryGb * 1073741824, "bytes");
+  const sentence = "Saved educational modeled byte ownership limit in whole MiB converted exactly to bytes; no provider storage capacity claim.";
+  const capacity = q(`${r.id}.${role}.capacity`, p.capacityMiB * 1048576, "bytes", sentence, true);
+  Object.assign(ledger.at(-1)!, { classification: "derived", formula: `${p.capacityMiB} * 1048576`, provenance: [{ source: `saved-design:${r.id}.objectStoragePolicy.capacityMiB`, supports: "implementation", detail: sentence }] });
+  return capacity;
 }
 export function validateObjectCapacityProfile(resources: readonly Resource[], contract: ProductContract) {
   const count = (version: string) => {
