@@ -156,8 +156,8 @@ integration("local deployment lifecycle", () => {
       await harness.sql.query('INSERT INTO "Outbox" (id, "eventType", payload) VALUES ($1, $2, $3)',
         [randomUUID(), "deployment-created", JSON.stringify(outbox.rows[0].payload)]);
 
-      const invalidLayout = { resources: [layout.resources[2]], connectionLines: [] };
-      const invalid = await harness.request("/infrastructure", { name: "Invalid isolated VM", layout: invalidLayout }, "POST", 201);
+      const invalidLayout = { resources: [layout.resources[2], layout.resources[3]], connectionLines: [] };
+      const invalid = await harness.request("/infrastructure", { name: "Invalid isolated VMs", layout: invalidLayout }, "POST", 201);
       infrastructureIds.push(invalid.createdInfrastructure.id);
       const invalidDeployment = await harness.request("/deployments", { infrastructureId: invalid.createdInfrastructure.id }, "POST", 201);
       deploymentIds.push(invalidDeployment.createdDeployment.id);
