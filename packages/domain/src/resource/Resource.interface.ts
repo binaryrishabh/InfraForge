@@ -18,7 +18,10 @@ import type { AsyncQueueSettings, AsyncWorkerSettings } from "./AsyncSettings.in
 
 import type { ObjectStoragePolicy } from "./ObjectStoragePolicy.interface";
 
+import type { FirewallCapacity } from "./FirewallCapacity.interface";
+
 export interface Resource {
+  firewallCapacity?: FirewallCapacity;
   objectStoragePolicy?: ObjectStoragePolicy;
   dataKeyspace?: DataKeyspace;
   cachePolicy?: CachePolicy;

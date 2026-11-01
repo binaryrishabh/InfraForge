@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { validateConnection } from "@infraforge/domain/validation";
-import { RESOURCE_PORTS, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbHealthError, lbAdmissionError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, type Resource, type ResourceType } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbHealthError, lbAdmissionError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, type Resource, type ResourceType } from "@infraforge/domain/resource";
 import { useCanvasStore } from "./store/canvasStore";
 import { positionIsOccupied } from "./utils/cardFootprint";
 import { NODE_CARD_WIDTH, DESIGN_CARD_HEIGHT, GRID_SIZE } from "./utils/nodeGeometry";
@@ -114,7 +114,7 @@ export function deleteConnection(connectionId: string) {
   toast("Connection removed", { action: { label: "Undo", onClick: undo }, duration: 5000 });
 }
 
-const TRACKED = ["name", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "dbConcurrency", "vmExecution", "vmCpuQuota", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts"] as const;
+const TRACKED = ["name", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "dbConcurrency", "vmExecution", "vmCpuQuota", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts"] as const;
 export function updateResource(resourceId: string, patch: Partial<Resource>) {
   const store = useCanvasStore.getState();
   if (!editable(store)) return;
@@ -126,6 +126,7 @@ export function updateResource(resourceId: string, patch: Partial<Resource>) {
   if (vmCpuQuotaError(candidate.type, candidate.vmCpuQuota, candidate.asyncWorker?.enabled)) return;
   if (vmExecutionError(candidate.type, candidate.vmExecution, candidate.asyncWorker?.enabled)) return;
   if (dbConcurrencyError(candidate.type, candidate.dbConcurrency)) return;
+  if (firewallCapacityError(candidate.type, candidate.firewallCapacity)) return;
   if (objectStoragePolicyError(candidate.type, candidate.objectStoragePolicy)) return;
   if (monitoringPolicyError(candidate.type, candidate.monitoringPolicy)) return;
   if (cdnCachePolicyError(candidate.type, candidate.cdnCachePolicy)) return;

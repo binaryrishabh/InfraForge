@@ -5,6 +5,7 @@ import { CONNECTION_RULES } from "../topology/CONNECTION_RULES.constants";
 import { computeTopology } from "../topology/computeTopology";
 import { dataKeyspaceError } from "../resource/DataKeyspace.interface";
 import { cachePolicyError } from "../resource/CachePolicy.interface";
+import { firewallCapacityError } from "../resource/FirewallCapacity.interface";
 import { objectStoragePolicyError } from "../resource/ObjectStoragePolicy.interface";
 import { monitoringPolicyError } from "../resource/MonitoringPolicy.interface";
 import { cdnCachePolicyError } from "../resource/CdnCachePolicy.interface";
@@ -44,6 +45,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
     const errors: string[] = [];
     const warnings: string[] = [];
     for (const resource of resources) {
+        const firewallMessage = firewallCapacityError(resource.type, resource.firewallCapacity);
+        if (firewallMessage) errors.push(`${resource.id}: ${firewallMessage}`);
         const objectMessage = objectStoragePolicyError(resource.type, resource.objectStoragePolicy);
         if (objectMessage) errors.push(`${resource.id}: ${objectMessage}`);
         const monitoringMessage = monitoringPolicyError(resource.type, resource.monitoringPolicy);
