@@ -5,6 +5,7 @@ import { CONNECTION_RULES } from "../topology/CONNECTION_RULES.constants";
 import { computeTopology } from "../topology/computeTopology";
 import { dataKeyspaceError } from "../resource/DataKeyspace.interface";
 import { cachePolicyError } from "../resource/CachePolicy.interface";
+import { dbConcurrencyError } from "../resource/DbConcurrency.interface";
 
 // Function to validete the above defined rules
 export function validateConnection(sourceType: ResourceType, targetType: ResourceType, context?: "draw" | { source: Resource; target?: Resource; connectionId: string }): { valid: boolean, message: string } {
@@ -40,6 +41,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
         if (message) errors.push(`${resource.id}: ${message}`);
         const cacheMessage = cachePolicyError(resource.type, resource.cachePolicy);
         if (cacheMessage) errors.push(`${resource.id}: ${cacheMessage}`);
+        const concurrencyMessage = dbConcurrencyError(resource.type, resource.dbConcurrency);
+        if (concurrencyMessage) errors.push(`${resource.id}: ${concurrencyMessage}`);
     }
     for (const line of connections) {
         const source = resources.find(resource => resource.id === line.sourceId);

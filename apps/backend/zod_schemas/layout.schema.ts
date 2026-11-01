@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -29,6 +29,7 @@ const ResourceSchema = z.object({
   y: z.number(),
   skuId: z.string().optional(),
   cachePolicy: CachePolicySchema.optional(),
+  dbConcurrency: z.object({ version: z.literal(1), activeQueries: z.number().int().min(1).max(DB_ACTIVE_QUERIES_MAX).optional(), queuedQueries: z.number().int().min(0).max(DB_QUEUED_QUERIES_MAX).optional() }).strict().optional(),
   dataKeyspace: z.object({ version: z.literal(1), count: z.number().int().min(1).max(DATA_KEYSPACE_MAX), accessPattern: z.enum(["uniform", "hot-key"]).optional() }).strict().optional(),
   autoscaling: z.object({
     enabled: z.boolean().optional(),
@@ -60,6 +61,8 @@ const ResourceSchema = z.object({
   region: z.string().optional(),
   name: z.string().optional(),
 }).catchall(z.json()).superRefine((resource, ctx) => {
+  const dbMessage = dbConcurrencyError(resource.type, resource.dbConcurrency);
+  if (dbMessage) ctx.addIssue({ code: "custom", path: ["dbConcurrency"], message: dbMessage });
   const cacheMessage = cachePolicyError(resource.type, resource.cachePolicy);
   if (cacheMessage) ctx.addIssue({ code: "custom", path: ["cachePolicy"], message: cacheMessage });
   const keyspaceMessage = dataKeyspaceError(resource.type, resource.dataKeyspace);
