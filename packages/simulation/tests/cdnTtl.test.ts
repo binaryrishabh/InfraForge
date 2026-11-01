@@ -34,9 +34,35 @@ test("compiler refuses saved TTL versus materialized config and version mismatch
   const f = cdnSetup("repeated", 1);
   const config = f.contract.nodes.cdn!.resources[0]!.config; if (config.kind !== "cdn") throw Error("Expected CDN");
   config.ttl = { ...config.ttl, value: 60_000_000 };
-  expect(compileProduct(f.saved, f.contract).ok).toBe(false);
+  const row = f.contract.ledger.find(r => r.id === "cdn.ttl")!;
+  row.quantity = { ...config.ttl }; row.formula = "60000000";
+  const mismatched = compileProduct(f.saved, f.contract);
+  expect(mismatched.ok).toBe(false);
+  if (!mismatched.ok) expect(JSON.stringify(mismatched.diagnostics)).toContain("CDN TTL must match saved intent");
   const v = cdnSetup("repeated", 1); v.contract.version = v.contract.version.replace("/cdn-ttl/1", "");
   expect(compileProduct(v.saved, v.contract).ok).toBe(false);
+});
+
+test("expiry alone makes the object cold; the next request fetches it while a longer TTL stays warm", () => {
+  const short = cdnSetup("repeated", 1), long = cdnSetup("repeated", 60);
+  for (const f of [short, long]) f.runtime.advanceTo(1100000);
+  const cold = short.runtime.evidence().systems.cdns[0]!;
+  expect(cold).toMatchObject({ hits: 2, fills: 1, originRequests: 1, expirations: 1, entries: [] });
+  for (const f of [short, long]) f.runtime.advanceTo(1600000);
+  expect(short.runtime.evidence().systems.cdns[0]!).toMatchObject({ fills: 2, originRequests: 2, hits: 2 });
+  expect(long.runtime.evidence().systems.cdns[0]!).toMatchObject({ fills: 1, originRequests: 1, hits: 3 });
+  expect(short.runtime.evidence().resources.find(r => r.id === "store")!.completed).toBe(2);
+  expect(long.runtime.evidence().resources.find(r => r.id === "store")!.completed).toBe(1);
+});
+
+test("adapter and compiler independently refuse malformed and wrong-owner CDN policies", () => {
+  const valid = cdnSetup("repeated", 1);
+  for (const value of [null, {}, { version: 1 }, { version: 2, ttlSeconds: 60 }, { version: 1, ttlSeconds: 60, coalesce: true }, ...[0, 3601, 1.5, NaN, Infinity, "60"].map(ttlSeconds => ({ version: 1, ttlSeconds }))]) {
+    const d = cdnDesign(); Object.assign(d.resources[0]!, { cdnCachePolicy: value });
+    expect(contractFromDesign(d)).toHaveProperty("refused"); expect(compileProduct(d, valid.contract).ok).toBe(false);
+  }
+  const wrong = cdnDesign(); Object.assign(wrong.resources[1]!, { cdnCachePolicy: { version: 1, ttlSeconds: 1 } });
+  expect(contractFromDesign(wrong)).toHaveProperty("refused"); expect(compileProduct(wrong, valid.contract).ok).toBe(false);
 });
 
 for (const ttl of [undefined, 1, 60, 3600]) test(`one-shot and stepped evidence identical: TTL ${ttl}`, () => {

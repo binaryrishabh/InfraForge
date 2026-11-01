@@ -17,6 +17,11 @@ for (const ttl of [undefined, 1, 60, 3600]) test(`strict TTL capture, replay and
   expect(configuration(layout.resources[0]!)).toEqual(expect.objectContaining(ttl === undefined ? {} : { cdnCachePolicy: { version: 1, ttlSeconds: ttl } }));
   if (ttl === undefined) expect(configuration(layout.resources[0]!)).not.toHaveProperty("cdnCachePolicy");
   else for (const adapterProfiles of [undefined, []]) expect(buildContractFromRunInputs({ ...input, adapterProfiles }, 12)).toHaveProperty("refused");
+  if (ttl === undefined) {
+    const old = { ...input }; delete old.adapterProfiles;
+    expect(readRunInputs(old)).not.toHaveProperty("adapterProfiles");
+    expect(buildContractFromRunInputs(old, 12)).toEqual(buildContractFromRunInputs(input, 12));
+  }
 });
 
 for (const policy of [null, [], 60, {}, { version: 1 }, { version: 2, ttlSeconds: 60 }, ...[0, -1, 3601, 1.5, "60", null, NaN, Infinity].map(ttlSeconds => ({ version: 1, ttlSeconds })), { version: 1, ttlSeconds: 60, coalesce: true }, { version: 1, ttlSeconds: 60, maxWaiters: 256 }]) test(`bad TTL intent refuses at every boundary: ${JSON.stringify(policy)}`, () => {
