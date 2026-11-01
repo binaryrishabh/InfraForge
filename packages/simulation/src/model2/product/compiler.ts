@@ -20,6 +20,7 @@ import { WORKLOAD_LIMITS } from "../workload/policy";
 import { numericOrigins } from "./origins";
 import { dataKeys, hotKey, HOT_KEY_PROFILE, multiKey, KEYSPACE_PROFILE, validateDatabaseKeyspace } from "./keyspace";
 import { CACHE_POLICY_PROFILE, cachePolicyChanges, validateCachePolicyBindings } from "./cachePolicy";
+import { CACHE_CAPACITY_PROFILE, cacheCapacityChanges, validateCacheCapacityBindings } from "./cacheCapacity";
 // Model 1 saves a pool policy on its LB; keep fixed siblings and expand one named VM.
 export function savedPoolPolicies(design: SavedProductDesign): SavedProductDesign {
   const resources = design.resources.map((r) => ({ ...r }));
@@ -42,6 +43,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (multiKey(design.resources) && !contract.version.includes(`/${KEYSPACE_PROFILE}`)) error("KEYSPACE_VERSION", "version", "Multi-key intent requires its explicit data-keyspace/1 contract version");
     if (hotKey(design.resources) !== contract.version.includes(`/${HOT_KEY_PROFILE}`)) error("HOT_KEY_VERSION", "version", "Hot-key intent requires its explicit data-hot-key/1 contract version and matching saved intent");
     if (cachePolicyChanges(design.resources) !== contract.version.includes(`/${CACHE_POLICY_PROFILE}`)) error("CACHE_POLICY_VERSION", "version", "Changed cache intent requires its explicit data-cache-policy/1 contract version and matching saved intent");
+    if (cacheCapacityChanges(design.resources) !== contract.version.includes(`/${CACHE_CAPACITY_PROFILE}`)) error("CACHE_CAPACITY_VERSION", "version", "Logical cache capacity requires its explicit data-cache-capacity/1 contract version and matching saved intent");
     if (contract.applicationFlowProfile !== undefined && !["application-flow/1", "application-flow/2", "application-flow/3"].includes(contract.applicationFlowProfile)) error("UNKNOWN_FLOW_PROFILE", "applicationFlowProfile", "Unsupported flow profile");
     if ((design.resources.some(r => r.applicationFlow?.schema === "application-flow/3") ? "application-flow/3" : design.resources.some(r => r.applicationFlow?.schema === "application-flow/2") ? "application-flow/2" : design.resources.some(r => r.applicationFlow) ? "application-flow/1" : undefined) !== contract.applicationFlowProfile) error("FLOW_PROFILE", "applicationFlowProfile", "Saved flow requires the application-flow/1 adapter");
     if (contract.applicationFlowProfile && !contract.version.endsWith(`/${contract.applicationFlowProfile}`)) error("FLOW_VERSION", "version", "Flow semantic version must identify application-flow/1");
@@ -299,6 +301,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     semantic.numericOrigins = numericOrigins(runtime, pools, contract, crashes);
     runtime.ledger.sort((a, b) => a.id < b.id ? -1 : 1);
     validateCachePolicyBindings(design.resources, runtime);
+    validateCacheCapacityBindings(design.resources, runtime);
     phase = "runtime-contract"; validateMaterializedSemantics(runtime, semantic.edges, new Set(design.resources.filter(r => r.listenerSettings !== undefined).flatMap(r => [...roleIds.entries()].filter(([key]) => key.split("/")[0]!.split("#")[0] === r.id).map(([,id]) => id)))); validateSystems(runtime);
     return { ok: true, value: canonical({ schema: "infraforge-compiled-product/1", semantic, input: runtime, pools, crashes, ...(interventionReceipts.length ? {interventionReceipts} : {}) }), diagnostics };
   } catch (cause) {

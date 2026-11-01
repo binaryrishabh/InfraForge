@@ -5,7 +5,7 @@ export { DeploymentChaosNames, type DeploymentChaosNamesType } from "./Deploymen
 export { ResourceHealth, type ResourceHealthType } from "./ResourceHealth.enum";
 export type { Resource } from "./Resource.interface";
 export { DATA_KEYSPACE_MAX, dataKeyspaceError, type DataKeyspace } from "./DataKeyspace.interface";
-export { CACHE_TTL_MAX_SECONDS, cachePolicyError, type CachePolicy } from "./CachePolicy.interface";
+export { CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, type CachePolicy } from "./CachePolicy.interface";
 export { securitySettingsError, SECURITY_SETTINGS_LIMITS, type ListenerSettings, type FirewallSettings } from "./SecuritySettings.interface";
 export { RETRY_GROUPS, DEFAULT_RETRY_SETTINGS, retrySettingsError, type RetrySettings, type RetryGroup } from "./RetrySettings.interface";
 export type { ConnectionLine } from "./ConnectionLine.interface";
