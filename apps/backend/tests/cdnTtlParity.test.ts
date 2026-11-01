@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { createModel2Run } from "@infraforge/simulation/model2-run";
 import { buildContractFromRunInputs } from "@infraforge/simulation/internal-product";
 import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
@@ -26,7 +27,7 @@ test("browser-target CDN TTL contracts, evidence, faults and live views equal se
       for (let second = 1; second <= 12; second++) {
         browser.advance(); server.advance();
         if (second === 1 && scenario !== "healthy") {
-          const action = { kind: "chaos" as const, parameters: { type: "crash" as const, resourceId: scenario === "outage" ? "store" : "cdn" } };
+          const action = { kind: "chaos" as const, parameters: { type: DeploymentChaosNames.Crash, resourceId: scenario === "outage" ? "store" : "cdn" } };
           expect(browser.apply(action)).toEqual(server.apply(action));
           while (browser.catchingUp) browser.catchUp(10);
           while (server.catchingUp) server.catchUp(10);

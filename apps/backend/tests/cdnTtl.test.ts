@@ -9,8 +9,8 @@ import { configuration, designDifference } from "../comparison/design";
 
 for (const ttl of [undefined, 1, 60, 3600]) test(`strict TTL capture, replay and comparison: ${ttl}`, () => {
   const layout = cdnLayout(ttl);
-  expect(LayoutSchema.parse(layout).resources).toEqual(layout.resources);
-  expect(LiveTopologySchema.parse(layout).resources).toEqual(layout.resources);
+  expect(layout.resources).toEqual(LayoutSchema.parse(layout).resources);
+  expect(layout.resources).toEqual(LiveTopologySchema.parse(layout).resources);
   const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, cdnWorkload, "cdn-ttl"))));
   expect(input.adapterProfiles).toEqual(ttl === undefined ? [] : ["cdn-ttl/1"]);
   expect(buildContractFromRunInputs(input, 12)).not.toHaveProperty("refused");
