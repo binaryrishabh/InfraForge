@@ -1,4 +1,4 @@
-import { RESOURCE_PORTS, type Resource } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, type Resource, type MonitoringPolicy } from "@infraforge/domain/resource";
 import type { SavedProductDesign } from "../src/model2/product/contracts";
 import { prepare } from "./asyncCanvas.fixture";
 import { compileProduct } from "../src/model2/product/compiler";
@@ -8,7 +8,7 @@ import { quantities } from "./workloadFixture";
 
 export const monitoringModes = ["vm", "db", "multiple", "cdn-dns", "target-outage", "backend-outage"] as const;
 export type MonitoringMode = typeof monitoringModes[number] | "agent-outage";
-export function monitoringDesign(mode: MonitoringMode = "vm", policy?: { version: 1; collectionIntervalSeconds?: number; exportIntervalSeconds?: number }): SavedProductDesign {
+export function monitoringDesign(mode: MonitoringMode = "vm", policy?: MonitoringPolicy): SavedProductDesign {
   const edge = mode === "cdn-dns";
   const types: Record<string, Resource["type"]> = edge ? { cdn: "CDN", store: "Object Storage", dns: "DNS", monitor: "Monitoring Agent" } : { vm: "Virtual Machine", ...(mode === "db" || mode === "multiple" ? { db: "Database" as const } : {}), monitor: "Monitoring Agent" };
   const targets = edge ? ["cdn", "dns"] : mode === "db" ? ["db"] : mode === "multiple" ? ["vm", "db"] : ["vm"];
@@ -17,7 +17,7 @@ export function monitoringDesign(mode: MonitoringMode = "vm", policy?: { version
   if (policy) Object.assign(saved.resources.find(r => r.id === "monitor")!, { monitoringPolicy: policy });
   return saved;
 }
-export function monitoringSetup(mode: MonitoringMode = "vm", policy?: { version: 1; collectionIntervalSeconds?: number; exportIntervalSeconds?: number }) {
+export function monitoringSetup(mode: MonitoringMode = "vm", policy?: MonitoringPolicy) {
   const saved = monitoringDesign(mode, policy), adapted = prepare(saved), contract = withRunLength(adapted.contract, 65, "monitor-cadence-proof");
   if (mode.endsWith("outage")) {
     const q = quantities();

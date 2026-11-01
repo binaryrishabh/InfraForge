@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { monitoringPolicyError, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT_MAX_ATTEMPTS, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -29,7 +29,10 @@ const ResourceSchema = z.object({
   y: z.number(),
   skuId: z.string().optional(),
   cachePolicy: CachePolicySchema.optional(),
-  monitoringPolicy: z.object({ version: z.literal(1), collectionIntervalSeconds: z.number().int().min(1).max(MONITORING_CADENCE_MAX_SECONDS).optional(), exportIntervalSeconds: z.number().int().min(1).max(MONITORING_CADENCE_MAX_SECONDS).optional() }).strict().optional(),
+  monitoringPolicy: z.discriminatedUnion("version", [
+    z.object({ version: z.literal(1), collectionIntervalSeconds: z.number().int().min(1).max(MONITORING_CADENCE_MAX_SECONDS).optional(), exportIntervalSeconds: z.number().int().min(1).max(MONITORING_CADENCE_MAX_SECONDS).optional() }).strict(),
+    z.object({ version: z.literal(2), collectionIntervalSeconds: z.number().int().min(1).max(MONITORING_CADENCE_MAX_SECONDS).optional(), exportIntervalSeconds: z.number().int().min(1).max(MONITORING_CADENCE_MAX_SECONDS).optional(), bufferSamples: z.number().int().min(1).max(MONITORING_BUFFER_MAX_SAMPLES), batchSamples: z.number().int().min(1).max(MONITORING_BUFFER_MAX_SAMPLES), exportAttempts: z.number().int().min(1).max(MONITORING_EXPORT_MAX_ATTEMPTS) }).strict(),
+  ]).optional(),
   cdnCachePolicy: z.union([
     z.object({ version: z.literal(1), ttlSeconds: z.number().int().min(1).max(CDN_TTL_MAX_SECONDS) }).strict(),
     z.object({ version: z.literal(2), ttlSeconds: z.number().int().min(1).max(CDN_TTL_MAX_SECONDS).optional(), coalesce: z.boolean(), maxWaiters: z.number().int().min(1).max(CDN_MAX_WAITERS).optional() }).strict(),

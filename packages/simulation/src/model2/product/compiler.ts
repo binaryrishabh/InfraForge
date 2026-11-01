@@ -19,6 +19,7 @@ import { capabilityFacts } from "./capabilities";
 import { WORKLOAD_LIMITS } from "../workload/policy";
 import { numericOrigins } from "./origins";
 import { dataKeys, hotKey, HOT_KEY_PROFILE, multiKey, KEYSPACE_PROFILE, validateDatabaseKeyspace } from "./keyspace";
+import { validateMonitoringBufferProfile, validateMonitoringBufferBindings } from "./monitoringBuffer";
 import { validateMonitoringCadenceProfile, validateMonitoringCadenceBindings } from "./monitoringCadence";
 import { validateCdnCoalescingProfile, validateCdnCoalescingBindings } from "./cdnCoalescing";
 import { CDN_TTL_PROFILE, cdnTtlChanges, validateCdnTtlBindings } from "./cdnTtl";
@@ -51,6 +52,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     boundedProduct(design); boundedProduct(contract);
     design = savedPoolPolicies(design);
     validateMonitoringCadenceProfile(design.resources, contract);
+    validateMonitoringBufferProfile(design.resources, contract);
     validateCdnCoalescingProfile(design.resources, contract);
     if (cdnTtlChanges(design.resources) !== contract.version.includes(`/${CDN_TTL_PROFILE}`)) error("CDN_TTL_VERSION", "version", "CDN TTL requires its explicit cdn-ttl/1 contract version and matching saved intent");
     if (multiKey(design.resources) && !contract.version.includes(`/${KEYSPACE_PROFILE}`)) error("KEYSPACE_VERSION", "version", "Multi-key intent requires its explicit data-keyspace/1 contract version");
@@ -337,6 +339,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     runtime.ledger.sort((a, b) => a.id < b.id ? -1 : 1);
     validateCdnTtlBindings(design.resources, runtime);
     validateMonitoringCadenceBindings(design.resources, runtime);
+    validateMonitoringBufferBindings(design.resources, runtime);
     validateCdnCoalescingBindings(design.resources, runtime);
     validateCachePolicyBindings(design.resources, runtime);
     validateCacheCapacityBindings(design.resources, runtime);

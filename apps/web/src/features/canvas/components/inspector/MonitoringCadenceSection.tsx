@@ -9,9 +9,9 @@ export function MonitoringCadenceSection({ resource, disabled }: { resource: Res
       <Field key={field} label={label} hint={help}>{({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} type="number" min={1} max={MONITORING_CADENCE_MAX_SECONDS} step={1}
         value={resource.monitoringPolicy?.[field] ?? ""} placeholder="10" disabled={disabled}
         onChange={event => {
-          const policy = { ...resource.monitoringPolicy, version: 1 as const };
+          const policy = resource.monitoringPolicy ? { ...resource.monitoringPolicy } : { version: 1 as const };
           if (event.target.value === "") delete policy[field]; else policy[field] = Number(event.target.value);
-          updateResource(resource.id, { monitoringPolicy: policy.collectionIntervalSeconds === undefined && policy.exportIntervalSeconds === undefined ? undefined : policy });
+          updateResource(resource.id, { monitoringPolicy: policy.version === 1 && policy.collectionIntervalSeconds === undefined && policy.exportIntervalSeconds === undefined ? undefined : policy });
         }} />}</Field>)}
   </InspectorSection>;
 }
