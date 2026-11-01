@@ -1,6 +1,7 @@
 import type { ApplicationFlow } from "./ApplicationFlow.interface";
 import type { DataKeyspace } from "./DataKeyspace.interface";
 import type { CachePolicy } from "./CachePolicy.interface";
+import type { MonitoringPolicy } from "./MonitoringPolicy.interface";
 import type { CdnCachePolicy } from "./CdnCachePolicy.interface";
 import type { VmCpuQuota } from "./VmCpuQuota.interface";
 import type { VmExecution } from "./VmExecution.interface";
@@ -19,6 +20,7 @@ export interface Resource {
   dataKeyspace?: DataKeyspace;
   cachePolicy?: CachePolicy;
   cdnCachePolicy?: CdnCachePolicy;
+  monitoringPolicy?: MonitoringPolicy;
   dbConcurrency?: DbConcurrency;
   vmExecution?: VmExecution;
   vmCpuQuota?: VmCpuQuota;
