@@ -55,7 +55,7 @@ test("disabled queues retain capacity intent for re-enable and keep their existi
   saved.resources.find(r => r.id === "queue")!.asyncQueue = { enabled: false, capacityMessages: 3 };
   const disabled = prepare(saved), broker = disabled.compiled.input.resources.find(r => r.kind === "delivery-queue")!;
   if (broker.kind !== "delivery-queue") throw Error("Missing queue");
-  expect(broker).toEqual(old.compiled.input.resources.find(r => r.kind === "delivery-queue"));
+  expect(broker).toEqual(old.compiled.input.resources.find(r => r.kind === "delivery-queue")!);
   expect(saved.resources.find(r => r.id === "queue")!.asyncQueue!.capacityMessages).toBe(3);
 });
 
