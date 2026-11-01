@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdir, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import type { Resource, LbHealth } from "@infraforge/domain/resource";
+import { DeploymentChaosNames, type Resource, type LbHealth } from "@infraforge/domain/resource";
 import { createModel2Run } from "@infraforge/simulation/model2-run";
 import { buildContractFromRunInputs } from "@infraforge/simulation/internal-product";
 import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
@@ -39,7 +39,7 @@ test("browser-target and server replay agree each second through health removal,
       for (let second = 1; second <= 46; second++) {
         browser.advance(); server.advance();
         if (second === 2) {
-          const action = { kind: "chaos" as const, parameters: { type: "crash" as const, resourceId: "app" } };
+          const action = { kind: "chaos" as const, parameters: { type: DeploymentChaosNames.Crash, resourceId: "app" } };
           expect(browser.apply(action)).toEqual(server.apply(action));
           browser.catchUp(1000); server.catchUp(1000);
           expect(browser.catchingUp).toBe(false); expect(server.catchingUp).toBe(false);
