@@ -6,6 +6,7 @@ export { ResourceHealth, type ResourceHealthType } from "./ResourceHealth.enum";
 export type { Resource } from "./Resource.interface";
 export { DATA_KEYSPACE_MAX, dataKeyspaceError, type DataKeyspace } from "./DataKeyspace.interface";
 export { CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, type CachePolicy } from "./CachePolicy.interface";
+export { VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, type VmExecution } from "./VmExecution.interface";
 export { DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, dbConcurrencyError, type DbConcurrency } from "./DbConcurrency.interface";
 export { LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, lbAdmissionError, type LbAdmission } from "./LbAdmission.interface";
 export { LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbHealthError, type LbHealth } from "./LbHealth.interface";
