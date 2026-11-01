@@ -45,3 +45,12 @@ test("compiler independently refuses policy, profile and materialized intent mis
     expect(contractFromDesign(d)).toHaveProperty("refused"); expect(compileProduct(d, f.contract).ok).toBe(false);
   }
 });
+
+test("compiler refuses missing, duplicate or unsupported owned coalescing profiles", () => {
+  for (const version of ["canvas-assumptions/2", "canvas-assumptions/2/cdn-coalescing/1/cdn-coalescing/1", "canvas-assumptions/2/cdn-coalescing/2", "canvas-assumptions/2/cdn-coalescing/10"]) {
+    const f = coalescingConfig(); f.contract.nodes.cdn!.profileVersion = version;
+    expect(compileProduct(f.saved, f.contract).ok).toBe(false);
+  }
+  const f = coalescingConfig(); f.contract.version = "canvas-assumptions/2/cdn-coalescing/10";
+  expect(compileProduct(f.saved, f.contract).ok).toBe(false);
+});

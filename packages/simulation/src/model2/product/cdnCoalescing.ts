@@ -13,7 +13,11 @@ export function cdnCoalescing(r: Resource, q: (id: string, value: number, unit: 
     : q(`${r.id}.waiters`, 256, "count") };
 }
 export function validateCdnCoalescingProfile(resources: readonly Resource[], contract: ProductContract) {
-  const count = (version: string) => version.split(`/${CDN_COALESCING_PROFILE}`).length - 1;
+  const count = (version: string) => {
+    const profiles = version.match(/\/cdn-coalescing\/[^/]+/g) ?? [];
+    if (profiles.some(p => p !== `/${CDN_COALESCING_PROFILE}`)) throw Error("Unsupported CDN coalescing profile");
+    return profiles.length;
+  };
   if (count(contract.version) !== Number(cdnCoalescingChanges(resources))) throw Error("CDN coalescing requires its explicit cdn-coalescing/1 contract version and matching saved intent");
   for (const r of resources) if (count(contract.nodes[r.id]?.profileVersion ?? "") !== Number(changedCdnCoalescing(r))) throw Error("CDN coalescing requires its owned profile and matching saved intent");
 }

@@ -14,7 +14,7 @@ const cdn: Resource = { id: "cdn", type: "CDN", x: 0, y: 0 };
 afterEach(() => { useCanvasStore.getState().clearCanvas(); useAuthStore.setState({ user: null, status: "guest" }); });
 function edit(value: string) {
   const tree = CdnTtlSection({ resource: useCanvasStore.getState().resources[0]!, disabled: false });
-  const field = tree.props.children as ReactElement<{ children: (ids: { id: string }) => ReactElement<{ onChange: (e: { target: { value: string } }) => void }> }>;
+  const field = tree.props.children[0] as ReactElement<{ children: (ids: { id: string }) => ReactElement<{ onChange: (e: { target: { value: string } }) => void }> }>;
   field.props.children({ id: "ttl-test" }).props.onChange({ target: { value } });
 }
 
