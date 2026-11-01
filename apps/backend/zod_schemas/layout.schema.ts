@@ -48,7 +48,7 @@ const ResourceSchema = z.object({
   }).strict()).max(32) }).strict().optional(),
   applicationFlow: ApplicationFlowSchema.optional(),
   asyncQueue: z.object({ enabled: z.boolean(), visibilityTimeoutSeconds: z.number().optional(), maxReceives: z.number().optional(), retentionSeconds: z.number().optional(), deadLetterCapacity: z.number().optional(), capacityMessages: z.number().int().min(1).max(100000).optional() }).strict().optional(),
-  asyncWorker: z.object({ enabled: z.boolean(), concurrency: z.number().optional(), prefetch: z.number().optional(), cpuMsPerJob: z.number().optional(), badJobPercent: z.number().optional() }).strict().optional(),
+  asyncWorker: z.object({ enabled: z.boolean(), concurrency: z.number().optional(), prefetch: z.number().optional(), cpuMsPerJob: z.number().optional(), badJobPercent: z.number().optional(), idempotentResults: z.boolean().optional() }).strict().optional(),
   circuitBreaker: z.object({ enabled: z.boolean(), failureThreshold: z.number().optional(), cooldownMs: z.number().optional() }).strict().optional(),
   retry: z.object({
     enabled: z.boolean(),
@@ -113,9 +113,10 @@ export const LiveTopologySchema = z.object({
   connectionLines: z.array(ConnectionSchema),
 }).superRefine(validateSecurityScopes);
 
-function validateSecurityScopes(layout: { resources: z.infer<typeof ResourceSchema>[] }, ctx: z.RefinementCtx) {
+function validateSecurityScopes(layout: { resources: z.infer<typeof ResourceSchema>[]; connectionLines: z.infer<typeof ConnectionSchema>[] }, ctx: z.RefinementCtx) {
   for (const [i, r] of layout.resources.entries()) {
     const message = securitySettingsError(r.type, r.listenerSettings, r.firewallSettings, layout.resources);
     if (message) ctx.addIssue({ code: "custom", path: ["resources", i, "security"], message });
+    if (r.asyncWorker?.enabled && r.asyncWorker.idempotentResults === true && layout.connectionLines.some(e => e.sourceId === r.id && layout.resources.find(t => t.id === e.targetId)?.type === "Database")) ctx.addIssue({ code: "custom", path: ["resources", i, "asyncWorker", "idempotentResults"], message: "Idempotent result writes protect Object Storage only; disconnect the worker database dependency." });
   }
 }

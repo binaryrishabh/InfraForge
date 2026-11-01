@@ -25,6 +25,9 @@ export function AsyncSection({ resource, disabled }: { resource: Resource; disab
       {fields.map(([key, label, min, max]) => <Field key={key} label={label}>{({ id }) => <Input id={id} type="number" min={min} max={max} step={1} disabled={disabled}
         value={(policy as unknown as Record<string, number>)[key] ?? ""} placeholder={key === "capacityMessages" ? "Default (1000 × modeled queue cores)" : "Unknown"}
         onChange={(e) => commit({ [key]: e.target.value === "" ? undefined : Number(e.target.value) })} />}</Field>)}
+      {!queue && <Switch label="Idempotent result writes" checked={resource.asyncWorker?.idempotentResults === true} disabled={disabled}
+        onChange={(idempotentResults) => commit({ idempotentResults })}
+        description="When enabled, if the same message is processed again, the worker avoids writing the same result object twice." />}
       {queue && <p className="text-xs text-ink-3">Maximum live messages this modeled queue can own at once. When it is full, new publishes are refused. This is an educational message limit, not a cloud-provider storage guarantee.</p>}
       {error && <p role="alert">{error}</p>}
       <p className="text-xs text-ink-3">A job that outlives its visibility timeout can be delivered again and may write duplicate results. Bad uploads read and spend CPU on every attempt, then immediately nack; their redelivery does not wait for lease expiry. The share uses the run seed and upload identity, so a finite run may differ from the chosen percentage. Dead-lettered jobs remain in a bounded internal list; when full, overflow is discarded and counted. Worker scaling and redrive are unavailable.</p>

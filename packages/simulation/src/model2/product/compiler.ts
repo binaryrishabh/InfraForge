@@ -21,6 +21,7 @@ import { numericOrigins } from "./origins";
 import { dataKeys, hotKey, HOT_KEY_PROFILE, multiKey, KEYSPACE_PROFILE, validateDatabaseKeyspace } from "./keyspace";
 import { CACHE_POLICY_PROFILE, cachePolicyChanges, validateCachePolicyBindings } from "./cachePolicy";
 import { CACHE_CAPACITY_PROFILE, cacheCapacityChanges, validateCacheCapacityBindings } from "./cacheCapacity";
+import { QUEUE_IDEMPOTENCY_PROFILE, queueIdempotencyChanges, resultWritePolicy, validateQueueIdempotencyBindings } from "./queueIdempotency";
 import { QUEUE_CAPACITY_PROFILE, queueCapacityChanges, validateQueueCapacityBindings } from "./queueCapacity";
 import { VM_CPU_QUOTA_PROFILE, vmCpuQuotaChanges, validateVmCpuQuotaBindings } from "./vmCpuQuota";
 import { VM_EXECUTION_PROFILE, vmExecutionChanges, validateVmExecutionBindings } from "./vmExecution";
@@ -50,6 +51,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (hotKey(design.resources) !== contract.version.includes(`/${HOT_KEY_PROFILE}`)) error("HOT_KEY_VERSION", "version", "Hot-key intent requires its explicit data-hot-key/1 contract version and matching saved intent");
     if (cachePolicyChanges(design.resources) !== contract.version.includes(`/${CACHE_POLICY_PROFILE}`)) error("CACHE_POLICY_VERSION", "version", "Changed cache intent requires its explicit data-cache-policy/1 contract version and matching saved intent");
     if (cacheCapacityChanges(design.resources) !== contract.version.includes(`/${CACHE_CAPACITY_PROFILE}`)) error("CACHE_CAPACITY_VERSION", "version", "Logical cache capacity requires its explicit data-cache-capacity/1 contract version and matching saved intent");
+    if (queueIdempotencyChanges(design.resources) !== contract.version.includes(`/${QUEUE_IDEMPOTENCY_PROFILE}`)) error("QUEUE_IDEMPOTENCY_VERSION", "version", "Idempotent result writes require the explicit queue-idempotency/1 contract version and matching saved intent");
     if (queueCapacityChanges(design.resources) !== contract.version.includes(`/${QUEUE_CAPACITY_PROFILE}`)) error("QUEUE_CAPACITY_VERSION", "version", "Queue capacity requires its explicit queue-capacity/1 contract version and matching saved intent");
     if (vmCpuQuotaChanges(design.resources) !== contract.version.includes(`/${VM_CPU_QUOTA_PROFILE}`)) error("VM_CPU_QUOTA_VERSION", "version", "Application CPU quota requires its explicit vm-cpu-quota/1 contract version and matching saved intent");
     if (vmExecutionChanges(design.resources) !== contract.version.includes(`/${VM_EXECUTION_PROFILE}`)) error("VM_EXECUTION_VERSION", "version", "VM execution requires its explicit vm-execution/1 contract version and matching saved intent");
@@ -93,6 +95,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (r.applicationFlow && (r.asyncWorker?.enabled || r.asyncQueue?.enabled)) error("INVALID_FLOW", `resources.${r.id}.applicationFlow`, "Async flow ownership is unsupported");
       const asyncError = asyncSettingsError(r.type, r.asyncQueue, r.asyncWorker);
       if (asyncError) error("INVALID_ASYNC", `resources.${r.id}.async`, asyncError);
+      if (r.asyncWorker?.enabled && r.asyncWorker.idempotentResults === true && design.connections.some(e => e.sourceId === r.id && nodes.get(e.targetId)?.type === "Database")) error("INVALID_ASYNC", `resources.${r.id}.asyncWorker.idempotentResults`, "Idempotent result writes protect Object Storage only; disconnect the worker database dependency.");
       const breakerError = circuitBreakerSettingsError(r.type, r.circuitBreaker);
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
@@ -115,7 +118,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (r.type === "Firewall" ? !spec.firewall || spec.resources.length !== 0 : !spec.resources.some((c) => c.role === spec.primary && ownerAccepts(r.type, c.config))) error("RESOURCE_OWNER", `nodes.${r.id}`, "Primary mechanism must match the resource translation owner");
       if (r.asyncWorker?.enabled) {
         const worker = spec.resources.find((v) => v.role === spec.primary)?.config;
-        if (worker?.kind !== "async-worker" || requireKnown(worker.concurrency, "count") !== r.asyncWorker.concurrency || requireKnown(worker.prefetch, "count") !== r.asyncWorker.prefetch || requireKnown(worker.cpu, "cpu-us") !== r.asyncWorker.cpuMsPerJob! * 1000) error("ASYNC_MISMATCH", `nodes.${r.id}`, "Worker profile must match saved parallelism, credit and CPU demand.");
+        if (worker?.kind !== "async-worker" || worker.idempotency !== resultWritePolicy(r) || (worker.idempotency === "object-if-absent" && !!worker.database) || requireKnown(worker.concurrency, "count") !== r.asyncWorker.concurrency || requireKnown(worker.prefetch, "count") !== r.asyncWorker.prefetch || requireKnown(worker.cpu, "cpu-us") !== r.asyncWorker.cpuMsPerJob! * 1000) error("ASYNC_MISMATCH", `nodes.${r.id}`, "Worker profile must match saved parallelism, credit, CPU demand and result write policy; idempotent result writes protect Object Storage only.");
       }
       if (spec.asyncBadJobPercent !== undefined && (!r.asyncWorker?.enabled || r.asyncWorker.badJobPercent === undefined || requireKnown(spec.asyncBadJobPercent, "percent") !== r.asyncWorker.badJobPercent)) error("ASYNC_MISMATCH", `nodes.${r.id}`, "Poison share must match saved worker intent.");
       if (r.asyncWorker?.enabled && r.asyncWorker.badJobPercent !== undefined && spec.asyncBadJobPercent === undefined) error("ASYNC_MISMATCH", `nodes.${r.id}`, "Saved poison share requires an authored profile.");
@@ -326,6 +329,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateCacheCapacityBindings(design.resources, runtime);
     validateVmCpuQuotaBindings(design.resources, runtime);
     validateVmExecutionBindings(design.resources, runtime);
+    validateQueueIdempotencyBindings(design.resources, runtime);
     validateQueueCapacityBindings(design.resources, runtime);
     validateDbConcurrencyBindings(design.resources, runtime);
     validateLbAdmissionBindings(design.resources, runtime);

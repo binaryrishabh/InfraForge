@@ -59,6 +59,7 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
     for (const line of connections) {
         const source = resources.find(resource => resource.id === line.sourceId);
         const target = resources.find(resource => resource.id === line.targetId);
+        if (source?.asyncWorker?.enabled && source.asyncWorker.idempotentResults === true && target?.type === "Database") errors.push(`${source.id}: Idempotent result writes protect Object Storage only; disconnect the worker database dependency.`);
         // Existing wiring retains shipped readiness semantics. Only conditional
         // rules introduce a readiness requirement; drawing rules are separate.
         if (source && target && (CONNECTION_RULES[source.type]?.some(rule => typeof rule !== "string" && rule.target === target.type) || (source.applicationFlow?.schema === "application-flow/3" && target.type === RESOURCE_TYPES.MessageQueue && target.asyncQueue?.enabled))) {
