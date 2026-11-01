@@ -13,7 +13,7 @@ export function AsyncSection({ resource, disabled }: { resource: Resource; disab
   const commit = (patch: Record<string, number | boolean | undefined>) => updateResource(resource.id, queue
     ? { asyncQueue: { ...resource.asyncQueue, enabled: policy?.enabled ?? false, ...patch } }
     : { asyncWorker: { ...resource.asyncWorker, enabled: policy?.enabled ?? false, ...patch } });
-  const fields = queue ? [["visibilityTimeoutSeconds", "Visibility timeout (seconds)", 1, 3600], ["maxReceives", "Maximum deliveries before dead-lettering", 1, 10], ["retentionSeconds", "Message retention (seconds)", 1, 86400], ["deadLetterCapacity", "Dead-letter list size", 0, 1000]] as const
+  const fields = queue ? [["capacityMessages", "Queue capacity (messages)", 1, 100000], ["visibilityTimeoutSeconds", "Visibility timeout (seconds)", 1, 3600], ["maxReceives", "Maximum deliveries before dead-lettering", 1, 10], ["retentionSeconds", "Message retention (seconds)", 1, 86400], ["deadLetterCapacity", "Dead-letter list size", 0, 1000]] as const
     : [["concurrency", "Jobs in parallel", 1, 64], ["prefetch", "Prefetch credit (leased jobs)", 1, 64], ["cpuMsPerJob", "CPU milliseconds per job (authored assumption)", 1, 120000], ["badJobPercent", "Share of arriving uploads that can never be processed", 0, 100]] as const;
   const executionError = queue ? undefined : vmExecutionError(resource.type, resource.vmExecution, true) ?? vmCpuQuotaError(resource.type, resource.vmCpuQuota, true);
   const error = asyncSettingsError(resource.type, resource.asyncQueue, resource.asyncWorker);
@@ -23,8 +23,9 @@ export function AsyncSection({ resource, disabled }: { resource: Resource; disab
       description={executionError ?? (queue ? "Connect app → queue → worker. Connect both VMs to the same Object Storage." : "Enable the connected queue; this VM polls for jobs, reads uploads, spends CPU, writes results and acknowledges.")} />
     {policy?.enabled && <div className="mt-4 flex flex-col gap-4">
       {fields.map(([key, label, min, max]) => <Field key={key} label={label}>{({ id }) => <Input id={id} type="number" min={min} max={max} step={1} disabled={disabled}
-        value={(policy as unknown as Record<string, number>)[key] ?? ""} placeholder="Unknown"
+        value={(policy as unknown as Record<string, number>)[key] ?? ""} placeholder={key === "capacityMessages" ? "Default (1000 × modeled queue cores)" : "Unknown"}
         onChange={(e) => commit({ [key]: e.target.value === "" ? undefined : Number(e.target.value) })} />}</Field>)}
+      {queue && <p className="text-xs text-ink-3">Maximum live messages this modeled queue can own at once. When it is full, new publishes are refused. This is an educational message limit, not a cloud-provider storage guarantee.</p>}
       {error && <p role="alert">{error}</p>}
       <p className="text-xs text-ink-3">A job that outlives its visibility timeout can be delivered again and may write duplicate results. Bad uploads read and spend CPU on every attempt, then immediately nack; their redelivery does not wait for lease expiry. The share uses the run seed and upload identity, so a finite run may differ from the chosen percentage. Dead-lettered jobs remain in a bounded internal list; when full, overflow is discarded and counted. Worker scaling and redrive are unavailable.</p>
       {queue && <AsyncQueueReadings metrics={metrics} />}

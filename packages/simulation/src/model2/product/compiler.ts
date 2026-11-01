@@ -21,6 +21,7 @@ import { numericOrigins } from "./origins";
 import { dataKeys, hotKey, HOT_KEY_PROFILE, multiKey, KEYSPACE_PROFILE, validateDatabaseKeyspace } from "./keyspace";
 import { CACHE_POLICY_PROFILE, cachePolicyChanges, validateCachePolicyBindings } from "./cachePolicy";
 import { CACHE_CAPACITY_PROFILE, cacheCapacityChanges, validateCacheCapacityBindings } from "./cacheCapacity";
+import { QUEUE_CAPACITY_PROFILE, queueCapacityChanges, validateQueueCapacityBindings } from "./queueCapacity";
 import { VM_CPU_QUOTA_PROFILE, vmCpuQuotaChanges, validateVmCpuQuotaBindings } from "./vmCpuQuota";
 import { VM_EXECUTION_PROFILE, vmExecutionChanges, validateVmExecutionBindings } from "./vmExecution";
 import { DB_CONCURRENCY_PROFILE, dbConcurrencyChanges, validateDbConcurrencyBindings } from "./dbConcurrency";
@@ -49,6 +50,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (hotKey(design.resources) !== contract.version.includes(`/${HOT_KEY_PROFILE}`)) error("HOT_KEY_VERSION", "version", "Hot-key intent requires its explicit data-hot-key/1 contract version and matching saved intent");
     if (cachePolicyChanges(design.resources) !== contract.version.includes(`/${CACHE_POLICY_PROFILE}`)) error("CACHE_POLICY_VERSION", "version", "Changed cache intent requires its explicit data-cache-policy/1 contract version and matching saved intent");
     if (cacheCapacityChanges(design.resources) !== contract.version.includes(`/${CACHE_CAPACITY_PROFILE}`)) error("CACHE_CAPACITY_VERSION", "version", "Logical cache capacity requires its explicit data-cache-capacity/1 contract version and matching saved intent");
+    if (queueCapacityChanges(design.resources) !== contract.version.includes(`/${QUEUE_CAPACITY_PROFILE}`)) error("QUEUE_CAPACITY_VERSION", "version", "Queue capacity requires its explicit queue-capacity/1 contract version and matching saved intent");
     if (vmCpuQuotaChanges(design.resources) !== contract.version.includes(`/${VM_CPU_QUOTA_PROFILE}`)) error("VM_CPU_QUOTA_VERSION", "version", "Application CPU quota requires its explicit vm-cpu-quota/1 contract version and matching saved intent");
     if (vmExecutionChanges(design.resources) !== contract.version.includes(`/${VM_EXECUTION_PROFILE}`)) error("VM_EXECUTION_VERSION", "version", "VM execution requires its explicit vm-execution/1 contract version and matching saved intent");
     if (dbConcurrencyChanges(design.resources) !== contract.version.includes(`/${DB_CONCURRENCY_PROFILE}`)) error("DB_CONCURRENCY_VERSION", "version", "Database concurrency requires its explicit data-db-concurrency/1 contract version and matching saved intent");
@@ -324,6 +326,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateCacheCapacityBindings(design.resources, runtime);
     validateVmCpuQuotaBindings(design.resources, runtime);
     validateVmExecutionBindings(design.resources, runtime);
+    validateQueueCapacityBindings(design.resources, runtime);
     validateDbConcurrencyBindings(design.resources, runtime);
     validateLbAdmissionBindings(design.resources, runtime);
     validateLbHealthBindings(design.resources, runtime);
