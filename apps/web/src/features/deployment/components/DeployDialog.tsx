@@ -59,7 +59,7 @@ export function DeployDialog({ open, onOpenChange, initialName, resourceCount, c
         <details className="rounded-md border border-line px-4 py-2.5">
           <summary className="text-sm font-medium text-ink">Adjust the workload</summary>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <WorkloadDynamicsControls profile={profile} onChange={patch} disabled={loading} />
+            <WorkloadDynamicsControls profile={profile} onChange={next => setProfile(resolveWorkload(next))} disabled={loading} />
             <ClientRetryControls profile={profile} onChange={next => setProfile(resolveWorkload(next))} disabled={loading} />
             <Field label="Requests" hint={`About ${Math.round(requestsPerSecond(profile)).toLocaleString()} per second at full load.`}>
               {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} type="number" min={1} value={profile.targetThroughput} onChange={(e) => patch({ targetThroughput: Number(e.target.value) })} />}

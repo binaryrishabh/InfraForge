@@ -34,3 +34,13 @@ test("workload descriptions and source/rerun facts retain arrivals, variable CPU
     expect(html).toContain("captured-traffic-seed");
   }
 });
+
+test("choosing Even and Fixed again returns exactly the historical preset form", () => {
+  const steady = WORKLOAD_PRESETS[0]!.profile;
+  const random = withWorkloadDynamics(withWorkloadDynamics(steady, { arrivalProcess: "poisson" }), { applicationCpuCv: 0.5 });
+  const back = withWorkloadDynamics(withWorkloadDynamics(random, { arrivalProcess: "even" }), { applicationCpuCv: 0 });
+  expect(back).not.toHaveProperty("workloadDynamics");
+  expect(JSON.stringify(back)).toBe(JSON.stringify(steady));
+  // Poisson with fixed work is a real choice and stays explicit.
+  expect(withWorkloadDynamics(steady, { arrivalProcess: "poisson" }).workloadDynamics).toEqual({ version: 1, arrivalProcess: "poisson", applicationCpuCv: 0 });
+});

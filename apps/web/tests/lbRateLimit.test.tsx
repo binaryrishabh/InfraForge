@@ -48,3 +48,14 @@ test("limiter save/reload preserves explicit settings and clearing restores abse
     updateResource("lb", { lbRateLimit: undefined }); expect(useCanvasStore.getState().resources[0]!.lbRateLimit).toBeUndefined();
   } finally { saved.mockRestore(); }
 });
+
+test("typed limiter values are accepted only when complete and in range, so a cleared field never disables the limit", async () => {
+  const { parseBurst, parseSustainedRate } = await import("../src/features/canvas/components/inspector/lbRateLimitInput");
+  expect(parseBurst("20")).toEqual({ ok: true, value: 20 });
+  for (const text of ["", " ", "0", "1.5", "100001", "abc"]) expect(parseBurst(text).ok).toBe(false);
+  expect(parseSustainedRate("0.001")).toEqual({ ok: true, value: 0.001 });
+  expect(parseSustainedRate("2.5")).toEqual({ ok: true, value: 2.5 });
+  for (const text of ["", "0", "0.0001", "1000001", "-1", "x"]) expect(parseSustainedRate(text).ok).toBe(false);
+  const html = renderToStaticMarkup(<LbRateLimitSection resource={{ ...lb, lbRateLimit: policy }} disabled={false} />);
+  expect(html).toContain('value="20"'); expect(html).toContain('value="10"'); expect(html).not.toContain('role="alert"');
+});
