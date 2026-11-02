@@ -3,6 +3,8 @@ import type { SavedProductDesign, ProductContract } from "./contracts";
 import type { derivedLedger } from "./provenance";
 import type { ArrivalSource, RateArrivals } from "../workload/contracts";
 import { rateRows } from "../workload/arrivals";
+import { POISSON_PROVENANCE } from "../workload/poisson";
+import { arrivalVersion } from "./workloadDynamics";
 export function compileArrivals(design: SavedProductDesign, contract: ProductContract, provenance: ReturnType<typeof derivedLedger>): ArrivalSource[] {
   const p = design.workload, app = contract.application!, horizon = requireKnown(contract.horizon, "us"), start = requireKnown(contract.arrival.start, "us");
   if (!Number.isFinite(p.targetThroughput) || p.targetThroughput <= 0 || !["per-minute", "per-hour"].includes(p.throughputUnit) || p.readWriteRatio === undefined || p.readWriteRatio < 0 || p.readWriteRatio > 1 || !["steady", "peak"].includes(p.trafficShape)) throw Error("Workload needs explicit positive throughput/unit, read fraction [0,1] and supported traffic shape");
@@ -24,8 +26,11 @@ export function compileArrivals(design: SavedProductDesign, contract: ProductCon
   // A load change applies to arrivals scheduled at or after its time; earlier arrivals never change.
   const changes = (contract.arrival.changes ?? []).map((c) => ({ at: requireKnown(c.at, "us"), fraction: requireKnown(c.fraction, "ratio") }));
   if (changes.some((c, i) => !Number.isSafeInteger(c.at) || c.at < 0 || c.fraction < 0 || c.fraction > 10 || (i > 0 && c.at <= changes[i - 1]!.at))) throw Error("Load changes need increasing whole-microsecond times and fractions from 0 to 10");
-  const provenanceText = "product-arrivals/1: deterministic open-loop spacing with fractional read accumulator, explicit peak window; not a user/session conversion or Poisson process";
-  const rate: RateArrivals = { schema: "infraforge-rate-arrivals/1", provenance: provenanceText, startUs: start, endUs: horizon, intervalUs: baseInterval,
+  const poisson = arrivalVersion(p) === "product-arrivals/2";
+  if (poisson && (!contract.seed || !Number.isSafeInteger(start) || !Number.isSafeInteger(horizon))) throw Error("Poisson arrivals require captured seed and safe microsecond boundaries");
+  if (contract.workloadVersion !== arrivalVersion(p)) throw Error("Captured arrival process does not match workload contract version");
+  const provenanceText = poisson ? POISSON_PROVENANCE : "product-arrivals/1: deterministic open-loop spacing with fractional read accumulator, explicit peak window; not a user/session conversion or Poisson process";
+  const rate: RateArrivals = { schema: poisson ? "infraforge-rate-arrivals/2" : "infraforge-rate-arrivals/1", provenance: provenanceText, startUs: start, endUs: horizon, intervalUs: baseInterval,
     readFraction: p.readWriteRatio, readOperation: app.readOperation, writeOperation: app.writeOperation,
     ...(p.trafficShape === "peak" ? { peak: { startUs: requireKnown(peak!.start, "us"), endUs: requireKnown(peak!.end, "us"), multiplier: p.peakMultiplier!, ...(every === undefined ? {} : { everyUs: every }) } } : {}),
     changes: changes.map((c) => ({ atUs: c.at, fraction: c.fraction })) };
@@ -33,7 +38,7 @@ export function compileArrivals(design: SavedProductDesign, contract: ProductCon
   const limit = contract.arrival.generated ? contract.limits.maxRequests : Math.min(contract.limits.maxRequests, contract.limits.maxTraceRows);
   const rows: Array<{ id: string; atUs: number; operation: string }> = [];
   let count = 0;
-  for (const row of rateRows(rate)) {
+  for (const row of rateRows(rate, contract.seed)) {
     if (count++ >= limit) throw Error("Compiled arrival budget exceeded");
     if (!contract.arrival.generated) rows.push(row);
   }

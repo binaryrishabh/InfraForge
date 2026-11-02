@@ -96,7 +96,7 @@ export function validateWorkload(input: WorkloadInput) {
       const invalid = validateRate(a.rate, new Set(operations.keys()));
       errors.push(...invalid);
       // Counted without storing rows; stops one past the budget.
-      if (!invalid.length) for (const _row of rateRows(a.rate)) if (++count > input.limits.maxRequests) break;
+      if (!invalid.length) for (const _row of rateRows(a.rate, input.seed, a.id)) if (++count > input.limits.maxRequests) break;
     } else {
       if (!operations.has(a.operation)) errors.push("Unknown arrival operation");
       const start = number(a.start, "us");

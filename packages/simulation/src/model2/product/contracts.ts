@@ -67,7 +67,7 @@ export interface ProductContract {
   securityProfile?: "canvas-security/1";
   applicationFlowProfile?: "application-flow/1" | "application-flow/2" | "application-flow/3";
   failureCauseProfile?: "failure-cause/1";
-  schema: "infraforge-product-model2/1"; version: string; designVersion: string; catalogVersion: string; workloadVersion: "product-arrivals/1";
+  schema: "infraforge-product-model2/1"; version: string; designVersion: string; catalogVersion: string; workloadVersion: "product-arrivals/1" | "product-arrivals/2";
   application?: ApplicationProfile; ledger: RealityEntry[]; nodes: Record<string, NodeContract>;
   edges: Record<string, EdgeContract>; transports: Record<string, TransportProfile>;
   caller: { address: string; entry: string; transport: string; request: string[]; response: string[]; security: Omit<DialConfig, "path">; dependencies: Array<Omit<EdgeContract, "sourceRole" | "targetRole"> & { id: string; target: string }> };

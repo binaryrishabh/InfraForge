@@ -22,7 +22,7 @@ export type ArrivalSource =
 // Arrivals generated while the run advances instead of stored: a declared rate with an optional peak window and
 // load changes (each a fraction of the rate from its time on). Row for row the same as the equivalent trace.
 export interface RateArrivals {
-  schema: "infraforge-rate-arrivals/1"; provenance: string;
+  schema: "infraforge-rate-arrivals/1" | "infraforge-rate-arrivals/2"; provenance: string;
   startUs: number; endUs: number; intervalUs: number; readFraction: number; readOperation: string; writeOperation: string;
   // A peak window repeats every `everyUs` when set (for example a 20-second burst every 120 seconds).
   peak?: { startUs: number; endUs: number; multiplier: number; everyUs?: number };

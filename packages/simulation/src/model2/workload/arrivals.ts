@@ -3,6 +3,7 @@ import { requireKnown } from "../../reality/quantity";
 import { keyedUniform } from "../random";
 import { micros } from "../time";
 import { WORKLOAD_LIMITS } from "./policy";
+import { poissonRows } from "./poisson";
 
 export const identity = (...parts: Array<string | number>) => JSON.stringify(parts);
 
@@ -28,7 +29,7 @@ export function ingestTrace(header: Omit<ArrivalTrace, "rows">, rows: Iterable<T
 
 export function* openRows(source: Exclude<ArrivalSource, { kind: "closed" }>, seed: string): Generator<TraceRow> {
   if (source.kind === "trace") { yield* source.trace.rows; return; }
-  if (source.kind === "rate") { yield* rateRows(source.rate); return; }
+  if (source.kind === "rate") { yield* rateRows(source.rate, seed, source.id); return; }
   const count = requireKnown(source.count, "count");
   let at = requireKnown(source.start, "us");
   for (let index = 0; index < count; index++) {
@@ -44,7 +45,11 @@ export function* openRows(source: Exclude<ArrivalSource, { kind: "closed" }>, se
 
 // Deterministic open-loop spacing with a fractional read accumulator. A load change applies to arrivals scheduled
 // at or after its time; at load 0 the next arrival waits for the next change.
-export function* rateRows(r: RateArrivals): Generator<TraceRow> {
+export function* rateRows(r: RateArrivals, seed = "", sourceId = "product-workload"): Generator<TraceRow> {
+  if (r.schema === "infraforge-rate-arrivals/2") {
+    if (!seed) throw Error("Poisson rate arrivals require the captured seed");
+    yield* poissonRows(r, seed, sourceId); return;
+  }
   const fraction = (time: number) => { let f = 1; for (const c of r.changes) if (c.atUs <= time) f = c.fraction; else break; return f; };
   let at = r.startUs, index = 0, readDebt = 0;
   while (Math.round(at) < r.endUs) {
@@ -58,8 +63,9 @@ export function* rateRows(r: RateArrivals): Generator<TraceRow> {
 
 export function validateRate(r: RateArrivals, operations: Set<string>): string[] {
   const finite = [r.startUs, r.endUs, r.intervalUs, r.readFraction, ...(r.peak ? [r.peak.startUs, r.peak.endUs, r.peak.multiplier, r.peak.everyUs ?? 1] : []), ...r.changes.flatMap((c) => [c.atUs, c.fraction])];
-  if (r.schema !== "infraforge-rate-arrivals/1" || !r.provenance || finite.some((n) => !Number.isFinite(n))) return ["Invalid rate arrival schema/provenance"];
+  if (!["infraforge-rate-arrivals/1", "infraforge-rate-arrivals/2"].includes(r.schema) || !r.provenance || finite.some((n) => !Number.isFinite(n))) return ["Invalid rate arrival schema/provenance"];
   const errors: string[] = [];
+  if (r.schema === "infraforge-rate-arrivals/2" && [r.startUs, r.endUs, ...(r.peak ? [r.peak.startUs, r.peak.endUs, r.peak.everyUs ?? 1] : [])].some(n => !Number.isSafeInteger(n))) errors.push("Poisson boundaries require safe integer microseconds");
   if (r.startUs < 0 || r.endUs <= r.startUs || r.intervalUs < 1 || r.readFraction < 0 || r.readFraction > 1) errors.push("Invalid rate arrival window/interval/read fraction");
   if (!operations.has(r.readOperation) || !operations.has(r.writeOperation)) errors.push("Unknown rate arrival operation");
   // A repeating window may begin after the run ends (then it never applies); a single window must fit the run.

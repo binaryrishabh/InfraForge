@@ -89,7 +89,7 @@ function servingPath(input: SystemsInput) {
   };
   const offered = new Set<string>();
   for (const source of input.arrivals) {
-    if (source.kind === "rate") for (const row of rateRows(source.rate)) offered.add(row.operation);
+    if (source.kind === "rate") for (const row of rateRows(source.rate, input.seed, source.id)) offered.add(row.operation);
     else if (source.kind === "trace") source.trace.rows.forEach(row => offered.add(row.operation));
     else offered.add(source.operation);
   }
