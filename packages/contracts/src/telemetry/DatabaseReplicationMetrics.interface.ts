@@ -1,6 +1,8 @@
 export interface DatabaseReplicationMetrics {
   version: 1;
-  currentWriter: "primary" | "replica" | null;
+  currentWriter: "primary" | "replica" | "none" | null;
+  primaryProcessState?: "available" | "unavailable" | "fenced" | null;
+  replicaProcessState?: "available" | "unavailable" | "writer" | null;
   replicaState: "available" | "unavailable" | "promoted" | null;
   writerEpoch: number | null;
   primaryEpoch: number | null;

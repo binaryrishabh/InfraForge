@@ -9,21 +9,35 @@ export function databaseReplica(config: DatabaseReplication, id: string, clock: 
   let primaryCommittedWrites = 0, replicaAppliedWrites = 0, primaryGeneration = 0, replicaGeneration = 0;
   let promoted = false, replicaCommittedWrites = 0, promotionAtUs: number | null = null, lostOperations = 0;
   let regressedKeys: Array<{ key: string; primaryVersion: number; promotedVersion: number }> = [];
-  let available = true, primaryReads = 0, replicaReads = 0, freshReplicaReads = 0, staleReplicaReads = 0;
+  let primaryProcessState: "available" | "unavailable" | "fenced" = "available";
+  let replicaProcessState: "available" | "unavailable" | "writer" = "available";
+  let crashRestore: { primary: typeof primaryProcessState; replica: typeof replicaProcessState } | undefined;
+  let primaryReads = 0, replicaReads = 0, freshReplicaReads = 0, staleReplicaReads = 0;
   let writerEpoch = 1, fencedWriteRejections = 0, fencedReplicationRejections = 0;
+  const drainReady = () => { for (const work of [...pending.values()]) if (work.ready) work.apply(); };
+  const currentWriter = () => promoted ? replicaProcessState === "writer" ? "replica" as const : "none" as const : primaryProcessState === "available" ? "primary" as const : "none" as const;
   return {
     epoch: () => writerEpoch,
+    currentWriter,
+    sourceAvailable: (source: "primary" | "replica") => source === "primary" ? primaryProcessState === "available" : replicaProcessState !== "unavailable",
     acceptEpoch(epoch: number) { if (epoch === writerEpoch) return true; fencedWriteRejections++; return false; },
-    canPromote() { return available && !promoted; },
+    canPromote() { return replicaProcessState === "available" && !promoted; },
     promote() {
       if (promoted) throw Error("Database replica already promoted; v1 has no second replica");
-      if (!available) throw Error("Database replica unavailable");
+      if (replicaProcessState === "unavailable") throw Error("Database replica unavailable");
       lostOperations = pending.size;
       regressedKeys = [...primary].filter(([key, row]) => row.version > (replica.get(key)?.version ?? 0)).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, row]) => ({ key, primaryVersion: row.version, promotedVersion: replica.get(key)?.version ?? 0 }));
-      promoted = true; writerEpoch++; promotionAtUs = clock.now; pending.clear(); return replica;
+      promoted = true; replicaProcessState = "writer";
+      if (primaryProcessState !== "unavailable") primaryProcessState = "fenced";
+      writerEpoch++; promotionAtUs = clock.now; pending.clear(); return replica;
     },
-    available(value: boolean) { available = value; if (value) for (const work of [...pending.values()]) if (work.ready) work.apply(); },
-    readSource(readOnly: boolean) { return promoted || readOnly && available && config.readPolicy === "replica-preferred" ? "replica" as const : "primary" as const; },
+    primaryAvailability(value: boolean) { primaryProcessState = value ? promoted ? "fenced" : "available" : "unavailable"; },
+    available(value: boolean) { replicaProcessState = value ? promoted ? "writer" : "available" : "unavailable"; if (value) drainReady(); },
+    wholeAvailability(value: boolean) {
+      if (!value && !crashRestore) { crashRestore = { primary: primaryProcessState, replica: replicaProcessState }; primaryProcessState = "unavailable"; replicaProcessState = "unavailable"; }
+      else if (value && crashRestore) { primaryProcessState = crashRestore.primary; replicaProcessState = crashRestore.replica; crashRestore = undefined; drainReady(); }
+    },
+    readSource(readOnly: boolean) { return promoted || readOnly && replicaProcessState !== "unavailable" && config.readPolicy === "replica-preferred" ? "replica" as const : "primary" as const; },
     read(key: string, source: "primary" | "replica") { return (source === "replica" ? replica : primary).get(key); },
     observed(source: "primary" | "replica", keys: string[], observed: Array<Row & { key: string }>) {
       if (source === "primary") { primaryReads++; return; }
@@ -38,7 +52,7 @@ export function databaseReplica(config: DatabaseReplication, id: string, clock: 
       const epoch = writerEpoch;
       const work = { at: clock.now, ready: false, apply() {
         if (epoch !== writerEpoch) { fencedReplicationRejections++; return; }
-        if (!available) { work.ready = true; return; }
+        if (replicaProcessState === "unavailable") { work.ready = true; return; }
         for (const [key, row] of payload) replica.set(key, row);
         pending.delete(generation); replicaGeneration = generation; replicaAppliedWrites++;
       } };
@@ -48,7 +62,7 @@ export function databaseReplica(config: DatabaseReplication, id: string, clock: 
     evidence() {
       const oldest = pending.values().next().value;
       const age = oldest ? (clock.now - oldest.at) / 1000 : 0;
-      return { version: 1 as const, currentWriter: promoted ? "replica" as const : "primary" as const, replicaState: promoted ? "promoted" as const : available ? "available" as const : "unavailable" as const, primaryReads, replicaReads, freshReplicaReads, staleReplicaReads,
+      return { version: 1 as const, currentWriter: currentWriter(), primaryProcessState, replicaProcessState, replicaState: replicaProcessState === "unavailable" ? "unavailable" as const : promoted ? "promoted" as const : "available" as const, primaryReads, replicaReads, freshReplicaReads, staleReplicaReads,
         writerEpoch, primaryEpoch: 1, replicaEpoch: promoted ? 2 : 1, primaryRole: promoted ? "fenced" as const : "writer" as const, replicaRole: promoted ? "writer" as const : "replica" as const,
         fencedWriteRejections, fencedReplicationRejections, fencingReasons: { "fenced-writer-epoch": fencedWriteRejections, "fenced-replication-epoch": fencedReplicationRejections },
         primaryRows: [...primary].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, row]) => ({ key, ...row })),
