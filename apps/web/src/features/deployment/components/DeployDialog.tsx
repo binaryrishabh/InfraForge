@@ -1,6 +1,8 @@
+import { WORKLOAD_PRESETS as PRESETS } from "../workloadOptions";
+import { WorkloadDynamicsControls } from "./WorkloadDynamicsControls";
 import { useState, type FormEvent } from "react";
 import { Play } from "lucide-react";
-import type { WorkloadProfile } from "@infraforge/domain/workload";
+import type { WorkloadProfile, ResolvedWorkloadProfile } from "@infraforge/domain/workload";
 import { INFRASTRUCTURE_NAME_MAX_LENGTH, validateInfrastructureName } from "@infraforge/domain/validation";
 import { describeWorkload, requestsPerSecond, plural } from "@/lib/format";
 import { Dialog } from "@/ui/Dialog";
@@ -10,15 +12,6 @@ import { Field, Input } from "@/ui/Field";
 import { Segmented } from "@/ui/Segmented";
 import { cx } from "@/ui/cx";
 
-interface Preset { id: string; label: string; profile: Required<WorkloadProfile> }
-const PRESETS: Preset[] = [
-  { id: "steady", label: "Steady", profile: { targetThroughput: 1_000_000, throughputUnit: "per-hour", trafficShape: "steady", peakMultiplier: 3, readWriteRatio: 0.8, payloadSize: "medium" } },
-  { id: "peak", label: "Peak hours", profile: { targetThroughput: 1_000_000, throughputUnit: "per-hour", trafficShape: "peak", peakMultiplier: 3, readWriteRatio: 0.8, payloadSize: "medium" } },
-  { id: "sale", label: "Flash sale", profile: { targetThroughput: 2_000_000, throughputUnit: "per-hour", trafficShape: "peak", peakMultiplier: 5, readWriteRatio: 0.9, payloadSize: "heavy" } },
-  { id: "bots", label: "Bot traffic", profile: { targetThroughput: 3_000_000, throughputUnit: "per-hour", trafficShape: "steady", peakMultiplier: 3, readWriteRatio: 0.95, payloadSize: "light" } },
-  { id: "writes", label: "Write-heavy", profile: { targetThroughput: 1_000_000, throughputUnit: "per-hour", trafficShape: "steady", peakMultiplier: 3, readWriteRatio: 0.3, payloadSize: "medium" } },
-];
-
 /* Freeform run: name the design and choose the traffic it faces. The run
 captures this canvas, this workload and a fresh seed. */
 export function DeployDialog({ open, onOpenChange, initialName, resourceCount, connectionCount, loading, onRun }: {
@@ -27,7 +20,7 @@ export function DeployDialog({ open, onOpenChange, initialName, resourceCount, c
 }) {
   const [name, setName] = useState(() => defaultDesignName(initialName));
   const [touched, setTouched] = useState(false);
-  const [profile, setProfile] = useState<Required<WorkloadProfile>>(PRESETS[0]!.profile);
+  const [profile, setProfile] = useState<ResolvedWorkloadProfile>(PRESETS[0]!.profile);
   const preset = PRESETS.find((p) => JSON.stringify(p.profile) === JSON.stringify(profile));
   const nameError = touched ? validateInfrastructureName(name) : null;
   const patch = (next: Partial<WorkloadProfile>) => setProfile((prev) => ({ ...prev, ...next }));
@@ -64,6 +57,7 @@ export function DeployDialog({ open, onOpenChange, initialName, resourceCount, c
         <details className="rounded-md border border-line px-4 py-2.5">
           <summary className="text-sm font-medium text-ink">Adjust the workload</summary>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <WorkloadDynamicsControls profile={profile} onChange={patch} disabled={loading} />
             <Field label="Requests" hint={`About ${Math.round(requestsPerSecond(profile)).toLocaleString()} per second at full load.`}>
               {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} type="number" min={1} value={profile.targetThroughput} onChange={(e) => patch({ targetThroughput: Number(e.target.value) })} />}
             </Field>

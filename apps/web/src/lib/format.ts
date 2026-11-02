@@ -19,7 +19,14 @@ export function describeWorkload(w: WorkloadProfile) {
   const rate = `${w.targetThroughput.toLocaleString()} requests per ${w.throughputUnit === "per-minute" ? "minute" : "hour"}`;
   const shape = w.trafficShape === "peak" ? `bursts to ${w.peakMultiplier ?? 3}×` : "steady";
   const reads = w.readWriteRatio !== undefined ? `${Math.round(w.readWriteRatio * 100)}% reads` : null;
-  return [rate, shape, reads, `${w.payloadSize} payloads`].filter(Boolean).join(" · ");
+  return [rate, shape, reads, `${w.payloadSize} payloads`, describeWorkloadDynamics(w)].filter(Boolean).join(" · ");
+}
+
+export function describeWorkloadDynamics(w: WorkloadProfile) {
+  const cv = w.workloadDynamics?.applicationCpuCv ?? 0;
+  const arrivals = w.workloadDynamics?.arrivalProcess === "poisson" ? "Poisson arrivals" : "Even arrivals";
+  const level = cv === 0.5 ? "Moderate" : cv === 1 ? "High" : "Custom";
+  return `${arrivals} · ${cv === 0 ? "Fixed app CPU (CV 0)" : `Variable app CPU: ${level} (CV ${cv})`}`;
 }
 
 export function formatDate(iso: string) {
