@@ -114,6 +114,7 @@ export function compileInterventions(design: SavedProductDesign, contract: Produ
       else if (kind === "consumer-outage") input.asyncInterventions.push({...common, kind: "consumer-state", available: false, duration: duration!});
       else if (kind === "pool-reset") input.networkInterventions.push({...common, kind: "reset", evidenceActionId: row.id});
       else if (kind === "flush") input.dataInterventions.push({...common, kind});
+      else if (kind === "cdn-purge") input.systems.interventions.push({...common, kind});
       else if (kind === "session-capacity") input.dataInterventions.push({...common, kind, duration: duration!, sessions: q("sessions", Number(parameters.sessions), "count")});
       else if (kind === "cpu-capacity") input.dataInterventions.push({...common, kind, duration: duration!, cores: q("cores", Number(parameters.cores), "cores")});
       else if (kind === "delay" || kind === "partition" || kind === "bandwidth") {

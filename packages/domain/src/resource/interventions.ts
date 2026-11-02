@@ -4,8 +4,8 @@ export interface InterventionParameter {
   min?: number; max?: number | "authored-baseline" | "remaining-seconds"; values?: string[];
 }
 export interface InterventionDescriptor {
-  id: string; revision: number; label: string; targetKind: "Database" | "Cache" | "Firewall" | "Virtual Machine" | "edge";
-  mechanism: "relational" | "cache" | "firewall" | "transport" | "async-worker"; parameters: InterventionParameter[];
+  id: string; revision: number; label: string; targetKind: "Database" | "Cache" | "CDN" | "Firewall" | "Virtual Machine" | "edge";
+  mechanism: "relational" | "cache" | "cdn" | "firewall" | "transport" | "async-worker"; parameters: InterventionParameter[];
   directions?: Array<"request" | "response" | "both">;
   reversible: boolean; endPolicy: "timed" | "one-shot"; requires: string[];
 }
@@ -23,6 +23,8 @@ export const INTERVENTIONS: readonly InterventionDescriptor[] = [
     parameters: [{ name: "cores", kind: "number", unit: "cores", min: 0, max: "authored-baseline" }, duration], reversible: true, endPolicy: "timed", requires: ["fixed relational role", "known authored cores"] },
   { id: "flush", revision: 1, label: "Flush cache", targetKind: "Cache", mechanism: "cache",
     parameters: [], reversible: false, endPolicy: "one-shot", requires: ["fixed cache role"] },
+  { id: "cdn-purge", revision: 1, label: "Purge CDN cache", targetKind: "CDN", mechanism: "cdn",
+    parameters: [], reversible: false, endPolicy: "one-shot", requires: ["fixed CDN role"] },
   { id: "delay", revision: 1, label: "Edge delay", targetKind: "edge", mechanism: "transport",
     parameters: [{ name: "delay", kind: "integer", unit: "us", min: 0, max: 5_000_000 }, duration], reversible: true, endPolicy: "timed", requires: ["materialized transport links"] },
   { id: "bandwidth", revision: 1, label: "Edge bandwidth", targetKind: "edge", mechanism: "transport",

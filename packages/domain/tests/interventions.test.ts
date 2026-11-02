@@ -1,6 +1,12 @@
 import { expect, test } from "bun:test";
 import { INTERVENTIONS, interventionError } from "../src/resource";
 const request = { interventionId: "session-capacity", revision: 1, target: { resourceId: "db" }, parameters: { sessions: 0, duration: 1 } };
+test("CDN purge is a strict versioned resource-only parameterless one-shot", () => {
+  expect(INTERVENTIONS.find(d => d.id === "cdn-purge")).toEqual({id: "cdn-purge", revision: 1, label: "Purge CDN cache", targetKind: "CDN", mechanism: "cdn", parameters: [], reversible: false, endPolicy: "one-shot", requires: ["fixed CDN role"]});
+  const purge = {interventionId: "cdn-purge", revision: 1, target: {resourceId: "cdn"}, parameters: {}};
+  expect(interventionError(purge)).toBeNull();
+  for (const bad of [{...purge, revision: 2}, {...purge, extra: true}, {...purge, target: {edgeId: "cdn", direction: "both"}}, {...purge, target: {resourceId: "cdn", key: "asset"}}, ...[{key: "asset"}, {duration: 1}, {restore: true}].map(parameters => ({...purge, parameters}))]) expect(interventionError(bad)).not.toBeNull();
+});
 test("consumer outage is duration-only, timed and reversible for a background worker", () => {
   expect(INTERVENTIONS.find(d => d.id === "consumer-outage")).toMatchObject({revision: 1, targetKind: "Virtual Machine", mechanism: "async-worker", reversible: true, endPolicy: "timed"});
   const request = {interventionId: "consumer-outage", revision: 1, target: {resourceId: "worker"}, parameters: {duration: 1}};
@@ -15,7 +21,7 @@ test("consumer outage is duration-only, timed and reversible for a background wo
 });
 test("capabilities round-trip as data and enforce product policy at contextual boundaries", () => {
   expect(JSON.parse(JSON.stringify(INTERVENTIONS))).toEqual(INTERVENTIONS);
-  expect(INTERVENTIONS.map(d => d.id)).toEqual(["consumer-outage", "pool-reset", "deny-port", "session-capacity", "cpu-capacity", "flush", "delay", "bandwidth", "partition"]);
+  expect(INTERVENTIONS.map(d => d.id)).toEqual(["consumer-outage", "pool-reset", "deny-port", "session-capacity", "cpu-capacity", "flush", "cdn-purge", "delay", "bandwidth", "partition"]);
   expect(interventionError(request, { remainingSeconds: 1 })).toBeNull();
   for (const parameters of [{sessions: -1, duration: 1}, {sessions: 513, duration: 1}, {sessions: 0.5, duration: 1}, {sessions: Infinity, duration: 1}, {sessions: 0, duration: 301}, {sessions: 0}, {sessions: 0, duration: 1, extra: true}])
     expect(interventionError({...request, parameters}, {authoredBaseline: 512})).toContain("INTERVENTION_");
