@@ -1,4 +1,5 @@
 import { applicationFlow } from "./flow";
+import { sampleAppCpu } from "./demand";
 import { carryCause, causeFields, type Cause } from "../workload/cause";
 import { requireKnown } from "../../reality/quantity";
 import type { EventClock } from "../time";
@@ -13,10 +14,15 @@ interface Call { work: Invocation; phase: "queued" | "cpu" | "wait" | "dependenc
   flow?: ReturnType<typeof applicationFlow>; flowStep?: string; afterWait?: () => void;
   done(outcome: RemoteOutcome, cause?: Cause): void; child?: Receipt; cancelWait?: () => boolean; waitRemaining: number; waitSince: number }
 export function computeResource(config: ComputeResource, profiles: Map<string, ComputeProfile>, kernel: EventClock,
-  send: (target: string, work: Invocation, done: Call["done"]) => Receipt, causal?: CausalObserver, ownedCpu?: ReturnType<typeof cpuScheduler>) {
+  send: (target: string, work: Invocation, done: Call["done"]) => Receipt, causal?: CausalObserver, ownedCpu?: ReturnType<typeof cpuScheduler>, seed = "") {
   const workers = requireKnown(config.workers, "count"), capacity = requireKnown(config.queueCapacity, "count");
   const scheduler = ownedCpu ?? cpuScheduler(config.id, requireKnown(config.cores, "cores"), kernel, config.quota ? { budget: requireKnown(config.quota.budget, "cpu-us"), period: requireKnown(config.quota.period, "us") } : undefined);
   const memory = residentMemory(config, profiles), active = new Map<string, Call>(), queue = new Map<string, Call>();
+  const demand = (p: ComputeProfile, work: Invocation, stage: string) => {
+    const value = sampleAppCpu(requireKnown(p.cpu, "cpu-us"), p.cpuDistribution, seed, config.id, work.callId, stage);
+    if (p.cpuDistribution) causal?.({ atUs: kernel.now, kind: "app-cpu-demand", resource: config.id, work, detail: { stage, demandCoreUs: value } });
+    return value;
+  };
   let paused = false, received = 0, admitted = 0, rejected = 0, completed = 0, failed = 0, cancelled = 0, allocationRejected = 0, pumping = false;
   let occupancyAt = kernel.now, occupancy = 0;
   const accountOccupancy = () => { occupancy += active.size * (kernel.now - occupancyAt); occupancyAt = kernel.now; };
@@ -58,7 +64,7 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
         call.flow = applicationFlow(config.id, call.work, flow, kernel, send, (step, done) => {
           call.flowStep = step; call.phase = "cpu";
           const p = profiles.get(call.work.operation)!;
-          scheduler.add({ id: call.work.callId, demand: requireKnown(p.cpu, "cpu-us"), cap: requireKnown(p.maxCpuParallelism, "cores"), done: () => {
+          scheduler.add({ id: call.work.callId, demand: demand(p, call.work, step), cap: requireKnown(p.maxCpuParallelism, "cores"), done: () => {
             if (call.phase === "finished") return;
             call.phase = "wait"; call.afterWait = done; call.waitRemaining = requireKnown(p.blockingWait, "us"); scheduleWait(call);
           } });
@@ -66,7 +72,7 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
         call.flow.start(); continue;
       }
       const p = profiles.get(call.work.operation)!;
-      scheduler.add({ id: call.work.callId, demand: requireKnown(p.cpu, "cpu-us"), cap: requireKnown(p.maxCpuParallelism, "cores"), done: () => {
+      scheduler.add({ id: call.work.callId, demand: demand(p, call.work, "cpu"), cap: requireKnown(p.maxCpuParallelism, "cores"), done: () => {
         if (call.phase === "finished") return;
         call.phase = "wait"; call.waitRemaining = requireKnown(p.blockingWait, "us"); scheduleWait(call);
       } });

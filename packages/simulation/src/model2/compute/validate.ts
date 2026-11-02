@@ -1,4 +1,5 @@
 import { validateFlows } from "./validateFlow";
+import { APP_CPU_DISTRIBUTION } from "./demand";
 import { requireKnown, validateQuantity, type Quantity, type Unit } from "../../reality/quantity";
 import type { ComputeInput, ComputeResource, ComputeProfile } from "./contracts";
 import { micros } from "../time";
@@ -23,6 +24,8 @@ export function validateCompute(input: ComputeInput) {
   };
   const defined = <T>(q: T | undefined): q is T => q !== undefined;
   for (const p of input.profiles) if (p.schema === "infraforge-compute-demand/1") {
+    const d = p.cpuDistribution;
+    if (d && (d.schema !== "app-cpu-demand/1" || d.provenance !== APP_CPU_DISTRIBUTION || !Number.isFinite(d.cv) || d.cv <= 0 || d.cv > 1 || !Number.isSafeInteger(Math.ceil(requireKnown(p.cpu, "cpu-us") * 20 * Math.LN2)))) throw Error("Invalid application CPU distribution descriptor");
     check(p.maxCpuParallelism, "cores", Number.MIN_VALUE); check(p.blockingWait, "us", 0, false, true);
     if (!["complete-model", "partial"].includes(p.residentCoverage)) throw new Error("Resident profile coverage required");
     for (const q of [p.requestResidentBytes, p.activeResidentBytes].filter(defined)) check(q, "bytes", 0, true, true);

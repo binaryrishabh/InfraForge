@@ -16,7 +16,7 @@ export function computeModules(input: ComputeInput, computes: Map<string, Return
           const profile = input.profiles.find(p => p.id === config.profiles[o.id]);
           return profile && isComputeProfile(profile) ? [[o.id, profile] as const] : [];
         }));
-        const resource = computeResource(config, profiles, host.clock, host.send, host.causal, host.cpu);
+        const resource = computeResource(config, profiles, host.clock, host.send, host.causal, host.cpu, input.seed);
         computes.set(config.id, resource); return resource;
       },
     });

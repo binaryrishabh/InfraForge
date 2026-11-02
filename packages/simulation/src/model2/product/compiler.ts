@@ -1,3 +1,4 @@
+import { checkCpuDynamics } from "./workloadDynamics";
 import { RESOURCE_PORTS, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbHealthError, lbAdmissionError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
@@ -159,6 +160,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     }
     for (const key of Object.keys(contract.edges)) if (!edgeIds.has(key)) error("ORPHAN_EDGE_INTENT", `edges.${key}`, "Semantic edge must refer to an actual saved connection");
     if (diagnostics.length) return { ok: false, diagnostics };
+    checkCpuDynamics(design.workload, contract);
     const app = contract.application!;
     if (app.schema !== "infraforge-application/1" || !app.version || !app.id || !app.validityDomain || !app.provenance.length || !app.operations.some((o) => o.id === app.controlOperation)) throw Error("Versioned application provenance/validity, operations and explicit control operation required");
     phase = "provenance"; const provenance = derivedLedger(contract.ledger);

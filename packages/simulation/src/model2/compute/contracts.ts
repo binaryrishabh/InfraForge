@@ -4,6 +4,7 @@ import type { DemandProfile } from "../workload/profiles";
 import type { WorkStation, WorkloadInput, StationState } from "../workload/contracts";
 
 export interface ComputeProfile extends Omit<DemandProfile, "schema" | "io" | "stage"> {
+  cpuDistribution?: import("./demand").AppCpuDistribution;
   schema: "infraforge-compute-demand/1";
   stage: "compute";
   blockingWait: Quantity<"us">;
