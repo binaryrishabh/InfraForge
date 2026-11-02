@@ -12,7 +12,7 @@ export const WORKLOAD_PRESETS: Preset[] = [
 
 export function withWorkloadDynamics(p: WorkloadProfile, patch: Partial<Omit<WorkloadDynamics, "version">>): WorkloadProfile {
   const dynamics: WorkloadDynamics = { version: 1, arrivalProcess: "even", applicationCpuCv: 0, ...p.workloadDynamics, ...patch };
-  const next = { ...p, workloadDynamics: dynamics };
+  const next: WorkloadProfile = { ...p, workloadDynamics: dynamics };
   // Even arrivals with fixed work is the historical form, so choosing it again leaves the profile exactly as the old presets.
   if (dynamics.arrivalProcess === "even" && dynamics.applicationCpuCv === 0) delete next.workloadDynamics;
   return next;
