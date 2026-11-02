@@ -15,7 +15,7 @@ test("replication persists through save/live/capture/replay/comparison and rejec
   for (const schema of [LayoutSchema, LiveTopologySchema]) expect(layout.resources).toEqual(schema.parse(layout).resources);
   expect(validateDeploymentReadiness(layout.resources, layout.connectionLines).errors).toEqual([]);
   const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, databaseWorkload, "database-ha"))));
-  expect(input.adapterProfiles).toEqual(["db-replication/1"]);
+  expect(input.adapterProfiles).toEqual(["db-replication/1", "traffic-evidence/2"]);
   expect(buildContractFromRunInputs(input, 10)).not.toHaveProperty("refused");
   for (const adapterProfiles of [undefined, []]) expect(buildContractFromRunInputs({ ...input, adapterProfiles }, 10)).toHaveProperty("refused");
   expect(() => readRunInputs({ ...input, adapterProfiles: ["db-replication/1", "db-replication/1"] })).toThrow();

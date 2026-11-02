@@ -12,7 +12,7 @@ test("idempotent result intent survives save/reload and new captures select only
     const saved = JSON.parse(JSON.stringify(schema.parse(idempotencyLayout(value))));
     const input = readRunInputs(captureRunInputs(saved, workload, "idempotency"));
     expect(input.resources.find(r => r.id === "worker")!.asyncWorker!.idempotentResults).toBe(value);
-    expect(input.adapterProfiles).toEqual(value === true ? ["queue-idempotency/1"] : []);
+    expect(input.adapterProfiles).toEqual([...(value === true ? ["queue-idempotency/1"] : []), "traffic-evidence/2"]);
     const built = buildContractFromRunInputs(input, 3);
     if ("refused" in built) throw Error(JSON.stringify(built));
     expect(built.contract.nodes.worker!.resources[0]!.config).toHaveProperty("idempotency", value ? "object-if-absent" : "none");
@@ -26,7 +26,7 @@ test("captured replay refuses missing, mismatched and duplicate profiles and com
   expect(buildContractFromRunInputs({ ...old, adapterProfiles: input.adapterProfiles }, 3)).toHaveProperty("refused");
   expect(() => readRunInputs({ ...input, adapterProfiles: ["queue-idempotency/1", "queue-idempotency/1"] })).toThrow();
   const combined = captureRunInputs(idempotencyLayout(true, true, 3), workload, "idempotency");
-  expect(combined.adapterProfiles).toEqual(["failure-cause/1", "application-flow/3", "queue-capacity/1", "queue-idempotency/1"]);
+  expect(combined.adapterProfiles).toEqual(["failure-cause/1", "application-flow/3", "queue-capacity/1", "queue-idempotency/1", "traffic-evidence/2"]);
   expect(buildContractFromRunInputs(combined, 3)).toHaveProperty("contract");
   expect(compareInputs(old, input)).toMatchObject({ grade: "side-by-side-only", design: { reconfigured: [{ id: "worker", fields: [{ field: "asyncWorker" }] }] } });
 });

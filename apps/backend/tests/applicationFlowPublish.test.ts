@@ -27,7 +27,7 @@ test("/3 saves/reloads without defaults and captures its exact required profiles
   const d = canvas(); expect(validateDeploymentReadiness(d.resources, d.connectionLines).valid).toBe(true);
   for (const schema of [LayoutSchema, LiveTopologySchema]) expect<Resource[]>(schema.parse(JSON.parse(JSON.stringify(d))).resources).toEqual(d.resources);
   const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(d, workload, "publish-parity"))));
-  expect(input.adapterProfiles).toEqual(["failure-cause/1", "application-flow/3"]);
+  expect(input.adapterProfiles).toEqual(["failure-cause/1", "application-flow/3", "traffic-evidence/2"]);
   for (const adapterProfiles of [undefined, [], ["failure-cause/1"], ["application-flow/2"]] as const) expect(buildContractFromRunInputs({ ...input, adapterProfiles: adapterProfiles ? [...adapterProfiles] : undefined }, 4)).toHaveProperty("refused");
   expect(() => readRunInputs({ ...input, adapterProfiles: ["application-flow/4"] })).toThrow();
   for (const schema of ["application-flow/1", "application-flow/2"] as const) { const old = structuredClone(d); old.resources[0]!.applicationFlow!.schema = schema; expect(LayoutSchema.safeParse(old).success).toBe(false); }

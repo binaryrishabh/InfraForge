@@ -1,14 +1,18 @@
 /** Timing ownership audit (traffic-evidence/2 only).
  * caller-offered -> completed caller-terminal owns responseUs, the sole denominator.
- * path-offered -> connection-acquired owns connection acquisition; acquired ->
- * request-delivered owns request transit. A remote-terminal observation is needed
- * for response transit; cumulative path remoteServiceUs includes nested work and
- * is never added. lb-received -> first selection owns LB pending wait.
+ * Observer-only latency-path-* boundaries mirror transport start/acquisition/
+ * delivery/remote-terminal/terminal: start -> acquired owns connection acquisition,
+ * acquired -> delivered owns request transit, remote-terminal -> terminal owns
+ * response transit. Path terminal clips late remote work. Cumulative path
+ * remoteServiceUs includes nested work and is never added. latency-lb-admitted ->
+ * latency-lb-start owns actual pending wait after admission, excluding rate limits.
  * app-admitted -> app-start owns application queue wait; start -> terminal owns
  * application residence, excluding its dependency intervals. app-dependency owns
  * downstream wait until its return; flow step boundaries prove flow dependency wait.
  * client-attempt terminal/issued prove failed attempt time and actual retry delay;
- * LB attempt-terminal proves failed LB attempts (never count overlapping work twice).
+ * latency-lb-attempt-start -> failed attempt-terminal proves failed LB attempts.
+ * Failed client attempts cover their nested work; dependency wait covers nested
+ * LB attempts/transport; failed entry LB attempts cover their app and transit.
  * Database counters do not prove exclusive per-request database internals.
  * Missing boundaries remain unattributed. Health probes have no live caller root.
  * Each measured second uses completed callers only: all-request means divide by

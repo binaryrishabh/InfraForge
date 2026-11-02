@@ -15,7 +15,7 @@ test("buffer boundary capture, comparison, composed cadence and replay", () => {
     expect(validateDeploymentReadiness(layout.resources, layout.connectionLines).errors).toEqual([]);
     const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, monitoringWorkload, "monitor-buffer"))));
     const expectedProfiles: AdapterProfile[] = cadence ? ["monitor-cadence/1", "monitor-buffer/1"] : ["monitor-buffer/1"];
-    expect(input.adapterProfiles).toEqual(expectedProfiles);
+    expect(input.adapterProfiles).toEqual([...(expectedProfiles), "traffic-evidence/2"]);
     expect(buildContractFromRunInputs(input, 65)).not.toHaveProperty("refused");
     for (const adapterProfiles of [undefined, [], ["monitor-cadence/1"]] as const) expect(buildContractFromRunInputs({ ...input, adapterProfiles: adapterProfiles === undefined ? undefined : [...adapterProfiles] }, 65)).toHaveProperty("refused");
     expect(() => readRunInputs({ ...input, adapterProfiles: ["monitor-buffer/1", "monitor-buffer/1"] })).toThrow();

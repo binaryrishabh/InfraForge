@@ -43,17 +43,17 @@ test("layout, live topology and captured resources retain optional bounded cache
 test("only new captures with changed compiled cache behavior select the cache policy profile", () => {
   const old = captureRunInputs(layout(), workload, "capture-cache"), historical = { ...old, adapterProfiles: undefined };
   expect(readRunInputs(JSON.parse(JSON.stringify(historical))).adapterProfiles).toBeUndefined();
-  expect(buildContractFromRunInputs(historical, 5)).toEqual(buildContractFromRunInputs(old, 5));
+  expect(buildContractFromRunInputs(historical, 5)).toEqual(buildContractFromRunInputs({ ...old, adapterProfiles: [] }, 5));
   for (const policy of [{ version: 1 as const }, { version: 1 as const, ttlSeconds: 60, singleFlight: false }]) {
     const saved = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout(policy), workload, "capture-cache"))));
-    expect(saved.adapterProfiles).toEqual([]); expect(saved.resources[1]!.cachePolicy).toEqual(policy);
+    expect(saved.adapterProfiles).toEqual(["traffic-evidence/2"]); expect(saved.resources[1]!.cachePolicy).toEqual(policy);
     expect(buildContractFromRunInputs(saved, 5)).toEqual(buildContractFromRunInputs(old, 5));
   }
   for (const policy of [{ version: 1 as const, ttlSeconds: 1 }, { version: 1 as const, singleFlight: true }, { version: 1 as const, ttlSeconds: 120, singleFlight: true }]) {
     const captured = captureRunInputs(layout(policy), workload, "capture-cache");
     const saved = readRunInputs(JSON.parse(JSON.stringify(captured)));
     expect(JSON.stringify(saved)).toBe(JSON.stringify(captured));
-    expect(saved.adapterProfiles).toEqual(["data-cache-policy/1"]); expect(saved.resources[1]!.cachePolicy).toEqual(policy);
+    expect(saved.adapterProfiles).toEqual(["data-cache-policy/1", "traffic-evidence/2"]); expect(saved.resources[1]!.cachePolicy).toEqual(policy);
     expect(buildContractFromRunInputs(saved, 5)).toHaveProperty("contract");
     for (const adapterProfiles of [undefined, []]) expect(buildContractFromRunInputs({ ...saved, adapterProfiles }, 5)).toHaveProperty("refused");
   }

@@ -18,9 +18,9 @@ test("learner-authored CPU quota survives layout/live and captured input", () =>
 
 test("quota capture is explicit, strict and composes with VM execution", () => {
   const old = captureRunInputs(layout(), workload, "quota");
-  expect(old.adapterProfiles).toEqual([]);
+  expect(old.adapterProfiles).toEqual(["traffic-evidence/2"]);
   const saved = captureRunInputs(layout(25), workload, "quota");
-  expect(saved.adapterProfiles).toEqual(["vm-cpu-quota/1"]);
+  expect(saved.adapterProfiles).toEqual(["vm-cpu-quota/1", "traffic-evidence/2"]);
   expect(buildContractFromRunInputs(saved, 3)).toHaveProperty("contract");
   for (const adapterProfiles of [undefined, [], ["vm-execution/1" as const]]) expect(buildContractFromRunInputs({ ...saved, adapterProfiles }, 3)).toHaveProperty("refused");
   expect(buildContractFromRunInputs({ ...old, adapterProfiles: saved.adapterProfiles }, 3)).toHaveProperty("refused");

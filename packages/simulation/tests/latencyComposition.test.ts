@@ -5,6 +5,7 @@ import { compileProduct, contractFromDesign, createProductModel2, currentAdapter
 import { withRunLength } from "../src/model2/product/runContract";
 import { latencyComposition, type LatencySample } from "../src/model2/workload/latencyComposition";
 import type { CausalEvent } from "../src/model2/workload/causal";
+import { quantities } from "./workloadFixture";
 
 function measure(mode: string, stepped = false) {
   const design = latencyDesign(mode === "client-retry", mode === "limiter");
@@ -14,6 +15,11 @@ function measure(mode: string, stepped = false) {
   if (mode === "direct") { design.resources = design.resources.filter(r => r.id !== "lb"); design.connections = design.connections.filter(e => e.sourceId !== "lb"); }
   const b = contractFromDesign(design, { adapterProfiles: [...currentAdapterProfiles(design.resources, design.workload), "traffic-evidence/2"] });
   if ("refused" in b) throw Error(JSON.stringify(b));
+  if (mode === "deadline") {
+    const { q, ledger } = quantities();
+    for (const op of b.contract.application!.operations) op.callerTimeout = q(`deadline.${op.id}`, 2000, "us");
+    b.contract.ledger.push(...ledger);
+  }
   const c = compileProduct(design, withRunLength(b.contract, 3, "latency-conservation")); if (!c.ok) throw Error(JSON.stringify(c));
   const samples: LatencySample[] = [], events: CausalEvent[] = [];
   const accounting = latencyComposition(c.value.input.limits.maxLiveCalls!, s => samples.push(s));
@@ -38,6 +44,15 @@ for (const mode of ["direct", "queue", "lb-retry", "client-retry", "limiter"]) t
   if (mode === "client-retry") expect(a.samples.some(s => (s.categoriesUs.clientRetryDelay ?? 0) > 0 && (s.categoriesUs.failedAttempt ?? 0) > 0)).toBe(true);
   if (mode === "lb-retry") { expect(a.events.some(e => e.kind === "retry-scheduled")).toBe(true); expect(a.samples.some(s => (s.categoriesUs.failedAttempt ?? 0) > 0)).toBe(true); }
   if (mode === "limiter") expect(a.events.some(e => e.kind === "lb-rate-limited")).toBe(true);
+});
+
+test("real caller deadlines exclude cancelled remote work from completed composition", () => {
+  const a = measure("deadline");
+  expect(a.evidence.counts.deadlineExceeded).toBeGreaterThan(0);
+  expect(a.events.some(e => e.kind === "app-terminal" && e.detail.outcome === "cancelled")).toBe(true);
+  expect(a.samples.length).toBe(a.evidence.counts.completed);
+  expect(a.samples.every(s => s.responseUs < 2000)).toBe(true);
+  expect(a.accounting.liveRoots).toBe(a.evidence.counts.inFlight);
 });
 
 test("missing events and bounded root overflow stay unattributed; stopped callers are excluded", () => {

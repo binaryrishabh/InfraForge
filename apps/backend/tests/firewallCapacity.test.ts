@@ -16,7 +16,7 @@ test("save/live/capture/replay/comparison preserve optional firewall capacity", 
     for (const schema of [LayoutSchema, LiveTopologySchema]) expect(layout.resources).toEqual(schema.parse(layout).resources);
     expect(validateDeploymentReadiness(layout.resources, layout.connectionLines).errors).toEqual([]);
     const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, firewallWorkload, "firewall-flow-capacity"))));
-    expect(input.adapterProfiles).toEqual(["firewall-flow-capacity/1"]);
+    expect(input.adapterProfiles).toEqual(["firewall-flow-capacity/1", "traffic-evidence/2"]);
     expect(buildContractFromRunInputs(input, 30)).not.toHaveProperty("refused");
     for (const adapterProfiles of [undefined, [], ["object-capacity/1"]] as const) expect(buildContractFromRunInputs({ ...input, adapterProfiles: adapterProfiles === undefined ? undefined : [...adapterProfiles] }, 30)).toHaveProperty("refused");
     expect(() => readRunInputs({ ...input, adapterProfiles: ["firewall-flow-capacity/1", "firewall-flow-capacity/1"] })).toThrow();

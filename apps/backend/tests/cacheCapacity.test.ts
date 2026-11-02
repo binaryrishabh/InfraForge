@@ -44,7 +44,7 @@ test("layout/live/captured schemas retain bounded version 2 capacity and reject 
 
 test("new captures select capacity profile only with saved capacity; missing/mismatched historical profiles refuse", () => {
   const old = captureRunInputs(layout(), workload, "capacity-capture");
-  expect(old.adapterProfiles).toEqual(["data-keyspace/1"]);
+  expect(old.adapterProfiles).toEqual(["data-keyspace/1", "traffic-evidence/2"]);
   expect(buildContractFromRunInputs({ ...old, adapterProfiles: [...old.adapterProfiles!, "data-cache-capacity/1"] }, 5)).toHaveProperty("refused");
   for (const policy of [{ version: 2 as const, capacityEntries: 10 }, { version: 2 as const, capacityEntries: 1000, ttlSeconds: 1, singleFlight: true }]) {
     const captured = captureRunInputs(layout(policy), workload, "capacity-capture"), saved = readRunInputs(JSON.parse(JSON.stringify(captured)));

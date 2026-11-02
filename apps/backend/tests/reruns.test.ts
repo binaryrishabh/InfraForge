@@ -73,6 +73,6 @@ test("exact reruns copy historical profile absence and new profile selection wit
     expect(rerunInputHash(rerun)).toBe(rerunInputHash(captured));
     const built = buildContractFromRunInputs(rerun, 5); if ("refused" in built) throw Error(JSON.stringify(built));
     expect(built.contract.failureCauseProfile).toBe(historical ? undefined : "failure-cause/1");
-    expect(currentDesignInput(rerun, design).adapterProfiles).toEqual(["failure-cause/1"]);
+    expect(currentDesignInput(rerun, design).adapterProfiles).toEqual(["failure-cause/1", "traffic-evidence/2"]);
   }
 });

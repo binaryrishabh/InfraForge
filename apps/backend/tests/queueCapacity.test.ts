@@ -11,7 +11,7 @@ test("queue capacity survives save/reload, live validation and captured inputs w
     const saved = JSON.parse(JSON.stringify(schema.parse(capacityLayout(value))));
     const input = readRunInputs(captureRunInputs(saved, workload, "capacity"));
     expect(input.resources.find(r => r.id === "queue")!.asyncQueue!.capacityMessages).toBe(value);
-    expect(input.adapterProfiles).toEqual(value === undefined ? [] : ["queue-capacity/1"]);
+    expect(input.adapterProfiles).toEqual([...(value === undefined ? [] : ["queue-capacity/1"]), "traffic-evidence/2"]);
     expect(buildContractFromRunInputs(input, 3)).toHaveProperty("contract");
   }
   expect(DEFAULT_ASYNC_QUEUE_SETTINGS).not.toHaveProperty("capacityMessages");
@@ -23,7 +23,7 @@ test("reconstruction refuses missing, mismatched and duplicate captured capacity
   expect(buildContractFromRunInputs({ ...old, adapterProfiles: input.adapterProfiles }, 3)).toHaveProperty("refused");
   expect(() => readRunInputs({ ...input, adapterProfiles: ["queue-capacity/1", "queue-capacity/1"] })).toThrow();
   const combined = captureRunInputs(capacityLayout(3, true), workload, "capacity");
-  expect(combined.adapterProfiles).toEqual(["failure-cause/1", "application-flow/3", "queue-capacity/1"]);
+  expect(combined.adapterProfiles).toEqual(["failure-cause/1", "application-flow/3", "queue-capacity/1", "traffic-evidence/2"]);
   expect(buildContractFromRunInputs(combined, 3)).toHaveProperty("contract");
   expect(compareInputs(input, captureRunInputs(capacityLayout(4), workload, "capacity"))).toMatchObject({ grade: "one-change-design", design: { reconfigured: [{ id: "queue", fields: [{ field: "asyncQueue" }] }] } });
 });

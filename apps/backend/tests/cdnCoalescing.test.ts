@@ -15,7 +15,7 @@ for (const coalesce of [true, false]) for (const ttlSeconds of [undefined, 1, 36
   expect(validateDeploymentReadiness(layout.resources, layout.connectionLines)).toEqual(validateDeploymentReadiness(cdnLayout().resources, layout.connectionLines));
   const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, cdnWorkload, "cdn-coalescing"))));
   const profiles: AdapterProfile[] = [...(ttlSeconds === undefined ? [] : ["cdn-ttl/1" as const]), "cdn-coalescing/1"];
-  expect(input.adapterProfiles).toEqual(profiles);
+  expect(input.adapterProfiles).toEqual([...(profiles), "traffic-evidence/2"]);
   expect(buildContractFromRunInputs(input, 12)).not.toHaveProperty("refused");
   for (const adapterProfiles of [undefined, [], ["cdn-ttl/1"]] as (AdapterProfile[] | undefined)[]) expect(buildContractFromRunInputs({ ...input, adapterProfiles }, 12)).toHaveProperty("refused");
   expect(() => readRunInputs({ ...input, adapterProfiles: ["cdn-coalescing/1", "cdn-coalescing/1"] })).toThrow();

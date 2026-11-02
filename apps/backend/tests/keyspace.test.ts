@@ -34,13 +34,13 @@ test("hot-key layout/capture schemas retain explicit intent and bound the option
   }
   const d = layout(100); d.resources[2]!.dataKeyspace!.accessPattern = "hot-key";
   const input = captureRunInputs(d, workload, "hot-capture"), stored = readRunInputs(JSON.parse(JSON.stringify(input)));
-  expect(input.adapterProfiles).toEqual(["data-keyspace/1", "data-hot-key/1"]);
+  expect(input.adapterProfiles).toEqual(["data-keyspace/1", "data-hot-key/1", "traffic-evidence/2"]);
   expect(JSON.stringify(stored)).toBe(JSON.stringify(input));
   expect(buildContractFromRunInputs({ ...stored, adapterProfiles: ["data-keyspace/1"] }, 5)).toHaveProperty("refused");
   expect(buildContractFromRunInputs({ ...stored, adapterProfiles: undefined }, 5)).toHaveProperty("refused");
   d.resources[2]!.dataKeyspace!.count = 1;
   const one = captureRunInputs(d, workload, "hot-capture"), historical = captureRunInputs(layout(), workload, "hot-capture");
-  expect(one.adapterProfiles).toEqual([]); expect(buildContractFromRunInputs(one, 5)).toEqual(buildContractFromRunInputs(historical, 5));
+  expect(one.adapterProfiles).toEqual(["traffic-evidence/2"]); expect(buildContractFromRunInputs(one, 5)).toEqual(buildContractFromRunInputs(historical, 5));
 });
 
 test("layout and live topology schemas retain strict versioned DB keyspaces and refuse invalid bounds", () => {
@@ -57,13 +57,13 @@ test("layout and live topology schemas retain strict versioned DB keyspaces and 
 
 test("only new multi-key captures persist data-keyspace/1; old inputs remain without implicit profiles", () => {
   const old = captureRunInputs(layout(), workload, "keyspace-parity"), one = captureRunInputs(layout(1), workload, "keyspace-parity");
-  expect(old.adapterProfiles).toEqual([]); expect(one.adapterProfiles).toEqual([]);
+  expect(old.adapterProfiles).toEqual(["traffic-evidence/2"]); expect(one.adapterProfiles).toEqual(["traffic-evidence/2"]);
   expect(buildContractFromRunInputs(old, 5)).toEqual(buildContractFromRunInputs(one, 5));
   const historical = { ...old, adapterProfiles: undefined };
   expect(readRunInputs(JSON.parse(JSON.stringify(historical))).adapterProfiles).toBeUndefined();
-  expect(buildContractFromRunInputs(historical, 5)).toEqual(buildContractFromRunInputs(old, 5));
+  expect(buildContractFromRunInputs(historical, 5)).toEqual(buildContractFromRunInputs({ ...old, adapterProfiles: [] }, 5));
   const captured = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout(10), workload, "keyspace-parity"))));
-  expect(captured.adapterProfiles).toEqual(["data-keyspace/1"]);
+  expect(captured.adapterProfiles).toEqual(["data-keyspace/1", "traffic-evidence/2"]);
   expect(captured.resources[2]!.dataKeyspace).toEqual({ version: 1, count: 10 });
   expect(buildContractFromRunInputs({ ...captured, adapterProfiles: undefined }, 5)).toHaveProperty("refused");
   expect(buildContractFromRunInputs({ ...old, adapterProfiles: ["data-keyspace/1"] }, 5)).toHaveProperty("refused");

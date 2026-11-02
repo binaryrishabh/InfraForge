@@ -24,7 +24,7 @@ test("/2 data steps save/reload with captured profile, strict validation and com
   expect(validateDeploymentReadiness(d.resources,d.connectionLines).valid).toBe(true);
   for(const schema of [LayoutSchema,LiveTopologySchema])expect<Resource[]>(schema.parse(JSON.parse(JSON.stringify(d))).resources).toEqual(d.resources);
   const input=readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(d,workload,"data-parity"))));
-  expect(input.adapterProfiles).toEqual(["failure-cause/1","application-flow/2"]);
+  expect(input.adapterProfiles).toEqual(["failure-cause/1","application-flow/2", "traffic-evidence/2"]);
   expect(buildContractFromRunInputs({...input,adapterProfiles:undefined},4)).toHaveProperty("refused");
   const old=structuredClone(d);old.resources[0]!.applicationFlow!.schema="application-flow/1";
   expect(LayoutSchema.safeParse(old).success).toBe(false);
