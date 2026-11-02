@@ -1,7 +1,7 @@
 import { clientRetryError, type WorkloadProfile } from "@infraforge/domain/workload";
 import type { ProductContract } from "./contracts";
 
-export const CLIENT_RETRY_PROFILE = "client-retry/1";
+export const CLIENT_RETRY_PROFILE = "client-retry/1" as const;
 
 export function compileClientRetry(p: WorkloadProfile, contract: ProductContract) {
   const error = clientRetryError(p.clientRetry); if (error) throw Error(error);

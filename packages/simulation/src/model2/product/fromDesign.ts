@@ -52,7 +52,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const dynamicsError = workloadDynamicsError(saved.workload.workloadDynamics) ?? clientRetryError(saved.workload.clientRetry);
     if (dynamicsError) throw Error(dynamicsError);
     const design = savedPoolPolicies(saved), resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
-    // New canvas runs with retry/breaker intent record observational cause evidence; no learner control, and no decision depends on it.
+    // New captures record cause evidence when saved retry, breaker, flow or limiter intent needs it.
     const profiles = history && "adapterProfiles" in history ? history.adapterProfiles : history ? [] : currentAdapterProfiles(resources, saved.workload);
     if (profiles.some(p => ![CLIENT_RETRY_PROFILE, "failure-cause/1", "application-flow/2", "application-flow/3", KEYSPACE_PROFILE, HOT_KEY_PROFILE, CACHE_POLICY_PROFILE, CACHE_CAPACITY_PROFILE, DATABASE_REPLICATION_PROFILE, DB_CONCURRENCY_PROFILE, VM_EXECUTION_PROFILE, VM_CPU_QUOTA_PROFILE, LB_RATE_LIMIT_PROFILE, LB_ADMISSION_PROFILE, LB_HEALTH_PROFILE, QUEUE_CAPACITY_PROFILE, QUEUE_IDEMPOTENCY_PROFILE, CDN_TTL_PROFILE, CDN_COALESCING_PROFILE, MONITOR_CADENCE_PROFILE, MONITOR_BUFFER_PROFILE, OBJECT_CAPACITY_PROFILE, FIREWALL_CAPACITY_PROFILE].includes(p)) || new Set(profiles).size !== profiles.length) error("adapterProfiles", "Unsupported adapter profile selection.");
     const failureCause = profiles.includes("failure-cause/1");

@@ -41,6 +41,7 @@ test("eligible reads retry through the same entry, keep root/deadline, double ex
   const stepped = run(fixture(), "backend-rejected", 2);
   while (!stepped.runtime.advanceSlice(60000, 1)) { /* bounded stepping */ }
   expect(stepped.runtime.evidence()).toEqual(f.runtime.evidence());
+  expect(JSON.stringify(stepped.runtime.evidence())).toBe(JSON.stringify(f.runtime.evidence()));
 });
 
 for (const reason of ["rate-limited", "circuit-open", "session-limit", null] as const) test(`ineligible cause ${reason} never retries`, () => {
@@ -103,4 +104,11 @@ test("invalid retry ownership or missing cause profile refuses before execution"
   expect(() => run(input)).toThrow("read-only");
   input.operations[0]!.idempotency = "read-only"; delete input.failureCauseProfile;
   expect(() => run(input)).toThrow("failure-cause/1");
+});
+
+test("pending-event budget refuses retry timers without reporting them as scheduled", () => {
+  const input = fixture(); input.limits.maxPendingEvents = 2;
+  const f = run(input);
+  expect(() => f.runtime.advanceTo(60000)).toThrow("pending-event budget exhausted");
+  expect(f.runtime.evidence().clientRetry).toMatchObject({ totalAttempts: 1, retriesScheduled: 0, retriesIssued: 0 });
 });

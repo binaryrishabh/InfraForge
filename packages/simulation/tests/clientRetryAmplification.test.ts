@@ -73,6 +73,7 @@ test("retries re-enter the LB bucket and rate-limited roots are never retried", 
 test("Poisson cross-resource demonstration repeats deterministically with the same originals", () => {
   const off = measure(false, false, true), on = measure(true, false, true), repeat = measure(true, false, true);
   expect(on.originals).toEqual(off.originals); expect(repeat.evidence).toEqual(on.evidence);
+  expect(JSON.stringify(repeat.evidence)).toBe(JSON.stringify(on.evidence));
   expect(on.evidence.clientRetry!.totalAttempts).toBe(on.issued);
   expect(on.evidence.clientRetry!.totalAttempts).toBeGreaterThan(on.originals.length);
   expect(on.evidence.clientRetry!.exhausted).toBe(on.exhausted);

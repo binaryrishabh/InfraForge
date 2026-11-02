@@ -109,12 +109,12 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
         if (outcome === "rejected" && operation.clientRetry) {
           const decision = clientRetryDecision(operation.clientRetry, current.attempt, kernel.now, deadline, abandon, cause);
           if (decision.at !== undefined) {
-            observe?.({ atUs: kernel.now, kind: "client-retry-scheduled", resource: "$caller", work: current, detail: { retryAtUs: decision.at } });
             const attempt = current.attempt + 1;
             cancelRetry = kernel.schedule(decision.at, 3, identity("client-retry", rootId, attempt), () => {
               cancelRetry = undefined;
               if (!terminal) issue({ ...work, attempt, clientAttempt: attempt, callId: identity(rootId, "attempt", attempt, "entry") });
             });
+            observe?.({ atUs: kernel.now, kind: "client-retry-scheduled", resource: "$caller", work: current, detail: { retryAtUs: decision.at } });
             return;
           }
           observe?.({ atUs: kernel.now, kind: "client-retry-stopped", resource: "$caller", work: current, detail: { reason: decision.reason!, rootReason: cause?.rootReason ?? null } });
