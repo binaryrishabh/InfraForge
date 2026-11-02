@@ -105,6 +105,13 @@ jobs:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_HOST_FINGERPRINT: ${{ secrets.EC2_HOST_FINGERPRINT }}
         run: bun --no-env-file scripts/deploy/preflight.ts
+      # This job's own fresh token (not the image job's) must be able to read the exact published digest.
+      # Failing here, before Tailscale/SSH/backup, leaves production untouched.
+      - name: Prove this job can pull the exact approved image
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: bun --no-env-file scripts/deploy/image.ts verify "$RELEASE_SHA" "$RELEASE_IMAGE"
       - name: Recheck main after approval
         env:
           GH_TOKEN: ${{ github.token }}

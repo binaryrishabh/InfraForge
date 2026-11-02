@@ -5,7 +5,7 @@ import { prepareReleaseImage } from "../release/image";
 import { APPROVED_IMAGE_REPOSITORY, APPROVED_IMAGE_SOURCE, approvedImageReference, pullApprovedImage } from "../release/registry";
 import * as releaseProcess from "../release/process";
 import * as build from "../release/build";
-import { publishReleaseImage } from "../deploy/image";
+import { publishReleaseImage, verifyPublishedImage } from "../deploy/image";
 
 const sha = "a".repeat(40), other = "b".repeat(40);
 const digest = `sha256:${"c".repeat(64)}`, reference = `${APPROVED_IMAGE_REPOSITORY}@${digest}`;
@@ -152,6 +152,17 @@ test("the release workflow publishes off-host and the host script never builds o
   expect(release).toContain("needs: [release-gate, image]");
   expect(release).toContain("packages: read");
   expect(release).not.toContain("packages: write");
+  // A job-level permissions block replaces the defaults, so the release job must restate what it already needs.
+  const permissions = release.slice(release.indexOf("permissions:"), release.indexOf("env:"));
+  for (const need of ["contents: read", "actions: read", "deployments: read", "packages: read"]) expect(permissions).toContain(need);
+  expect(permissions).not.toMatch(/write/);
+  expect(image.slice(image.indexOf("permissions:"), image.indexOf("outputs:")).replace(/\s+/g, " ").trim()).toBe("permissions: contents: read packages: write");
+  // The release job proves its own token can read the exact digest before Tailscale, SSH, backup or any host command.
+  const proof = release.indexOf("Prove this job can pull the exact approved image");
+  expect(proof).toBeGreaterThan(0);
+  for (const later of ["Join Tailscale for the home server", "Release exact backend commit"]) expect(proof).toBeLessThan(release.indexOf(later));
+  expect(release.slice(proof, release.indexOf("- name:", proof + 10))).toContain("REGISTRY_TOKEN: ${{ github.token }}");
+  expect(release.slice(proof, release.indexOf("- name:", proof + 10))).toContain("scripts/deploy/image.ts verify");
   expect(release).toContain("RELEASE_IMAGE: ${{ needs.image.outputs.reference }}");
 });
 
@@ -182,4 +193,37 @@ test("the runner publishes only a verified build and outputs the immutable diges
     if (message !== "immutable digest") expect(calls.some(c => c.includes("push"))).toBe(false);
   }
   await expect(publishReleaseImage(sha, make({}, {}, []) as never, ".", { ...env, REGISTRY_TOKEN: undefined })).rejects.toThrow("credentials");
+});
+
+test("the release job proves read access to the exact digest and verifies repository, source, revision and metadata before production", async () => {
+  const calls: string[][] = [];
+  const env = { REGISTRY_USER: "octo", REGISTRY_TOKEN: "ghs_RELEASE_JOB_TOKEN" };
+  const make = (behaviour: { labels?: Record<string, string>; metadata?: Record<string, unknown>; pullFails?: boolean }) => async (args: string[], _cwd: string, _e?: unknown, _d?: string, input?: string) => {
+    calls.push(args);
+    const configAt = args.indexOf("--config"), verb = configAt > 0 ? args[configAt + 2] : args[1];
+    if (verb === "login") { expect(input).toBe(env.REGISTRY_TOKEN); expect(args.join(" ")).not.toContain(env.REGISTRY_TOKEN); return ""; }
+    if (verb === "pull") { if (behaviour.pullFails) throw new Error("docker pull failed; denied: permission_denied: read_package"); return ""; }
+    if (verb === "version") return "amd64";
+    if (verb === "image" && (configAt > 0 ? args[configAt + 3] : args[2]) === "inspect") return JSON.stringify([{ Id: imageId, Architecture: "amd64", RepoDigests: [reference], Config: { Labels: behaviour.labels ?? goodLabels() } }]);
+    if (verb === "run") return JSON.stringify(behaviour.metadata ?? { sha, migrationFingerprint: "m", authContract: 1 });
+    return "";
+  };
+  const ok = await verifyPublishedImage(sha, reference, make({}) as never, ".", env);
+  expect(ok).toEqual({ reference, migrationFingerprint: "m" });
+  const flat = calls.map(c => c.join(" "));
+  expect(flat.some(c => c.includes(" build "))).toBe(false);
+  expect(flat.some(c => c.includes("compose") || c.includes("ssh"))).toBe(false);
+  expect(flat.filter(c => c.includes("image rm"))).toHaveLength(2);
+  expect(flat.some(c => c.includes("logout"))).toBe(true);
+  for (const [name, behaviour, message] of [
+    ["token cannot read the package", { pullFails: true }, "permission_denied"],
+    ["wrong revision", { labels: { ...goodLabels(), "org.opencontainers.image.revision": other } }, "revision"],
+    ["wrong source", { labels: { ...goodLabels(), "org.opencontainers.image.source": "https://github.com/x/y" } }, "source"],
+    ["wrong metadata", { metadata: { sha: other, migrationFingerprint: "m", authContract: 1 } }, "Embedded release metadata"],
+    ["wrong auth contract", { metadata: { sha, migrationFingerprint: "m", authContract: 2 } }, "Embedded release metadata"],
+  ] as [string, { labels?: Record<string, string>; metadata?: Record<string, unknown>; pullFails?: boolean }, string][]) {
+    await expect(verifyPublishedImage(sha, reference, make(behaviour) as never, ".", env), name).rejects.toThrow(message);
+  }
+  await expect(verifyPublishedImage(sha, `${APPROVED_IMAGE_REPOSITORY}:latest`, make({}) as never, ".", env)).rejects.toThrow("approved exact image digest");
+  await expect(verifyPublishedImage(sha, reference, make({}) as never, ".", { ...env, REGISTRY_TOKEN: undefined })).rejects.toThrow("credentials");
 });

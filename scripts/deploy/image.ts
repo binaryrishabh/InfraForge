@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildReleaseImage } from "../release/build";
 import { command } from "../release/process";
-import { APPROVED_IMAGE_REPOSITORY, APPROVED_IMAGE_SOURCE } from "../release/registry";
+import { APPROVED_IMAGE_REPOSITORY, APPROVED_IMAGE_SOURCE, approvedImageReference, pullApprovedImage } from "../release/registry";
 import { fullSha } from "../release/public-check";
 
 // Runs on the GitHub runner, never on the production host. Builds the exact approved commit with the
@@ -39,10 +39,40 @@ export async function publishReleaseImage(sha: string, run = command, root = pro
   }
 }
 
+/**
+ * Runs in the RELEASE job, with that job's own fresh workflow token, before anything touches production:
+ * proves the exact published digest is readable with the same token class the host will later receive,
+ * and that its repository, source, revision and embedded release metadata are the approved release.
+ */
+export async function verifyPublishedImage(sha: string, reference: string, run = command, root = process.cwd(), env: Record<string, string | undefined> = process.env) {
+  fullSha(sha);
+  approvedImageReference(reference);
+  const user = env.REGISTRY_USER, token = env.REGISTRY_TOKEN;
+  if (!user || !token) throw new Error("Registry credentials are required to prove access to the release image");
+  const local = await pullApprovedImage(reference, sha, root, { user, token }, run);
+  try {
+    const metadata = JSON.parse(await run(["docker", "run", "--rm", "--network", "none", local, "cat", "/app/apps/backend/release.json"], root));
+    if (metadata.sha !== sha || typeof metadata.migrationFingerprint !== "string" || !metadata.migrationFingerprint || metadata.authContract !== 1) {
+      throw new Error("Embedded release metadata does not match the approved release");
+    }
+    return { reference, migrationFingerprint: metadata.migrationFingerprint as string };
+  } finally {
+    // The runner keeps nothing from this proof; the host pulls the digest itself.
+    await run(["docker", "image", "rm", "--no-prune", local], root).catch(() => {});
+    await run(["docker", "image", "rm", "--no-prune", reference], root).catch(() => {});
+  }
+}
+
 if (import.meta.main) {
-  const [action, sha = ""] = process.argv.slice(2);
-  if (action !== "publish") throw new Error("Use: bun --no-env-file scripts/deploy/image.ts publish <full-sha>");
-  const result = await publishReleaseImage(sha);
-  console.log(`Published ${result.reference} (${result.architecture})`);
-  if (process.env.GITHUB_OUTPUT) await appendFile(process.env.GITHUB_OUTPUT, `reference=${result.reference}\n`);
+  const [action, sha = "", reference = ""] = process.argv.slice(2);
+  if (action === "publish") {
+    const result = await publishReleaseImage(sha);
+    console.log(`Published ${result.reference} (${result.architecture})`);
+    if (process.env.GITHUB_OUTPUT) await appendFile(process.env.GITHUB_OUTPUT, `reference=${result.reference}\n`);
+    // Recorded so a same-SHA retry can later be compared: image reproducibility is not assumed.
+    if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, `Published release image for ${sha}: \`${result.reference}\`\n`);
+  } else if (action === "verify") {
+    const result = await verifyPublishedImage(sha, reference);
+    console.log(`Verified release-job access to ${result.reference}`);
+  } else throw new Error("Use: bun --no-env-file scripts/deploy/image.ts publish <full-sha> | verify <full-sha> <digest-reference>");
 }
