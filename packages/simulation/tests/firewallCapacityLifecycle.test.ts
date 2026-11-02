@@ -10,7 +10,7 @@ import { createProductModel2 } from "../src/model2/product/run";
 // Exercise the existing security hook with the capacity from the real saved-design compiler.
 function plane(two = false, tls = false) {
   const f = firewallSetup(two ? "two" : tls ? "tls" : "front", 2), input = f.compiled.input;
-  const context: NetworkContext = { endpoint: id => input.endpoints[id]!, reachable: () => true, setReady() {}, observe() {}, setAvailable() {}, abortOwned() {}, drain() {}, backend: () => ({ health: true, draining: false, outstanding: 0 }) };
+  const context: NetworkContext = { invalidateSessions: () => 0, endpoint: id => input.endpoints[id]!, reachable: () => true, setReady() {}, observe() {}, setAvailable() {}, abortOwned() {}, drain() {}, backend: () => ({ health: true, draining: false, outstanding: 0 }) };
   const security = securityPlane(input, new EventKernel(1000), context, () => undefined);
   const hook = (path: string) => security.hook(input.paths.find(p => p.id === path)!, () => { throw Error("Unexpected DNS"); });
   return { ...f, security, hook };

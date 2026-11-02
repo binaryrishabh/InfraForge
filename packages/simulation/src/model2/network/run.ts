@@ -20,6 +20,7 @@ import type { CausalObserver } from "../workload/causal";
 import type { CpuOwners, ClockOwners } from "../composition/host";
 
 export interface NetworkContext {
+  invalidateSessions(target: string, ids: readonly string[]): number;
   setReady(id: string, ready: boolean, owner?: string): void;
   endpoint(id: string): { alive: boolean; ready: boolean };
   reachable(path: string): boolean;
@@ -71,11 +72,16 @@ export function createNetworkRuntime(authored: NetworkInput, extension?: Network
     const trace = networkTrace(kernel, input.limits.maxRawResults, extension?.causal, input.limits.maxTraceBytes), states = new Map(Object.entries(input.endpoints).map(([id, state]) => [id, { ...state }])), readiness = new Map<string, Map<string, boolean>>(), activeStates = new Map<string, { alive: boolean; ready: boolean }>();
     const availability = new Map<string, boolean>();
     const applyState = (id: string) => { const desired = activeStates.get(id) ?? input.endpoints[id]!; const next = { alive: desired.alive && (availability.get(id) ?? true), ready: desired.ready && [...(readiness.get(id)?.values() ?? [])].every(Boolean) }; const previous = states.get(id)!; states.set(id, next); if (previous.alive !== next.alive && input.resources.find((r) => r.id === id)!.kind !== "load-balancer") controls.pause(id, !next.alive); };
-    const context: NetworkContext = { abortOwned: controls.abortOwned, setReady(id, ready, owner = "default") { if (!states.has(id)) throw Error("Unknown readiness target"); const gates = readiness.get(id) ?? new Map<string, boolean>(); gates.set(owner, ready); readiness.set(id, gates); applyState(id); }, setAvailable(id, alive) { if (!states.has(id)) throw Error("Unknown availability target"); availability.set(id, alive); applyState(id); }, drain(lb, backend, grace) { lbs.get(lb)!.drain(backend, grace); }, backend(lb, backend) { return lbs.get(lb)!.backend(backend); }, endpoint: (id) => ({ ...states.get(id)! }), observe: controls.observe, inspect: (id) => controls.observe(id) ?? lbs.get(id)?.measure(), reachable: (id) => { const p = input.paths.find((p) => p.id === id); return !!p && [...p.request, ...p.response].every((l) => links.get(l)!.reachable()); } };
+    const context: NetworkContext = { invalidateSessions: () => 0, abortOwned: controls.abortOwned, setReady(id, ready, owner = "default") { if (!states.has(id)) throw Error("Unknown readiness target"); const gates = readiness.get(id) ?? new Map<string, boolean>(); gates.set(owner, ready); readiness.set(id, gates); applyState(id); }, setAvailable(id, alive) { if (!states.has(id)) throw Error("Unknown availability target"); availability.set(id, alive); applyState(id); }, drain(lb, backend, grace) { lbs.get(lb)!.drain(backend, grace); }, backend(lb, backend) { return lbs.get(lb)!.backend(backend); }, endpoint: (id) => ({ ...states.get(id)! }), observe: controls.observe, inspect: (id) => controls.observe(id) ?? lbs.get(id)?.measure(), reachable: (id) => { const p = input.paths.find((p) => p.id === id); return !!p && [...p.request, ...p.response].every((l) => links.get(l)!.reachable()); } };
     for (const r of input.resources) if (r.kind !== "load-balancer" && !states.get(r.id)!.alive) controls.pause(r.id, true);
     extension?.install?.(kernel, trace.emit, context);
     const links = new Map(input.links.map((l) => [l.id, networkLink(l, kernel, trace.emit, extension?.usage)]));
     const paths = new Map<string, ReturnType<typeof pathTransport>>();
+    context.invalidateSessions = (target, ids) => {
+      const sessions = new Set(ids); let invalidated = 0;
+      for (const p of input.paths) if (p.target === target) invalidated += paths.get(JSON.stringify([p.source, p.target]))!.invalidateSessions(sessions);
+      return invalidated;
+    };
     context.retireOwner = (id) => { for (const r of input.resources) if (r.id === id || r.id.startsWith(id + "/")) context.setReady(r.id, false, "terminated"); for (const p of input.paths) {
       const outgoing = p.source === id || p.source.startsWith(id + "/"), incoming = p.target === id || p.target.startsWith(id + "/");
       const path = paths.get(JSON.stringify([p.source, p.target]))!;

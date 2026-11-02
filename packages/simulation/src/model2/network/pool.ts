@@ -96,6 +96,11 @@ export function connectionPool(id: string, config: PoolConfig, kernel: EventKern
       for (const c of [...connections.values()]) removeConnection(c, reason); pump();
       return result;
     },
+    invalidateSessions(ids: ReadonlySet<string>) {
+      const invalid = [...connections.values()].filter(c => ids.has(c.id));
+      for (const c of invalid) removeConnection(c, "reset");
+      pump(); return invalid.length;
+    },
     drain(grace: number) {
       if (draining) return; draining = true;
       for (const a of [...waiting.values()]) { a.timer?.(); waiting.delete(a.id); a.connection?.reserved.delete(a.id); a.fail("drained"); }

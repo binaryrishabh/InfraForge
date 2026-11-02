@@ -63,8 +63,11 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
         const clock = extension?.clockFor?.(i.target, kernel) ?? kernel;
         const apply = (active: boolean) => {
           const config = input.resources.find((r) => r.id === i.target)!;
-          if (i.kind === "db-promote-replica") databases.get(i.target)!.promoteReplica();
-          else if (i.kind === "db-fail-primary") databases.get(i.target)!.primaryAvailability(!active);
+          if (i.kind === "db-promote-replica" || i.kind === "db-fail-primary") {
+            const db = databases.get(i.target)!;
+            const invalid = i.kind === "db-promote-replica" ? db.promoteReplica() : db.primaryAvailability(!active);
+            db.recordConnectionInvalidations(context.invalidateSessions(i.target, invalid));
+          }
           else if (i.kind === "flush") caches.get(i.target)!.flush();
           else if (config.kind === "relational") {
             if (i.kind === "session-capacity") databases.get(i.target)!.sessionCapacity(requireKnown(active ? i.sessions : config.maxSessions, "count"));

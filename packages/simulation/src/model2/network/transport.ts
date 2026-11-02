@@ -99,6 +99,7 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
       } };
     },
     reset(local = false, capture = false) { const previous = localReset; localReset = local; try { return pool.reset("reset", capture); } finally { localReset = previous; } },
+    invalidateSessions(ids: ReadonlySet<string>) { return pool.invalidateSessions(ids); },
     dispose() { breaker?.dispose(); for (const cancel of [...liveReceipts.values()]) cancel(); localReset = true; try { pool.reset(); } finally { localReset = false; } },
     startGeneration() { breaker?.startGeneration(); },
     drain: (grace: number) => pool.drain(grace),
