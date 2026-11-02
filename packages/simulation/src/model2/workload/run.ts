@@ -5,6 +5,7 @@ import { EventKernel, lexical, type EventClock } from "../time";
 import { requireKnown } from "../../reality/quantity";
 import { identity, ingestTrace, openRows } from "./arrivals";
 import { ResultBook } from "./evidence";
+import { clientRetryDecision } from "./clientRetry";
 import { validateWorkload } from "./validate";
 import { workloadStation } from "./station";
 import { WORKLOAD_POLICY_LEDGER } from "./policy";
@@ -57,23 +58,28 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
   const counts = { offered: 0, admitted: 0, completed: 0, rejected: 0, deadlineExceeded: 0, abandoned: 0, remoteOutcomesAfterCallerStop: 0, cancellationRequested: 0, cancellationConfirmedAtEntry: 0 };
   const byOperation = new Map(input.operations.map((o) => [o.id, { offered: 0, completed: 0, rejected: 0, deadlineExceeded: 0, abandoned: 0 }]));
   const sources = new Map(input.arrivals.map((a) => [a.id, { offered: 0 }]));
+  const retryPolicy = input.operations.find(o => o.clientRetry)?.clientRetry;
+  const maxAttempts = input.limits.maxRequests * (retryPolicy?.maxAttempts ?? 1);
+  let issuedAttempts = 0;
   const offer = (source: string, row: TraceRow, next?: () => void) => {
     if (live.size >= (input.limits.maxLiveCalls ?? Infinity)) throw new Error("Executor live-caller budget exhausted");
     if (++counts.offered > input.limits.maxRequests) throw new Error("Request execution budget exceeded");
     sources.get(source)!.offered++;
     const operation = operations.get(row.operation)!, perOperation = byOperation.get(row.operation)!; perOperation.offered++;
     const rootId = identity("root", source, row.id), callId = identity(rootId, "attempt", 0, "entry");
-    const work: Invocation = { rootId, attempt: 0, callId, operation: operation.id, offeredAt: kernel.now, ...(row.payloadBytes === undefined ? {} : { payloadBytes: row.payloadBytes }) };
+    const work: Invocation = { rootId, attempt: 0, callId, operation: operation.id, offeredAt: kernel.now, ...(row.payloadBytes === undefined ? {} : { payloadBytes: row.payloadBytes }), ...(retryPolicy ? { clientAttempt: 0 } : {}) };
     modules.causal?.({ atUs: kernel.now, kind: "caller-offered", resource: "$caller", work, detail: {} });
     const pending: { work: Invocation; receipt?: Receipt } = { work }; live.set(rootId, pending);
-    let terminal = false, cancelDeadline: (() => boolean) | undefined, cancelAbandon: (() => boolean) | undefined;
+    let terminal = false, cancelDeadline: (() => boolean) | undefined, cancelAbandon: (() => boolean) | undefined, cancelRetry: (() => boolean) | undefined;
+    const deadline = kernel.now + requireKnown(operation.callerTimeout, "us");
+    const abandon = operation.abandonAfter ? kernel.now + requireKnown(operation.abandonAfter, "us") : Infinity;
     const finish = (outcome: CallerOutcome, cause?: Cause) => {
       if (terminal) return;
-      terminal = true; live.delete(rootId); cancelDeadline?.(); cancelAbandon?.();
+      terminal = true; live.delete(rootId); cancelDeadline?.(); cancelAbandon?.(); cancelRetry?.();
       const key = outcome === "deadline-exceeded" ? "deadlineExceeded" : outcome;
       counts[key]++; perOperation[key]++;
-      modules.causal?.({ atUs: kernel.now, kind: "caller-terminal", resource: "$caller", work, detail: { outcome, ...causeFields(input.failureCauseProfile && outcome === "rejected" ? cause : undefined), responseUs: kernel.now - work.offeredAt } });
-      book.record({ ...work, at: kernel.now, outcome, responseUs: kernel.now - work.offeredAt }); next?.();
+      modules.causal?.({ atUs: kernel.now, kind: "caller-terminal", resource: "$caller", work: pending.work, detail: { outcome, ...causeFields(input.failureCauseProfile && outcome === "rejected" ? cause : undefined), responseUs: kernel.now - work.offeredAt } });
+      book.record({ ...pending.work, at: kernel.now, outcome, responseUs: kernel.now - work.offeredAt }); next?.();
     };
     const stop = (outcome: "deadline-exceeded" | "abandoned") => {
       finish(outcome);
@@ -84,11 +90,35 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
     };
     cancelDeadline = kernel.schedule(kernel.now + requireKnown(operation.callerTimeout, "us"), 1, identity("caller-stop", rootId, 0), () => stop("deadline-exceeded"));
     if (operation.abandonAfter) cancelAbandon = kernel.schedule(kernel.now + requireKnown(operation.abandonAfter, "us"), 1, identity("caller-stop", rootId, 1), () => stop("abandoned"));
-    pending.receipt = (modules.enter ?? send)(operation.entry, work, (outcome, cause) => {
-      if (terminal) { counts.remoteOutcomesAfterCallerStop++; return; }
-      finish(outcome === "completed" ? "completed" : "rejected", cause);
-    });
-    if (pending.receipt.admitted) counts.admitted++;
+    let rootAdmitted = false;
+    const issue = (current: Invocation) => {
+      if (retryPolicy && ++issuedAttempts > maxAttempts) throw Error("Client attempt execution budget exceeded");
+      pending.work = current; pending.receipt = undefined;
+      if (retryPolicy) modules.causal?.({ atUs: kernel.now, kind: "client-attempt-issued", resource: "$caller", work: current, detail: {} });
+      let settled = false;
+      const receipt = (modules.enter ?? send)(operation.entry, current, (outcome, cause) => {
+        if (terminal || settled) { counts.remoteOutcomesAfterCallerStop++; return; }
+        settled = true; pending.receipt = undefined;
+        if (retryPolicy) modules.causal?.({ atUs: kernel.now, kind: "client-attempt-terminal", resource: "$caller", work: current, detail: { outcome, ...causeFields(cause) } });
+        if (outcome === "rejected" && operation.clientRetry) {
+          const decision = clientRetryDecision(operation.clientRetry, current.attempt, kernel.now, deadline, abandon, cause);
+          if (decision.at !== undefined) {
+            modules.causal?.({ atUs: kernel.now, kind: "client-retry-scheduled", resource: "$caller", work: current, detail: { retryAtUs: decision.at } });
+            const attempt = current.attempt + 1;
+            cancelRetry = kernel.schedule(decision.at, 3, identity("client-retry", rootId, attempt), () => {
+              cancelRetry = undefined;
+              if (!terminal) issue({ ...work, attempt, clientAttempt: attempt, callId: identity(rootId, "attempt", attempt, "entry") });
+            });
+            return;
+          }
+          modules.causal?.({ atUs: kernel.now, kind: "client-retry-stopped", resource: "$caller", work: current, detail: { reason: decision.reason!, rootReason: cause?.rootReason ?? null } });
+        }
+        finish(outcome === "completed" ? "completed" : "rejected", cause);
+      });
+      if (!settled && !terminal) pending.receipt = receipt;
+      if (receipt.admitted && !rootAdmitted) { counts.admitted++; rootAdmitted = true; }
+    };
+    issue(work);
   };
   const scheduleRow = (source: string, row: TraceRow, next?: () => void, offered?: () => void) => {
     if (row.atUs <= horizon) kernel.schedule(row.atUs, 3, identity("arrival", source, row.id), () => { offer(source, row, next); offered?.(); });

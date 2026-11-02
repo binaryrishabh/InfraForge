@@ -323,7 +323,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     }
     const entry = ref(contract.caller.entry); path("external-entry", "$caller", entry, { purpose: "dependency", sourceRole: "external", targetRole: "entry", ...contract.caller });
     for (const e of contract.caller.dependencies) path(`external/${e.id}`, "$caller", ref(e.target), { ...e, sourceRole: "external", targetRole: "target" });
-    for (const o of [...app.operations].sort((a, b) => a.id < b.id ? -1 : 1)) runtime.operations.push({ ...o, entry });
+    for (const o of [...app.operations].sort((a, b) => a.id < b.id ? -1 : 1)) runtime.operations.push({ ...o, entry,
+      ...(contract.clientRetry && o.id === app.readOperation ? { clientRetry: { ...contract.clientRetry } } : {}) });
     runtime.links = [...links.values()];
     runtime.systems.instrumentation = contract.instrumentation.flatMap((p) => expansion.has(p.target.slice(1)) ? expansion.get(p.target.slice(1))!.map((target) => ({ ...p, target })) : [{ ...p, target: ref(p.target) }]);
     runtime.systems.commands = rewriteReferences(contract.commands, (v) => ref(v));

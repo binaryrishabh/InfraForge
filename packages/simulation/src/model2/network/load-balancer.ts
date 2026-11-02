@@ -22,7 +22,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
   let retriesWaiting = 0;
   const suppressedByReason = { "max-attempts": 0, budget: 0, deadline: 0, "non-retryable": 0, "ambiguous-write": 0 };
   const suppress = (r: Request, reason: keyof typeof suppressedByReason, id = r.work.callId) => {
-    if (enhanced) { suppressedByReason[reason]++; trace("retry-suppressed", id, reason, r.work.rootId, r.work.attempt + r.attempt - 1, true); }
+    if (enhanced) { suppressedByReason[reason]++; trace("retry-suppressed", id, reason, r.work.rootId, r.work.clientAttempt ?? r.work.attempt + r.attempt - 1, true); }
     finish(r, "rejected", r.cause);
   };
   const path = (backend: string) => paths.get(JSON.stringify([config.id, backend]))!;
@@ -47,7 +47,8 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
     if (r.attempt && config.retry && (activeRetries + (config.retry.reserveBackoffBudget ? retriesWaiting : 0)) >= requireKnown(config.retry.maxConcurrentRetries, "count")) { retryLimited++; suppress(r, "budget"); return; }
     r.attempt++; attempts++; member.outstanding++; member.selected++; r.backend = member.id;
     if (r.attempt > 1) { retries++; activeRetries++; r.retrying = true; }
-    const work: Invocation = { ...r.work, attempt: r.work.attempt + r.attempt - 1, parentCallId: r.work.callId,
+    const work: Invocation = { ...r.work, attempt: r.work.clientAttempt ?? r.work.attempt + r.attempt - 1,
+      ...(r.work.clientAttempt === undefined ? {} : { lbAttempt: r.attempt }), parentCallId: r.work.callId,
       callId: JSON.stringify([...JSON.parse(r.work.callId), "lb", config.id, "try", r.attempt, member.id]) };
     trace("lb-selected", work.callId, member.id, work.rootId, work.attempt);
     r.receipt = path(member.id).exchange(work, (result: TransportResult) => {

@@ -5,6 +5,7 @@ import type { FaultPlan } from "../contracts";
 import type { DemandProfile, ProfileContext } from "./profiles";
 
 export interface OperationClass {
+  clientRetry?: import("@infraforge/domain/workload").ClientRetry;
   id: string;
   entry: string;
   callerTimeout: Quantity<"us">;
@@ -37,6 +38,9 @@ export interface ArrivalTrace {
   rows: TraceRow[];
 }
 export interface WorkIdentity {
+  // Present only with client retries. LB tries keep this attempt and carry their own ordinal.
+  clientAttempt?: number;
+  lbAttempt?: number;
   rootId: string;
   attempt: number;
   callId: string;

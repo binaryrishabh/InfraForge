@@ -7,6 +7,7 @@ export function numericOrigins(input: SystemsInput, pools: CompiledPool[], contr
     return `contract.nodes.${node}.resources[role=${role ?? spec.primary}].config`;
   };
   const source = (path: string): { origin: SemanticSpec["numericOrigins"][number]["origin"]; sources: string[] } => {
+    if (/^input.operations\.\d+\.clientRetry\./.test(path)) return { origin: "user-authored", sources: ["design.workload.clientRetry", "client-retry/1: bounded read attempts, integer milliseconds converted to simulated microseconds; no jitter"] };
     const match = /^input.resources\.(\d+)(.*)$/.exec(path);
     if (match) return { origin: "user-authored", sources: [resourceSource(+match[1]!) + match[2]] };
     if (path.startsWith("input.arrivals")) return { origin: "derived", sources: ["design.workload.targetThroughput", "design.workload.throughputUnit", "design.workload.readWriteRatio", "design.workload.trafficShape", "design.workload.peakMultiplier", "contract.arrival", "contract.horizon", `${contract.workloadVersion} integer microsecond scheduling and explicit operation mapping`, ...(contract.workloadVersion === "product-arrivals/2" ? ["design.workload.workloadDynamics.arrivalProcess", "contract.seed", "seeded integrated exponential hazard and independent arrival-operation choice"] : [])] };

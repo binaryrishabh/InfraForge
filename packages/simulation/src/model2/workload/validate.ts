@@ -1,4 +1,5 @@
 import { validateLedger } from "../../reality/ledger";
+import { clientRetryError } from "@infraforge/domain/workload";
 import { requireKnown, type Quantity, type Unit } from "../../reality/quantity";
 import { micros } from "../time";
 import { ingestTrace, rateRows, validateRate } from "./arrivals";
@@ -76,10 +77,13 @@ export function validateWorkload(input: WorkloadInput) {
   };
   for (const r of input.resources) visit(r.id);
   for (const o of input.operations) {
+    const retryError = clientRetryError(o.clientRetry); if (retryError) errors.push(retryError);
+    if (o.clientRetry && (o.idempotency !== "read-only" || input.failureCauseProfile !== "failure-cause/1")) errors.push("Client retries require a read-only operation and failure-cause/1");
     if (!resources.has(o.entry) || !["detach", "request-cancellation"].includes(o.onCallerStop) || !["read-only", "idempotent", "non-idempotent", "unknown"].includes(o.idempotency)) errors.push("Invalid operation ownership/entry");
     micros(horizon + number(o.callerTimeout, "us", 1));
     if (o.abandonAfter) micros(horizon + number(o.abandonAfter, "us", 1));
   }
+  if (input.operations.filter(o => o.clientRetry).length > 1) errors.push("Only the application read operation may retry");
   let count = 0;
   for (const a of input.arrivals) {
     if (a.kind === "trace") {
