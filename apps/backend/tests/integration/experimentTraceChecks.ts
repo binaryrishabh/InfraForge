@@ -45,7 +45,9 @@ export async function checkExperimentTraces(harness: LocalHarness, sessions: Ses
     const point = (second: number) => result.experimentTrace!.points.find((p) => p.simulatedSeconds === second)!;
     expect(point(30).resources.find((r) => r.id === "app-2")?.health).toBe("healthy");
     expect(point(31).resources.find((r) => r.id === "app-2")?.health).toBe("failed");
-    expect(Object.fromEntries(point(60).resources.map(({ id, ...metrics }) => [id, metrics]))).toEqual(done.terminalSnapshot.metrics);
+    // The retained trace keeps only the persisted evidence fields; live-only readout blocks are not stored in samples.
+    const persisted = ({ health, cpu, memory, rps, connections, asyncQueue }: Record<string, unknown>) => ({ health, cpu, memory, rps, connections, asyncQueue });
+    expect(Object.fromEntries(point(60).resources.map(({ id, ...metrics }) => [id, persisted(metrics)]))).toEqual(Object.fromEntries(Object.entries(done.terminalSnapshot.metrics as Record<string, Record<string, unknown>>).map(([id, metrics]) => [id, persisted(metrics)])));
     const cookie = harness.cookie, bob = await sessions.create();
     try { harness.cookie = bob.cookie; await harness.request(`/deployments/${blocked}/report`, undefined, "GET", 404); await harness.request(`/deployments/compare?a=${blocked}&b=${runs[0]}`, undefined, "GET", 404); }
     finally { harness.cookie = cookie; }
