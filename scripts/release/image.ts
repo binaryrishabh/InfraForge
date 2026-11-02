@@ -1,12 +1,14 @@
-import { buildReleaseImage } from "./build";
 import { verifyImage } from "./compose";
 import { command } from "./process";
+import { approvedImageReference, pullApprovedImage, type RegistryAuth } from "./registry";
 import type { Release } from "./sequence";
 
 export type ReleaseAction = "apply" | "reconfigure" | "rollback";
 export type AcceptedState = { current: Release; previous?: Release };
 
-export async function prepareReleaseImage(action: ReleaseAction, sha: string, state: AcceptedState | undefined, root: string): Promise<Release> {
+// "apply" never builds: it pulls the exact digest a GitHub runner published (see scripts/release/registry.ts).
+export async function prepareReleaseImage(action: ReleaseAction, sha: string, state: AcceptedState | undefined, root: string,
+  source: { reference?: string; auth?: RegistryAuth } = {}): Promise<Release> {
   if (action === "apply" && [state?.current.sha, state?.previous?.sha].includes(sha)) {
     throw new Error("This SHA already has a retained accepted image; use reconfigure for current settings or rollback for a previous release");
   }
@@ -17,7 +19,7 @@ export async function prepareReleaseImage(action: ReleaseAction, sha: string, st
   if (accepted) await verifyImage(accepted, root);
   // Use the retained content ID throughout reconfiguration, never build or retag.
   const image = accepted?.imageId ?? `infraforge-backend:${sha}`;
-  if (action === "apply") await buildReleaseImage(sha, image, root);
+  if (action === "apply") await pullApprovedImage(approvedImageReference(source.reference), sha, root, source.auth);
   const [built] = JSON.parse(await command(["docker", "image", "inspect", image], root));
   if (built.Config.Labels?.["org.infraforge.rehearsal"]) throw new Error("Test-only images cannot be accepted for production release");
   const metadata = JSON.parse(await command(["docker", "run", "--rm", "--network", "none", built.Id, "cat", "/app/apps/backend/release.json"], root));

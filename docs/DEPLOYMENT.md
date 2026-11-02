@@ -210,15 +210,44 @@ require that exact SHA on both tiers. A matching frontend is reused too; otherwi
 the accepted checkout is staged and verified normally. Receipts for a fully reused
 release record both the requested commit and the running SHA.
 
-The release builder retains its 768 MiB memory cap and isolated cleanup, with a
-one-core CPU budget (previously 0.2 cores). Readiness polls return as soon as healthy;
-there is no fixed readiness sleep to remove. Migration, backup, health and rollback
-checks are unchanged. CI no longer repeats boundary/challenge tests already run by
-lint/workspace tests, and execution identity is checked once before the heavy jobs.
+### Image build location (off-host)
+
+The production home server does not build the backend image. After the release gate
+admits the exact current-main SHA, a GitHub runner builds `apps/backend/Dockerfile` at
+that commit (`RELEASE_SHA` and the OCI source/revision labels are unchanged), proves the
+labels and the embedded `/app/apps/backend/release.json` (exact SHA, migration
+fingerprint, auth contract), publishes it to `ghcr.io/binaryrishabh/infraforge-backend`
+and passes the immutable digest (`...@sha256:<64 hex>`) to the release job. The digest,
+never a tag, is the authority; the upload tag is unique per run and is not trusted.
+
+On the host, `apply` pulls only that exact digest, then refuses unless the pulled content
+carries the approved digest, the approved source, the exact revision, no rehearsal label
+and the host's platform, and its embedded release metadata matches. Only then is the
+verified content tagged `infraforge-backend:<sha>` so the existing Compose, retained-image
+and rollback machinery stay local and unchanged: rollback never needs the registry. A
+missing, unauthorized or wrong image fails before maintenance, application stop or
+migration, and the host never falls back to building.
+
+The short-lived workflow token (`packages: read` for the release job) reaches the host
+only on stdin of the pull step, is written to a private temporary Docker config for that
+step, and is logged out and deleted afterwards. It is never in a command line, the
+environment of any child process, a file in the repository or an image. If the package is
+made public by its owner, the token is simply unnecessary.
+
+Platform: the published image is `linux/amd64`, the architecture of the production host.
+On a host of another architecture the pull step refuses with a clear message; an ARM64
+host requires a multi-platform publish before releasing there (the bootstrap script still
+supports ARM64 hosts, but releasing to one is not covered until that is added).
+
+A same-SHA manual retry re-runs only the gate, the image job and the release; it rebuilds
+that SHA on the runner and passes the new digest, without repeating the validation suite.
+
+Readiness polls return as soon as healthy; there is no fixed readiness sleep to remove.
+Migration, backup, health and rollback checks are unchanged.
 
 ## Release disk capacity and image retention
 
-Before creating release state, building, pulling dependencies or stopping services,
+Before creating release state, pulling the release image or dependencies, or stopping services,
 the release reads Docker's storage driver and `DockerRootDir` using `docker info`.
 For the supported classic `overlay2` layout it measures available bytes at the
 Docker root, its `overlay2` image directory and the release state directory (its
@@ -239,7 +268,7 @@ bun --no-env-file scripts/release/hygiene.ts qualify /var/lib/infraforge/release
 
 This is a minimum operating budget, not a prediction: the incident's roughly
 1.46 GB backend image rounds up to **1.5 GiB loaded image + 1.5 GiB export/load
-staging + 2 GiB BuildKit intermediate/cache work + 1 GiB PostgreSQL/Redis growth +
+staging + 2 GiB image pull/extraction work + 1 GiB PostgreSQL/Redis growth +
 1 GiB pg_dump staging + 1 GiB host/log safety = 8 GiB**. The latter allowances
 are capacity assumptions, not measurements of production data. Increase disk
 capacity before releasing if build intermediates, growth or a staged dump exceed
@@ -273,13 +302,10 @@ still leaves insufficient room, expand the filesystem or review capacity. Never
 use broad `docker system prune`, volume pruning or default/shared-builder pruning
 as release recovery.
 
-Each release build already uses a dedicated `infraforge-release-*` BuildKit
-builder. Its daemon and cache are removed after the build finishes, including
-build failure/interruption, without `--keep-state` or `--keep-daemon`; cleanup
-failure blocks acceptance. This leaves no retained cache for that owned builder
-and never prunes a running build or another builder. See Docker's
-[builder removal contract](https://docs.docker.com/reference/cli/docker/buildx/rm/)
-and [image removal contract](https://docs.docker.com/reference/cli/docker/image/rm/).
+The production host no longer runs BuildKit for releases, so a release leaves no
+build cache or builder on it; the pulled image layers are ordinary retained images
+under the retention rules above. See Docker's
+[image removal contract](https://docs.docker.com/reference/cli/docker/image/rm/).
 
 Production Compose failures save a redacted final 16,000 characters of stderr in
 `/var/lib/infraforge/releases/compose-error-<time>-<uuid>.log` and print that exact

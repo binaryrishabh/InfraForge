@@ -101,10 +101,11 @@ test("public backend verifies HTTP responses and credential availability", async
 test("missing credentials fail before SSH and error messages contain names only", () => {
   const env = { EC2_HOST: "fixture", EC2_USERNAME: "release", EC2_SSH_KEY: "fixture-private-value", EC2_HOST_FINGERPRINT: `SHA256:${"a".repeat(43)}`,
     VERCEL_TOKEN: "fixture-token-value", VERCEL_ORG_ID: "team_fixture", VERCEL_PROJECT_ID: "prj_fixture", RELEASE_SHA: sha,
-    BACKEND_ORIGIN: "https://backend.example.invalid", FRONTEND_ORIGIN: "https://app.example.invalid" };
+    RELEASE_IMAGE: `ghcr.io/binaryrishabh/infraforge-backend@sha256:${"c".repeat(64)}`, BACKEND_ORIGIN: "https://backend.example.invalid", FRONTEND_ORIGIN: "https://app.example.invalid" };
   expect(() => deploymentSettings(env)).not.toThrow();
   for (const key of Object.keys(env)) expect(() => deploymentSettings({ ...env, [key]: "" })).toThrow(key);
   expect(() => deploymentSettings({ ...env, EC2_HOST_FINGERPRINT: "unpinned" })).toThrow("Pinned");
+  expect(() => deploymentSettings({ ...env, RELEASE_IMAGE: "ghcr.io/binaryrishabh/infraforge-backend:latest" })).toThrow("exact image digest");
 });
 test("bootstrap rendering refuses injection and missing TLS inputs while HTTP remains closed", async () => {
   const template = await Bun.file(new URL("../../ops/nginx.conf.template", import.meta.url)).text();

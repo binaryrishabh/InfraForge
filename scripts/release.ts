@@ -56,7 +56,12 @@ try {
   let state: AcceptedState | undefined;
   try { state = JSON.parse(await readFile(resolve(directory, "accepted.json"), "utf8")); }
   catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
-  const next = await prepareReleaseImage(action as ReleaseAction, sha, state, root);
+  // The registry token arrives on stdin only when the workflow asks for it; it is never in argv or the environment.
+  const token = action === "apply" && process.env.RELEASE_REGISTRY_AUTH === "stdin" ? (await Bun.stdin.text()).trim() : "";
+  const user = process.env.RELEASE_REGISTRY_USER;
+  if (token && !user) throw new Error("Registry user is required with registry credentials");
+  const next = await prepareReleaseImage(action as ReleaseAction, sha, state, root,
+    { reference: process.env.RELEASE_IMAGE, ...(token ? { auth: { user: user!, token } } : {}) });
   const save = async (current: Release, previous?: Release) => {
     const temporary = resolve(directory, "accepted.json.tmp");
     const file = await open(temporary, "w", 0o600);
