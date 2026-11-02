@@ -22,6 +22,8 @@ export const WorkloadProfileSchema = z.object({
   peakMultiplier: z.number().min(1, "Multiplier must be at least 1").max(10, "Multiplier cannot exceed 10").optional(),
   readWriteRatio: z.number().min(0, "Ratio cannot be negative").max(1, "Ratio cannot exceed 1").optional(),
   payloadSize: z.enum(["light", "medium", "heavy"]),
+  clientRetry: z.object({ version: z.literal(1), maxAttempts: z.number().int().min(2).max(4),
+    backoffMs: z.number().int().min(1).max(10000) }).strict().optional(),
   workloadDynamics: z.object({ version: z.literal(1), arrivalProcess: z.enum(["even", "poisson"]),
     applicationCpuCv: z.number().finite().min(0).max(1) }).strict().optional(),
 });

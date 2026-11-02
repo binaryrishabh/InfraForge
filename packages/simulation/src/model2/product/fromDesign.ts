@@ -1,7 +1,8 @@
 import { LB_RATE_LIMIT_PROFILE, lbRateLimitChanges, lbRateLimit } from "./lbRateLimit";
+import { CLIENT_RETRY_PROFILE, compileClientRetry } from "./clientRetry";
 import { arrivalVersion, compileCpuDynamics } from "./workloadDynamics";
 import type { AdapterProfile } from "@infraforge/contracts/run-inputs";
-import { workloadDynamicsError } from "@infraforge/domain/workload";
+import { clientRetryError, workloadDynamicsError } from "@infraforge/domain/workload";
 import { findSku, CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog";
 import { RESOURCE_PORTS, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbHealthError, lbAdmissionError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
 import type { Quantity, Unit } from "../../reality/quantity";
@@ -35,10 +36,10 @@ const SCOPE = "Assumed educational workload; no measured application or provider
 const operations = ["read", "write", "health"] as const;
 
 // Only new captures select current implicit profiles. Historical builds use their recorded list.
-export function currentAdapterProfiles(resources: SavedProductDesign["resources"]): AdapterProfile[] {
+export function currentAdapterProfiles(resources: SavedProductDesign["resources"], workload?: SavedProductDesign["workload"]): AdapterProfile[] {
   const dataFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/2");
   const publishFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/3");
-  return [...(dataFlow || publishFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled || r.lbRateLimit !== undefined) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : []), ...(publishFlow ? ["application-flow/3" as const] : []), ...(multiKey(resources) ? [KEYSPACE_PROFILE] : []), ...(hotKey(resources) ? [HOT_KEY_PROFILE] : []), ...(cachePolicyChanges(resources) ? [CACHE_POLICY_PROFILE] : []), ...(cacheCapacityChanges(resources) ? [CACHE_CAPACITY_PROFILE] : []), ...(databaseReplicationChanges(resources) ? [DATABASE_REPLICATION_PROFILE] : []), ...(dbConcurrencyChanges(resources) ? [DB_CONCURRENCY_PROFILE] : []), ...(vmExecutionChanges(resources) ? [VM_EXECUTION_PROFILE] : []), ...(vmCpuQuotaChanges(resources) ? [VM_CPU_QUOTA_PROFILE] : []), ...(lbRateLimitChanges(resources) ? [LB_RATE_LIMIT_PROFILE] : []), ...(lbAdmissionChanges(resources) ? [LB_ADMISSION_PROFILE] : []), ...(lbHealthChanges(resources) ? [LB_HEALTH_PROFILE] : []), ...(queueCapacityChanges(resources) ? [QUEUE_CAPACITY_PROFILE] : []), ...(queueIdempotencyChanges(resources) ? [QUEUE_IDEMPOTENCY_PROFILE] : []), ...(cdnTtlChanges(resources) ? [CDN_TTL_PROFILE] : []), ...(cdnCoalescingChanges(resources) ? [CDN_COALESCING_PROFILE] : []), ...(monitoringCadenceChanges(resources) ? [MONITOR_CADENCE_PROFILE] : []), ...(monitoringBufferChanges(resources) ? [MONITOR_BUFFER_PROFILE] : []), ...(objectCapacityChanges(resources) ? [OBJECT_CAPACITY_PROFILE] : []), ...(firewallCapacityChanges(resources) ? [FIREWALL_CAPACITY_PROFILE] : [])];
+  return [...(workload?.clientRetry ? [CLIENT_RETRY_PROFILE] : []), ...(workload?.clientRetry || dataFlow || publishFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled || r.lbRateLimit !== undefined) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : []), ...(publishFlow ? ["application-flow/3" as const] : []), ...(multiKey(resources) ? [KEYSPACE_PROFILE] : []), ...(hotKey(resources) ? [HOT_KEY_PROFILE] : []), ...(cachePolicyChanges(resources) ? [CACHE_POLICY_PROFILE] : []), ...(cacheCapacityChanges(resources) ? [CACHE_CAPACITY_PROFILE] : []), ...(databaseReplicationChanges(resources) ? [DATABASE_REPLICATION_PROFILE] : []), ...(dbConcurrencyChanges(resources) ? [DB_CONCURRENCY_PROFILE] : []), ...(vmExecutionChanges(resources) ? [VM_EXECUTION_PROFILE] : []), ...(vmCpuQuotaChanges(resources) ? [VM_CPU_QUOTA_PROFILE] : []), ...(lbRateLimitChanges(resources) ? [LB_RATE_LIMIT_PROFILE] : []), ...(lbAdmissionChanges(resources) ? [LB_ADMISSION_PROFILE] : []), ...(lbHealthChanges(resources) ? [LB_HEALTH_PROFILE] : []), ...(queueCapacityChanges(resources) ? [QUEUE_CAPACITY_PROFILE] : []), ...(queueIdempotencyChanges(resources) ? [QUEUE_IDEMPOTENCY_PROFILE] : []), ...(cdnTtlChanges(resources) ? [CDN_TTL_PROFILE] : []), ...(cdnCoalescingChanges(resources) ? [CDN_COALESCING_PROFILE] : []), ...(monitoringCadenceChanges(resources) ? [MONITOR_CADENCE_PROFILE] : []), ...(monitoringBufferChanges(resources) ? [MONITOR_BUFFER_PROFILE] : []), ...(objectCapacityChanges(resources) ? [OBJECT_CAPACITY_PROFILE] : []), ...(firewallCapacityChanges(resources) ? [FIREWALL_CAPACITY_PROFILE] : [])];
 }
 
 /** Canvas intent is preserved; missing application and service settings are visible assumptions.
@@ -48,13 +49,14 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
   const error = (path: string, message: string) => refused.push({ code: "DESIGN_NOT_RUNNABLE", path, message, severity: "error" });
   try {
     boundedProduct(saved);
-    const dynamicsError = workloadDynamicsError(saved.workload.workloadDynamics);
+    const dynamicsError = workloadDynamicsError(saved.workload.workloadDynamics) ?? clientRetryError(saved.workload.clientRetry);
     if (dynamicsError) throw Error(dynamicsError);
     const design = savedPoolPolicies(saved), resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
     // New canvas runs with retry/breaker intent record observational cause evidence; no learner control, and no decision depends on it.
-    const profiles = history && "adapterProfiles" in history ? history.adapterProfiles : history ? [] : currentAdapterProfiles(resources);
-    if (profiles.some(p => !["failure-cause/1", "application-flow/2", "application-flow/3", KEYSPACE_PROFILE, HOT_KEY_PROFILE, CACHE_POLICY_PROFILE, CACHE_CAPACITY_PROFILE, DATABASE_REPLICATION_PROFILE, DB_CONCURRENCY_PROFILE, VM_EXECUTION_PROFILE, VM_CPU_QUOTA_PROFILE, LB_RATE_LIMIT_PROFILE, LB_ADMISSION_PROFILE, LB_HEALTH_PROFILE, QUEUE_CAPACITY_PROFILE, QUEUE_IDEMPOTENCY_PROFILE, CDN_TTL_PROFILE, CDN_COALESCING_PROFILE, MONITOR_CADENCE_PROFILE, MONITOR_BUFFER_PROFILE, OBJECT_CAPACITY_PROFILE, FIREWALL_CAPACITY_PROFILE].includes(p)) || new Set(profiles).size !== profiles.length) error("adapterProfiles", "Unsupported adapter profile selection.");
+    const profiles = history && "adapterProfiles" in history ? history.adapterProfiles : history ? [] : currentAdapterProfiles(resources, saved.workload);
+    if (profiles.some(p => ![CLIENT_RETRY_PROFILE, "failure-cause/1", "application-flow/2", "application-flow/3", KEYSPACE_PROFILE, HOT_KEY_PROFILE, CACHE_POLICY_PROFILE, CACHE_CAPACITY_PROFILE, DATABASE_REPLICATION_PROFILE, DB_CONCURRENCY_PROFILE, VM_EXECUTION_PROFILE, VM_CPU_QUOTA_PROFILE, LB_RATE_LIMIT_PROFILE, LB_ADMISSION_PROFILE, LB_HEALTH_PROFILE, QUEUE_CAPACITY_PROFILE, QUEUE_IDEMPOTENCY_PROFILE, CDN_TTL_PROFILE, CDN_COALESCING_PROFILE, MONITOR_CADENCE_PROFILE, MONITOR_BUFFER_PROFILE, OBJECT_CAPACITY_PROFILE, FIREWALL_CAPACITY_PROFILE].includes(p)) || new Set(profiles).size !== profiles.length) error("adapterProfiles", "Unsupported adapter profile selection.");
     const failureCause = profiles.includes("failure-cause/1");
+    if (!!saved.workload.clientRetry !== profiles.includes(CLIENT_RETRY_PROFILE) || (saved.workload.clientRetry && !failureCause)) error("adapterProfiles", "Client retries require captured client-retry/1 and failure-cause/1 with matching saved intent; reads only.");
     const hasKeyspace = multiKey(resources);
     if (hasKeyspace !== profiles.includes(KEYSPACE_PROFILE)) error("adapterProfiles", "Multi-key intent requires its captured data-keyspace/1 adapter profile and matching saved intent.");
     const hasHotKey = hotKey(resources);
@@ -525,6 +527,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       else note(`default.${path}`, value, "setting", `The assumed ${path.replaceAll(".", " ")} is ${JSON.stringify(value)}.`);
     };
     compileCpuDynamics(design.workload, contract);
+    compileClientRetry(design.workload, contract);
     inspect(contract, "contract");
     const compiled = compileProduct(saved, contract);
     if (!compiled.ok) return { refused: compiled.diagnostics.map((d) => ({ ...d, message: `This design cannot run with the default profile: ${d.message}` })) };

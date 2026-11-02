@@ -64,6 +64,7 @@ export interface ControllerProfile {
   manual: Array<{ id: string; at: Quantity<"us">; desired: Quantity<"count"> }>;
 }
 export interface ProductContract {
+  clientRetry?: import("@infraforge/domain/workload").ClientRetry;
   securityProfile?: "canvas-security/1";
   applicationFlowProfile?: "application-flow/1" | "application-flow/2" | "application-flow/3";
   failureCauseProfile?: "failure-cause/1";

@@ -6,7 +6,11 @@ export interface WorkloadProfile {
   readWriteRatio?: number;
   payloadSize: "light" | "medium" | "heavy";
   workloadDynamics?: WorkloadDynamics;
+  clientRetry?: ClientRetry;
 }
+
+// Total attempts include the original. Writes are never retried.
+export interface ClientRetry { version: 1; maxAttempts: number; backoffMs: number }
 
 export interface WorkloadDynamics {
   version: 1;
