@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { LB_RATE_BURST_MAX, LB_RATE_MIN_RPS, LB_RATE_MAX_RPS, type Resource } from "@infraforge/domain/resource";
 import { Field, Input } from "@/ui/Field";
 import { updateResource } from "../../actions";
@@ -8,7 +8,12 @@ import { parseBurst, parseSustainedRate, type LimitInput } from "./lbRateLimitIn
 // Keeps what the learner is typing until it is a valid saved value; undo/redo still replaces it from the saved policy.
 function useDraft(saved: number | undefined) {
   const [text, setText] = useState(saved === undefined ? "" : String(saved));
-  useEffect(() => { setText(current => Number(current) === saved && current.trim() !== "" ? current : saved === undefined ? "" : String(saved)); }, [saved]);
+  const [seen, setSeen] = useState(saved);
+  if (saved !== seen) {
+    // The saved value changed (our own valid edit, or undo/redo): keep matching text, otherwise show the saved value.
+    setSeen(saved);
+    if (Number(text) !== saved || text.trim() === "") setText(saved === undefined ? "" : String(saved));
+  }
   return [text, setText] as const;
 }
 
