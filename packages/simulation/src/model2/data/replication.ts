@@ -2,6 +2,8 @@ import type { DatabaseReplication } from "@infraforge/domain/resource";
 import type { EventClock } from "../time";
 
 type Row = { version: number; bytes: number };
+type PrimaryProcessState = "available" | "unavailable" | "fenced";
+type ReplicaProcessState = "available" | "unavailable" | "writer";
 // One atomic commit per message. Fixed delay and the kernel's ordering preserve commit order.
 export function databaseReplica(config: DatabaseReplication, id: string, clock: EventClock, primary: Map<string, Row>) {
   const replica = new Map([...primary].map(([key, row]) => [key, { ...row }]));
@@ -9,9 +11,9 @@ export function databaseReplica(config: DatabaseReplication, id: string, clock: 
   let primaryCommittedWrites = 0, replicaAppliedWrites = 0, primaryGeneration = 0, replicaGeneration = 0;
   let promoted = false, replicaCommittedWrites = 0, promotionAtUs: number | null = null, lostOperations = 0;
   let regressedKeys: Array<{ key: string; primaryVersion: number; promotedVersion: number }> = [];
-  let primaryProcessState: "available" | "unavailable" | "fenced" = "available";
-  let replicaProcessState: "available" | "unavailable" | "writer" = "available";
-  let crashRestore: { primary: typeof primaryProcessState; replica: typeof replicaProcessState } | undefined;
+  let primaryProcessState: PrimaryProcessState = "available";
+  let replicaProcessState: ReplicaProcessState = "available";
+  let crashRestore: { primary: PrimaryProcessState; replica: ReplicaProcessState } | undefined;
   let primaryReads = 0, replicaReads = 0, freshReplicaReads = 0, staleReplicaReads = 0;
   let writerEpoch = 1, fencedWriteRejections = 0, fencedReplicationRejections = 0;
   const drainReady = () => { for (const work of [...pending.values()]) if (work.ready) work.apply(); };

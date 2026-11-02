@@ -145,13 +145,14 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     primaryAvailability(value: boolean) {
       if (!replication) throw Error("Database replication disabled");
       replication.primaryAvailability(value);
-      if (value) { pump(); return []; }
+      if (value && replication.currentWriter() !== "primary") { pump(); return []; }
       const wasPaused = paused; paused = true;
-      const invalid = [...sessions.keys()].filter(id => sessionMembers.get(id) === "primary");
+      // Sessions opened on the survivor cannot move back to the returning writer.
+      const invalid = [...sessions.keys()].filter(id => sessionMembers.get(id) === (value ? "replica" : "primary"));
       sessionInvalidations += invalid.length;
       for (const id of invalid) invalidatedSessions.add(id);
       for (const id of invalid) closeSlot(id);
-      for (const t of [...active.values(), ...queue.values()]) if (invalid.includes(t.session) || t.readSource === "primary") finish(t, false, "database-primary-unavailable");
+      for (const t of [...active.values(), ...queue.values()]) if (invalid.includes(t.session) || !value && t.readSource === "primary") finish(t, false, value ? "writer-returned" : "database-primary-unavailable");
       paused = wasPaused; pump(); return invalid;
     },
     promoteReplica() {
