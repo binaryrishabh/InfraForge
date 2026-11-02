@@ -28,6 +28,8 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
     inspect: (id: string) => network?.inspect?.(id) ?? network?.observe(id),
     inspectData: runtime.inspectData,
     inspectCdn: runtime.inspectCdn,
+    inspectMonitor: runtime.inspectMonitor,
+    inspectObject: runtime.inspectObject,
     applicationFlowEvidence: () => flow?.measure(),
     appliedInterventions: () => [...applied.values()],
     activeInterventions: () => [...active.values()],

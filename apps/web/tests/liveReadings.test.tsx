@@ -25,7 +25,7 @@ test("selected live resource shows queue and security consequences from a snapsh
     for (const [label, value] of [["Ready messages", "12"], ["Oldest ready message age (seconds)", "2.5"], ["In flight", "4"], ["Redeliveries", "3"], ["Dead-lettered", "1"], ["Failed attempts (worker nacks sent)", "5"], ["CPU seconds spent on failed attempts", "0.75"]]) {
       expect(html).toContain(`<dt>${label}</dt><dd>${value}</dd>`);
     }
-    for (const text of ["denied opens 3", "no listener 2", "backend deliveries 5", "connection-7", "fw:ingress:block-db", "Firewall flows: 2 / 100"]) expect(html).toContain(text);
+    for (const text of ["denied opens 3", "no listener 2", "backend deliveries 5", "connection-7", "fw:ingress:block-db", "<dt>Current flow occupancy</dt><dd>2</dd>", "<dt>Configured flow limit</dt><dd>100</dd>"]) expect(html).toContain(text);
     expect(html).toContain("Unknown requests/s");
   } finally { initial.metrics = previous; useSimulationStore.getState().reset(); }
 });

@@ -11,5 +11,5 @@ export interface SecurityMetrics {
   /** Number of admission detail rows omitted by the evidence budget; counters remain exact. */
   omitted?: number;
   edges: SecurityEdgeMetrics[];
-  firewall?: { occupancy: number; limit: number; admissions: number; generation: number };
+  firewall?: { occupancy: number; limit: number; admissions: number; generation: number; policyDenied?: number | null; "flow-capacity"?: number | null };
 }

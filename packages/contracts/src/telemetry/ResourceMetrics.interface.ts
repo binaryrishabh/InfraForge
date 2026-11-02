@@ -3,6 +3,8 @@ import type { ResourceHealthType } from "@infraforge/domain/resource";
 import type { AsyncQueueMetrics } from "./AsyncQueueMetrics.interface";
 
 export interface ResourceMetrics {
+  monitoring?: import("./ObservabilityMetrics.interface").MonitoringMetrics;
+  objectStorage?: import("./ObservabilityMetrics.interface").ObjectStorageMetrics;
   database?: import("./DataDeliveryMetrics.interface").DatabaseMetrics;
   cache?: import("./DataDeliveryMetrics.interface").CacheMetrics;
   cdn?: import("./DataDeliveryMetrics.interface").CdnMetrics;

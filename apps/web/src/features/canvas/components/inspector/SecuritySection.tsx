@@ -19,10 +19,15 @@ function ListenerEditor({ resource, disabled }: { resource: Resource; disabled: 
   </form>;
 }
 
-export function SecurityReadings({ metrics }: { metrics?: SecurityMetrics }) {
+export function SecurityReadings({ metrics, firewall = false }: { metrics?: SecurityMetrics; firewall?: boolean }) {
   const text = (v: number | null | undefined) => v == null ? "Unknown" : String(v);
+  metrics = metrics?.version === 1 ? metrics : undefined;
+  const policy = metrics?.firewall;
+  const rows = [["Current flow occupancy", policy?.occupancy], ["Configured flow limit", policy?.limit], ["Admitted opens", policy?.admissions],
+    ["Policy denied opens", policy?.policyDenied], ["Flow capacity refusals", policy?.["flow-capacity"]], ["Policy generation", policy?.generation]] as const;
   return <div>
-    {metrics?.firewall && <p>Firewall flows: {metrics.firewall.occupancy} / {metrics.firewall.limit}; new admissions: {metrics.firewall.admissions}; generation {metrics.firewall.generation}. Flow limit is an educational assumption.</p>}
+    {(firewall || policy) && <><dl>{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{text(value)}</dd></div>)}</dl>
+      <p>Flow limit is an educational assumption. Policy denials, flow capacity refusals, TLS failures and listener failures are separate reasons.</p></>}
     {!metrics && <p>Security measurements: Unknown</p>}
     {metrics?.evidence === "omitted" && <p>Security evidence omitted ({metrics.omitted ?? "Unknown"} rows); connection details: Unknown</p>}
     {metrics?.edges.map(e => <div key={e.path}>
@@ -71,6 +76,6 @@ export function SecuritySection({ resource, disabled }: { resource: Resource; di
       {resource.listenerSettings ? <ListenerEditor key={JSON.stringify(resource.listenerSettings)} resource={resource} disabled={disabled} /> : <p>Listeners are inferred from the service and saved connection ports.</p>}
     </>}
     {error && <p role="alert">{error}</p>}
-    <SecurityReadings metrics={metrics} />
+    <SecurityReadings metrics={metrics} firewall={firewall} />
   </InspectorSection>;
 }

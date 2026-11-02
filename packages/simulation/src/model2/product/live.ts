@@ -4,12 +4,15 @@ import { withTimeline, type TimedAction } from "./timeline";
 import type { CompiledProduct, ProductContract, SavedProductDesign } from "./contracts";
 import type { CausalObserver } from "../workload/causal";
 import { dataDeliveryLive } from "./dataDeliveryLive";
+import { observabilityLive } from "./observabilityLive";
 
 // One simulated second at a time, projected onto the canvas nodes the person drew.
 // Values Model 2 does not know stay null ("Unknown"); they are never shown as zero.
 export type LiveValue = number | null;
 export type LiveHealth = "healthy" | "degraded" | "saturated" | "failed" | "unknown";
 export interface LiveNodeMetrics {
+  monitoring?: import("@infraforge/contracts/telemetry").MonitoringMetrics;
+  objectStorage?: import("@infraforge/contracts/telemetry").ObjectStorageMetrics;
   database?: import("@infraforge/contracts/telemetry").DatabaseMetrics;
   cache?: import("@infraforge/contracts/telemetry").CacheMetrics;
   cdn?: import("@infraforge/contracts/telemetry").CdnMetrics;
@@ -134,6 +137,9 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         for (const resource of deliveryResources) Object.assign(metrics[resource.id]!, dataDeliveryLive(resource, runtime, runtime.inspect(resource.id), compiled.input.resources));
       }
       for (const resource of compiled.input.resources) {
+        if (metrics[resource.id] && (resource.kind === "monitor" || resource.kind === "object-store")) Object.assign(metrics[resource.id]!, observabilityLive(resource, runtime));
+      }
+      for (const resource of compiled.input.resources) {
         if (resource.kind !== "delivery-queue" || !compiled.semantic.nodes.find((n) => n.id === resource.id)?.profile.includes("canvas-async/1")) continue;
         const queue = runtime.inspectQueue(resource.id);
         const workers = compiled.input.resources.filter((r) => r.kind === "async-worker" && r.broker === resource.id).map((r) => runtime.inspectWorker(r.id));
@@ -144,7 +150,8 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
       if (security) for (const node of nodeIds) {
         const policy = security.policies.find(p => p.id === node), unknown = security.omitted > 0;
         const edges = security.edges.filter(e => owner(e.source) === node || owner(e.target) === node).map(e => ({ ...e, lastDenial: unknown ? undefined : e.lastDenial }));
-        metrics[node]!.security = { version: 1, evidence: unknown ? "omitted" : "complete", omitted: security.omitted, edges, ...(policy ? { firewall: { occupancy: policy.occupancy, limit: policy.limit, admissions: policy.admissions, generation: policy.generation } } : {}) };
+        // Flow-capacity refusals exist as bounded detail rows, but have no aggregate counter.
+        metrics[node]!.security = { version: 1, evidence: unknown ? "omitted" : "complete", omitted: security.omitted, edges, ...(policy ? { firewall: { occupancy: policy.occupancy, limit: policy.limit, admissions: policy.admissions, generation: policy.generation, policyDenied: policy.policyDenied ?? null, "flow-capacity": null } } : {}) };
         const incoming = security.edges.filter(e => owner(e.target) === node);
         const denied = incoming.reduce((n, e) => n + e.denied - (previousSecurity.get(e.path)?.denied ?? 0), 0);
         const delivered = incoming.reduce((n, e) => n + e.backendDeliveries - (previousSecurity.get(e.path)?.backendDeliveries ?? 0), 0);
