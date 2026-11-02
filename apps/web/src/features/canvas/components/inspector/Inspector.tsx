@@ -1,3 +1,4 @@
+import { LbRateLimitSection } from "./LbRateLimitSection";
 import { FirewallCapacitySection } from "./FirewallCapacitySection";
 import { ObjectCapacitySection } from "./ObjectCapacitySection";
 import { SecuritySection } from "./SecuritySection";
@@ -50,7 +51,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
         <div className="min-w-0">
           <p className="if-eyebrow">{resource.type}</p>
           <p className="truncate text-[16px] font-semibold text-ink">{resource.name || resource.id}</p>
-          <p className="if-num truncate text-xs text-ink-3">{resource.id} · {resource.type === "Firewall" ? "policy attachment" : resource.listenerSettings ? `TCP listeners: ${resource.listenerSettings.ports.join(", ") || "none"}` : `inferred TCP :${RESOURCE_PORTS[resource.type]}`}</p>
+          <p className="if-num truncate text-xs text-ink-3">{resource.id} Â· {resource.type === "Firewall" ? "policy attachment" : resource.listenerSettings ? `TCP listeners: ${resource.listenerSettings.ports.join(", ") || "none"}` : `inferred TCP :${RESOURCE_PORTS[resource.type]}`}</p>
         </div>
       </div>
       <div className="px-4 pb-4">
@@ -74,6 +75,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
       {resource.type === "Monitoring Agent" && <MonitoringBufferSection key={`monitoring-buffer-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "CDN" && <CdnTtlSection key={`cdn-ttl-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <AutoscalingSection key={`pool-${resource.id}`} resource={resource} disabled={locked} />}
+      {resource.type === RESOURCE_TYPES.LoadBalancer && <LbRateLimitSection resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <LbAdmissionSection key={`admission-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <LbHealthSection key={`health-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <RetrySection key={`retry-${resource.id}`} resource={resource} disabled={locked} />}

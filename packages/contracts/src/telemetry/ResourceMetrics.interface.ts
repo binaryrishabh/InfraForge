@@ -2,7 +2,12 @@ import type { ResourceHealthType } from "@infraforge/domain/resource";
 
 import type { AsyncQueueMetrics } from "./AsyncQueueMetrics.interface";
 
+export interface LbRateLimitMetrics {
+  version: 1; received: number; admitted: number; rejected: number; availableTokens: number; retainedRefillTokens: number; sustainedRequestsPerSecond: number; burstCapacity: number;
+}
+
 export interface ResourceMetrics {
+  rateLimit?: LbRateLimitMetrics;
   monitoring?: import("./ObservabilityMetrics.interface").MonitoringMetrics;
   objectStorage?: import("./ObservabilityMetrics.interface").ObjectStorageMetrics;
   databaseReplication?: import("./DatabaseReplicationMetrics.interface").DatabaseReplicationMetrics;

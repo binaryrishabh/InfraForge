@@ -27,3 +27,5 @@ export { DEFAULT_CIRCUIT_BREAKER_SETTINGS, circuitBreakerSettingsError, type Cir
 export { DEFAULT_ASYNC_QUEUE_SETTINGS, DEFAULT_ASYNC_WORKER_SETTINGS, asyncSettingsError, type AsyncQueueSettings, type AsyncWorkerSettings } from "./AsyncSettings.interface";
 
 export { FLOW_OPERATIONS, applicationFlowError, type ApplicationFlow, type FlowOperation, type FlowStep, type FlowCall, type FlowData, type FlowPublish } from "./ApplicationFlow.interface";
+
+export { lbRateLimitError, LB_RATE_BURST_MAX, LB_RATE_MIN_RPS, LB_RATE_MAX_RPS, type LbRateLimit } from "./LbRateLimit.interface";

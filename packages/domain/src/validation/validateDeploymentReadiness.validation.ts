@@ -1,3 +1,4 @@
+import { lbRateLimitError } from "../resource/LbRateLimit.interface";
 import { RESOURCE_TYPES, type ResourceType } from "../resource/RESOURCE_TYPES.constants";
 import type { ConnectionLine } from "../resource/ConnectionLine.interface";
 import type { Resource } from "../resource/Resource.interface";
@@ -65,6 +66,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
         if (replicationMessage) errors.push(`${resource.id}: ${replicationMessage}`);
         const concurrencyMessage = dbConcurrencyError(resource.type, resource.dbConcurrency);
         if (concurrencyMessage) errors.push(`${resource.id}: ${concurrencyMessage}`);
+        const rateLimitMessage = lbRateLimitError(resource.type, resource.lbRateLimit);
+        if (rateLimitMessage) errors.push(`${resource.id}: ${rateLimitMessage}`);
         const admissionMessage = lbAdmissionError(resource.type, resource.lbAdmission);
         if (admissionMessage) errors.push(`${resource.id}: ${admissionMessage}`);
         const healthMessage = lbHealthError(resource.type, resource.lbHealth);
@@ -94,7 +97,7 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
     }
     for (const resource of resources) {
         if (!connectedIds.has(resource.id) && !(resources.length === 1 && resource.type === RESOURCE_TYPES.VirtualMachine)) {
-            errors.push(`${resource.id} is isolated — connect it or remove it`);
+            errors.push(`${resource.id} is isolated â€” connect it or remove it`);
         }
     }
     const topology = computeTopology(resources, connections);

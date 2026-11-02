@@ -1,3 +1,4 @@
+import { lbRateLimitError, LB_RATE_BURST_MAX, LB_RATE_MIN_RPS, LB_RATE_MAX_RPS } from "@infraforge/domain/resource";
 import * as z from "zod";
 import { firewallCapacityError, FIREWALL_FLOW_CAPACITY_MAX, objectStoragePolicyError, OBJECT_STORAGE_CAPACITY_MAX_MIB, monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT_MAX_ATTEMPTS, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, databaseReplicationError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
@@ -40,6 +41,7 @@ const ResourceSchema = z.object({
     z.object({ version: z.literal(2), ttlSeconds: z.number().int().min(1).max(CDN_TTL_MAX_SECONDS).optional(), coalesce: z.boolean(), maxWaiters: z.number().int().min(1).max(CDN_MAX_WAITERS).optional() }).strict(),
   ]).optional(),
   lbHealth: z.object({ version: z.literal(1), intervalSeconds: z.number().int().min(1).max(LB_HEALTH_SECONDS_MAX).optional(), timeoutSeconds: z.number().int().min(1).max(LB_HEALTH_SECONDS_MAX).optional(), unhealthyAfter: z.number().int().min(1).max(LB_HEALTH_THRESHOLD_MAX).optional(), healthyAfter: z.number().int().min(1).max(LB_HEALTH_THRESHOLD_MAX).optional() }).strict().optional(),
+  lbRateLimit: z.object({ version: z.literal(1), burstRequests: z.number().int().min(1).max(LB_RATE_BURST_MAX), sustainedRequestsPerSecond: z.number().finite().min(LB_RATE_MIN_RPS).max(LB_RATE_MAX_RPS) }).strict().optional(),
   lbAdmission: z.object({ version: z.literal(1), maxActive: z.number().int().min(1).max(LB_ACTIVE_MAX).optional(), maxQueued: z.number().int().min(0).max(LB_QUEUED_MAX).optional(), queueWaitMs: z.number().int().min(1).max(LB_QUEUE_WAIT_MAX_MS).optional() }).strict().optional(),
   vmCpuQuota: z.object({ version: z.literal(1), limitPercent: z.number().int().min(1).max(VM_CPU_LIMIT_MAX) }).strict().optional(),
   vmExecution: z.object({ version: z.literal(1), workers: z.number().int().min(1).max(VM_WORKERS_MAX).optional(), queuedRequests: z.number().int().min(0).max(VM_QUEUED_REQUESTS_MAX).optional() }).strict().optional(),
@@ -86,6 +88,8 @@ const ResourceSchema = z.object({
   if (cdnMessage) ctx.addIssue({ code: "custom", path: ["cdnCachePolicy"], message: cdnMessage });
   const healthMessage = lbHealthError(resource.type, resource.lbHealth);
   if (healthMessage) ctx.addIssue({ code: "custom", path: ["lbHealth"], message: healthMessage });
+  const rateLimitMessage = lbRateLimitError(resource.type, resource.lbRateLimit);
+  if (rateLimitMessage) ctx.addIssue({ code: "custom", path: ["lbRateLimit"], message: rateLimitMessage });
   const lbMessage = lbAdmissionError(resource.type, resource.lbAdmission);
   if (lbMessage) ctx.addIssue({ code: "custom", path: ["lbAdmission"], message: lbMessage });
   const quotaMessage = vmCpuQuotaError(resource.type, resource.vmCpuQuota, resource.asyncWorker?.enabled);

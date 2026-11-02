@@ -1,5 +1,6 @@
+import { LB_RATE_LIMIT_PROFILE, lbRateLimitChanges, validateLbRateLimitBindings } from "./lbRateLimit";
 import { checkCpuDynamics } from "./workloadDynamics";
-import { RESOURCE_PORTS, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbHealthError, lbAdmissionError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbHealthError, lbAdmissionError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -72,6 +73,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (vmExecutionChanges(design.resources) !== contract.version.includes(`/${VM_EXECUTION_PROFILE}`)) error("VM_EXECUTION_VERSION", "version", "VM execution requires its explicit vm-execution/1 contract version and matching saved intent");
     if (dbConcurrencyChanges(design.resources) !== contract.version.includes(`/${DB_CONCURRENCY_PROFILE}`)) error("DB_CONCURRENCY_VERSION", "version", "Database concurrency requires its explicit data-db-concurrency/1 contract version and matching saved intent");
     if (lbHealthChanges(design.resources) !== contract.version.includes(`/${LB_HEALTH_PROFILE}`)) error("LB_HEALTH_VERSION", "version", "Load balancer health requires its explicit lb-health/1 contract version and matching saved intent");
+    if (lbRateLimitChanges(design.resources) !== contract.version.includes(`/${LB_RATE_LIMIT_PROFILE}`)) error("LB_RATE_LIMIT_VERSION", "version", "Load balancer rate limit requires lb-rate-limit/1 and matching saved intent");
     if (lbAdmissionChanges(design.resources) !== contract.version.includes(`/${LB_ADMISSION_PROFILE}`)) error("LB_ADMISSION_VERSION", "version", "Load balancer admission requires its explicit lb-admission/1 contract version and matching saved intent");
     if (contract.applicationFlowProfile !== undefined && !["application-flow/1", "application-flow/2", "application-flow/3"].includes(contract.applicationFlowProfile)) error("UNKNOWN_FLOW_PROFILE", "applicationFlowProfile", "Unsupported flow profile");
     if ((design.resources.some(r => r.applicationFlow?.schema === "application-flow/3") ? "application-flow/3" : design.resources.some(r => r.applicationFlow?.schema === "application-flow/2") ? "application-flow/2" : design.resources.some(r => r.applicationFlow) ? "application-flow/1" : undefined) !== contract.applicationFlowProfile) error("FLOW_PROFILE", "applicationFlowProfile", "Saved flow requires the application-flow/1 adapter");
@@ -99,6 +101,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (cdnError) error("INVALID_CDN_TTL", `resources.${r.id}.cdnCachePolicy`, cdnError);
       const healthError = lbHealthError(r.type, r.lbHealth);
       if (healthError) error("INVALID_LB_HEALTH", `resources.${r.id}.lbHealth`, healthError);
+      const rateLimitError = lbRateLimitError(r.type, r.lbRateLimit);
+      if (rateLimitError) error("INVALID_LB_RATE_LIMIT", `resources.${r.id}.lbRateLimit`, rateLimitError);
       const lbError = lbAdmissionError(r.type, r.lbAdmission);
       if (lbError) error("INVALID_LB_ADMISSION", `resources.${r.id}.lbAdmission`, lbError);
       const quotaError = vmCpuQuotaError(r.type, r.vmCpuQuota, r.asyncWorker?.enabled);
@@ -125,7 +129,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "databaseReplication", "dbConcurrency", "vmExecution", "vmCpuQuota", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "databaseReplication", "dbConcurrency", "vmExecution", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -365,6 +369,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateQueueCapacityBindings(design.resources, runtime);
     validateDatabaseReplicationBindings(design.resources, runtime);
     validateDbConcurrencyBindings(design.resources, runtime);
+    validateLbRateLimitBindings(design.resources, runtime);
     validateLbAdmissionBindings(design.resources, runtime);
     validateLbHealthBindings(design.resources, runtime);
     phase = "runtime-contract"; validateMaterializedSemantics(runtime, semantic.edges, new Set(design.resources.filter(r => r.listenerSettings !== undefined).flatMap(r => [...roleIds.entries()].filter(([key]) => key.split("/")[0]!.split("#")[0] === r.id).map(([,id]) => id)))); validateSystems(runtime);

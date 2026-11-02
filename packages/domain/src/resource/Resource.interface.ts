@@ -1,3 +1,4 @@
+import type { LbRateLimit } from "./LbRateLimit.interface";
 import type { ApplicationFlow } from "./ApplicationFlow.interface";
 import type { DataKeyspace } from "./DataKeyspace.interface";
 import type { CachePolicy } from "./CachePolicy.interface";
@@ -33,6 +34,7 @@ export interface Resource {
   dbConcurrency?: DbConcurrency;
   vmExecution?: VmExecution;
   vmCpuQuota?: VmCpuQuota;
+  lbRateLimit?: LbRateLimit;
   lbAdmission?: LbAdmission;
   lbHealth?: LbHealth;
   listenerSettings?: ListenerSettings;

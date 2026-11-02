@@ -11,6 +11,7 @@ import { observabilityLive } from "./observabilityLive";
 export type LiveValue = number | null;
 export type LiveHealth = "healthy" | "degraded" | "saturated" | "failed" | "unknown";
 export interface LiveNodeMetrics {
+  rateLimit?: import("@infraforge/contracts/telemetry").LbRateLimitMetrics;
   monitoring?: import("@infraforge/contracts/telemetry").MonitoringMetrics;
   objectStorage?: import("@infraforge/contracts/telemetry").ObjectStorageMetrics;
   databaseReplication?: import("@infraforge/contracts/telemetry").DatabaseReplicationMetrics;
@@ -34,7 +35,7 @@ export interface LiveProjection {
 type Counters = { received: number; completed: number; failed: number; queued: number; serving: number; used: number; available: number | null; consumed: number };
 type Station = { received: number; completed: number; failed: number; rejected: number; queued: number; serving: number; consumedCoreUs: number;
   compute?: { cpu?: { appCoreUs: number; competitorCoreUs: number; availableCoreUs: number } } };
-type Balancer = { received: number; completed: number; rejected: number; active: number; pending: number; backends: Array<{ health: boolean; draining: boolean }> };
+type Balancer = { rateLimit?: LiveNodeMetrics["rateLimit"]; received: number; completed: number; rejected: number; active: number; pending: number; backends: Array<{ health: boolean; draining: boolean }> };
 
 const SECOND = 1_000_000;
 const ratio = (part: number, whole: number) => whole > 0 ? part / whole : null;
@@ -100,7 +101,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
           lbNow.set(node, { received: lb.received, completed: lb.completed, rejected: lb.rejected });
           const received = lb.received - before.received, completed = lb.completed - before.completed, rejected = lb.rejected - before.rejected;
           const healthyBackends = lb.backends.filter((b) => b.health && !b.draining).length;
-          metrics[node] = { cpu: null, memory: null, connections: lb.active + lb.pending, rps: completed, errorRate: ratio(rejected, received),
+          metrics[node] = { ...(lb.rateLimit ? { rateLimit: lb.rateLimit } : {}), cpu: null, memory: null, connections: lb.active + lb.pending, rps: completed, errorRate: ratio(rejected, received),
             health: healthyBackends === 0 ? "failed" : rejected > 0 ? "saturated" : lb.pending > 0 ? "degraded" : "healthy" };
           continue;
         }

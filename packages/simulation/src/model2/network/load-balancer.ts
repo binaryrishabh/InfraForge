@@ -1,4 +1,5 @@
-import { carryCause, type Cause } from "../workload/cause";
+import { tokenBucketState, takeToken, projectTokens } from "../composition/token-bucket-core";
+import { seedCause, carryCause, type Cause } from "../workload/cause";
 import { requireKnown } from "../../reality/quantity";
 import type { EventClock } from "../time";
 import { lexical } from "../time";
@@ -11,6 +12,7 @@ import type { CausalObserver } from "../workload/causal";
 interface Request { work: Invocation; done(outcome: RemoteOutcome, cause?: Cause): void; cause?: Cause; receipt?: Receipt; timer?: () => boolean; retryTimer?: () => boolean; attempt: number; backend?: string; retrying: boolean; waiting?: boolean; terminal: boolean }
 export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Map<string, ReturnType<typeof pathTransport>>, operations: Map<string, OperationClass>, seed: string, horizon: number, trace: Trace, causal?: CausalObserver, failureCauseProfile?: "failure-cause/1") {
   const members = [...config.backends].sort().map((id) => ({ id, health: config.health.initial === "eligible", draining: false, successes: 0, failures: 0, outstanding: 0, selected: 0, probes: 0, epoch: 0, cancelCheck: undefined as (() => boolean) | undefined }));
+  let bucket = config.rateLimit ? tokenBucketState(requireKnown(config.rateLimit.burst, "count"), requireKnown(config.rateLimit.burst, "count"), 1, requireKnown(config.rateLimit.refillEvery, "us"), kernel.now) : undefined;
   let disposed = false;
   const healthCancels = new Map<string, () => void>();
   const active = new Map<string, Request>(), pending = new Map<string, Request>();
@@ -114,6 +116,15 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
       if (disposed) { done("cancelled"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" }; }
       received++;
       causal?.({ atUs: kernel.now, kind: "lb-received", resource: config.id, work, detail: { active: active.size, pending: pending.size } });
+      if (bucket) {
+        const decision = takeToken(bucket, kernel.now); bucket = decision.state;
+        causal?.({ atUs: kernel.now, kind: decision.admitted ? "lb-rate-admitted" : "lb-rate-limited", resource: config.id, work, detail: { availableTokens: bucket.tokens } });
+        if (!decision.admitted) {
+          rejected++; const cause = failureCauseProfile ? seedCause("rate-limited", config.id) : undefined;
+          trace("lb-failure", work.callId, "rate-limited", work.rootId, work.attempt, undefined, cause);
+          done("rejected", cause); return { admitted: false, state: () => "finished", cancel: () => "already-finished" };
+        }
+      }
       if (active.size >= requireKnown(config.maxOutstanding, "count") && pending.size >= requireKnown(config.maxPending, "count")) { rejected++; trace("lb-failure", work.callId, "pending-overflow", work.rootId, work.attempt); done("rejected"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" }; }
       const r: Request = { work, done, attempt: 0, retrying: false, terminal: false }; pending.set(work.callId, r);
       r.timer = kernel.schedule(kernel.now + requireKnown(config.pendingTimeout, "us"), 1, JSON.stringify(["lb-pending-timeout", config.id, work.callId]), () => { trace("lb-failure", work.callId, "pending-timeout", work.rootId, work.attempt); finish(r, "rejected"); }); pump();
@@ -124,6 +135,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
     },
     drain(backend: string, grace: number) { const m = members.find((m) => m.id === backend)!; m.draining = true; m.cancelCheck?.(); path(backend).drain(grace); trace("backend-draining", config.id, `${backend}:${grace}us`); },
     measure: () => ({ id: config.id, received, completed, rejected, cancelled, active: active.size, pending: pending.size, attempts, retries, retryLimited, activeRetries,
+      ...(bucket ? { rateLimit: { version: 1 as const, received: bucket.received, admitted: bucket.admitted, rejected: bucket.rejected, availableTokens: projectTokens(bucket, kernel.now).tokens, retainedRefillTokens: projectTokens(bucket, kernel.now).retainedRefillTokens, sustainedRequestsPerSecond: 1000000 / bucket.period, burstCapacity: bucket.capacity } } : {}),
       ...(enhanced ? { retriesWaiting, suppressedByReason: { ...suppressedByReason } } : {}),
       backends: members.map(({ cancelCheck: _cancel, epoch: _epoch, ...m }) => ({ ...m })) }),
   };

@@ -4,7 +4,7 @@ export function workloadDynamicsError(value: unknown): string | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return error;
   const v = value as Record<string, unknown>;
   if (Object.keys(v).some(k => !["version", "arrivalProcess", "applicationCpuCv"].includes(k)) || v.version !== 1 ||
-    !["even", "poisson"].includes(String(v.arrivalProcess)) || typeof v.applicationCpuCv !== "number" ||
+    (v.arrivalProcess !== "even" && v.arrivalProcess !== "poisson") || typeof v.applicationCpuCv !== "number" ||
     !Number.isFinite(v.applicationCpuCv) || v.applicationCpuCv < 0 || v.applicationCpuCv > 1) return error;
   return null;
 }

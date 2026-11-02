@@ -6,7 +6,7 @@ const fields: Record<string, string[]> = {
   relational: ["replication", "semantics", "execution", "maxSessions", "activeTransactions", "pendingQueries", "keys", "initial", "plans", "access"],
   cache: ["semantics", "execution", "capacity", "entryOverhead", "policy", "ttl", "initial", "commandCpu"],
   "cache-aside": ["execution", "cache", "database", "keys", "access", "coalesce", "onCacheFailure", "invalidateWrites", "operations"],
-  "load-balancer": ["backends", "policy", "maxOutstanding", "maxPending", "pendingTimeout", "health", "retry"],
+  "load-balancer": ["rateLimit", "backends", "policy", "maxOutstanding", "maxPending", "pendingTimeout", "health", "retry"],
   "dns-authority": ["records", "negativeTtl"], "dns-resolver": ["authority", "cacheEntries"],
   cdn: ["origin", "namespace", "keys", "capacity", "ttl", "coalesce", "maxWaiters"],
   registry: ["store", "namespace"], "artifact-client": ["registry", "cacheBytes", "attempts", "backoff", "replicas", "initialLayers"],

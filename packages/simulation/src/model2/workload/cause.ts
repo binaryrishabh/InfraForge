@@ -1,5 +1,5 @@
 export const RETRYABLE_FAILURES = ["acquire-timeout", "connect-timeout", "response-timeout", "reset", "drained", "pool-overflow", "link-overflow", "backend-rejected"] as const;
-export type FailureReason = typeof RETRYABLE_FAILURES[number] | "session-limit" | "circuit-open";
+export type FailureReason = typeof RETRYABLE_FAILURES[number] | "session-limit" | "circuit-open" | "rate-limited";
 
 /** failure-cause/1: one bounded summary, never a reconstructed chain. */
 export interface Cause { rootReason: FailureReason | null; rootResource: string | null; depth: number }

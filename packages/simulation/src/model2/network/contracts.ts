@@ -37,6 +37,7 @@ export interface RetryPolicy {
   retryOn: FailureReason[]; allowAmbiguousNonIdempotent: boolean;
 }
 export interface LoadBalancer {
+  rateLimit?: { profile: "lb-rate-limit/1"; burst: Quantity<"count">; refillEvery: Quantity<"us"> };
   id: string; kind: "load-balancer"; backends: string[]; policy: "round-robin" | "least-outstanding";
   maxOutstanding: Quantity<"count">; maxPending: Quantity<"count">; pendingTimeout: Quantity<"us">;
   health: { interval: Quantity<"us">; timeout: Quantity<"us">; healthy: Quantity<"count">; unhealthy: Quantity<"count">;

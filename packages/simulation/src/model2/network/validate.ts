@@ -74,6 +74,7 @@ export function validateNetwork(input: NetworkInput) {
   let probes = 0;
   for (const r of input.resources) if (r.kind === "load-balancer") {
     if (!["round-robin", "least-outstanding"].includes(r.policy) || !["eligible", "ineligible"].includes(r.health.initial) || !input.operations.some((o) => o.id === r.health.operation)) throw new Error("Invalid LB routing/health policy");
+    if (r.rateLimit && (r.rateLimit.profile !== "lb-rate-limit/1" || number(r.rateLimit.burst, "count", 1) > 100000 || number(r.rateLimit.refillEvery, "us", 1) > 1000000000)) throw Error("Invalid load balancer token bucket");
     number(r.maxOutstanding, "count", 1); number(r.maxPending, "count"); number(r.pendingTimeout, "us", 1);
     const interval = number(r.health.interval, "us", 1), timeout = number(r.health.timeout, "us", 1);
     number(r.health.healthy, "count", 1); number(r.health.unhealthy, "count", 1);
