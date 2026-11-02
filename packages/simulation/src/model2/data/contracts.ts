@@ -37,4 +37,4 @@ export interface DataInput extends Omit<NetworkInput, "workloadVersion" | "resou
   dataInterventions: DataIntervention[];
 }
 export interface DataRequest { kind: "get" | "set" | "invalidate" | "query"; key: string; row?: { version: number; bytes: number }; token?: string }
-export interface DataReply { ok: boolean; hit?: boolean; key?: string; version?: number; bytes?: number; token?: string; rows?: Array<{ key: string; version: number; bytes: number }>; reason?: string; durable?: boolean }
+export interface DataReply { readSource?: "primary" | "replica"; ok: boolean; hit?: boolean; key?: string; version?: number; bytes?: number; token?: string; rows?: Array<{ key: string; version: number; bytes: number }>; reason?: string; durable?: boolean }

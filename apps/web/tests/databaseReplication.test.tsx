@@ -29,6 +29,6 @@ test("Database HA section is bounded, explicit and respects locks", () => {
 });
 test("HA readouts are optional and supplied unknowns remain Unknown", () => {
   expect(renderToStaticMarkup(<DatabaseReplicationReadings />)).toBe("");
-  const html = renderToStaticMarkup(<DatabaseReplicationReadings metrics={{ cpu: null, memory: null, health: "healthy", databaseReplication: { version: 1, currentWriter: null, replicaState: null, primaryCommittedWrites: 7, replicaAppliedWrites: null, pendingReplication: null, lagMs: null, oldestPendingAgeMs: null, primaryGeneration: null, replicaGeneration: null } }} />);
+  const html = renderToStaticMarkup(<DatabaseReplicationReadings metrics={{ cpu: null, memory: null, health: "healthy", databaseReplication: { version: 1, currentWriter: null, replicaState: null, primaryReads: null, replicaReads: null, freshReplicaReads: null, staleReplicaReads: null, primaryCommittedWrites: 7, replicaAppliedWrites: null, pendingReplication: null, lagMs: null, oldestPendingAgeMs: null, primaryGeneration: null, replicaGeneration: null } }} />);
   expect(html).toContain("Unknown"); expect(html).toContain(">7<");
 });

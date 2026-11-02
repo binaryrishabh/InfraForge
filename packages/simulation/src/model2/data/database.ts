@@ -9,7 +9,7 @@ import { lockManager } from "./locks";
 import type { CausalObserver } from "../workload/causal";
 import type { DatabaseIo } from "./io";
 
-interface Tx { orphaned?: boolean; work: Invocation; plan: TransactionPlan; step: number; phase: "queued" | "lock" | "cpu" | "io" | "wait" | "commit"; terminal: boolean; phaseAt: number; writes: Map<string, { version: number; bytes: number }>; rows: DataReply["rows"]; cancelTx?: () => boolean; cancelStatement?: () => boolean; cancelLock?: () => boolean; cancelWait?: () => boolean; cancelIo?: () => void; done(outcome: RemoteOutcome): void; session: string }
+interface Tx { readSource?: "primary" | "replica"; orphaned?: boolean; work: Invocation; plan: TransactionPlan; step: number; phase: "queued" | "lock" | "cpu" | "io" | "wait" | "commit"; terminal: boolean; phaseAt: number; writes: Map<string, { version: number; bytes: number }>; rows: DataReply["rows"]; cancelTx?: () => boolean; cancelStatement?: () => boolean; cancelLock?: () => boolean; cancelWait?: () => boolean; cancelIo?: () => void; done(outcome: RemoteOutcome): void; session: string }
 export function relationalDatabase(config: RelationalConfig, kernel: EventClock, causal?: CausalObserver, ownedCpu?: ReturnType<typeof cpuScheduler>, io?: DatabaseIo, seed = "") {
   const pg2 = config.semantics === "postgresql-keyed/2", pg = pg2 || config.semantics === "postgresql-keyed/1";
   if (io && !pg) throw Error("Finite IO requires PostgreSQL session semantics");
@@ -47,7 +47,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     causal?.({ atUs: kernel.now, kind: "db-terminal", resource: config.id, work: t.work, detail: { session: t.session, outcome: ok ? "committed" : cancel ? "cancelled" : "aborted", reason, writes: ok ? t.writes.size : 0 } });
     if (pg && reason === "transaction-timeout") { sessions.delete(t.session); sessionTrace.get(t.session)?.("db-session-closed"); sessionTrace.delete(t.session); sessionEvents.transactionTerminated++; }
     if (t.orphaned) closeSlot(t.session);
-    if (t.work.message) t.work.message.response = { ok, rows: t.rows, durable: ok && t.plan.durability === "authored-log-ack", ...(reason ? { reason } : {}) } satisfies DataReply;
+    if (t.work.message) t.work.message.response = { ok, rows: t.rows, ...(t.readSource ? { readSource: t.readSource } : {}), durable: ok && t.plan.durability === "authored-log-ack", ...(reason ? { reason } : {}) } satisfies DataReply;
     locks.release(t.work.callId); t.done(ok ? "completed" : cancel ? "cancelled" : "rejected"); pump();
   };
   const deadline = (t: Tx, kind: "statement" | "lock" | "transaction", step = t.step) => {
@@ -81,13 +81,14 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     const s = t.plan.statements[t.step]!, key = (t.work.message?.request as DataRequest | undefined)?.key;
     const keys = s.keys.map((k) => k === "$key" ? key! : k);
     if (keys.some((k) => !keyspace.has(k))) { finish(t, false, "key-outside-dataset"); return; }
-    const observe = () => keys.flatMap((k) => { const row = t.writes.get(k) ?? rows.get(k); return row ? [{ key: k, ...row }] : s.kind === "insert" ? [{ key: k, version: 0, bytes: requireKnown(s.insertBytes!, "bytes") }] : []; });
+    const observe = () => keys.flatMap((k) => { const row = t.writes.get(k) ?? (replication && t.readSource ? replication.read(k, t.readSource) : rows.get(k)); return row ? [{ key: k, ...row }] : s.kind === "insert" ? [{ key: k, version: 0, bytes: requireKnown(s.insertBytes!, "bytes") }] : []; });
     const snapshot = observe();
     // The first PG command's deadline includes the authored DB admission queue.
     if (!pg || t.step > 0) t.cancelStatement = deadline(t, "statement");
     const service = () => {
       if (t.terminal) return; t.cancelLock?.(); phase(t, "cpu");
       const observed = s.kind === "snapshot-read" ? snapshot : observe();
+      if (replication && s.kind !== "write" && s.kind !== "insert") replication.observed(t.readSource!, keys, observed);
       cpu.add({ id: t.work.callId, demand: requireKnown(s.cpu, "cpu-us"), cap: requireKnown(s.parallelism, "cores"), done() {
         if (t.terminal) return;
         const block = () => { phase(t, "wait"); t.cancelWait = kernel.schedule(kernel.now + requireKnown(s.blockingWait, "us"), 2, JSON.stringify(["db-blocking", config.id, t.work.callId, t.step]), () => {
@@ -127,6 +128,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     pumping = false;
   };
   return {
+    replicaAvailability(value: boolean) { replication?.available(value); },
     openSession,
     sessionAlive: (id: string) => sessions.has(id),
     accept(work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt {
@@ -144,6 +146,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
       causal?.({ atUs: kernel.now, kind: "db-admitted", resource: config.id, work, detail: { session } });
       const counts = byClass.get(work.operation) ?? { admitted: 0, committed: 0, aborted: 0, cancelled: 0 }; counts.admitted++; byClass.set(work.operation, counts);
       const t: Tx = { work, done, plan: config.plans[work.operation]!, step: 0, phase: "queued", phaseAt: kernel.now, terminal: false, writes: new Map(), rows: [], session };
+      if (replication) t.readSource = replication.readSource(t.plan.statements.every(s => s.kind === "snapshot-read" || s.kind === "lock-read"));
       if (io) phaseEntries.queued++;
       sessions.set(session, t); queue.set(work.callId, t);
       if (pg) t.cancelStatement = deadline(t, "statement"); else t.cancelTx = deadline(t, "transaction"); pump();

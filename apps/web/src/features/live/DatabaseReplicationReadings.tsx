@@ -1,6 +1,6 @@
 import type { ResourceMetrics } from "@infraforge/contracts/telemetry";
 
-const fields = [["currentWriter", "Current writer"], ["replicaState", "Replica state"], ["pendingReplication", "Pending replication"], ["lagMs", "Replica lag (ms; oldest pending age)"], ["primaryCommittedWrites", "Primary committed writes"], ["replicaAppliedWrites", "Replica applied writes"], ["primaryGeneration", "Primary data generation"], ["replicaGeneration", "Replica applied generation"]] as const;
+const fields = [["primaryReads", "Primary reads"], ["replicaReads", "Replica reads"], ["freshReplicaReads", "Fresh replica reads"], ["staleReplicaReads", "Stale replica reads"], ["currentWriter", "Current writer"], ["replicaState", "Replica state"], ["pendingReplication", "Pending replication"], ["lagMs", "Replica lag (ms; oldest pending age)"], ["primaryCommittedWrites", "Primary committed writes"], ["replicaAppliedWrites", "Replica applied writes"], ["primaryGeneration", "Primary data generation"], ["replicaGeneration", "Replica applied generation"]] as const;
 export function DatabaseReplicationReadings({ metrics }: { metrics?: ResourceMetrics }) {
   const values = metrics?.databaseReplication;
   if (!values) return null;

@@ -16,7 +16,7 @@ export function replicaFixture(delay = 2, policy: "primary" | "replica-preferred
   const submit = (operation = "heavy", key = "k0") => {
     const id = `work-${sequence++}`;
     const work: Invocation = { rootId: id, callId: id, sessionId: id, operation, attempt: 0, offeredAt: clock.now, message: { request: { kind: "query", key } } };
-    db.accept(work, () => {}); return work;
+    db.accept(work, () => db.closeSession(id)); return work;
   };
   return { config, clock, db, submit, ha: () => db.evidence().databaseReplication! };
 }
@@ -50,4 +50,42 @@ test("saved replication strictly binds captured profile and materialized config"
   if (role.config.kind !== "relational") throw Error("relational");
   role.config.replication!.replicationDelayMs++; expect(compileProduct(design, f.contract).ok).toBe(false);
   expect(prepareDatabase().runtime.evidence().data.databases[0]!).not.toHaveProperty("databaseReplication");
+});
+
+test("replica preferred returns actual older rows in the lag window and fresh rows after catch-up", () => {
+  const f = replicaFixture(2, "replica-preferred"); f.submit(); f.clock.advanceTo(100);
+  const stale = f.submit("light"); f.clock.advanceTo(200);
+  expect((stale.message!.response as DataReply).rows![0]!.version).toBe(1);
+  expect((stale.message!.response as DataReply).readSource).toBe("replica");
+  expect(f.ha()).toMatchObject({ replicaReads: 1, staleReplicaReads: 1, freshReplicaReads: 0 });
+  f.clock.advanceTo(2100); const fresh = f.submit("light"); f.clock.advanceTo(2200);
+  expect((fresh.message!.response as DataReply).rows![0]!.version).toBe(2);
+  expect(f.ha()).toMatchObject({ replicaReads: 2, staleReplicaReads: 1, freshReplicaReads: 1 });
+});
+
+test("primary policy and unavailable replica route to writer; only matching keys prove staleness", () => {
+  for (const policy of ["primary", "replica-preferred"] as const) {
+    const f = replicaFixture(2, policy); f.submit(); f.clock.advanceTo(100);
+    const other = f.submit("light", "k1"); f.clock.advanceTo(200);
+    expect((other.message!.response as DataReply).rows![0]!.version).toBe(1);
+    expect(f.ha().staleReplicaReads).toBe(0);
+    f.db.replicaAvailability(false);
+    const fallback = f.submit("light"); f.clock.advanceTo(300);
+    expect((fallback.message!.response as DataReply).rows![0]!.version).toBe(2);
+    expect((fallback.message!.response as DataReply).readSource).toBe("primary");
+    expect(f.ha().replicaReads).toBe(f.ha().freshReplicaReads + f.ha().staleReplicaReads);
+    if (policy === "primary") expect(f.ha().replicaReads).toBe(0);
+  }
+});
+
+test("repeated hot-key reads keep per-key versions and conserve fresh plus stale outcomes", () => {
+  const f = replicaFixture(2, "replica-preferred");
+  for (let n = 0; n < 4; n++) { f.submit("heavy", "k0"); f.clock.advanceTo(n * 200 + 100); f.submit("light", "k0"); f.clock.advanceTo(n * 200 + 200); }
+  const cold = f.submit("light", "k2"); f.clock.advanceTo(900);
+  expect((cold.message!.response as DataReply).rows![0]!.version).toBe(1);
+  expect(f.ha()).toMatchObject({ replicaReads: 5, staleReplicaReads: 4, freshReplicaReads: 1 });
+  const primary = replicaFixture(); primary.submit(); primary.clock.advanceTo(100);
+  const fresh = primary.submit("light"); primary.clock.advanceTo(200);
+  expect((fresh.message!.response as DataReply).rows![0]!.version).toBe(2);
+  expect(primary.ha()).toMatchObject({ primaryReads: 1, replicaReads: 0 });
 });
