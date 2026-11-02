@@ -2,12 +2,23 @@ import type { ClientRetryCounters } from "@infraforge/contracts/telemetry";
 import type { CausalObserver } from "./causal";
 
 // Constant-size aggregates: at most four attempt ordinals and the finite cause contract.
-export function clientRetryEvidence(maxAttempts: number) {
+export function clientRetryEvidence(maxAttempts: number, attemptTimeoutMs?: number) {
   const counts = { originalsOffered: 0, totalAttempts: 0, retriesScheduled: 0, retriesIssued: 0, recovered: 0, exhausted: 0, givenUp: 0 };
   const ineligibleByReason: Record<string, number> = {};
+  const timeouts = attemptTimeoutMs === undefined ? undefined : { attemptsTimedOut: 0, timeoutCancellationsRequested: 0, timeoutCancellationsConfirmed: 0, supersededOutcomes: { completed: 0, rejected: 0, cancelled: 0 }, wastedCompletions: 0, recoveredByTimeoutRetry: 0 };
   const outcomes = Array.from({ length: maxAttempts }, (_, attempt) => ({ attempt, issued: 0, completed: 0, rejected: 0, cancelled: 0, deadlineExceeded: 0, abandoned: 0 }));
   const observe: CausalObserver = e => {
     const attempt = e.work?.attempt ?? 0;
+    if (timeouts) {
+      if (e.kind === "client-attempt-terminal" && e.detail.timedOut) timeouts.attemptsTimedOut++;
+      if (e.kind === "client-timeout-cancellation") { timeouts.timeoutCancellationsRequested++; if (e.detail.result === "cancelled") timeouts.timeoutCancellationsConfirmed++; }
+      if (e.kind === "caller-terminal" && e.detail.outcome === "completed" && e.detail.timeoutRetried) timeouts.recoveredByTimeoutRetry++;
+      if (e.kind === "client-attempt-superseded-outcome") {
+        const outcome = e.detail.outcome;
+        if (outcome === "completed" || outcome === "rejected" || outcome === "cancelled") timeouts.supersededOutcomes[outcome]++;
+        if (outcome === "completed") timeouts.wastedCompletions++;
+      }
+    }
     if (e.kind === "caller-offered") counts.originalsOffered++;
     if (e.kind === "client-attempt-issued") { counts.totalAttempts++; outcomes[attempt]!.issued++; if (attempt > 0) counts.retriesIssued++; }
     if (e.kind === "client-retry-scheduled") counts.retriesScheduled++;
@@ -25,7 +36,7 @@ export function clientRetryEvidence(maxAttempts: number) {
       if (key === "completed" || key === "rejected" || key === "cancelled" || key === "deadlineExceeded" || key === "abandoned") outcomes[attempt]![key]++;
     }
   };
-  const measure = (): ClientRetryCounters => ({ ...counts, ineligibleByReason: { ...ineligibleByReason }, extraLoadFactor: counts.originalsOffered ? counts.totalAttempts / counts.originalsOffered : null,
+  const measure = (): ClientRetryCounters => ({ ...counts, ...(timeouts ? { ...timeouts, supersededOutcomes: { ...timeouts.supersededOutcomes } } : {}), ineligibleByReason: { ...ineligibleByReason }, extraLoadFactor: counts.originalsOffered ? counts.totalAttempts / counts.originalsOffered : null,
     perAttemptOutcomes: outcomes.map(o => ({ ...o, inFlight: o.issued - o.completed - o.rejected - o.cancelled - o.deadlineExceeded - o.abandoned })) });
   return { observe, measure };
 }
