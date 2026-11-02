@@ -136,7 +136,7 @@ export function createNetworkRuntime(authored: NetworkInput, extension?: Network
       },
     };
   }, extension?.resource, extension?.causal, extension?.cpuFor, extension?.clockFor);
-  return { dispose: () => disposeNetwork(), horizon: runtime.horizon, advanceTo: runtime.advanceTo, advanceSlice: runtime.advanceSlice,
+  return { dispose: () => disposeNetwork(), horizon: runtime.horizon, advanceTo: runtime.advanceTo, measureObjective: runtime.measureObjective, advanceSlice: runtime.advanceSlice,
     evidence() { const e = runtime.evidence(); return { ...e, workloadVersion: "m2d/1" as const, network: copy(measure()), networkConfiguration: copy({ links: input.links, paths: input.paths, resources: input.resources.filter((r) => r.kind === "load-balancer"), endpoints: input.endpoints, interventions: input.networkInterventions }),
       unmodeled: ["packets/TCP congestion/retransmission", "TLS framing/cryptography", "DNS/NAT/ephemeral ports", "physical topology/provider transport", "GC/reclaim/swap/OOM", "database query/lock/cache mechanisms", "cost"] }; } };
 }

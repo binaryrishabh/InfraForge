@@ -80,7 +80,7 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
       }
     },
   });
-  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, advanceSlice: runtime.advanceSlice,
+  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, measureObjective: runtime.measureObjective, advanceSlice: runtime.advanceSlice,
     // Read existing evidence for one resource without copying the run's retained history.
     inspectData: { database: (id: string) => databases.get(id)?.evidence(), cache: (id: string) => caches.get(id)?.evidence(), application: (id: string) => applications.get(id)?.evidence() },
     evidence() {

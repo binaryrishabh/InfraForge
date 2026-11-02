@@ -27,7 +27,7 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
     }
     for (const p of compiled.pools) controllers.push(replicaController(p, kernel, context, controls, requireKnown(compiled.input.horizon, "us")));
   } });
-  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo,
+  return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, measureObjective: runtime.measureObjective,
     // Cheap current reads for live views: one resource's counters now, and replica counts. No history is copied.
     inspect: (id: string) => network?.inspect?.(id) ?? network?.observe(id),
     inspectData: runtime.inspectData,

@@ -7,6 +7,7 @@ import { identity, ingestTrace, openRows } from "./arrivals";
 import { ResultBook } from "./evidence";
 import { clientRetryDecision } from "./clientRetry";
 import { clientRetryEvidence } from "./clientRetryEvidence";
+import { objectiveEvidence } from "./objectiveEvidence";
 import { validateWorkload } from "./validate";
 import { workloadStation } from "./station";
 import { WORKLOAD_POLICY_LEDGER } from "./policy";
@@ -61,6 +62,8 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
   const sources = new Map(input.arrivals.map((a) => [a.id, { offered: 0 }]));
   const retryPolicy = input.operations.find(o => o.clientRetry)?.clientRetry;
   const retries = retryPolicy ? clientRetryEvidence(retryPolicy.maxAttempts) : undefined;
+  const objective = input.workloadObjective ? objectiveEvidence(input.workloadObjective, horizon) : undefined;
+  const measureObjective = () => objective?.measure(counts.offered, kernel.now, live.values());
   const observe: CausalObserver | undefined = retries ? e => { retries.observe(e); modules.causal?.(e); } : modules.causal;
   const maxAttempts = input.limits.maxRequests * (retryPolicy?.maxAttempts ?? 1);
   let issuedAttempts = 0;
@@ -82,6 +85,7 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
       terminal = true; live.delete(rootId); cancelDeadline?.(); cancelAbandon?.(); cancelRetry?.();
       const key = outcome === "deadline-exceeded" ? "deadlineExceeded" : outcome;
       counts[key]++; perOperation[key]++;
+      objective?.finish(outcome, kernel.now - work.offeredAt);
       observe?.({ atUs: kernel.now, kind: "caller-terminal", resource: "$caller", work: pending.work, detail: { outcome, ...causeFields(input.failureCauseProfile && outcome === "rejected" ? cause : undefined), responseUs: kernel.now - work.offeredAt } });
       book.record({ ...pending.work, at: kernel.now, outcome, responseUs: kernel.now - work.offeredAt }); next?.();
     };
@@ -167,6 +171,7 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
   let failure: string | null = null;
   return {
     horizon,
+    measureObjective,
     advanceTo(until: number) {
       if (failure) throw new Error("Failed execution cannot resume");
       if (until > horizon) throw new Error("Beyond authored horizon");
@@ -181,6 +186,7 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
       const state = snapshot(), terminal = counts.completed + counts.rejected + counts.deadlineExceeded + counts.abandoned;
       return copy({ modelVersion: "2", workloadVersion: input.workloadVersion, status: "internal", seed: input.seed,
         ...(retries ? { clientRetry: { policy: retryPolicy!, ...retries.measure() } } : {}),
+        ...(objective ? { objective: measureObjective()! } : {}),
         capture: { throughUs: kernel.now, reachedHorizon: kernel.now === horizon && !failure && (kernel.nextAt === undefined || kernel.nextAt > horizon), failure,
           ...(input.limits.maxPendingEvents === undefined ? {} : { timestampComplete: kernel.nextAt === undefined || kernel.nextAt > kernel.now }) },
         ...state, samples, ...(input.limits.maxRetainedSamples === undefined ? {} : { sampleRetention: { retained: samples.length, omitted: sampleOmitted, bytes: sampleBytes, policy: "bounded prefix; cumulative terminal aggregates remain independent" } }), faults, byOperation: Object.fromEntries(byOperation), sources: Object.fromEntries(sources),
