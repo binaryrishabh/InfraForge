@@ -1,4 +1,5 @@
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
+import { LatencyBreakdown } from "./LatencyBreakdown";
 
 export function TrafficReadings() {
   const traffic = useSimulationStore(s => s.traffic);
@@ -17,5 +18,6 @@ export function TrafficReadings() {
       ] as const).map(([label, value]) => <div key={label}><dt className="text-xs text-ink-3">{label}</dt><dd>{value ?? "Unknown"}</dd></div>)}</dl>
       <p className="mt-2 text-xs text-ink-3">Offered requests/s counts originals. Attempts include retries. Retry counters are cumulative; response time includes retry delays.</p>
     </div>}
+    {traffic?.latency && <LatencyBreakdown latency={traffic.latency} />}
   </section>;
 }
