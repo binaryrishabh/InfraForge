@@ -50,6 +50,7 @@ test("one-shot and stepped runs have identical final evidence and data delivery 
     const ids = f.compiled.semantic.nodes.map(n => n.id), stepped = createLiveModel2(f.compiled, ids), oneShot = createLiveModel2(f.compiled, ids);
     let view;
     for (let second = 0; second < 4; second++) { stepped.advanceSecond(); view = stepped.project(); }
+    if (!view) throw Error("Expected four projected seconds");
     oneShot.catchUp(3, 3); oneShot.advanceSecond();
     expect(oneShot.project()).toEqual(view);
     const official = createProductModel2(f.compiled); official.advanceTo(4_000_000);
