@@ -1,5 +1,5 @@
 import type { WorkloadProfile } from "@infraforge/domain/workload";
-import { describeClientRetry, describeWorkloadDynamics } from "@/lib/format";
+import { describeClientRetry, describeWorkloadDynamics, describeObjective } from "@/lib/format";
 
 export function SourceInputFacts({ workload, seed }: { workload: WorkloadProfile | null; seed: string | null }) {
   return (
@@ -8,6 +8,7 @@ export function SourceInputFacts({ workload, seed }: { workload: WorkloadProfile
       {workload && <div><dt className="text-xs text-ink-3">Peak multiplier · read share</dt><dd className="text-ink">Peak multiplier: {workload.peakMultiplier ?? "not captured"} · {workload.readWriteRatio === undefined ? "read share not captured" : `${Math.round(workload.readWriteRatio * 100)}% reads`}</dd></div>}
       {workload && <div><dt className="text-xs text-ink-3">Traffic dynamics</dt><dd className="text-ink">{describeWorkloadDynamics(workload)}</dd></div>}
       {workload && <div><dt className="text-xs text-ink-3">Client retries</dt><dd className="text-ink">{describeClientRetry(workload)}</dd></div>}
+      {workload && <div><dt className="text-xs text-ink-3">Service objective</dt><dd className="text-ink">{describeObjective(workload)}</dd></div>}
       <div className="min-w-0"><dt className="text-xs text-ink-3">Source seed</dt><dd className="if-num break-all text-ink">{seed ?? "Unavailable"}</dd></div>
     </dl>
   );

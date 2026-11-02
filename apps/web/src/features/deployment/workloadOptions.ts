@@ -1,4 +1,4 @@
-import type { WorkloadProfile, WorkloadDynamics, ResolvedWorkloadProfile } from "@infraforge/domain/workload";
+import type { WorkloadProfile, WorkloadDynamics, WorkloadObjective, ResolvedWorkloadProfile } from "@infraforge/domain/workload";
 
 interface Preset { id: string; label: string; profile: ResolvedWorkloadProfile }
 export const WORKLOAD_PRESETS: Preset[] = [
@@ -22,5 +22,12 @@ export function withClientRetry(p: WorkloadProfile, maxAttempts: number, backoff
   const next = { ...p };
   if (maxAttempts === 0) delete next.clientRetry;
   else next.clientRetry = { version: 1, maxAttempts, backoffMs };
+  return next;
+}
+
+export function withObjective(p: WorkloadProfile, objective: Omit<WorkloadObjective, "version"> | null): WorkloadProfile {
+  const next = { ...p };
+  if (objective === null) delete next.workloadObjective;
+  else next.workloadObjective = { version: 1, ...objective };
   return next;
 }

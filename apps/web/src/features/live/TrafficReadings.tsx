@@ -1,5 +1,6 @@
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import { LatencyBreakdown } from "./LatencyBreakdown";
+import { ObjectiveReadings } from "./ObjectiveReadings";
 
 export function TrafficReadings() {
   const traffic = useSimulationStore(s => s.traffic);
@@ -19,5 +20,6 @@ export function TrafficReadings() {
       <p className="mt-2 text-xs text-ink-3">Offered requests/s counts originals. Attempts include retries. Retry counters are cumulative; response time includes retry delays.</p>
     </div>}
     {traffic?.latency && <LatencyBreakdown latency={traffic.latency} />}
+    {traffic?.objective && <ObjectiveReadings objective={traffic.objective} />}
   </section>;
 }

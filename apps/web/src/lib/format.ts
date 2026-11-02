@@ -19,7 +19,11 @@ export function describeWorkload(w: WorkloadProfile) {
   const rate = `${w.targetThroughput.toLocaleString()} requests per ${w.throughputUnit === "per-minute" ? "minute" : "hour"}`;
   const shape = w.trafficShape === "peak" ? `bursts to ${w.peakMultiplier ?? 3}×` : "steady";
   const reads = w.readWriteRatio !== undefined ? `${Math.round(w.readWriteRatio * 100)}% reads` : null;
-  return [rate, shape, reads, `${w.payloadSize} payloads`, describeWorkloadDynamics(w), describeClientRetry(w)].filter(Boolean).join(" · ");
+  return [rate, shape, reads, `${w.payloadSize} payloads`, describeWorkloadDynamics(w), describeClientRetry(w), describeObjective(w)].filter(Boolean).join(" · ");
+}
+
+export function describeObjective(w: WorkloadProfile) {
+  return w.workloadObjective ? `Service objective: ${w.workloadObjective.targetSuccessPercent}% within ${w.workloadObjective.maxResponseMs} ms` : "Service objective: none";
 }
 
 export function describeClientRetry(w: WorkloadProfile) {
