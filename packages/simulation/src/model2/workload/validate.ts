@@ -82,6 +82,7 @@ export function validateWorkload(input: WorkloadInput) {
     if (o.clientRetry && (o.idempotency !== "read-only" || input.failureCauseProfile !== "failure-cause/1")) errors.push("Client retries require a read-only operation and failure-cause/1");
     if (!resources.has(o.entry) || !["detach", "request-cancellation"].includes(o.onCallerStop) || !["read-only", "idempotent", "non-idempotent", "unknown"].includes(o.idempotency)) errors.push("Invalid operation ownership/entry");
     micros(horizon + number(o.callerTimeout, "us", 1));
+    if (o.clientRetry?.attemptTimeoutMs !== undefined && o.clientRetry.attemptTimeoutMs * 1000 >= requireKnown(o.callerTimeout, "us")) errors.push("Client attempt timeout must be less than the read operation's callerTimeout.");
     if (o.abandonAfter) micros(horizon + number(o.abandonAfter, "us", 1));
   }
   if (input.operations.filter(o => o.clientRetry).length > 1) errors.push("Only the application read operation may retry");

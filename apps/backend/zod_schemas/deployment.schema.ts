@@ -25,7 +25,8 @@ export const WorkloadProfileSchema = z.object({
   workloadObjective: z.object({ version: z.literal(1), maxResponseMs: z.number().int().min(1).max(60000),
     targetSuccessPercent: z.number().finite().min(50).max(99.99) }).strict().optional(),
   clientRetry: z.object({ version: z.literal(1), maxAttempts: z.number().int().min(2).max(4),
-    backoffMs: z.number().int().min(1).max(10000) }).strict().optional(),
+    backoffMs: z.number().int().min(1).max(10000), attemptTimeoutMs: z.number().int().min(1).max(60000).optional() }).strict().optional(),
+  attemptTimeoutMs: z.never().optional(),
   workloadDynamics: z.object({ version: z.literal(1), arrivalProcess: z.enum(["even", "poisson"]),
     applicationCpuCv: z.number().finite().min(0).max(1) }).strict().optional(),
 });
