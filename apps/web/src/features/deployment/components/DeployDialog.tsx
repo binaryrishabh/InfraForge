@@ -1,5 +1,7 @@
 import { WORKLOAD_PRESETS as PRESETS } from "../workloadOptions";
 import { WorkloadDynamicsControls } from "./WorkloadDynamicsControls";
+import { ClientRetryControls } from "./ClientRetryControls";
+import { resolveWorkload } from "@infraforge/domain/workload";
 import { useState, type FormEvent } from "react";
 import { Play } from "lucide-react";
 import type { WorkloadProfile, ResolvedWorkloadProfile } from "@infraforge/domain/workload";
@@ -58,6 +60,7 @@ export function DeployDialog({ open, onOpenChange, initialName, resourceCount, c
           <summary className="text-sm font-medium text-ink">Adjust the workload</summary>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <WorkloadDynamicsControls profile={profile} onChange={patch} disabled={loading} />
+            <ClientRetryControls profile={profile} onChange={next => setProfile(resolveWorkload(next))} disabled={loading} />
             <Field label="Requests" hint={`About ${Math.round(requestsPerSecond(profile)).toLocaleString()} per second at full load.`}>
               {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} type="number" min={1} value={profile.targetThroughput} onChange={(e) => patch({ targetThroughput: Number(e.target.value) })} />}
             </Field>

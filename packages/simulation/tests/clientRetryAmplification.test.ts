@@ -18,8 +18,10 @@ export function recoveryDesign(retry: boolean, limited = false): SavedProductDes
     workload: { targetThroughput: 72000, throughputUnit: "per-minute", trafficShape: "steady", readWriteRatio: 1, payloadSize: "light", ...(retry ? { clientRetry: { version: 1, maxAttempts: 3, backoffMs: 50 } } : {}) } };
 }
 
-function measure(retry: boolean, limited = false) {
-  const design = recoveryDesign(retry, limited), built = contractFromDesign(design);
+function measure(retry: boolean, limited = false, poisson = false) {
+  const design = recoveryDesign(retry, limited);
+  if (poisson) design.workload.workloadDynamics = { version: 1, arrivalProcess: "poisson", applicationCpuCv: 0.5 };
+  const built = contractFromDesign(design);
   if ("refused" in built) throw Error(JSON.stringify(built));
   const contract = withRunLength(built.contract, 3, "recovery-amplification");
   contract.limits.maxPendingEvents = 10000; contract.limits.maxLiveCalls = 10000;
@@ -66,4 +68,14 @@ test("retries re-enter the LB bucket and rate-limited roots are never retried", 
   expect(bucket.admitted).toBeLessThanOrEqual(20 + 200 * 3);
   expect(on.stopped.size).toBe(bucket.rejected); expect(on.retriedAfterStop).toEqual([]);
   console.info("recovery-limited", JSON.stringify({ originals: on.originals.length, attempts: on.issued, received: lb.received, admitted: bucket.admitted, rejected: bucket.rejected, exhausted: on.exhausted, recovered: on.recovered }));
+});
+
+test("Poisson cross-resource demonstration repeats deterministically with the same originals", () => {
+  const off = measure(false, false, true), on = measure(true, false, true), repeat = measure(true, false, true);
+  expect(on.originals).toEqual(off.originals); expect(repeat.evidence).toEqual(on.evidence);
+  expect(on.evidence.clientRetry!.totalAttempts).toBe(on.issued);
+  expect(on.evidence.clientRetry!.totalAttempts).toBeGreaterThan(on.originals.length);
+  expect(on.evidence.clientRetry!.exhausted).toBe(on.exhausted);
+  expect(on.evidence.network.loadBalancers[0]!.received - off.evidence.network.loadBalancers[0]!.received).toBe(on.issued - on.originals.length);
+  console.info("recovery-poisson-demo", JSON.stringify({ originals: on.originals.length, attempts: on.issued, retries: on.issued-on.originals.length, factor: on.evidence.clientRetry!.extraLoadFactor, exhausted: on.exhausted, recovered: on.recovered, offCompleted: off.evidence.counts.completed, onCompleted: on.evidence.counts.completed, offApp: off.evidence.resources.find(r=>r.id==="app")!.received, onApp: on.evidence.resources.find(r=>r.id==="app")!.received, offDb: off.evidence.resources.find(r=>r.id==="db")!.received, onDb: on.evidence.resources.find(r=>r.id==="db")!.received }));
 });

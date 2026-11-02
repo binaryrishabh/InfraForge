@@ -8,5 +8,14 @@ export function TrafficReadings() {
     <p className="mb-2 font-semibold">Last measured second</p>
     <dl className="grid grid-cols-3 gap-2">{rows.map(([label, value]) => <div key={label}><dt className="text-xs text-ink-3">{label}</dt><dd>{value ?? "Unknown"}</dd></div>)}</dl>
     <p className="mt-2 text-xs text-ink-3">p99 = 99% of completed requests in this measured window were at or below this response time.</p>
+    {traffic?.clientRetry && <div aria-label="Client retry load" className="mt-3 border-t border-line pt-2">
+      <p className="mb-2 font-semibold">Client retry load</p>
+      <dl className="grid grid-cols-3 gap-2">{([
+        ["Attempts/s", traffic.clientRetry.attemptRps], ["Retries issued", traffic.clientRetry.retriesIssued],
+        ["Recovered", traffic.clientRetry.recovered], ["Exhausted", traffic.clientRetry.exhausted],
+        ["Gave up (deadline)", traffic.clientRetry.givenUp], ["Load factor", traffic.clientRetry.extraLoadFactor?.toFixed(2).replace(/\.?0+$/, "")],
+      ] as const).map(([label, value]) => <div key={label}><dt className="text-xs text-ink-3">{label}</dt><dd>{value ?? "Unknown"}</dd></div>)}</dl>
+      <p className="mt-2 text-xs text-ink-3">Offered requests/s counts originals. Attempts include retries. Retry counters are cumulative; response time includes retry delays.</p>
+    </div>}
   </section>;
 }

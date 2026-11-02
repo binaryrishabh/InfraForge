@@ -13,3 +13,10 @@ export const WORKLOAD_PRESETS: Preset[] = [
 export function withWorkloadDynamics(p: WorkloadProfile, patch: Partial<Omit<WorkloadDynamics, "version">>): WorkloadProfile {
   return { ...p, workloadDynamics: { version: 1, arrivalProcess: "even", applicationCpuCv: 0, ...p.workloadDynamics, ...patch } };
 }
+
+export function withClientRetry(p: WorkloadProfile, maxAttempts: number, backoffMs = p.clientRetry?.backoffMs ?? 200): WorkloadProfile {
+  const next = { ...p };
+  if (maxAttempts === 0) delete next.clientRetry;
+  else next.clientRetry = { version: 1, maxAttempts, backoffMs };
+  return next;
+}
