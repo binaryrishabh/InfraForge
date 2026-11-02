@@ -3,6 +3,7 @@ import { FirewallCapacitySection } from "./FirewallCapacitySection";
 import { ObjectCapacitySection } from "./ObjectCapacitySection";
 import { SecuritySection } from "./SecuritySection";
 import { DataKeyspaceSection } from "./DataKeyspaceSection";
+import { VmMemorySection } from "./VmMemorySection";
 import { VmCpuQuotaSection } from "./VmCpuQuotaSection";
 import { VmExecutionSection } from "./VmExecutionSection";
 import { DatabaseReplicationSection } from "./DatabaseReplicationSection";
@@ -62,6 +63,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
           )}
         </Field>
       </div>
+      {resource.type === "Virtual Machine" && <VmMemorySection key={`vm-memory-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Virtual Machine" && <VmCpuQuotaSection key={`vm-cpu-quota-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Virtual Machine" && <VmExecutionSection key={`vm-execution-${resource.id}`} resource={resource} disabled={locked} />}
       {sizeable && <InstanceSection key={`size-${resource.id}`} resource={resource} disabled={locked} />}

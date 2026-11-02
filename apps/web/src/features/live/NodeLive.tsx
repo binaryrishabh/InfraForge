@@ -1,3 +1,4 @@
+import { VmMemoryReadings } from "./VmMemoryReadings";
 import { LbRateLimitReadings } from "./LbRateLimitReadings";
 import { RESOURCE_TYPES, type Resource } from "@infraforge/domain/resource";
 import { ResourceIcon } from "@/components/common/ResourceIcon";
@@ -42,6 +43,7 @@ export function NodeLive({ deploymentId, resource, resources, controls, ended = 
         {effects.map((chaos, index) => <p key={chaos.intervention?.actionId ?? index} className="if-num mt-1 text-xs font-semibold text-fail">Fault active: {(chaos.intervention ? `${chaos.intervention.label} ${JSON.stringify(chaos.intervention.parameters)}; restores at ${chaos.intervention.restoreAtUs} us` : CHAOS_LABELS[chaos.chaosType!])} · {chaos.remainingTicks} s left</p>)}
         {restarting && <p className="if-num mt-1 text-xs font-semibold text-warn">Restarting on a new size</p>}
       </div>
+      {resource.type === "Virtual Machine" && !resource.asyncWorker?.enabled && <VmMemoryReadings metrics={metric?.vmMemory} />}
       {resource.type === "Database" && <DatabaseReplicationReadings metrics={metric} />}
       {(resource.lbRateLimit || metric?.rateLimit) && <LbRateLimitReadings metrics={metric?.rateLimit} />}
       <DataDeliveryReadings type={resource.type} metrics={metric} />
