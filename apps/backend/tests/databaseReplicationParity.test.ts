@@ -16,28 +16,39 @@ test("captured replication, stale reads and promotion match browser-target bundl
     const diagnostics = await new Response(build.stderr).text(); if (await build.exited !== 0) throw Error(diagnostics);
     const module = await import(pathToFileURL(path).href), browserRun: typeof createModel2Run = module.createModel2Run;
     const proof = [];
-    for (const mode of ["primary", "stale", "promotion"] as const) {
+    for (const mode of ["primary", "stale", "promotion", "fenced-restart"] as const) {
       const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(databaseLayout(2000, mode === "primary" ? "primary" : "replica-preferred"), databaseWorkload, "ha-parity"))));
-      const browser = browserRun(input, 8), views = [], evidence = [], actions: Array<{ atSecond: number; request: ActionRequest }> = [];
-      for (let second = 0; second < 8; second++) {
-        if (mode === "promotion" && second === 1) {
+      const horizon = mode === "fenced-restart" ? 38 : 8;
+      const browser = browserRun(input, horizon), views = [], evidence = [], actions: Array<{ atSecond: number; request: ActionRequest }> = [];
+      for (let second = 0; second < horizon; second++) {
+        if ((mode === "promotion" || mode === "fenced-restart") && second === 1) {
           const outcome = browser.apply(promoteRequest); expect(outcome.outcome.intervention).toMatchObject({ atUs: 1_000_001, endUs: null });
           actions.push({ atSecond: second, request: promoteRequest });
         }
+        if (mode === "fenced-restart" && second === 2) {
+          const request: ActionRequest = { kind: "chaos", parameters: { type: "crash", resourceId: "db" } };
+          browser.apply(request); actions.push({ atSecond: second, request });
+        }
         browser.advance(); views.push(browser.view()); evidence.push(browser.evidence());
       }
-      const server = createModel2Engine(input, 8);
+      const server = createModel2Engine(input, horizon);
       const wire = JSON.parse(JSON.stringify(actions)) as typeof actions;
-      for (let second = 0; second < 8; second++) {
+      for (let second = 0; second < horizon; second++) {
         for (const action of wire.filter(a => a.atSecond === second)) server.apply(action.request);
         server.advance(); expect(server.view()).toEqual(views[second]!); expect(server.evidence()).toEqual(evidence[second]!);
-        expect(server.view().metrics.db!.databaseReplication).toMatchObject(server.evidence().data.databases[0]!.databaseReplication!);
+        const measured = server.evidence().data.databases[0]!.databaseReplication!;
+        expect(server.view().metrics.db!.databaseReplication).toMatchObject({ currentWriter: measured.currentWriter, writerEpoch: measured.writerEpoch, pendingReplication: measured.pendingReplication, lagMs: measured.lagMs, replicaReads: measured.replicaReads, staleReplicaReads: measured.staleReplicaReads, lostOperations: measured.lostOperations, fencedWriteRejections: measured.fencedWriteRejections });
       }
       const ha = server.evidence().data.databases[0]!.databaseReplication!;
       if (mode === "primary") expect(ha.replicaReads).toBe(0);
       if (mode === "stale") expect(ha.staleReplicaReads).toBeGreaterThan(0);
       if (mode === "promotion") { expect(ha.lostOperations).toBeGreaterThan(0); expect(ha.replicaCommittedWrites).toBeGreaterThan(0); }
-      proof.push({ mode, ...ha });
+      if (mode === "fenced-restart") {
+        expect(ha).toMatchObject({ currentWriter: "replica", writerEpoch: 2, primaryEpoch: 1, primaryRole: "fenced", replicaRole: "writer" });
+        expect(server.view().metrics.db!.health).not.toBe("failed"); expect(ha.replicaCommittedWrites).toBeGreaterThan(0);
+        expect(ha.fencedReplicationRejections).toBe(ha.lostOperations);
+      }
+      proof.push({ mode, writer: ha.currentWriter, epoch: ha.writerEpoch, writes: ha.primaryCommittedWrites, replicaWrites: ha.replicaCommittedWrites, staleReads: ha.staleReplicaReads, lost: ha.lostOperations, fencedReplication: ha.fencedReplicationRejections });
     }
     console.info("database-replication-parity", JSON.stringify(proof));
   } finally { if (await Bun.file(path).exists()) await unlink(path); }

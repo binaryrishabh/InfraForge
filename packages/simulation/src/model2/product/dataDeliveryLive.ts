@@ -1,3 +1,4 @@
+import { databaseReplicationLive } from "./databaseReplicationLive";
 import type { ResourceMetrics } from "@infraforge/contracts/telemetry";
 import type { CompiledProduct } from "./contracts";
 import type { createProductModel2 } from "./run";
@@ -11,7 +12,7 @@ export function dataDeliveryLive(resource: CompiledProduct["input"]["resources"]
   if (resource.kind === "relational") {
     const db = source.inspectData.database(resource.id);
     const state = current as { serving?: number; waiting?: number; queued?: number; rejected?: number; sessionRefused?: number } | undefined;
-    return { ...(resource.replication ? { databaseReplication: db?.databaseReplication ?? { version: 1 as const, currentWriter: null, replicaState: null, replicaCommittedWrites: null, promotionCount: null, promotionAtUs: null, lostOperations: null, regressedKeys: null, primaryReads: null, replicaReads: null, freshReplicaReads: null, staleReplicaReads: null, primaryCommittedWrites: null, replicaAppliedWrites: null, pendingReplication: null, lagMs: null, oldestPendingAgeMs: null, primaryGeneration: null, replicaGeneration: null } } : {}), database: { version: 1, serving: state?.serving ?? null, waiting: state?.waiting ?? null, queued: state?.queued ?? null,
+    return { ...(resource.replication ? { databaseReplication: databaseReplicationLive(db?.databaseReplication) } : {}), database: { version: 1, serving: state?.serving ?? null, waiting: state?.waiting ?? null, queued: state?.queued ?? null,
       rejected: state?.rejected ?? null, sessionRefused: state?.sessionRefused ?? null, "query-queue-full": db?.reasons["query-queue-full"] ?? null } };
   }
   if (resource.kind === "cache") {

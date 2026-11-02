@@ -1,11 +1,10 @@
 import { expect, test } from "bun:test";
-import { replicaFixture } from "./databaseReplication.fixture";
+import { replicaFixture, promote } from "./databaseReplication.fixture";
 import { databaseDesign, prepareDatabase } from "./databaseReplication.fixture";
 import { interventionOptions } from "../src/model2/product/interventions";
 import { compileProduct } from "../src/model2/product/compiler";
 import { createProductModel2 } from "../src/model2/product/run";
 
-export const promote = { interventionId: "db-promote-replica", revision: 1, target: { resourceId: "db" }, parameters: {} };
 test("promotion loses only unapplied acknowledged commits and subsequent writes use replica", () => {
   const f = replicaFixture(); f.submit(); f.clock.advanceTo(100);
   f.db.promoteReplica();

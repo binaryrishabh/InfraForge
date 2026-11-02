@@ -2,6 +2,13 @@ export interface DatabaseReplicationMetrics {
   version: 1;
   currentWriter: "primary" | "replica" | null;
   replicaState: "available" | "unavailable" | "promoted" | null;
+  writerEpoch: number | null;
+  primaryEpoch: number | null;
+  replicaEpoch: number | null;
+  primaryRole: "writer" | "fenced" | null;
+  replicaRole: "replica" | "writer" | null;
+  fencedWriteRejections: number | null;
+  fencedReplicationRejections: number | null;
   replicaCommittedWrites: number | null;
   promotionCount: number | null;
   promotionAtUs: number | null;

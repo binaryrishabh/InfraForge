@@ -30,3 +30,5 @@ export function replicaFixture(delay = 2, policy: "primary" | "replica-preferred
   };
   return { config, clock, db, submit, ha: () => db.evidence().databaseReplication! };
 }
+
+export const promote = { interventionId: "db-promote-replica", revision: 1, target: { resourceId: "db" }, parameters: {} };

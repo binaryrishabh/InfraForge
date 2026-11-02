@@ -81,6 +81,6 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
     inspectData: { database: (id: string) => databases.get(id)?.evidence(), cache: (id: string) => caches.get(id)?.evidence(), application: (id: string) => applications.get(id)?.evidence() },
     evidence() {
     const e = runtime.evidence(), dataIds = new Set(input.resources.filter(isData).map((r) => r.id)); return { ...e, computeConfiguration: e.computeConfiguration.filter((r) => !dataIds.has(r.id)), workloadVersion: input.workloadVersion, data: copy({ databases: [...databases.values()].map((d) => d.evidence()), caches: [...caches.values()].map((c) => c.evidence()), applications: [...applications.values()].map((a) => a.evidence()), policyLedger: DATA_POLICY_LEDGER }),
-      dataConfiguration: copy(input.resources.filter(isData)), unmodeled: [...e.unmodeled.filter((x) => x !== "database query/lock/cache mechanisms"), "physical storage/buffer-cache/WAL fsync/replication/failover", "full SQL/MVCC/Redis protocols"] };
+      dataConfiguration: copy(input.resources.filter(isData)), unmodeled: [...e.unmodeled.filter((x) => x !== "database query/lock/cache mechanisms"), input.resources.some(r => r.kind === "relational" && r.replication) ? "physical storage/buffer-cache/WAL fsync; synchronous replication, consensus, automatic elections and replica resync" : "physical storage/buffer-cache/WAL fsync/replication/failover", "full SQL/MVCC/Redis protocols"] };
   } };
 }
