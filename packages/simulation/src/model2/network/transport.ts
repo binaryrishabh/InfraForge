@@ -1,3 +1,4 @@
+import type { CausalObserver } from "../workload/causal";
 import { carryCause, seedCause, type Cause } from "../workload/cause";
 import { circuitBreaker } from "./circuit-breaker";
 import { requireKnown } from "../../reality/quantity";
@@ -8,7 +9,7 @@ import type { ConnectionHook, FailureReason, PathConfig, Trace, TransportResult 
 import type { networkLink } from "./link";
 import { connectionPool, type Lease } from "./pool";
 
-export function pathTransport(config: PathConfig, kernel: EventKernel, links: Map<string, ReturnType<typeof networkLink>>, deliver: Deliver, alive: (id: string) => boolean, trace: Trace, disconnected?: (session: string, target: string) => void, hook?: ConnectionHook, callBudget?: { enter(): () => void }, failureCauseProfile?: "failure-cause/1") {
+export function pathTransport(config: PathConfig, kernel: EventKernel, links: Map<string, ReturnType<typeof networkLink>>, deliver: Deliver, alive: (id: string) => boolean, trace: Trace, disconnected?: (session: string, target: string) => void, hook?: ConnectionHook, callBudget?: { enter(): () => void }, failureCauseProfile?: "failure-cause/1", timing?: CausalObserver) {
   const breaker = config.circuitBreaker ? circuitBreaker(config.id, config.circuitBreaker, kernel, trace, config.source) : undefined;
   const liveReceipts = new Map<string, () => void>();
   let localReset = false;
@@ -18,6 +19,7 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
   const reasons: Record<string, number> = {}, latency = { connectionWaitUs: 0, requestTransportUs: 0, remoteServiceUs: 0, responseTransportUs: 0 };
   return {
     exchange(work: Invocation, done: (result: TransportResult) => void, options?: { healthCheck?: boolean }): Receipt {
+      const observe = (phase: string) => timing?.({ atUs: kernel.now, kind: `latency-path-${phase}`, resource: config.id, work, detail: {} });
       const token = breaker?.admit(work, options?.healthCheck);
       if (breaker && !token) {
         offered++; failed++; reasons["circuit-open"] = (reasons["circuit-open"] ?? 0) + 1;
@@ -28,6 +30,7 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
       }
       const releaseCall = callBudget?.enter();
       offered++; live++; const start = kernel.now, key = work.callId;
+      observe("start");
       trace("path-offered", key, `${config.id}:${work.operation}:request=${requireKnown(config.bytes[work.operation]!.request, "bytes")}:response=${requireKnown(config.bytes[work.operation]!.response, "bytes")}`, work.rootId, work.attempt);
       let terminal = false, delivered = false, remoteFinished = false, heldAfterStop = false, state: ReturnType<Receipt["state"]> = "queued", lease: Lease | undefined, remote: Receipt | undefined;
       let cancelAcquire: (() => boolean) | undefined, cancelTimeout: (() => boolean) | undefined, cancelTransfer: (() => boolean) | undefined;
@@ -36,6 +39,7 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
         if (failureCauseProfile && !result.ok && !result.cause) result = { ...result, cause: seedCause(null, null) };
         terminal = true; liveReceipts.delete(key); releaseCall?.(); state = "finished"; live--; cancelAcquire?.(); cancelTimeout?.(); cancelTransfer?.();
         if (result.ok) completed++; else if (isCancellation) cancelled++; else { failed++; reasons[result.reason!] = (reasons[result.reason!] ?? 0) + 1; }
+        observe("terminal");
         trace("transport-terminal", key, result.ok ? "completed" : isCancellation ? "cancelled" : result.reason!, work.rootId, work.attempt, undefined, result.cause);
         if (token) breaker!.complete(token, result, isCancellation, localReset && result.reason === "reset");
         heldAfterStop = !!hook?.holdLeaseUntilRemoteTerminal && isCancellation && (hook?.leaseHeldOnlyWithRemote ? !!remote : delivered) && !remoteFinished;
@@ -64,11 +68,13 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
       cancelAcquire = pool.acquire(key, (acquired) => {
         if (terminal) { acquired.release(); return; }
         lease = acquired; const route = acquired.route ?? config; endpoints = { origin: config.source, destination: route.target }; targets.set(acquired.connection, route.target); state = "serving"; const readyAt = kernel.now; latency.connectionWaitUs += readyAt - start;
+        observe("acquired");
         trace("connection-acquired", key, acquired.connection, work.rootId, work.attempt, !!config.pool.evidenceProfile);
         cancelTimeout = kernel.schedule(kernel.now + requireKnown(config.pool.responseTimeout, "us"), 1, JSON.stringify(["upstream-timeout", config.id, key]), () => finish({ ok: false, reason: "response-timeout", ambiguous: delivered }));
         const bytes = config.bytes[work.operation]!;
         sendBytes(route.request, totalBytes(requireKnown(bytes.request, "bytes"), work.message?.bodyBytes?.request), "request", () => {
           delivered = true; state = "waiting"; const deliveredAt = kernel.now; latency.requestTransportUs += deliveredAt - readyAt;
+          observe("delivered");
           trace("request-delivered", key, route.target, work.rootId, work.attempt);
           hook?.delivered?.();
           if (!alive(route.target)) return;
@@ -81,6 +87,7 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
             }
             if (!alive(route.target)) return;
             if (hook?.returnTraffic && !hook.returnTraffic(acquired.connection)) { finish({ ok: false, reason: "reset", ambiguous: true }); return; }
+            observe("remote-terminal");
             const serviceEnd = kernel.now; latency.remoteServiceUs += serviceEnd - deliveredAt;
             sendBytes(route.response, totalBytes(requireKnown(bytes.response, "bytes"), request.message?.bodyBytes?.response), "response", () => {
               if (work.message && request.message?.response !== undefined) work.message.response = JSON.parse(JSON.stringify(request.message.response));

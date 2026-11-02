@@ -11,11 +11,13 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
   const flow = compiled.input.resources.some(r => r.kind === "compute" && r.applicationFlow)
     ? applicationFlowEvidence(Math.min(compiled.input.limits.maxRawResults, compiled.input.limits.maxTraceRows), Math.min(APPLICATION_FLOW_MAX_BYTES, compiled.input.limits.maxTraceBytes ?? APPLICATION_FLOW_MAX_BYTES), compiled.input.resources.some(r => r.kind === "compute" && r.applicationFlow?.schema === "application-flow/3") ? "application-flow/3" : compiled.input.resources.some(r => r.kind === "compute" && r.applicationFlow?.schema === "application-flow/2") ? "application-flow/2" : "application-flow/1") : undefined;
   const observe: CausalObserver | undefined = flow ? event => { flow.observe(event); causal?.(event); } : causal;
+  // Timing boundaries are observer-only and never enter historical engine inputs.
+  const timingObserver: CausalObserver | undefined = compiled.trafficEvidenceProfile ? Object.assign((event: Parameters<CausalObserver>[0]) => observe?.(event), { trafficTiming: true as const }) : observe;
   const applied = new Map<string, NonNullable<CompiledProduct["interventionReceipts"]>[number]>();
   const active = new Map<string, NonNullable<CompiledProduct["interventionReceipts"]>[number]>();
   const controllers: ReturnType<typeof replicaController>[] = [];
   let network: NetworkContext | undefined;
-  const runtime = createSystemsModel2(compiled.input, { usage, causal: observe, deferredClients: compiled.pools.flatMap((p) => p.artifactClients.map((a) => a.id)), crashes: compiled.crashes.map((f) => ({ target: f.target, at: requireKnown(f.at, "us"), restartAt: requireKnown(f.restartAt, "us") })), install(kernel, context, controls) {
+  const runtime = createSystemsModel2(compiled.input, { usage, causal: timingObserver, deferredClients: compiled.pools.flatMap((p) => p.artifactClients.map((a) => a.id)), crashes: compiled.crashes.map((f) => ({ target: f.target, at: requireKnown(f.at, "us"), restartAt: requireKnown(f.restartAt, "us") })), install(kernel, context, controls) {
     network = context;
     for (const receipt of compiled.interventionReceipts ?? []) {
       kernel.schedule(receipt.atUs, 0, JSON.stringify(["product-intervention-active", receipt.actionId]), () => { applied.set(receipt.actionId, receipt); if (receipt.endUs !== null) active.set(receipt.actionId, receipt); });

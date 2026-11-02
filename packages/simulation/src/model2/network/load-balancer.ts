@@ -11,6 +11,7 @@ import type { CausalObserver } from "../workload/causal";
 
 interface Request { work: Invocation; done(outcome: RemoteOutcome, cause?: Cause): void; cause?: Cause; receipt?: Receipt; timer?: () => boolean; retryTimer?: () => boolean; attempt: number; backend?: string; retrying: boolean; waiting?: boolean; terminal: boolean }
 export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Map<string, ReturnType<typeof pathTransport>>, operations: Map<string, OperationClass>, seed: string, horizon: number, trace: Trace, causal?: CausalObserver, failureCauseProfile?: "failure-cause/1") {
+  const timing = (phase: string, work: Invocation, outcome?: string) => { if (causal?.trafficTiming) causal({ atUs: kernel.now, kind: `latency-lb-${phase}`, resource: config.id, work, detail: outcome ? { outcome } : {} }); };
   const members = [...config.backends].sort().map((id) => ({ id, health: config.health.initial === "eligible", draining: false, successes: 0, failures: 0, outstanding: 0, selected: 0, probes: 0, epoch: 0, cancelCheck: undefined as (() => boolean) | undefined }));
   let bucket = config.rateLimit ? tokenBucketState(requireKnown(config.rateLimit.burst, "count"), requireKnown(config.rateLimit.burst, "count"), 1, requireKnown(config.rateLimit.refillEvery, "us"), kernel.now) : undefined;
   let disposed = false;
@@ -29,6 +30,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
   const finish = (r: Request, outcome: RemoteOutcome, cause?: Cause) => {
     if (r.terminal) return; r.terminal = true; r.timer?.(); r.retryTimer?.(); if (r.waiting) { retriesWaiting--; r.waiting = false; } active.delete(r.work.callId); pending.delete(r.work.callId);
     if (outcome === "completed") completed++; else if (outcome === "cancelled") cancelled++; else rejected++;
+    timing("terminal", r.work, outcome);
     r.done(outcome, failureCauseProfile && outcome !== "completed" ? carryCause(cause) : undefined); pump();
   };
   const choose = (previous?: string) => {
@@ -50,11 +52,13 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
     const work: Invocation = { ...r.work, attempt: r.work.clientAttempt ?? r.work.attempt + r.attempt - 1,
       ...(r.work.clientAttempt === undefined ? {} : { lbAttempt: r.attempt }), parentCallId: r.work.callId,
       callId: JSON.stringify([...JSON.parse(r.work.callId), "lb", config.id, "try", r.attempt, member.id]) };
+    timing("attempt-start", work);
     trace("lb-selected", work.callId, member.id, work.rootId, work.attempt);
     r.receipt = path(member.id).exchange(work, (result: TransportResult) => {
       member.outstanding--; if (r.retrying) { activeRetries--; r.retrying = false; }
       if (r.terminal) return;
       r.cause = failureCauseProfile && !result.ok ? result.cause : undefined;
+      timing("attempt-terminal", work, result.ok ? "completed" : result.reason);
       trace("attempt-terminal", work.callId, result.ok ? "completed" : result.reason!, work.rootId, work.attempt, undefined, r.cause);
       if (result.ok) { finish(r, "completed"); return; }
       const policy = config.retry, op = operations.get(r.work.operation)!;
@@ -77,7 +81,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
   const pump = () => {
     if (pumping || disposed) return; pumping = true;
     while (pending.size && active.size < requireKnown(config.maxOutstanding, "count")) {
-      const r = pending.values().next().value!; pending.delete(r.work.callId); r.timer?.(); active.set(r.work.callId, r); attempt(r);
+      const r = pending.values().next().value!; pending.delete(r.work.callId); r.timer?.(); active.set(r.work.callId, r); timing("start", r.work); attempt(r);
     }
     pumping = false;
   };
@@ -127,6 +131,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
         }
       }
       if (active.size >= requireKnown(config.maxOutstanding, "count") && pending.size >= requireKnown(config.maxPending, "count")) { rejected++; trace("lb-failure", work.callId, "pending-overflow", work.rootId, work.attempt); done("rejected"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" }; }
+      timing("admitted", work);
       const r: Request = { work, done, attempt: 0, retrying: false, terminal: false }; pending.set(work.callId, r);
       r.timer = kernel.schedule(kernel.now + requireKnown(config.pendingTimeout, "us"), 1, JSON.stringify(["lb-pending-timeout", config.id, work.callId]), () => { trace("lb-failure", work.callId, "pending-timeout", work.rootId, work.attempt); finish(r, "rejected"); }); pump();
       return { admitted: true, state: () => r.terminal ? "finished" : pending.has(work.callId) ? "queued" : "waiting", cancel: () => {

@@ -5,4 +5,8 @@ export interface CausalEvent {
   work?: Pick<Invocation, "rootId" | "callId" | "parentCallId" | "attempt" | "operation" | "offeredAt">;
   detail: Record<string, string | number | boolean | null>;
 }
-export type CausalObserver = (event: CausalEvent) => void;
+export interface CausalObserver {
+  (event: CausalEvent): void;
+  // Enables observer-only timing boundaries for newly captured traffic evidence.
+  trafficTiming?: true;
+}

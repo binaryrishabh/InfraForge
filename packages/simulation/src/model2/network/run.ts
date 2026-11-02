@@ -101,7 +101,7 @@ export function createNetworkRuntime(authored: NetworkInput, extension?: Network
       liveCalls++; let released = false;
       return () => { if (!released) { released = true; liveCalls--; } };
     } };
-    for (const p of input.paths) paths.set(JSON.stringify([p.source, p.target]), pathTransport(p, kernel, links, deliver, (id) => states.get(id)!.alive, trace.emit, (session, target) => extension?.disconnected?.(target, session), extension?.connection?.(p, kernel, send, context), callBudget, input.failureCauseProfile));
+    for (const p of input.paths) paths.set(JSON.stringify([p.source, p.target]), pathTransport(p, kernel, links, deliver, (id) => states.get(id)!.alive, trace.emit, (session, target) => extension?.disconnected?.(target, session), extension?.connection?.(p, kernel, send, context), callBudget, input.failureCauseProfile, extension?.causal?.trafficTiming ? extension.causal : undefined));
     const modules = loadBalancerModules(input);
     const lbs = new Map(input.resources.filter(r => modules.has(r.kind)).map(r => [r.id, modules.create(r, { clock: extension?.clockFor?.(r.id, kernel) ?? kernel, send: (target, work, done) => send(r.id, target, work, done), paths, trace: trace.emit, causal: extension?.causal })]));
     disposeNetwork = () => { for (const lb of lbs.values()) lb.dispose(); for (const path of paths.values()) path.dispose(); };
