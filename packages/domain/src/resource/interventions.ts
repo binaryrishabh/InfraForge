@@ -11,6 +11,8 @@ export interface InterventionDescriptor {
 }
 const duration: InterventionParameter = { name: "duration", kind: "integer", unit: "s", min: 1, max: "remaining-seconds" };
 export const INTERVENTIONS: readonly InterventionDescriptor[] = [
+  { id: "db-fail-primary", revision: 1, label: "Fail original database primary", targetKind: "Database", mechanism: "relational",
+    parameters: [duration], reversible: true, endPolicy: "timed", requires: ["fixed relational role", "enabled replica"] },
   { id: "db-promote-replica", revision: 1, label: "Promote database replica", targetKind: "Database", mechanism: "relational",
     parameters: [], reversible: false, endPolicy: "one-shot", requires: ["fixed relational role", "enabled replica"] },
   { id: "consumer-outage", revision: 1, label: "Consumer outage", targetKind: "Virtual Machine", mechanism: "async-worker",

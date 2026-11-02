@@ -21,7 +21,7 @@ test("consumer outage is duration-only, timed and reversible for a background wo
 });
 test("capabilities round-trip as data and enforce product policy at contextual boundaries", () => {
   expect(JSON.parse(JSON.stringify(INTERVENTIONS))).toEqual(INTERVENTIONS);
-  expect(INTERVENTIONS.map(d => d.id)).toEqual(["db-promote-replica", "consumer-outage", "pool-reset", "deny-port", "session-capacity", "cpu-capacity", "flush", "cdn-purge", "delay", "bandwidth", "partition"]);
+  expect(INTERVENTIONS.map(d => d.id)).toEqual(["db-fail-primary", "db-promote-replica", "consumer-outage", "pool-reset", "deny-port", "session-capacity", "cpu-capacity", "flush", "cdn-purge", "delay", "bandwidth", "partition"]);
   expect(interventionError(request, { remainingSeconds: 1 })).toBeNull();
   for (const parameters of [{sessions: -1, duration: 1}, {sessions: 513, duration: 1}, {sessions: 0.5, duration: 1}, {sessions: Infinity, duration: 1}, {sessions: 0, duration: 301}, {sessions: 0}, {sessions: 0, duration: 1, extra: true}])
     expect(interventionError({...request, parameters}, {authoredBaseline: 512})).toContain("INTERVENTION_");

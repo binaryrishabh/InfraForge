@@ -83,7 +83,10 @@ export function validateData(input: DataInput) {
       if (r?.kind !== "relational") throw new Error("Data capacity intervention requires relational resource");
       const key = JSON.stringify([i.kind, i.target]); if (at < (spans.get(key) ?? 0)) throw new Error("Overlapping data interventions"); spans.set(key, micros(at + num(i.duration, "us", 1)));
       if (i.kind === "session-capacity") { if (num(i.sessions, "count") > (r.semantics.startsWith("postgresql-keyed/") ? POSTGRES_SESSION_CAP : caps.sessions)) throw new Error("Session limit budget"); }
-      else num(i.cores, "cores", 0, false);
+      else if (i.kind === "db-fail-primary") {
+        if (!r.replication?.enabled) throw Error("Member outage requires an enabled database replica");
+        if (at + num(i.duration, "us", 1) > horizon) throw Error("Member outage exceeds run horizon");
+      } else num(i.cores, "cores", 0, false);
     }
   }
 }
