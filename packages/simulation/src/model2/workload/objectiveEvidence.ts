@@ -1,7 +1,7 @@
 import type { WorkloadObjective } from "@infraforge/domain/workload";
 import type { ObjectiveMetrics } from "@infraforge/contracts/telemetry";
 import type { CallerOutcome } from "./contracts";
-import { classifyObjective } from "./objective";
+import { classifyObjective, evaluateObjective } from "./objective";
 
 // Terminal counters are fixed size; unresolved roots belong to the existing caller live map.
 export function objectiveEvidence(objective: WorkloadObjective, horizonUs: number) {
@@ -15,7 +15,8 @@ export function objectiveEvidence(objective: WorkloadObjective, horizonUs: numbe
         if (throughUs - work.offeredAt > thresholdUs) unresolvedPastThreshold++;
         else pending++;
       }
-      return { version: 1, objective: { ...objective }, throughUs, horizonUs, offered, ...terminal, unresolvedPastThreshold, pending };
+      return { version: 1, objective: { ...objective }, throughUs, horizonUs, offered, ...terminal, unresolvedPastThreshold, pending,
+        ...evaluateObjective({ good: terminal.good, pending, offered }, objective.targetSuccessPercent) };
     },
   };
 }

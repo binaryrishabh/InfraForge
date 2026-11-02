@@ -25,6 +25,7 @@ export interface LiveNodeMetrics {
   replicas?: { ready: number; total: number };
 }
 export interface LiveProjection {
+  objective?: import("@infraforge/contracts/telemetry").ObjectiveMetrics;
   latency?: import("@infraforge/contracts/telemetry").LatencyMetrics;
   clientRetry?: import("@infraforge/contracts/telemetry").ClientRetryLiveMetrics;
   simulatedSeconds: number;
@@ -178,7 +179,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
       const retryCounts = retries?.measure();
       const clientRetry = retryCounts ? { ...retryCounts, attemptRps: retryCounts.totalAttempts - previousAttempts } : undefined;
       previousAttempts = retryCounts?.totalAttempts ?? 0;
-      return { ...(measured ? { latency: measured.latency } : {}), ...(clientRetry ? { clientRetry } : {}), simulatedSeconds: now / SECOND, offeredRps: offered, completedRps, failedRps, latencyMs, metrics, overallHealth };
+      return { ...(compiled.input.workloadObjective ? { objective: runtime.measureObjective()! } : {}), ...(measured ? { latency: measured.latency } : {}), ...(clientRetry ? { clientRetry } : {}), simulatedSeconds: now / SECOND, offeredRps: offered, completedRps, failedRps, latencyMs, metrics, overallHealth };
     },
   };
 }

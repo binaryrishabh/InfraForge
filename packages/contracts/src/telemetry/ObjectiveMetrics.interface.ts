@@ -16,4 +16,8 @@ export interface ObjectiveMetrics extends ObjectiveCounters {
   objective: WorkloadObjective;
   throughUs: number;
   horizonUs: number;
+  status: "unknown" | "met" | "missed" | "undetermined";
+  measuredFraction: number | null;
+  worstCaseFraction: number | null;
+  bestCaseFraction: number | null;
 }
