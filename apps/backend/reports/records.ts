@@ -3,6 +3,7 @@ import type { ReportCheckpoint, ReportStage } from "@infraforge/contracts/report
 import { readRunInputs } from "../deployments/runInputs";
 import { LayoutSchema } from "../zod_schemas/layout.schema";
 import { WorkloadProfileSchema } from "../zod_schemas/deployment.schema";
+import { ClientRetryLiveSchema } from "./clientRetrySchema";
 import { DeploymentChaosNames } from "@infraforge/domain/resource";
 
 const text = z.string().min(1).max(4000);
@@ -33,7 +34,7 @@ const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction:
     resourceId: boundedId, durationTicks: amount.int(), remainingTicks: amount })).max(500).optional(),
   restarting: z.array(boundedId).max(500).optional(), pools: boundedMap(pool).optional(),
   installedSkus: boundedMap(boundedId).optional(),
-  traffic: z.object({offeredRps: amount.max(100_000_000), completedRps: amount.max(100_000_000), failedRps: amount.max(100_000_000),
+  traffic: z.object({clientRetry: ClientRetryLiveSchema.optional(), offeredRps: amount.max(100_000_000), completedRps: amount.max(100_000_000), failedRps: amount.max(100_000_000),
     latencyMs: z.object({p50: amount.max(3_600_000).nullable(), p95: amount.max(3_600_000).nullable(), p99: amount.max(3_600_000).nullable().optional()}).strict()}).strict().optional(),
   metrics: z.unknown().optional() });
 const terminal = checkpoint.extend({ version: z.literal(1), kind: z.literal("terminal"), capturedAt: timestamp,

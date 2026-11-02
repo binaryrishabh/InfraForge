@@ -19,7 +19,11 @@ export function describeWorkload(w: WorkloadProfile) {
   const rate = `${w.targetThroughput.toLocaleString()} requests per ${w.throughputUnit === "per-minute" ? "minute" : "hour"}`;
   const shape = w.trafficShape === "peak" ? `bursts to ${w.peakMultiplier ?? 3}×` : "steady";
   const reads = w.readWriteRatio !== undefined ? `${Math.round(w.readWriteRatio * 100)}% reads` : null;
-  return [rate, shape, reads, `${w.payloadSize} payloads`, describeWorkloadDynamics(w)].filter(Boolean).join(" · ");
+  return [rate, shape, reads, `${w.payloadSize} payloads`, describeWorkloadDynamics(w), describeClientRetry(w)].filter(Boolean).join(" · ");
+}
+
+export function describeClientRetry(w: WorkloadProfile) {
+  return w.clientRetry ? `Client retries: up to ${w.clientRetry.maxAttempts} attempts, backoff ${w.clientRetry.backoffMs} ms, reads only` : "Client retries: none";
 }
 
 export function describeWorkloadDynamics(w: WorkloadProfile) {

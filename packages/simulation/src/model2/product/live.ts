@@ -5,6 +5,7 @@ import type { CompiledProduct, ProductContract, SavedProductDesign } from "./con
 import type { CausalObserver } from "../workload/causal";
 import { dataDeliveryLive } from "./dataDeliveryLive";
 import { observabilityLive } from "./observabilityLive";
+import { clientRetryEvidence } from "../workload/clientRetryEvidence";
 
 // One simulated second at a time, projected onto the canvas nodes the person drew.
 // Values Model 2 does not know stay null ("Unknown"); they are never shown as zero.
@@ -24,6 +25,7 @@ export interface LiveNodeMetrics {
   replicas?: { ready: number; total: number };
 }
 export interface LiveProjection {
+  clientRetry?: import("@infraforge/contracts/telemetry").ClientRetryLiveMetrics;
   simulatedSeconds: number;
   offeredRps: number; completedRps: number; failedRps: number;
   // Caller response times of requests that completed during this second; null when none completed.
@@ -44,8 +46,12 @@ const percentile = (sorted: number[], p: number) => sorted.length ? sorted[Math.
 export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
   // Caller outcomes are counted as they happen, so a second's totals never need the run's history.
   const caller = { offered: 0, completed: 0, failed: 0 };
+  const retryPolicy = compiled.input.operations.find(o => o.clientRetry)?.clientRetry;
+  const retries = retryPolicy ? clientRetryEvidence(retryPolicy.maxAttempts) : undefined;
+  let previousAttempts = 0;
   let responses: number[] = [];
   const observe: CausalObserver = (event) => {
+    retries?.observe(event);
     if (event.kind === "caller-offered") caller.offered++;
     else if (event.kind === "caller-terminal") {
       if (event.detail.outcome === "completed") { caller.completed++; responses.push(event.detail.responseUs as number); } else caller.failed++;
@@ -167,7 +173,10 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         : lost > 0.05 || nodes.some((m) => m.health === "saturated") ? "saturated"
         : lost > 0.01 || nodes.some((m) => m.health === "degraded" || m.health === "failed") ? "degraded" : "healthy";
       previousAt = now; previousCaller = { ...caller }; previousLb = lbNow; responses = [];
-      return { simulatedSeconds: now / SECOND, offeredRps: offered, completedRps, failedRps, latencyMs, metrics, overallHealth };
+      const retryCounts = retries?.measure();
+      const clientRetry = retryCounts ? { ...retryCounts, attemptRps: retryCounts.totalAttempts - previousAttempts } : undefined;
+      previousAttempts = retryCounts?.totalAttempts ?? 0;
+      return { ...(clientRetry ? { clientRetry } : {}), simulatedSeconds: now / SECOND, offeredRps: offered, completedRps, failedRps, latencyMs, metrics, overallHealth };
     },
   };
 }

@@ -46,12 +46,14 @@ test("eligible reads retry through the same entry, keep root/deadline, double ex
 for (const reason of ["rate-limited", "circuit-open", "session-limit", null] as const) test(`ineligible cause ${reason} never retries`, () => {
   const f = run(fixture(), reason); f.runtime.advanceTo(60000); expect(f.calls).toHaveLength(1);
   expect(f.runtime.evidence().counts.rejected).toBe(1);
+  expect(f.runtime.evidence().clientRetry!.ineligibleByReason).toEqual({ [reason ?? "unknown"]: 1 });
 });
 test("writes never retry; eligible exhaustion and deadline-too-close give up with one root outcome", () => {
   for (const input of [fixture({ write: true }), fixture({ timeout: 1000 }), fixture({ maxAttempts: 2 })]) {
     const f = run(input); f.runtime.advanceTo(60000);
     expect(f.calls).toHaveLength(input.operations[0]!.clientRetry?.maxAttempts === 2 ? 2 : 1);
     expect(f.runtime.evidence().counts.rejected).toBe(1);
+    if (input.operations[0]!.clientRetry) expect(f.runtime.evidence().clientRetry).toMatchObject({ exhausted: input.operations[0]!.clientRetry!.maxAttempts === 2 ? 1 : 0, givenUp: input.operations[0]!.clientRetry!.maxAttempts === 2 ? 0 : 1 });
     expect(f.events.filter(e => e.kind === "caller-terminal")).toHaveLength(1);
   }
 });
@@ -72,6 +74,7 @@ test("abandon time prevents waiting retries; deadlines and abandonment cancel th
     expect(callbacks).toHaveLength(2); expect(cancel).toBe(1);
     expect(e.counts.remoteOutcomesAfterCallerStop).toBe(2); expect(e.results).toHaveLength(1);
     expect(e.results[0]!.outcome).toBe(abandon ? "abandoned" : "deadline-exceeded");
+    expect(e.clientRetry!.perAttemptOutcomes[1]).toMatchObject({ inFlight: 0, completed: 0, deadlineExceeded: abandon ? 0 : 1, abandoned: abandon ? 1 : 0 });
   }
 });
 

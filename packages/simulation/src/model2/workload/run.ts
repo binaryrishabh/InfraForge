@@ -6,6 +6,7 @@ import { requireKnown } from "../../reality/quantity";
 import { identity, ingestTrace, openRows } from "./arrivals";
 import { ResultBook } from "./evidence";
 import { clientRetryDecision } from "./clientRetry";
+import { clientRetryEvidence } from "./clientRetryEvidence";
 import { validateWorkload } from "./validate";
 import { workloadStation } from "./station";
 import { WORKLOAD_POLICY_LEDGER } from "./policy";
@@ -59,6 +60,8 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
   const byOperation = new Map(input.operations.map((o) => [o.id, { offered: 0, completed: 0, rejected: 0, deadlineExceeded: 0, abandoned: 0 }]));
   const sources = new Map(input.arrivals.map((a) => [a.id, { offered: 0 }]));
   const retryPolicy = input.operations.find(o => o.clientRetry)?.clientRetry;
+  const retries = retryPolicy ? clientRetryEvidence(retryPolicy.maxAttempts) : undefined;
+  const observe: CausalObserver | undefined = retries ? e => { retries.observe(e); modules.causal?.(e); } : modules.causal;
   const maxAttempts = input.limits.maxRequests * (retryPolicy?.maxAttempts ?? 1);
   let issuedAttempts = 0;
   const offer = (source: string, row: TraceRow, next?: () => void) => {
@@ -68,9 +71,10 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
     const operation = operations.get(row.operation)!, perOperation = byOperation.get(row.operation)!; perOperation.offered++;
     const rootId = identity("root", source, row.id), callId = identity(rootId, "attempt", 0, "entry");
     const work: Invocation = { rootId, attempt: 0, callId, operation: operation.id, offeredAt: kernel.now, ...(row.payloadBytes === undefined ? {} : { payloadBytes: row.payloadBytes }), ...(retryPolicy ? { clientAttempt: 0 } : {}) };
-    modules.causal?.({ atUs: kernel.now, kind: "caller-offered", resource: "$caller", work, detail: {} });
+    observe?.({ atUs: kernel.now, kind: "caller-offered", resource: "$caller", work, detail: {} });
     const pending: { work: Invocation; receipt?: Receipt } = { work }; live.set(rootId, pending);
     let terminal = false, cancelDeadline: (() => boolean) | undefined, cancelAbandon: (() => boolean) | undefined, cancelRetry: (() => boolean) | undefined;
+    let attemptOpen = false;
     const deadline = kernel.now + requireKnown(operation.callerTimeout, "us");
     const abandon = operation.abandonAfter ? kernel.now + requireKnown(operation.abandonAfter, "us") : Infinity;
     const finish = (outcome: CallerOutcome, cause?: Cause) => {
@@ -78,10 +82,11 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
       terminal = true; live.delete(rootId); cancelDeadline?.(); cancelAbandon?.(); cancelRetry?.();
       const key = outcome === "deadline-exceeded" ? "deadlineExceeded" : outcome;
       counts[key]++; perOperation[key]++;
-      modules.causal?.({ atUs: kernel.now, kind: "caller-terminal", resource: "$caller", work: pending.work, detail: { outcome, ...causeFields(input.failureCauseProfile && outcome === "rejected" ? cause : undefined), responseUs: kernel.now - work.offeredAt } });
+      observe?.({ atUs: kernel.now, kind: "caller-terminal", resource: "$caller", work: pending.work, detail: { outcome, ...causeFields(input.failureCauseProfile && outcome === "rejected" ? cause : undefined), responseUs: kernel.now - work.offeredAt } });
       book.record({ ...pending.work, at: kernel.now, outcome, responseUs: kernel.now - work.offeredAt }); next?.();
     };
     const stop = (outcome: "deadline-exceeded" | "abandoned") => {
+      if (retryPolicy && attemptOpen) { attemptOpen = false; observe?.({ atUs: kernel.now, kind: "client-attempt-terminal", resource: "$caller", work: pending.work, detail: { outcome } }); }
       finish(outcome);
       if (operation.onCallerStop === "request-cancellation" && pending.receipt) {
         counts.cancellationRequested++;
@@ -94,16 +99,17 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
     const issue = (current: Invocation) => {
       if (retryPolicy && ++issuedAttempts > maxAttempts) throw Error("Client attempt execution budget exceeded");
       pending.work = current; pending.receipt = undefined;
-      if (retryPolicy) modules.causal?.({ atUs: kernel.now, kind: "client-attempt-issued", resource: "$caller", work: current, detail: {} });
+      attemptOpen = true;
+      if (retryPolicy) observe?.({ atUs: kernel.now, kind: "client-attempt-issued", resource: "$caller", work: current, detail: {} });
       let settled = false;
       const receipt = (modules.enter ?? send)(operation.entry, current, (outcome, cause) => {
         if (terminal || settled) { counts.remoteOutcomesAfterCallerStop++; return; }
-        settled = true; pending.receipt = undefined;
-        if (retryPolicy) modules.causal?.({ atUs: kernel.now, kind: "client-attempt-terminal", resource: "$caller", work: current, detail: { outcome, ...causeFields(cause) } });
+        settled = true; attemptOpen = false; pending.receipt = undefined;
+        if (retryPolicy) observe?.({ atUs: kernel.now, kind: "client-attempt-terminal", resource: "$caller", work: current, detail: { outcome, ...causeFields(cause) } });
         if (outcome === "rejected" && operation.clientRetry) {
           const decision = clientRetryDecision(operation.clientRetry, current.attempt, kernel.now, deadline, abandon, cause);
           if (decision.at !== undefined) {
-            modules.causal?.({ atUs: kernel.now, kind: "client-retry-scheduled", resource: "$caller", work: current, detail: { retryAtUs: decision.at } });
+            observe?.({ atUs: kernel.now, kind: "client-retry-scheduled", resource: "$caller", work: current, detail: { retryAtUs: decision.at } });
             const attempt = current.attempt + 1;
             cancelRetry = kernel.schedule(decision.at, 3, identity("client-retry", rootId, attempt), () => {
               cancelRetry = undefined;
@@ -111,7 +117,7 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
             });
             return;
           }
-          modules.causal?.({ atUs: kernel.now, kind: "client-retry-stopped", resource: "$caller", work: current, detail: { reason: decision.reason!, rootReason: cause?.rootReason ?? null } });
+          observe?.({ atUs: kernel.now, kind: "client-retry-stopped", resource: "$caller", work: current, detail: { reason: decision.reason!, rootReason: cause?.rootReason ?? null } });
         }
         finish(outcome === "completed" ? "completed" : "rejected", cause);
       });
@@ -174,6 +180,7 @@ export function createWorkloadRuntime<M extends StationState>(authored: Workload
     evidence() {
       const state = snapshot(), terminal = counts.completed + counts.rejected + counts.deadlineExceeded + counts.abandoned;
       return copy({ modelVersion: "2", workloadVersion: input.workloadVersion, status: "internal", seed: input.seed,
+        ...(retries ? { clientRetry: { policy: retryPolicy!, ...retries.measure() } } : {}),
         capture: { throughUs: kernel.now, reachedHorizon: kernel.now === horizon && !failure && (kernel.nextAt === undefined || kernel.nextAt > horizon), failure,
           ...(input.limits.maxPendingEvents === undefined ? {} : { timestampComplete: kernel.nextAt === undefined || kernel.nextAt > kernel.now }) },
         ...state, samples, ...(input.limits.maxRetainedSamples === undefined ? {} : { sampleRetention: { retained: samples.length, omitted: sampleOmitted, bytes: sampleBytes, policy: "bounded prefix; cumulative terminal aggregates remain independent" } }), faults, byOperation: Object.fromEntries(byOperation), sources: Object.fromEntries(sources),

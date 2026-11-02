@@ -7,6 +7,7 @@ import { currentDesignInput } from "../reruns/options";
 import { readRecords } from "../reports/records";
 import { compareInputs } from "../comparison/inputs";
 import { buildModel2Contract } from "../simulator/contractBuilder";
+import { createModel2Engine } from "../simulator/model2Engine";
 import { layout, workload } from "./integration/scenario";
 
 const clientRetry = { version: 1 as const, maxAttempts: 3, backoffMs: 50 };
@@ -49,4 +50,16 @@ test("client retries require captured matching profiles and compiled intent", ()
   expect(compileProduct(design, built.contract).ok).toBe(true);
   built.contract.clientRetry!.backoffMs++;
   expect(compileProduct(design, built.contract).ok).toBe(false);
+});
+
+test("retained reports accept the optional measured retry block without discarding traffic", () => {
+  const input = captureRunInputs(layout, { ...workload, clientRetry }, "retry-report");
+  const run = createModel2Engine(input, 3, buildModel2Contract);
+  expect(run.view().traffic.clientRetry).toMatchObject({ totalAttempts: 0, extraLoadFactor: null });
+  run.advance(); const view = run.view(), limits: string[] = [];
+  const records = readRecords({ runInputs: input, stages: [], timeline: [], chaosEvents: [],
+    simulationState: view, terminalSnapshot: { ...view, version: 1, kind: "terminal", capturedAt: "2026-11-03T00:00:00.000Z", topologyRevision: 0, accumulatedCostUsd: 0 } }, limits);
+  expect(records.checkpoint!.traffic).toEqual(view.traffic);
+  expect(records.terminal!.traffic).toEqual(view.traffic);
+  expect(limits).toEqual([]);
 });
