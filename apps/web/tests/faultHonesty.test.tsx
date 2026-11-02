@@ -7,6 +7,9 @@ import * as fields from "../src/ui/Field";
 import * as browserRuns from "../src/features/model2Run/browserRuns";
 import { FaultControl } from "../src/features/live/controls/FaultControl";
 import { useCanvasStore } from "../src/features/canvas/store/canvasStore";
+import { NodeLive } from "../src/features/live/NodeLive";
+import { ActionTimeline } from "../src/features/reports/components/ActionTimeline";
+import type { RunAction } from "@infraforge/contracts/actions";
 
 const resources = [{ id: "app", name: "Upload API", type: "Virtual Machine" as const, x: 0, y: 0 }, { id: "db", name: "Orders database", type: "Database" as const, x: 0, y: 0 }];
 const lines = [{ id: "opaque-edge-7", sourceId: "app", targetId: "db", sourceType: "Virtual Machine", targetType: "Database", port: 5432 }];
@@ -20,6 +23,32 @@ function capabilities(options: InterventionOption[]) {
   restore = () => read.mockRestore();
 }
 const render = () => renderToStaticMarkup(<FaultControl deploymentId="run" resources={resources} />);
+
+test("selected CDN exposes a parameterless enabled purge with consequence copy and hides it for other or locked nodes", () => {
+  const cdn = {id: "cdn", type: "CDN" as const, x: 0, y: 0};
+  capabilities([{interventionId: "cdn-purge", revision: 1, target: {resourceId: "cdn"}, resolvedTargets: ["cdn"], affectedPaths: []}]);
+  const node = (resource = cdn, controls = true, ended = false) => renderToStaticMarkup(<NodeLive deploymentId="run" resource={resource} resources={[...resources, cdn]} controls={controls} ended={ended} />);
+  const html = node();
+  expect(html).toContain("Purge CDN cache</option>");
+  expect(html).toMatch(/<button(?![^>]* disabled=)[^>]*>.*?Purge CDN cache<\/button>/s);
+  expect(html).toContain("Removes the CDN&#x27;s currently cached entries. The next request must fetch from the origin again.");
+  expect(html).not.toContain('<input');
+  expect(node({...cdn, id: "db"})).not.toContain("Purge CDN cache");
+  expect(node(cdn, false)).not.toContain("Purge CDN cache");
+  expect(node(cdn, false, true)).not.toContain("Purge CDN cache");
+  restore!(); restore = undefined; capabilities([]);
+  expect(node()).toContain("No supported intervention for this target.");
+  expect(node()).not.toContain("Purge CDN cache");
+});
+
+test("durable CDN action timeline retains its label, exact microsecond and one-shot completion", () => {
+  const at = new Date(0).toISOString();
+  const action = {id: "purge", deploymentId: "run", sequence: 1, kind: "intervention", parameters: {interventionId: "cdn-purge", revision: 1, target: {resourceId: "cdn"}, parameters: {}}, status: "completed", requestedAt: at, appliedAt: at, completedAt: at, appliedSimulatedSeconds: 1, completedSimulatedSeconds: 2, outcome: {intervention: {actionId: "a1", interventionId: "cdn-purge", revision: 1, target: {resourceId: "cdn"}, parameters: {}, resolvedTargets: ["cdn"], affectedPaths: [], atUs: 1_000_001, endUs: null}, interventionEnded: true}, failureReason: null} as RunAction;
+  const html = renderToStaticMarkup(<ActionTimeline actions={[action]} />);
+  expect(html).toContain("Purge CDN cache v1 on cdn: one-shot");
+  expect(html).toContain("Applies at 1000001 us; one-shot");
+  expect(html).toContain("Control completed; downstream effects may remain.");
+});
 
 test("validation waits for an edit, uses human status copy and clears after correction", () => {
   capabilities([{ interventionId: "cpu-capacity", revision: 1, target: { resourceId: "db" }, authoredBaseline: 2, resolvedTargets: ["db/main"], affectedPaths: [] }]);

@@ -1,11 +1,10 @@
 import { resolveWorkload } from "@infraforge/domain/workload";
-import { cdnDesign } from "./cdnTtl.fixture";
+import type { Resource } from "@infraforge/domain/resource";
 import { buildModel2Contract, type ContractBuilder } from "../src/model2/product/runContract";
 import { quantities } from "./workloadFixture";
 export const purgeRequest = {kind: "intervention" as const, parameters: {interventionId: "cdn-purge", revision: 1, target: {resourceId: "cdn"}, parameters: {}}};
 export function purgeInput(rps = 2) {
-  const design = cdnDesign();
-  return {resources: design.resources, connectionLines: design.connections, workloadProfile: resolveWorkload({...design.workload, targetThroughput: rps * 60}), seed: "cdn-purge-proof"};
+  return {resources: [{id: "cdn", type: "CDN", x: 0, y: 0}, {id: "store", type: "Object Storage", x: 0, y: 0}] as Resource[], connectionLines: [{id: "e0", sourceId: "cdn", targetId: "store", sourceType: "CDN", targetType: "Object Storage", port: 443}], workloadProfile: resolveWorkload({targetThroughput: rps * 60, throughputUnit: "per-minute", trafficShape: "steady", readWriteRatio: 1, payloadSize: "light"}), seed: "cdn-purge-proof"};
 }
 // Long origin work keeps multiple callers waiting across the live action boundary.
 export const slowOrigin: ContractBuilder = (...args) => {

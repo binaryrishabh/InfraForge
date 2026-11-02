@@ -4,7 +4,7 @@ import { hash } from "./asyncCanvas.fixture";
 import { createModel2Run } from "../src/model2/product/liveRun";
 import { interventionOptions, resolveIntervention } from "../src/model2/product/interventions";
 import { purgeInput, purgeRequest, slowOrigin } from "./cdnPurge.fixture";
-import { buildContractFromRunInputs } from "../src/model2/product/runContract";
+import { buildModel2Contract, buildContractFromRunInputs, type ContractBuilder } from "../src/model2/product/runContract";
 import { compileProduct } from "../src/model2/product/compiler";
 import { withTimeline } from "../src/model2/product/timeline";
 import { createProductModel2 } from "../src/model2/product/run";
@@ -83,9 +83,35 @@ test("purge options belong only to the fixed materialized CDN role", () => {
   const {saved, contract, compiled} = cdnSetup();
   expect(interventionOptions(saved, contract, compiled.input).filter(o => o.interventionId === "cdn-purge")).toEqual([{interventionId: "cdn-purge", revision: 1, target: {resourceId: "cdn"}, resolvedTargets: ["cdn"], affectedPaths: []}]);
   for (const resourceId of ["store", "missing"]) expect(() => resolveIntervention(saved, contract, compiled.input, {...purgeRequest.parameters, target: {resourceId}})).toThrow("ROLE");
+  for (const type of ["Cache", "Virtual Machine", "Object Storage", "Load Balancer"] as const) {
+    saved.resources[0]!.type = type;
+    expect(() => resolveIntervention(saved, contract, compiled.input, purgeRequest.parameters)).toThrow("ROLE");
+    expect(interventionOptions(saved, contract, compiled.input).some(o => o.interventionId === "cdn-purge")).toBe(false);
+  }
+  saved.resources[0]!.type = "CDN";
   contract.nodes.cdn!.controller = {} as NonNullable<typeof contract.nodes.cdn>["controller"];
   expect(interventionOptions(saved, contract, compiled.input).some(o => o.interventionId === "cdn-purge")).toBe(false);
   delete contract.nodes.cdn!.controller;
   compiled.input.resources = compiled.input.resources.filter(r => r.id !== "cdn");
   expect(interventionOptions(saved, contract, compiled.input).some(o => o.interventionId === "cdn-purge")).toBe(false);
+});
+
+test("live purge owns all entries of its CDN and refuses other targets without changing the timeline", () => {
+  const input = purgeInput(10); input.workloadProfile.readWriteRatio = 0.5;
+  const build: ContractBuilder = (...args) => {
+    const result = buildModel2Contract(...args); if ("refused" in result) return result;
+    const cdn = result.contract.nodes.cdn!.resources[0]!.config, origin = result.contract.nodes.store!.resources[0]!.config;
+    if (cdn.kind !== "cdn" || origin.kind !== "object-store") throw Error("Expected CDN and origin");
+    cdn.keys.write = "second"; origin.initial.push({...origin.initial[0]!, key: "second"}); return result;
+  };
+  const run = createModel2Run(input, 8, build); run.advance();
+  expect(run.evidence().systems.cdns[0]!.entries).toHaveLength(2);
+  const before = JSON.stringify(run.evidence());
+  for (const target of [{resourceId: "store"}, {resourceId: "absent"}, {edgeId: "e0", direction: "both" as const}]) {
+    expect(() => run.apply({...purgeRequest, parameters: {...purgeRequest.parameters, target}})).toThrow(/ROLE|TARGET/);
+    expect(JSON.stringify(run.evidence())).toBe(before); expect(run.actions).toEqual([]);
+  }
+  run.apply(purgeRequest); run.advance();
+  expect(run.evidence().systems.cdns[0]).toMatchObject({purged: 2, fills: 4});
+  expect(run.evidence().systems.cdns[0]!.entries).toHaveLength(2);
 });

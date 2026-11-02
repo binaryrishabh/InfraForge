@@ -3,6 +3,13 @@ import { checkSubmission } from "../browserRuns/submission";
 
 const free = { horizonSeconds: 900, challenge: false }, attempt = { horizonSeconds: 90, challenge: true };
 const load = (atSecond: number, targetLoadFraction = 1.5) => ({ atSecond, request: { kind: "load", parameters: { targetLoadFraction } } });
+test("CDN purge submission is parameterless, replayable and refused on challenge attempts", () => {
+  const request = {kind: "intervention", parameters: {interventionId: "cdn-purge", revision: 1, target: {resourceId: "cdn"}, parameters: {}}};
+  const submit = (r: unknown = request, run = free) => checkSubmission({stopAtSecond: 10, actions: [{atSecond: 2, request: r}]}, run);
+  expect(submit().actions).toEqual([{atSecond: 2, request}] as never);
+  for (const parameters of [{...request.parameters, revision: 2}, {...request.parameters, target: {edgeId: "cdn", direction: "both"}}, ...[{key: "asset"}, {duration: 1}, {restore: true}].map(parameters => ({...request.parameters, parameters}))]) expect(() => submit({...request, parameters})).toThrow();
+  expect(() => submit(request, attempt)).toThrow("challenge");
+});
 
 test("a well-formed submission is accepted as the browser sent it", () => {
   const value = { stopAtSecond: 120, actions: [load(10), { atSecond: 30, request: { kind: "chaos", parameters: { type: "crash", resourceId: "app-1" } } },

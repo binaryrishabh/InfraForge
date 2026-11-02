@@ -29,6 +29,35 @@ function harness(overrides: Partial<RunStart> = {}) {
   return { host, messages, tick, seconds: () => messages.filter((m) => m.type === "second") as Array<Extract<FromWorker, { type: "second" }>> };
 }
 
+test("CDN live worker exposes the selected action, records exact time, replays once and refuses terminal or challenge controls", () => {
+  const input = {resources: [at("cdn", T.CDN, 0), at("store", T.ObjectStorage, 1)], connectionLines: [line("cdn", "store", T.CDN, T.ObjectStorage)], workloadProfile: resolveWorkload({targetThroughput: 120, throughputUnit: "per-minute", trafficShape: "steady", readWriteRatio: 1, payloadSize: "light"}), seed: "cdn-worker"};
+  const request = {kind: "intervention" as const, parameters: {interventionId: "cdn-purge", revision: 1, target: {resourceId: "cdn"}, parameters: {}}};
+  const h = harness({input, horizonSeconds: 8, stopAtSecond: 8}); h.tick();
+  expect(h.seconds()[0]!.interventions.options.filter(o => o.interventionId === "cdn-purge")).toMatchObject([{target: {resourceId: "cdn"}}]);
+  h.host.handle({type: "action", id: "purge", request});
+  expect(h.messages.at(-1)).toMatchObject({type: "action", ok: true, outcome: {intervention: {atUs: 1_000_001, endUs: null}}});
+  h.tick(7);
+  const done = h.messages.at(-1) as Extract<FromWorker, {type: "done"}>;
+  expect(done.submission.actions).toEqual([{atSecond: 1, request}]);
+  const reentry = createModel2Run(JSON.parse(JSON.stringify(input)), 8);
+  for (let second = 0; second < 8; second++) {
+    for (const action of done.submission.actions.filter(a => a.atSecond === second)) reentry.apply(action.request);
+    reentry.advance(); expect(reentry.view()).toEqual(h.seconds()[second]!.view);
+  }
+  expect(reentry.evidence()).toEqual(h.host.evidence()!);
+  expect(reentry.evidence().systems.cdns[0]!.purged).toBe(1);
+  expect(reentry.evidence().product.interventions).toHaveLength(1);
+  h.host.handle({type: "action", id: "late", request});
+  expect(h.messages.at(-1)).toMatchObject({type: "action", ok: false, message: "The run is not running."});
+  const scenario: ChallengeScenario = {version: 1, visibility: "revealed", steps: [{id: "purge", atSecond: 2, request: request.parameters}]};
+  for (const lock of [{challengeId: "fixed"}, {experiment: {fault: DeploymentChaosNames.Crash, resourceId: "store", atSimulatedSecond: 2}}, {scenario}]) {
+    const locked = harness({input, ...lock}); const before = locked.host.evidence();
+    locked.host.handle({type: "action", id: "spoof", request});
+    expect(locked.messages.at(-1)).toMatchObject({type: "action", ok: false, message: "Challenge attempts run under server-authored conditions."});
+    expect(locked.host.actions()).toEqual([]); expect(locked.host.evidence()).toEqual(before);
+  }
+});
+
 test("the browser run posts the live view every simulated second and stops at its stop second", () => {
   const h = harness({ stopAtSecond: 5 });
   h.tick(10);
