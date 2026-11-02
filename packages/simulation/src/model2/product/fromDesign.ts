@@ -24,7 +24,7 @@ import { CACHE_POLICY_PROFILE, cachePolicyChanges, changedCachePolicy, changedCa
 import { CACHE_CAPACITY_PROFILE, cacheCapacityChanges, changedCacheCapacity, MODELED_ROW_BYTES, MODELED_CACHE_ENTRY_OVERHEAD_BYTES } from "./cacheCapacity";
 import { QUEUE_IDEMPOTENCY_PROFILE, changedQueueIdempotency, queueIdempotencyChanges, resultWritePolicy } from "./queueIdempotency";
 import { QUEUE_CAPACITY_PROFILE, changedQueueCapacity, queueCapacityChanges, queueMessageCapacity } from "./queueCapacity";
-import { VM_MEMORY_PROFILE, vmMemoryChanges } from "./vmMemory";
+import { VM_MEMORY_PROFILE, vmMemoryChanges, changedVmMemory, vmMemorySettings, bindVmMemoryProfiles } from "./vmMemory";
 import { VM_CPU_QUOTA_PROFILE, vmCpuQuotaChanges, changedVmCpuQuota, vmCpuQuota } from "./vmCpuQuota";
 import { VM_EXECUTION_PROFILE, vmExecutionChanges, changedVmExecution, vmWorkers, vmQueuedRequests } from "./vmExecution";
 import { DATABASE_REPLICATION_PROFILE, databaseReplicationChanges, changedDatabaseReplication } from "./databaseReplication";
@@ -41,7 +41,7 @@ const operations = ["read", "write", "health"] as const;
 export function currentAdapterProfiles(resources: SavedProductDesign["resources"], workload?: SavedProductDesign["workload"]): AdapterProfile[] {
   const dataFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/2");
   const publishFlow = resources.some(r => r.applicationFlow?.schema === "application-flow/3");
-  return [...(workload?.clientRetry ? [CLIENT_RETRY_PROFILE] : []), ...(workload?.clientRetry || dataFlow || publishFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled || r.lbRateLimit !== undefined) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : []), ...(publishFlow ? ["application-flow/3" as const] : []), ...(multiKey(resources) ? [KEYSPACE_PROFILE] : []), ...(hotKey(resources) ? [HOT_KEY_PROFILE] : []), ...(cachePolicyChanges(resources) ? [CACHE_POLICY_PROFILE] : []), ...(cacheCapacityChanges(resources) ? [CACHE_CAPACITY_PROFILE] : []), ...(databaseReplicationChanges(resources) ? [DATABASE_REPLICATION_PROFILE] : []), ...(dbConcurrencyChanges(resources) ? [DB_CONCURRENCY_PROFILE] : []), ...(vmExecutionChanges(resources) ? [VM_EXECUTION_PROFILE] : []), ...(vmMemoryChanges(resources) ? [VM_MEMORY_PROFILE] : []), ...(vmCpuQuotaChanges(resources) ? [VM_CPU_QUOTA_PROFILE] : []), ...(lbRateLimitChanges(resources) ? [LB_RATE_LIMIT_PROFILE] : []), ...(lbAdmissionChanges(resources) ? [LB_ADMISSION_PROFILE] : []), ...(lbHealthChanges(resources) ? [LB_HEALTH_PROFILE] : []), ...(queueCapacityChanges(resources) ? [QUEUE_CAPACITY_PROFILE] : []), ...(queueIdempotencyChanges(resources) ? [QUEUE_IDEMPOTENCY_PROFILE] : []), ...(cdnTtlChanges(resources) ? [CDN_TTL_PROFILE] : []), ...(cdnCoalescingChanges(resources) ? [CDN_COALESCING_PROFILE] : []), ...(monitoringCadenceChanges(resources) ? [MONITOR_CADENCE_PROFILE] : []), ...(monitoringBufferChanges(resources) ? [MONITOR_BUFFER_PROFILE] : []), ...(objectCapacityChanges(resources) ? [OBJECT_CAPACITY_PROFILE] : []), ...(firewallCapacityChanges(resources) ? [FIREWALL_CAPACITY_PROFILE] : [])];
+  return [...(workload?.clientRetry ? [CLIENT_RETRY_PROFILE] : []), ...(workload?.clientRetry || dataFlow || publishFlow || resources.some(r => r.retry?.enabled || r.circuitBreaker?.enabled || r.lbRateLimit !== undefined || r.vmMemory !== undefined) ? ["failure-cause/1" as const] : []), ...(dataFlow ? ["application-flow/2" as const] : []), ...(publishFlow ? ["application-flow/3" as const] : []), ...(multiKey(resources) ? [KEYSPACE_PROFILE] : []), ...(hotKey(resources) ? [HOT_KEY_PROFILE] : []), ...(cachePolicyChanges(resources) ? [CACHE_POLICY_PROFILE] : []), ...(cacheCapacityChanges(resources) ? [CACHE_CAPACITY_PROFILE] : []), ...(databaseReplicationChanges(resources) ? [DATABASE_REPLICATION_PROFILE] : []), ...(dbConcurrencyChanges(resources) ? [DB_CONCURRENCY_PROFILE] : []), ...(vmExecutionChanges(resources) ? [VM_EXECUTION_PROFILE] : []), ...(vmMemoryChanges(resources) ? [VM_MEMORY_PROFILE] : []), ...(vmCpuQuotaChanges(resources) ? [VM_CPU_QUOTA_PROFILE] : []), ...(lbRateLimitChanges(resources) ? [LB_RATE_LIMIT_PROFILE] : []), ...(lbAdmissionChanges(resources) ? [LB_ADMISSION_PROFILE] : []), ...(lbHealthChanges(resources) ? [LB_HEALTH_PROFILE] : []), ...(queueCapacityChanges(resources) ? [QUEUE_CAPACITY_PROFILE] : []), ...(queueIdempotencyChanges(resources) ? [QUEUE_IDEMPOTENCY_PROFILE] : []), ...(cdnTtlChanges(resources) ? [CDN_TTL_PROFILE] : []), ...(cdnCoalescingChanges(resources) ? [CDN_COALESCING_PROFILE] : []), ...(monitoringCadenceChanges(resources) ? [MONITOR_CADENCE_PROFILE] : []), ...(monitoringBufferChanges(resources) ? [MONITOR_BUFFER_PROFILE] : []), ...(objectCapacityChanges(resources) ? [OBJECT_CAPACITY_PROFILE] : []), ...(firewallCapacityChanges(resources) ? [FIREWALL_CAPACITY_PROFILE] : [])];
 }
 
 /** Canvas intent is preserved; missing application and service settings are visible assumptions.
@@ -80,7 +80,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const hasCacheCapacity = cacheCapacityChanges(resources);
     if (hasCacheCapacity !== profiles.includes(CACHE_CAPACITY_PROFILE)) error("adapterProfiles", "Logical cache capacity requires its captured data-cache-capacity/1 adapter profile and matching saved intent.");
     const hasVmMemory = vmMemoryChanges(resources);
-    if (hasVmMemory !== profiles.includes(VM_MEMORY_PROFILE)) error("adapterProfiles", "Modeled memory requires its captured vm-memory/1 adapter profile and matching saved intent.");
+    if (hasVmMemory !== profiles.includes(VM_MEMORY_PROFILE) || (hasVmMemory && !failureCause)) error("adapterProfiles", "Modeled memory requires its captured vm-memory/1 adapter profile and matching saved intent.");
     const hasVmCpuQuota = vmCpuQuotaChanges(resources);
     if (hasVmCpuQuota !== profiles.includes(VM_CPU_QUOTA_PROFILE)) error("adapterProfiles", "Application CPU quota requires its captured vm-cpu-quota/1 adapter profile and matching saved intent.");
     const hasVmExecution = vmExecutionChanges(resources);
@@ -209,7 +209,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     }
     const execution = (r: Resource, role: string): ComputeResource => {
       const id = `${r.id}.${role}`;
-      return { id, kind: "compute", cores: q(`${id}.cores`, cores.get(r.id)!, "cores"), ...vmCpuQuota(r, role, cores.get(r.id)!, q, ledger), workers: vmWorkers(r, role, cores.get(r.id)!, q), scheduler: "capped-equal-fluid/1", queueCapacity: vmQueuedRequests(r, role, q), profiles: Object.fromEntries(operations.map((o) => [o, `canvas.${o}`])), context: { labels: { environment: "canvas-assumptions" }, quantities: {} }, cancellation: "cooperative", memory: { coverage: "partial", policy: "observe" } };
+      return { id, kind: "compute", cores: q(`${id}.cores`, cores.get(r.id)!, "cores"), ...vmCpuQuota(r, role, cores.get(r.id)!, q, ledger), workers: vmWorkers(r, role, cores.get(r.id)!, q), scheduler: "capped-equal-fluid/1", queueCapacity: vmQueuedRequests(r, role, q), profiles: Object.fromEntries(operations.map((o) => [o, `canvas.${o}`])), context: { labels: { environment: "canvas-assumptions" }, quantities: {} }, cancellation: "cooperative", memory: { coverage: "partial", policy: "observe" }, ...vmMemorySettings(r, role, q) };
     };
     const command = (r: Resource, role: string, names: string[]): CommandConfig => {
       const id = `${r.id}.${role}`;
@@ -337,7 +337,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
           }
           else if (data.length > 1 && !(data.length === 2 && cache && database && !outgoing(cache.id).length)) { error(`resources.${id}`, "Connect the app to one database, one database-backed cache, or one cache and one database; other combinations need an authored operation plan."); break; }
           const config = execution(r, "main");
-          config.memory.limit = q(`${id}.memory.limit`, memory.get(id)! * 1073741824, "bytes", "The memory label is interpreted as GiB for this partial observation only; total memory use remains unknown.");
+          if (!changedVmMemory(r)) config.memory.limit = q(`${id}.memory.limit`, memory.get(id)! * 1073741824, "bytes", "The memory label is interpreted as GiB for this partial observation only; total memory use remains unknown.");
           if (r.applicationFlow && r.applicationFlow.schema !== "application-flow/1") { /* The authored steps own every data dependency. */ }
           else if (cache && database) {
             config.downstream = "$self/aside";
@@ -533,6 +533,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       if (value && typeof value === "object" && Object.keys(value).length) { for (const [key, child] of Object.entries(value)) if (!["ledger", "capabilities", "provenance", "evidence"].includes(key)) inspect(child, `${path}.${key}`); }
       else note(`default.${path}`, value, "setting", `The assumed ${path.replaceAll(".", " ")} is ${JSON.stringify(value)}.`);
     };
+    bindVmMemoryProfiles(resources, contract, q);
     compileCpuDynamics(design.workload, contract);
     compileClientRetry(design.workload, contract);
     compileObjective(design.workload, contract);

@@ -33,7 +33,7 @@ import { CACHE_POLICY_PROFILE, cachePolicyChanges, validateCachePolicyBindings }
 import { CACHE_CAPACITY_PROFILE, cacheCapacityChanges, validateCacheCapacityBindings } from "./cacheCapacity";
 import { QUEUE_IDEMPOTENCY_PROFILE, queueIdempotencyChanges, resultWritePolicy, validateQueueIdempotencyBindings } from "./queueIdempotency";
 import { QUEUE_CAPACITY_PROFILE, queueCapacityChanges, validateQueueCapacityBindings } from "./queueCapacity";
-import { VM_MEMORY_PROFILE, vmMemoryChanges } from "./vmMemory";
+import { VM_MEMORY_PROFILE, vmMemoryChanges, validateVmMemoryBindings } from "./vmMemory";
 import { VM_CPU_QUOTA_PROFILE, vmCpuQuotaChanges, validateVmCpuQuotaBindings } from "./vmCpuQuota";
 import { VM_EXECUTION_PROFILE, vmExecutionChanges, validateVmExecutionBindings } from "./vmExecution";
 import { validateDatabaseReplicationProfile, validateDatabaseReplicationBindings } from "./databaseReplication";
@@ -373,6 +373,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateCdnCoalescingBindings(design.resources, runtime);
     validateCachePolicyBindings(design.resources, runtime);
     validateCacheCapacityBindings(design.resources, runtime);
+    validateVmMemoryBindings(design.resources, runtime);
     validateVmCpuQuotaBindings(design.resources, runtime);
     validateVmExecutionBindings(design.resources, runtime);
     validateQueueIdempotencyBindings(design.resources, runtime);

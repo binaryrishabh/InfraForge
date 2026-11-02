@@ -55,7 +55,7 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
     pumping = true;
     while (!paused && active.size < workers && queue.size) {
       const call = queue.values().next().value!; queue.delete(call.work.callId);
-      if (!memory.activate(call.work.callId)) { allocationRejected++; finish(call, "rejected"); continue; }
+      if (!memory.activate(call.work.callId)) { allocationRejected++; finish(call, "rejected", seedCause("memory-limit", config.id)); continue; }
       accountOccupancy(); active.set(call.work.callId, call); call.phase = "cpu";
       causal?.({ atUs: kernel.now, kind: "app-start", resource: config.id, work: call.work, detail: {} });
       const flow = config.applicationFlow?.operations[call.work.operation];
@@ -87,7 +87,7 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
       if (full || !memoryAccepted) {
         if (!full) allocationRejected++;
         // Retry captures identify the actual queue refusal; historical cause bytes stay unchanged.
-        const cause = full && work.clientAttempt !== undefined ? seedCause("backend-rejected", config.id) : undefined;
+        const cause = !full ? seedCause("memory-limit", config.id) : work.clientAttempt !== undefined ? seedCause("backend-rejected", config.id) : undefined;
         rejected++; causal?.({ atUs: kernel.now, kind: "app-rejected", resource: config.id, work, detail: causeFields(cause) }); done("rejected", cause); return { admitted: false, cancel: () => "already-finished", state: () => "finished" };
       }
       admitted++;

@@ -16,7 +16,7 @@ export function clientRetryEvidence(maxAttempts: number) {
       if (e.detail.reason === "exhausted") counts.exhausted++;
       else if (e.detail.reason === "deadline-too-close") counts.givenUp++;
       else {
-        const reason = ["rate-limited", "circuit-open", "session-limit"].includes(String(e.detail.rootReason)) ? String(e.detail.rootReason) : "unknown";
+        const reason = ["rate-limited", "circuit-open", "session-limit", "memory-limit"].includes(String(e.detail.rootReason)) ? String(e.detail.rootReason) : "unknown";
         ineligibleByReason[reason] = (ineligibleByReason[reason] ?? 0) + 1;
       }
     }
