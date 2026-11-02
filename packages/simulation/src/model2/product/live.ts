@@ -12,6 +12,7 @@ import { clientRetryEvidence } from "../workload/clientRetryEvidence";
 export type LiveValue = number | null;
 export type LiveHealth = "healthy" | "degraded" | "saturated" | "failed" | "unknown";
 export interface LiveNodeMetrics {
+  vmMemory?: import("@infraforge/contracts/telemetry").VmMemoryMetrics;
   rateLimit?: import("@infraforge/contracts/telemetry").LbRateLimitMetrics;
   monitoring?: import("@infraforge/contracts/telemetry").MonitoringMetrics;
   objectStorage?: import("@infraforge/contracts/telemetry").ObjectStorageMetrics;
@@ -141,6 +142,11 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         metrics[node] = { cpu, memory: null, connections: sessions ?? queued + serving, rps: completed, errorRate,
           health: down ? "failed" : (cpu ?? 0) >= 95 || (errorRate ?? 0) > 0.05 ? "saturated" : (cpu ?? 0) >= 80 || (errorRate ?? 0) > 0.01 ? "degraded" : "healthy",
           ...(pool ? { replicas: pool } : {}) };
+      }
+      const memory = runtime.vmMemoryEvidence();
+      if (memory) for (const node of nodeIds) {
+        const readings = memory.resources.filter(r => owner(r.id) === node);
+        if (readings.length && metrics[node]) metrics[node]!.vmMemory = { version: 1, resources: readings };
       }
       const deliveryResources = compiled.input.resources.filter(r => metrics[r.id] && ["relational", "cache", "cdn"].includes(r.kind));
       if (deliveryResources.length) {

@@ -7,6 +7,7 @@ export interface LbRateLimitMetrics {
 }
 
 export interface ResourceMetrics {
+  vmMemory?: import("./VmMemoryMetrics.interface").VmMemoryMetrics;
   rateLimit?: LbRateLimitMetrics;
   monitoring?: import("./ObservabilityMetrics.interface").MonitoringMetrics;
   objectStorage?: import("./ObservabilityMetrics.interface").ObjectStorageMetrics;

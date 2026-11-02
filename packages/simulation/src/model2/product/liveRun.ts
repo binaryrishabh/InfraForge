@@ -189,7 +189,7 @@ export type Model2Run = ReturnType<typeof createModel2Run>;
 
 function metric(m: LiveProjection["metrics"][string] | undefined): ResourceMetrics {
   if (!m) return { cpu: null, memory: null, health: ResourceHealth.UNKNOWN };
-  return { ...(m.rateLimit ? { rateLimit: m.rateLimit } : {}), ...(m.monitoring ? { monitoring: m.monitoring } : {}), ...(m.objectStorage ? { objectStorage: m.objectStorage } : {}), ...(m.databaseReplication ? { databaseReplication: m.databaseReplication } : {}), ...(m.database ? { database: m.database } : {}), ...(m.cache ? { cache: m.cache } : {}), ...(m.cdn ? { cdn: m.cdn } : {}), ...(m.security ? { security: m.security } : {}), ...(m.asyncQueue ? { asyncQueue: m.asyncQueue } : {}), cpu: m.cpu === null ? null : round(m.cpu), memory: m.memory === null ? null : round(m.memory), health: m.health as ResourceHealthType,
+  return { ...(m.vmMemory ? { vmMemory: m.vmMemory } : {}), ...(m.rateLimit ? { rateLimit: m.rateLimit } : {}), ...(m.monitoring ? { monitoring: m.monitoring } : {}), ...(m.objectStorage ? { objectStorage: m.objectStorage } : {}), ...(m.databaseReplication ? { databaseReplication: m.databaseReplication } : {}), ...(m.database ? { database: m.database } : {}), ...(m.cache ? { cache: m.cache } : {}), ...(m.cdn ? { cdn: m.cdn } : {}), ...(m.security ? { security: m.security } : {}), ...(m.asyncQueue ? { asyncQueue: m.asyncQueue } : {}), cpu: m.cpu === null ? null : round(m.cpu), memory: m.memory === null ? null : round(m.memory), health: m.health as ResourceHealthType,
     ...(m.rps === null ? {} : { rps: m.rps }), ...(m.connections === null ? {} : { connections: m.connections }), ...(m.replicas ? { replicas: m.replicas } : {}) };
 }
 const round = (value: number) => Math.round(value * 10) / 10;

@@ -94,7 +94,7 @@ export interface ReportCheckpoint {
   pools?: Record<string, PoolSnapshot>;
   installedSkus?: Record<string, string>;
   measurementFreshness?: "initialized" | "previous-revision" | "current-revision" | "unknown";
-  resources: Array<{ id: string; cpu?: number; memory?: number; rps?: number; connections?: number; health?: string }>;
+  resources: Array<{ id: string; vmMemory?: import("../telemetry/VmMemoryMetrics.interface").VmMemoryMetrics; cpu?: number; memory?: number; rps?: number; connections?: number; health?: string }>;
 }
 
 export interface RunReport {

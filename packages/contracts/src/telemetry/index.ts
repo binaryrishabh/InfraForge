@@ -5,6 +5,7 @@ export type * from "./ObjectiveMetrics.interface";
 export type * from "./LatencyMetrics.interface";
 export type * from "./PoolSnapshot.interface";
 export type * from "./ResourceMetrics.interface";
+export type * from "./VmMemoryMetrics.interface";
 export type * from "./DataDeliveryMetrics.interface";
 export type * from "./DatabaseReplicationMetrics.interface";
 export type * from "./ObservabilityMetrics.interface";

@@ -1,3 +1,4 @@
+import { vmMemoryEvidence } from "./vmMemoryEvidence";
 import { latencyEvidence } from "./latencyEvidence";
 import { APPLICATION_FLOW_MAX_BYTES, applicationFlowEvidence } from "../compute/flowEvidence";
 import { requireKnown } from "../../reality/quantity";
@@ -12,7 +13,8 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
   const flow = compiled.input.resources.some(r => r.kind === "compute" && r.applicationFlow)
     ? applicationFlowEvidence(Math.min(compiled.input.limits.maxRawResults, compiled.input.limits.maxTraceRows), Math.min(APPLICATION_FLOW_MAX_BYTES, compiled.input.limits.maxTraceBytes ?? APPLICATION_FLOW_MAX_BYTES), compiled.input.resources.some(r => r.kind === "compute" && r.applicationFlow?.schema === "application-flow/3") ? "application-flow/3" : compiled.input.resources.some(r => r.kind === "compute" && r.applicationFlow?.schema === "application-flow/2") ? "application-flow/2" : "application-flow/1") : undefined;
   const latency = compiled.trafficEvidenceProfile ? latencyEvidence(compiled.input.limits.maxLiveCalls ?? compiled.input.limits.maxRequests) : undefined;
-  const observe: CausalObserver | undefined = flow || latency ? event => { flow?.observe(event); latency?.observe(event); causal?.(event); } : causal;
+  const memory = vmMemoryEvidence(compiled, id => network?.inspect?.(id) ?? network?.observe(id));
+  const observe: CausalObserver | undefined = flow || latency || memory ? event => { memory?.observe(event.resource); flow?.observe(event); latency?.observe(event); causal?.(event); } : causal;
   // Timing boundaries are observer-only and never enter historical engine inputs.
   const timingObserver: CausalObserver | undefined = compiled.trafficEvidenceProfile ? Object.assign((event: Parameters<CausalObserver>[0]) => observe?.(event), { trafficTiming: true as const }) : observe;
   const applied = new Map<string, NonNullable<CompiledProduct["interventionReceipts"]>[number]>();
@@ -30,6 +32,7 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
   return { horizon: runtime.horizon, advanceTo: runtime.advanceTo, measureObjective: runtime.measureObjective,
     // Cheap current reads for live views: one resource's counters now, and replica counts. No history is copied.
     inspect: (id: string) => network?.inspect?.(id) ?? network?.observe(id),
+    vmMemoryEvidence: () => memory?.measure(),
     inspectData: runtime.inspectData,
     inspectCdn: runtime.inspectCdn,
     inspectMonitor: runtime.inspectMonitor,
@@ -44,5 +47,5 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
     pools: () => controllers.map((c) => c.status()),
     // Whether a resource is up and taking work right now (a crash makes it neither).
     up: (id: string) => { const e = network?.endpoint(id); return !!e && e.alive && e.ready; },
-    evidence() { const evidence = runtime.evidence(); return { ...evidence, ...(latency ? { latency: latency.measure(evidence.capture.throughUs).latency } : {}), ...(flow ? { applicationFlow: flow.measure() } : {}), workloadVersion: "m2h/1" as const, product: { ...(compiled.interventionReceipts?.length ? {interventions: compiled.interventionReceipts.map(r => ({...r, phase: !applied.has(r.actionId) ? "scheduled" : active.has(r.actionId) ? "active" : "completed"}))} : {}), versions: compiled.semantic.versions, semantic: compiled.semantic, controllers: controllers.map((c) => c.evidence()), scope: "Internal compiled authored contracts; no provider calibration/public activation" } }; } };
+    evidence() { const evidence = runtime.evidence(); return { ...evidence, ...(memory ? { vmMemory: memory.measure() } : {}), ...(latency ? { latency: latency.measure(evidence.capture.throughUs).latency } : {}), ...(flow ? { applicationFlow: flow.measure() } : {}), workloadVersion: "m2h/1" as const, product: { ...(compiled.interventionReceipts?.length ? {interventions: compiled.interventionReceipts.map(r => ({...r, phase: !applied.has(r.actionId) ? "scheduled" : active.has(r.actionId) ? "active" : "completed"}))} : {}), versions: compiled.semantic.versions, semantic: compiled.semantic, controllers: controllers.map((c) => c.evidence()), scope: "Internal compiled authored contracts; no provider calibration/public activation" } }; } };
 }
