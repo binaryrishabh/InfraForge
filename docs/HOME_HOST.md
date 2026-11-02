@@ -59,8 +59,9 @@ process itself is unchanged: the same workflow, approval and `scripts/deploy/bac
 
 1. A brand-new host starts in maintenance, so the workflow refuses its first release. Run it once over SSH
    from the clean checkout (docs/PRODUCTION_BOOTSTRAP.md "New host"):
-   `cd ~/InfraForge && bun --no-env-file scripts/release.ts apply <SHA> /etc/infraforge/release.env /var/lib/infraforge/releases`.
-   It builds and starts on the home server, creates a fresh database (the EC2 data was test data
+   `cd ~/InfraForge && RELEASE_IMAGE=ghcr.io/binaryrishabh/infraforge-backend@sha256:<DIGEST> bun --no-env-file scripts/release.ts apply <SHA> /etc/infraforge/release.env /var/lib/infraforge/releases`.
+   `<DIGEST>` is the image digest the release workflow's image job published for that SHA (the home server never builds
+   the image; if the package is private, log in to ghcr.io with a read-only token first). It starts on the home server, creates a fresh database (the EC2 data was test data
    only and is not moved), clears
    maintenance and checks `https://infraforge-backend.lapwork.in/health/ready`.
 2. Re-run the release workflow for the same SHA; it deploys the frontend built against the new

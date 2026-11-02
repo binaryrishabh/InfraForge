@@ -59,7 +59,6 @@ export async function verifyPublishedImage(sha: string, reference: string, run =
   } finally {
     // The runner keeps nothing from this proof; the host pulls the digest itself.
     await run(["docker", "image", "rm", "--no-prune", local], root).catch(() => {});
-    await run(["docker", "image", "rm", "--no-prune", reference], root).catch(() => {});
   }
 }
 

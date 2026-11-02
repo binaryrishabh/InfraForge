@@ -26,6 +26,7 @@ function fakeDocker(behaviour: Behaviour = {}) {
     if (verb === "logout") return "";
     if (verb === "version") return behaviour.hostArchitecture ?? "amd64";
     if (verb === "tag") return "";
+    if (verb === "image" && rest[2] === "rm") return `Untagged: ${rest.at(-1)}`;
     if (verb === "run") return JSON.stringify(behaviour.metadata ?? { sha, migrationFingerprint: "schema", authContract: 1 });
     if (verb === "image" && rest[2] === "inspect") {
       return JSON.stringify([{ Id: behaviour.id ?? imageId, Architecture: behaviour.architecture ?? "amd64", RepoDigests: behaviour.repoDigests ?? [reference],
@@ -61,7 +62,9 @@ test("the exact digest is pulled, verified, tagged by content ID, and the token 
   const token = "ghs_SECRET_TOKEN_VALUE";
   const local = await pullApprovedImage(reference, sha, ".", { user: "octo", token });
   expect(local).toBe(`infraforge-backend:${sha}`);
-  expect(docker.verbs()).toEqual(["login", "pull", "image", "version", "tag", "logout"]);
+  expect(docker.verbs()).toEqual(["login", "pull", "image", "version", "tag", "image", "logout"]);
+  // The registry digest reference is dropped right after tagging so cleanup of the release tag can free the image.
+  expect(docker.calls.filter(c => c.args.includes("rm")).map(c => c.args.at(-1))).toEqual([reference]);
   expect(docker.calls.find(c => c.args.includes("pull"))?.args.at(-1)).toBe(reference);
   expect(docker.calls.find(c => c.args.includes("tag"))?.args.slice(-2)).toEqual([imageId, `infraforge-backend:${sha}`]);
   expect(docker.calls.some(c => c.args.join(" ").includes(token))).toBe(false);

@@ -18,6 +18,11 @@ export function approvedImageReference(value: string | undefined, repository = A
 }
 
 type Run = typeof command;
+// Temporary Docker configs that hold a registry login, so an interrupted release can still remove them.
+const configs = new Set<string>();
+export async function removeRegistryConfigs() {
+  for (const directory of [...configs]) { await rm(directory, { recursive: true, force: true }).catch(() => {}); configs.delete(directory); }
+}
 export type RegistryAuth = { user: string; token: string };
 
 /**
@@ -30,6 +35,7 @@ export async function pullApprovedImage(reference: string, sha: string, root: st
   repository = APPROVED_IMAGE_REPOSITORY) {
   approvedImageReference(reference, repository);
   const config = await mkdtemp(join(tmpdir(), "infraforge-registry-"));
+  configs.add(config);
   const docker = (...args: string[]) => ["docker", "--config", config, ...args];
   try {
     if (auth) await run(docker("login", repository.split("/")[0]!, "--username", auth.user, "--password-stdin"), root, process.env, undefined, auth.token);
@@ -49,9 +55,13 @@ export async function pullApprovedImage(reference: string, sha: string, root: st
     }
     // Tag by content ID, never by name, so a registry change cannot swap what the release uses.
     await run(["docker", "tag", image.Id, `infraforge-backend:${sha}`], root);
+    // Keep exactly one local name. A leftover registry digest reference would keep the image on disk after the
+    // release tag is cleaned up (classic overlay2 only untags), so remove it now while the release tag still holds the image.
+    await run(["docker", "image", "rm", "--no-prune", reference], root);
     return `infraforge-backend:${sha}`;
   } finally {
     if (auth) await run(docker("logout", registryHost), root).catch(() => {});
     await rm(config, { recursive: true, force: true });
+    configs.delete(config);
   }
 }

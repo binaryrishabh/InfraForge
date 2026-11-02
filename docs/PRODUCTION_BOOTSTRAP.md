@@ -204,9 +204,10 @@ in-progress release. Obsolete queued SHAs refuse against current main before mut
 The underlying recovery/operator command remains:
 
 ```sh
-bun --no-env-file scripts/release.ts apply FULL_SHA /etc/infraforge/release.env /var/lib/infraforge/releases
+RELEASE_IMAGE=ghcr.io/binaryrishabh/infraforge-backend@sha256:DIGEST bun --no-env-file scripts/release.ts apply FULL_SHA /etc/infraforge/release.env /var/lib/infraforge/releases
 ```
 
+`DIGEST` is the digest published by the release workflow's image job for that SHA; the host never builds the image.
 Do not run it routinely by SSH. The workflow invokes it through the retry-aware wrapper.
 
 Provision at least **8 GiB (8,589,934,592 bytes) free** on both Docker's data-root

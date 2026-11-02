@@ -38,12 +38,15 @@ export async function collectCommand(child: CommandChild, milliseconds: number, 
   } finally { clearTimeout(timeout); }
 }
 
+// The docker subcommand, skipping a leading `--config <dir>` (used for temporary registry logins).
+const dockerVerb = (args: string[]) => args[0] !== "docker" ? undefined : args[1] === "--config" ? args[3] : args[1];
+const longDockerVerbs = ["build", "pull", "push"];
 export async function command(args: string[], cwd: string, env: Record<string, string | undefined> = process.env, diagnosticsDirectory?: string, input?: string) {
   if (args[0] === "docker" && args[1] !== "context" && env.RELEASE_REHEARSAL !== "owned-local") env = localDockerEnvironment(env);
   const child = Bun.spawn(args, { cwd, env, stdout: "pipe", stderr: "pipe", stdin: input === undefined ? "ignore" : new TextEncoder().encode(input) });
   children.add(child);
   const [output, diagnostic, exitCode] = await collectCommand(child,
-    (args.includes("build") || args.includes("pull") || args.includes("push")) ? 600000 : 120000)
+    (args[0] === "docker" && (longDockerVerbs.includes(dockerVerb(args)!) || dockerVerb(args) === "buildx" && args.includes("build"))) ? 600000 : 120000)
     .catch((error: Error) => {
       // Name the command that hung so a deadline is diagnosable from the release log (no settings values).
       if (error.message === "Release command deadline exceeded") throw new Error(`${error.message}: ${args.slice(0, 8).join(" ")}`);
@@ -55,15 +58,14 @@ export async function command(args: string[], cwd: string, env: Record<string, s
       : args[0] === "docker" && args[1] === "compose" && diagnosticsDirectory
         ? await composeFailureDetail(diagnostic, diagnosticsDirectory, env)
         // A failed image build shows its own redacted tail; it never reads settings.
-        : args[0] === "docker" && (args.includes("build") || args.includes("pull") || args.includes("push") || args.includes("login")) ? redactReleaseDiagnostic(diagnostic, env).slice(-4000)
+        : args[0] === "docker" && (longDockerVerbs.includes(dockerVerb(args)!) || dockerVerb(args) === "login") ? redactReleaseDiagnostic(diagnostic, env).slice(-4000)
         : "inspect private operator diagnostics";
     // Readiness retries may catch this exception. Report the private path here
     // as well so their eventual deadline never hides the operator's evidence.
     if (args[0] === "docker" && args[1] === "compose" && diagnosticsDirectory && env.RELEASE_REHEARSAL !== "owned-local") {
       console.error(`docker compose failed; ${detail}`);
     }
-    const verb = args[1] === "--config" ? args[3] : args[1];
-    throw new Error(`${args[0]} ${verb ?? ""} failed; ${detail}`);
+    throw new Error(`${args[0]} ${(args[0] === "docker" ? dockerVerb(args) : args[1]) ?? ""} failed; ${detail}`);
   }
   return output.trim();
 }

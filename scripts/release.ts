@@ -6,6 +6,7 @@ import { cancelCommands, command } from "./release/process";
 import { PreviousReleaseRestored, releaseSequence, rollbackSequence, type Release } from "./release/sequence";
 import { prepareReleaseImage, type AcceptedState, type ReleaseAction } from "./release/image";
 import { preflightReleaseSpace, pruneAcceptedImages } from "./release/hygiene";
+import { removeRegistryConfigs } from "./release/registry";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const [action, sha, environmentFile, stateDirectory] = process.argv.slice(2);
@@ -38,6 +39,7 @@ const interrupt = async () => {
   if (interrupted) return;
   interrupted = true;
   await cancelCommands();
+  await removeRegistryConfigs();
   if (acceptanceComplete) {
     await releaseLock();
     console.error("Accepted release cleanup interrupted; application remains running and release lock is removed.");

@@ -230,8 +230,10 @@ migration, and the host never falls back to building.
 
 The short-lived workflow token (`packages: read` for the release job) reaches the host
 only on stdin of the pull step, is written to a private temporary Docker config for that
-step, and is logged out and deleted afterwards. It is never in a command line, the
-environment of any child process, a file in the repository or an image. If the package is
+step, and is logged out and deleted afterwards (also if the release is interrupted). It is never an argument of a
+release command, in the environment of any child process, a file in the repository or an image. The SSH action
+itself carries it in the remote script text for the duration of the run (visible only to local host users, and valid
+only until the job ends); sending it by stdin from a direct SSH step would remove even that. If the package is
 made public by its owner, the token is simply unnecessary.
 
 Platform: the published image is `linux/amd64`, the architecture of the production host.
@@ -243,7 +245,8 @@ A same-SHA manual retry re-runs only the gate, the image job and the release; it
 that SHA on the runner and passes the new digest, without repeating the validation suite.
 
 Readiness polls return as soon as healthy; there is no fixed readiness sleep to remove.
-Migration, backup, health and rollback checks are unchanged.
+Migration, backup, health and rollback checks are unchanged. CI no longer repeats boundary/challenge tests already run by
+lint/workspace tests, and execution identity is checked once before the heavy jobs.
 
 ## Release disk capacity and image retention
 
@@ -303,8 +306,9 @@ use broad `docker system prune`, volume pruning or default/shared-builder prunin
 as release recovery.
 
 The production host no longer runs BuildKit for releases, so a release leaves no
-build cache or builder on it; the pulled image layers are ordinary retained images
-under the retention rules above. See Docker's
+build cache or builder on it. After a verified pull the registry digest reference is
+removed and only `infraforge-backend:<sha>` remains, so the pulled image follows the
+retention rules above and cleanup frees it like any earlier release. See Docker's
 [image removal contract](https://docs.docker.com/reference/cli/docker/image/rm/).
 
 Production Compose failures save a redacted final 16,000 characters of stderr in
@@ -357,10 +361,11 @@ Paths remain `~/InfraForge`, private `/etc/infraforge/release.env`, and
 parents (0711); private files remain operator-only. The workflow ultimately invokes:
 
 ```sh
-bun --no-env-file scripts/release.ts apply FULL_SHA /etc/infraforge/release.env /var/lib/infraforge/releases
+RELEASE_IMAGE=ghcr.io/binaryrishabh/infraforge-backend@sha256:DIGEST bun --no-env-file scripts/release.ts apply FULL_SHA /etc/infraforge/release.env /var/lib/infraforge/releases
 ```
 
-It builds an exact commit-tagged image with OCI revision/embedded release metadata,
+It pulls the exact pre-built, digest-pinned image (`RELEASE_IMAGE`, published by the workflow's image job) and
+verifies its OCI revision/embedded release metadata, then
 pre-pulls missing dependencies, starts/waits for the private PostgreSQL service
 when selected by URL, preflights database targets/history and idle runs, sets maintenance and verifies the
 public proxy actually returns 503 for API/WS, stops API/WS, repeats idle checks,

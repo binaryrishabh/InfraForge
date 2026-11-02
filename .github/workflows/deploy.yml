@@ -154,10 +154,11 @@ jobs:
           command_timeout: 25m
           script: |
             set -eu
+            # Keep the short-lived registry token out of every child environment; it reaches only the pull, over stdin.
+            # (The action itself places it in this script's text for the run; it expires when this job ends.)
+            registry_token="$REGISTRY_TOKEN"; unset REGISTRY_TOKEN
             echo "$RELEASE_SHA" | grep -Eq '^[a-f0-9]{40}$'
             echo "$RELEASE_IMAGE" | grep -Eq '^ghcr\.io/binaryrishabh/infraforge-backend@sha256:[a-f0-9]{64}$'
-            # Keep the short-lived registry token out of every child environment; it reaches only the pull, over stdin.
-            registry_token="$REGISTRY_TOKEN"; unset REGISTRY_TOKEN
             cd ~/InfraForge
             test -z "$(git status --porcelain)"
             git fetch origin main
