@@ -65,8 +65,9 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
         return [...new Set(affected)].map(resourceId => ({resourceId, durationTicks: (r.endUs! - r.atUs) / SECOND, remainingTicks: Math.ceil((r.endUs! - run.simulatedSeconds * SECOND) / SECOND),
           intervention: {actionId: r.actionId, label: INTERVENTIONS.find(d => d.id === r.interventionId)!.label, parameters: r.parameters, restoreAtUs: r.endUs!, ...(edgeIds.length ? {edgeIds} : {})}}));
       })],
-    traffic: last ? { offeredRps: last.offeredRps, completedRps: last.completedRps, failedRps: last.failedRps, latencyMs: last.latencyMs }
-      : { offeredRps: 0, completedRps: 0, failedRps: 0, latencyMs: { p50: null, p95: null, p99: null } },
+    // Captured historical views retain their exact latency shape; explicit dynamics opt into the new readout.
+    traffic: last ? { offeredRps: last.offeredRps, completedRps: last.completedRps, failedRps: last.failedRps, latencyMs: input.workloadProfile.workloadDynamics ? last.latencyMs : { p50: last.latencyMs.p50, p95: last.latencyMs.p95 } }
+      : { offeredRps: 0, completedRps: 0, failedRps: 0, latencyMs: { p50: null, p95: null, ...(input.workloadProfile.workloadDynamics ? { p99: null } : {}) } },
   });
 
   return {
