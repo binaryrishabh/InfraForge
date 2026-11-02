@@ -11,7 +11,7 @@ test("queue capacity survives save/reload, live validation and captured inputs w
     const saved = JSON.parse(JSON.stringify(schema.parse(capacityLayout(value))));
     const input = readRunInputs(captureRunInputs(saved, workload, "capacity"));
     expect(input.resources.find(r => r.id === "queue")!.asyncQueue!.capacityMessages).toBe(value);
-    expect(input.adapterProfiles).toEqual([...(value === undefined ? [] : ["queue-capacity/1"]), "traffic-evidence/2"]);
+    expect(input.adapterProfiles).toEqual([...(value === undefined ? [] : ["queue-capacity/1" as const]), "traffic-evidence/2"]);
     expect(buildContractFromRunInputs(input, 3)).toHaveProperty("contract");
   }
   expect(DEFAULT_ASYNC_QUEUE_SETTINGS).not.toHaveProperty("capacityMessages");

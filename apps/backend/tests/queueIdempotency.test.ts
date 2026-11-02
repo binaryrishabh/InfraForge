@@ -12,7 +12,7 @@ test("idempotent result intent survives save/reload and new captures select only
     const saved = JSON.parse(JSON.stringify(schema.parse(idempotencyLayout(value))));
     const input = readRunInputs(captureRunInputs(saved, workload, "idempotency"));
     expect(input.resources.find(r => r.id === "worker")!.asyncWorker!.idempotentResults).toBe(value);
-    expect(input.adapterProfiles).toEqual([...(value === true ? ["queue-idempotency/1"] : []), "traffic-evidence/2"]);
+    expect(input.adapterProfiles).toEqual([...(value === true ? ["queue-idempotency/1" as const] : []), "traffic-evidence/2"]);
     const built = buildContractFromRunInputs(input, 3);
     if ("refused" in built) throw Error(JSON.stringify(built));
     expect(built.contract.nodes.worker!.resources[0]!.config).toHaveProperty("idempotency", value ? "object-if-absent" : "none");

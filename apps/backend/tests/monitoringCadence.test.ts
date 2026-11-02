@@ -11,7 +11,7 @@ for (const policy of [{ version: 1 as const }, { version: 1 as const, collection
   for (const schema of [LayoutSchema, LiveTopologySchema]) expect(layout.resources).toEqual(schema.parse(layout).resources);
   expect(validateDeploymentReadiness(layout.resources, layout.connectionLines)).toEqual(validateDeploymentReadiness(monitoringLayout().resources, layout.connectionLines));
   const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, monitoringWorkload, "monitor-cadence"))));
-  expect(input.adapterProfiles).toEqual([...(changed ? ["monitor-cadence/1"] : []), "traffic-evidence/2"]);
+  expect(input.adapterProfiles).toEqual([...(changed ? ["monitor-cadence/1" as const] : []), "traffic-evidence/2"]);
   expect(buildContractFromRunInputs(input, 65)).not.toHaveProperty("refused");
   if (changed) for (const adapterProfiles of [undefined, []]) expect(buildContractFromRunInputs({ ...input, adapterProfiles }, 65)).toHaveProperty("refused");
   expect(() => readRunInputs({ ...input, adapterProfiles: ["monitor-cadence/1", "monitor-cadence/1"] })).toThrow();

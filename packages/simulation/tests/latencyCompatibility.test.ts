@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { resolveWorkload } from "@infraforge/domain/workload";
 import { keyspaceDesign, hash } from "./keyspace.fixture";
 import { contractFromDesign, compileProduct, createProductModel2 } from "../src/internalProduct";
 import { createModel2Run } from "../src/model2Run";
@@ -7,7 +8,7 @@ test("unmarked contract, artifact, assumptions, evidence and live views retain p
   const d = keyspaceDesign(), b = contractFromDesign(d, { adapterProfiles: [] }); if ("refused" in b) throw Error(JSON.stringify(b));
   const c = compileProduct(d, b.contract); if (!c.ok) throw Error(JSON.stringify(c));
   const r = createProductModel2(c.value); r.advanceTo(3000000);
-  const live = createModel2Run({ resources: d.resources, connectionLines: d.connections, workloadProfile: d.workload, seed: "latency-history", adapterProfiles: [] }, 3);
+  const live = createModel2Run({ resources: d.resources, connectionLines: d.connections, workloadProfile: resolveWorkload(d.workload), seed: "latency-history", adapterProfiles: [] }, 3);
   const views = [live.view()]; for (let n = 0; n < 3; n++) { live.advance(); views.push(live.view()); }
   // LF-normalized SHA-256 captured on untouched a654302 before this batch. Never regenerate.
   expect([b.contract, c.value, b.assumptions, r.evidence(), views].map(hash)).toEqual([

@@ -12,7 +12,7 @@ for (const ttl of [undefined, 1, 60, 3600]) test(`strict TTL capture, replay and
   expect(layout.resources).toEqual(LayoutSchema.parse(layout).resources);
   expect(layout.resources).toEqual(LiveTopologySchema.parse(layout).resources);
   const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, cdnWorkload, "cdn-ttl"))));
-  expect(input.adapterProfiles).toEqual([...(ttl === undefined ? [] : ["cdn-ttl/1"]), "traffic-evidence/2"]);
+  expect(input.adapterProfiles).toEqual([...(ttl === undefined ? [] : ["cdn-ttl/1" as const]), "traffic-evidence/2"]);
   expect(buildContractFromRunInputs(input, 12)).not.toHaveProperty("refused");
   expect(configuration(layout.resources[0]!)).toEqual(expect.objectContaining(ttl === undefined ? {} : { cdnCachePolicy: { version: 1, ttlSeconds: ttl } }));
   if (ttl === undefined) expect(configuration(layout.resources[0]!)).not.toHaveProperty("cdnCachePolicy");
