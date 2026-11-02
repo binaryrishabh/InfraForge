@@ -2,7 +2,7 @@ import { LB_RATE_LIMIT_PROFILE, lbRateLimitChanges, validateLbRateLimitBindings 
 import { checkClientRetry } from "./clientRetry";
 import { checkObjective } from "./objective";
 import { checkCpuDynamics } from "./workloadDynamics";
-import { RESOURCE_PORTS, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbHealthError, lbAdmissionError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, vmMemoryError, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbHealthError, lbAdmissionError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -33,6 +33,7 @@ import { CACHE_POLICY_PROFILE, cachePolicyChanges, validateCachePolicyBindings }
 import { CACHE_CAPACITY_PROFILE, cacheCapacityChanges, validateCacheCapacityBindings } from "./cacheCapacity";
 import { QUEUE_IDEMPOTENCY_PROFILE, queueIdempotencyChanges, resultWritePolicy, validateQueueIdempotencyBindings } from "./queueIdempotency";
 import { QUEUE_CAPACITY_PROFILE, queueCapacityChanges, validateQueueCapacityBindings } from "./queueCapacity";
+import { VM_MEMORY_PROFILE, vmMemoryChanges } from "./vmMemory";
 import { VM_CPU_QUOTA_PROFILE, vmCpuQuotaChanges, validateVmCpuQuotaBindings } from "./vmCpuQuota";
 import { VM_EXECUTION_PROFILE, vmExecutionChanges, validateVmExecutionBindings } from "./vmExecution";
 import { validateDatabaseReplicationProfile, validateDatabaseReplicationBindings } from "./databaseReplication";
@@ -71,6 +72,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (cacheCapacityChanges(design.resources) !== contract.version.includes(`/${CACHE_CAPACITY_PROFILE}`)) error("CACHE_CAPACITY_VERSION", "version", "Logical cache capacity requires its explicit data-cache-capacity/1 contract version and matching saved intent");
     if (queueIdempotencyChanges(design.resources) !== contract.version.includes(`/${QUEUE_IDEMPOTENCY_PROFILE}`)) error("QUEUE_IDEMPOTENCY_VERSION", "version", "Idempotent result writes require the explicit queue-idempotency/1 contract version and matching saved intent");
     if (queueCapacityChanges(design.resources) !== contract.version.includes(`/${QUEUE_CAPACITY_PROFILE}`)) error("QUEUE_CAPACITY_VERSION", "version", "Queue capacity requires its explicit queue-capacity/1 contract version and matching saved intent");
+    if (vmMemoryChanges(design.resources) !== contract.version.includes(`/${VM_MEMORY_PROFILE}`)) error("VM_MEMORY_VERSION", "version", "Modeled memory requires its explicit vm-memory/1 contract version and matching saved intent");
     if (vmCpuQuotaChanges(design.resources) !== contract.version.includes(`/${VM_CPU_QUOTA_PROFILE}`)) error("VM_CPU_QUOTA_VERSION", "version", "Application CPU quota requires its explicit vm-cpu-quota/1 contract version and matching saved intent");
     if (vmExecutionChanges(design.resources) !== contract.version.includes(`/${VM_EXECUTION_PROFILE}`)) error("VM_EXECUTION_VERSION", "version", "VM execution requires its explicit vm-execution/1 contract version and matching saved intent");
     if (dbConcurrencyChanges(design.resources) !== contract.version.includes(`/${DB_CONCURRENCY_PROFILE}`)) error("DB_CONCURRENCY_VERSION", "version", "Database concurrency requires its explicit data-db-concurrency/1 contract version and matching saved intent");
@@ -108,6 +110,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (rateLimitError) error("INVALID_LB_RATE_LIMIT", `resources.${r.id}.lbRateLimit`, rateLimitError);
       const lbError = lbAdmissionError(r.type, r.lbAdmission);
       if (lbError) error("INVALID_LB_ADMISSION", `resources.${r.id}.lbAdmission`, lbError);
+      const memoryError = vmMemoryError(r.type, r.vmMemory, r.asyncWorker?.enabled);
+      if (memoryError) error("INVALID_VM_MEMORY", `resources.${r.id}.vmMemory`, memoryError);
       const quotaError = vmCpuQuotaError(r.type, r.vmCpuQuota, r.asyncWorker?.enabled);
       if (quotaError) error("INVALID_VM_CPU_QUOTA", `resources.${r.id}.vmCpuQuota`, quotaError);
       const executionError = vmExecutionError(r.type, r.vmExecution, r.asyncWorker?.enabled);
@@ -132,7 +136,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "databaseReplication", "dbConcurrency", "vmExecution", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "databaseReplication", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }

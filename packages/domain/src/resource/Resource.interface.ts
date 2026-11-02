@@ -4,6 +4,7 @@ import type { DataKeyspace } from "./DataKeyspace.interface";
 import type { CachePolicy } from "./CachePolicy.interface";
 import type { MonitoringPolicy } from "./MonitoringPolicy.interface";
 import type { CdnCachePolicy } from "./CdnCachePolicy.interface";
+import type { VmMemory } from "./VmMemory.interface";
 import type { VmCpuQuota } from "./VmCpuQuota.interface";
 import type { VmExecution } from "./VmExecution.interface";
 import type { DbConcurrency } from "./DbConcurrency.interface";
@@ -34,6 +35,7 @@ export interface Resource {
   dbConcurrency?: DbConcurrency;
   vmExecution?: VmExecution;
   vmCpuQuota?: VmCpuQuota;
+  vmMemory?: VmMemory;
   lbRateLimit?: LbRateLimit;
   lbAdmission?: LbAdmission;
   lbHealth?: LbHealth;

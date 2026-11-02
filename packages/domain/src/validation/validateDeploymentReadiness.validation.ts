@@ -10,6 +10,7 @@ import { firewallCapacityError } from "../resource/FirewallCapacity.interface";
 import { objectStoragePolicyError } from "../resource/ObjectStoragePolicy.interface";
 import { monitoringPolicyError } from "../resource/MonitoringPolicy.interface";
 import { cdnCachePolicyError } from "../resource/CdnCachePolicy.interface";
+import { vmMemoryError } from "../resource/VmMemory.interface";
 import { vmCpuQuotaError } from "../resource/VmCpuQuota.interface";
 import { vmExecutionError } from "../resource/VmExecution.interface";
 import { databaseReplicationError } from "../resource/DatabaseReplication.interface";
@@ -58,6 +59,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
         if (message) errors.push(`${resource.id}: ${message}`);
         const cacheMessage = cachePolicyError(resource.type, resource.cachePolicy);
         if (cacheMessage) errors.push(`${resource.id}: ${cacheMessage}`);
+        const memoryMessage = vmMemoryError(resource.type, resource.vmMemory, resource.asyncWorker?.enabled);
+        if (memoryMessage) errors.push(`${resource.id}: ${memoryMessage}`);
         const quotaMessage = vmCpuQuotaError(resource.type, resource.vmCpuQuota, resource.asyncWorker?.enabled);
         if (quotaMessage) errors.push(`${resource.id}: ${quotaMessage}`);
         const executionMessage = vmExecutionError(resource.type, resource.vmExecution, resource.asyncWorker?.enabled);
