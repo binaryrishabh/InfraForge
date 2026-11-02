@@ -71,7 +71,13 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
 
   return {
     evidence: () => run.evidence(),
-    interventionOptions: () => options.filter(o => o.interventionId !== "db-promote-replica" || (run.simulatedSeconds * SECOND < run.horizon && !run.actions.some(a => a.kind === "intervention" && a.request.interventionId === "db-promote-replica" && "resourceId" in a.request.target && "resourceId" in o.target && a.request.target.resourceId === o.target.resourceId) && (last?.metrics["resourceId" in o.target ? o.target.resourceId : ""]?.health !== "failed"))),
+    interventionOptions: () => options.filter(option => {
+      if (option.interventionId !== "db-promote-replica") return true;
+      if (run.simulatedSeconds * SECOND >= run.horizon || !("resourceId" in option.target)) return false;
+      const target = option.target.resourceId;
+      if (last?.metrics[target]?.health === "failed") return false;
+      return !run.actions.some(action => action.kind === "intervention" && action.request.interventionId === "db-promote-replica" && "resourceId" in action.request.target && action.request.target.resourceId === target);
+    }),
     applicationFlowEvidence: () => run.applicationFlowEvidence(),
     get simulatedSeconds() { return run.simulatedSeconds; },
     get horizonSeconds() { return run.horizon / SECOND; },

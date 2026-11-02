@@ -5,7 +5,7 @@ import { DatabaseReplicationReadings } from "../src/features/live/DatabaseReplic
 import { updateResource } from "../src/features/canvas/actions";
 import { useCanvasStore } from "../src/features/canvas/store/canvasStore";
 import { undo, redo } from "../src/features/canvas/history";
-import type { Resource } from "@infraforge/domain/resource";
+import { ResourceHealth, type Resource } from "@infraforge/domain/resource";
 
 const db: Resource = { id: "db", type: "Database", x: 0, y: 0 };
 const policy = { version: 1 as const, enabled: true as const, replicationDelayMs: 100, readPolicy: "primary" as const };
@@ -29,6 +29,6 @@ test("Database HA section is bounded, explicit and respects locks", () => {
 });
 test("HA readouts are optional and supplied unknowns remain Unknown", () => {
   expect(renderToStaticMarkup(<DatabaseReplicationReadings />)).toBe("");
-  const html = renderToStaticMarkup(<DatabaseReplicationReadings metrics={{ cpu: null, memory: null, health: "healthy", databaseReplication: { version: 1, currentWriter: null, replicaState: null, writerEpoch: null, primaryEpoch: null, replicaEpoch: null, primaryRole: null, replicaRole: null, fencedWriteRejections: null, fencedReplicationRejections: null, replicaCommittedWrites: null, promotionCount: null, promotionAtUs: null, lostOperations: null, regressedKeys: null, primaryReads: null, replicaReads: null, freshReplicaReads: null, staleReplicaReads: null, primaryCommittedWrites: 7, replicaAppliedWrites: null, pendingReplication: null, lagMs: null, oldestPendingAgeMs: null, primaryGeneration: null, replicaGeneration: null } }} />);
+  const html = renderToStaticMarkup(<DatabaseReplicationReadings metrics={{ cpu: null, memory: null, health: ResourceHealth.HEALTHY, databaseReplication: { version: 1, currentWriter: null, replicaState: null, writerEpoch: null, primaryEpoch: null, replicaEpoch: null, primaryRole: null, replicaRole: null, fencedWriteRejections: null, fencedReplicationRejections: null, replicaCommittedWrites: null, promotionCount: null, promotionAtUs: null, lostOperations: null, regressedKeys: null, primaryReads: null, replicaReads: null, freshReplicaReads: null, staleReplicaReads: null, primaryCommittedWrites: 7, replicaAppliedWrites: null, pendingReplication: null, lagMs: null, oldestPendingAgeMs: null, primaryGeneration: null, replicaGeneration: null } }} />);
   expect(html).toContain("Unknown"); expect(html).toContain(">7<");
 });

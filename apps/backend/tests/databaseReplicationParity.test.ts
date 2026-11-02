@@ -1,3 +1,4 @@
+import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { expect, test } from "bun:test";
 import { mkdir, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
@@ -26,7 +27,7 @@ test("captured replication, stale reads and promotion match browser-target bundl
           actions.push({ atSecond: second, request: promoteRequest });
         }
         if (mode === "fenced-restart" && second === 2) {
-          const request: ActionRequest = { kind: "chaos", parameters: { type: "crash", resourceId: "db" } };
+          const request: ActionRequest = { kind: "chaos", parameters: { type: DeploymentChaosNames.Crash, resourceId: "db" } };
           browser.apply(request); actions.push({ atSecond: second, request });
         }
         browser.advance(); views.push(browser.view()); evidence.push(browser.evidence());

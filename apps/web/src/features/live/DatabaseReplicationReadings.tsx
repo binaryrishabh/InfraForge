@@ -1,6 +1,28 @@
 import type { ResourceMetrics } from "@infraforge/contracts/telemetry";
 
-const fields = [["writerEpoch", "Writer epoch"], ["primaryRole", "Original primary role"], ["replicaRole", "Replica role"], ["fencedWriteRejections", "Fenced writes rejected"], ["fencedReplicationRejections", "Old replication messages discarded"], ["promotionCount", "Promotions"], ["promotionAtUs", "Promotion time (us)"], ["lostOperations", "Unreplicated commits lost at promotion"], ["replicaCommittedWrites", "Promoted writer commits"], ["primaryReads", "Primary reads"], ["replicaReads", "Replica reads"], ["freshReplicaReads", "Fresh replica reads"], ["staleReplicaReads", "Stale replica reads"], ["currentWriter", "Current writer"], ["replicaState", "Replica state"], ["pendingReplication", "Pending replication"], ["lagMs", "Replica lag (ms; oldest pending age)"], ["primaryCommittedWrites", "Primary committed writes"], ["replicaAppliedWrites", "Replica applied writes"], ["primaryGeneration", "Primary data generation"], ["replicaGeneration", "Replica applied generation"]] as const;
+const fields = [
+  ["currentWriter", "Current writer"],
+  ["replicaState", "Replica state"],
+  ["primaryRole", "Original primary role"],
+  ["replicaRole", "Replica role"],
+  ["writerEpoch", "Writer epoch"],
+  ["pendingReplication", "Pending replication"],
+  ["lagMs", "Replica lag (ms; oldest pending age)"],
+  ["primaryReads", "Primary reads"],
+  ["replicaReads", "Replica reads"],
+  ["freshReplicaReads", "Fresh replica reads"],
+  ["staleReplicaReads", "Stale replica reads"],
+  ["promotionCount", "Promotions"],
+  ["promotionAtUs", "Promotion time (us)"],
+  ["lostOperations", "Unreplicated commits lost at promotion"],
+  ["fencedWriteRejections", "Fenced writes rejected"],
+  ["fencedReplicationRejections", "Old replication messages discarded"],
+  ["primaryCommittedWrites", "Primary committed writes"],
+  ["replicaAppliedWrites", "Replica applied writes"],
+  ["replicaCommittedWrites", "Promoted writer commits"],
+  ["primaryGeneration", "Primary data generation"],
+  ["replicaGeneration", "Replica data generation"],
+] as const;
 export function DatabaseReplicationReadings({ metrics }: { metrics?: ResourceMetrics }) {
   const values = metrics?.databaseReplication;
   if (!values) return null;

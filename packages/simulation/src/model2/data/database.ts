@@ -81,6 +81,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
       return;
     }
     const s = t.plan.statements[t.step]!, key = (t.work.message?.request as DataRequest | undefined)?.key;
+    if (replication) t.readSource = replication.readSource(t.plan.statements.every(statement => statement.kind === "snapshot-read" || statement.kind === "lock-read"));
     const keys = s.keys.map((k) => k === "$key" ? key! : k);
     if (keys.some((k) => !keyspace.has(k))) { finish(t, false, "key-outside-dataset"); return; }
     const observe = () => keys.flatMap((k) => { const row = t.writes.get(k) ?? (replication && t.readSource ? replication.read(k, t.readSource) : rows.get(k)); return row ? [{ key: k, ...row }] : s.kind === "insert" ? [{ key: k, version: 0, bytes: requireKnown(s.insertBytes!, "bytes") }] : []; });
@@ -89,6 +90,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     if (!pg || t.step > 0) t.cancelStatement = deadline(t, "statement");
     const service = () => {
       if (t.terminal) return; t.cancelLock?.(); phase(t, "cpu");
+      if (replication && s.kind === "lock-read") t.readSource = replication.readSource(t.plan.statements.every(statement => statement.kind === "snapshot-read" || statement.kind === "lock-read"));
       const observed = s.kind === "snapshot-read" ? snapshot : observe();
       if (replication && s.kind !== "write" && s.kind !== "insert") replication.observed(t.readSource!, keys, observed);
       cpu.add({ id: t.work.callId, demand: requireKnown(s.cpu, "cpu-us"), cap: requireKnown(s.parallelism, "cores"), done() {
@@ -149,7 +151,8 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
       if (config.access !== undefined && (work.message?.request as DataRequest | undefined)?.key === undefined) {
         const key = selectDataKey(config.keys, config.access, seed, config.id, work.rootId);
         work.message ??= { request: { kind: "query", key } };
-        work.message.request = { kind: "query", key };
+        const priorEpoch = (work.message.request as DataRequest | undefined)?.writerEpoch;
+        work.message.request = { kind: "query", key, ...(priorEpoch === undefined ? {} : { writerEpoch: priorEpoch }) };
       }
       io?.resolve(work);
       received++; const session = work.sessionId ?? work.callId;

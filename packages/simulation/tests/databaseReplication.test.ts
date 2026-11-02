@@ -73,3 +73,19 @@ test("repeated hot-key reads keep per-key versions and conserve fresh plus stale
   expect((fresh.message!.response as DataReply).rows![0]!.version).toBe(2);
   expect(primary.ha()).toMatchObject({ primaryReads: 1, replicaReads: 0 });
 });
+
+
+test("compiler refuses missing, duplicate or mismatched owned replication profiles and implicit replica intent", () => {
+  const design = databaseDesign(); design.resources.at(-1)!.databaseReplication = { version: 1, enabled: true, replicationDelayMs: 10, readPolicy: "primary" };
+  const f = prepareDatabase(design);
+  for (const version of ["canvas-assumptions/2", "canvas-assumptions/2/db-replication/2", "canvas-assumptions/2/db-replication/1/db-replication/1"]) {
+    for (const owned of [true, false]) {
+      const contract = structuredClone(f.contract); if (owned) contract.nodes.db!.profileVersion = version; else contract.version = version;
+      expect(compileProduct(design, contract).ok).toBe(false);
+    }
+  }
+  const oldDesign = databaseDesign(), old = prepareDatabase(oldDesign);
+  const db = old.contract.nodes.db!.resources[0]!.config; if (db.kind !== "relational") throw Error("database");
+  db.replication = { version: 1, enabled: true, replicationDelayMs: 10, readPolicy: "primary" };
+  expect(compileProduct(oldDesign, old.contract).ok).toBe(false);
+});

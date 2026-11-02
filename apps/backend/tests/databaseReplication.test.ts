@@ -4,17 +4,17 @@ import { buildContractFromRunInputs } from "@infraforge/simulation/internal-prod
 import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
 import { LayoutSchema, LiveTopologySchema } from "../zod_schemas/layout.schema";
 import { configuration } from "../comparison/design";
-import { databaseDesign } from "../../../packages/simulation/tests/databaseReplication.fixture";
+import { databaseLayout, databaseWorkload } from "./databaseReplication.fixture";
 
 test("replication persists through save/live/capture/replay/comparison and rejects invalid intent", () => {
-  const d = databaseDesign(), layout = { resources: d.resources, connectionLines: d.connections };
-  expect(captureRunInputs(layout, d.workload).adapterProfiles).toEqual([]);
+  const layout = databaseLayout(); delete layout.resources.at(-1)!.databaseReplication; delete layout.resources.at(-1)!.dataKeyspace;
+  expect(captureRunInputs(layout, databaseWorkload).adapterProfiles).toEqual([]);
   expect(configuration(layout.resources.at(-1)!)).not.toHaveProperty("databaseReplication");
   const policy = { version: 1 as const, enabled: true as const, replicationDelayMs: 60000, readPolicy: "replica-preferred" as const };
   layout.resources.at(-1)!.databaseReplication = policy;
-  for (const schema of [LayoutSchema, LiveTopologySchema]) expect(schema.parse(layout).resources).toEqual(layout.resources);
+  for (const schema of [LayoutSchema, LiveTopologySchema]) expect(layout.resources).toEqual(schema.parse(layout).resources);
   expect(validateDeploymentReadiness(layout.resources, layout.connectionLines).errors).toEqual([]);
-  const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, d.workload, "database-ha"))));
+  const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, databaseWorkload, "database-ha"))));
   expect(input.adapterProfiles).toEqual(["db-replication/1"]);
   expect(buildContractFromRunInputs(input, 10)).not.toHaveProperty("refused");
   for (const adapterProfiles of [undefined, []]) expect(buildContractFromRunInputs({ ...input, adapterProfiles }, 10)).toHaveProperty("refused");

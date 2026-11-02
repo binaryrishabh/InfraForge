@@ -38,11 +38,15 @@ test("real Crash/restart retains the single writer role and is deterministic one
     const c = compileProduct(design, contract); if (!c.ok) throw Error(JSON.stringify(c));
     const run = createProductModel2(c.value), stepped = createProductModel2(c.value);
     run.advanceTo(2_500_000); expect(run.up("db")).toBe(false);
+    const beforeRestart = run.inspectData.database("db")!.databaseReplication!;
     run.advanceTo(5_000_000); expect(run.up("db")).toBe(true);
     const ha = run.inspectData.database("db")!.databaseReplication!;
     expect(ha).toMatchObject({ writerEpoch: promoted ? 2 : 1, currentWriter: promoted ? "replica" : "primary", primaryRole: promoted ? "fenced" : "writer", replicaRole: promoted ? "writer" : "replica" });
+    expect(promoted ? ha.replicaCommittedWrites : ha.primaryCommittedWrites).toBeGreaterThan(promoted ? beforeRestart.replicaCommittedWrites : beforeRestart.primaryCommittedWrites);
+    if (promoted) expect(ha.primaryRows).toEqual(beforeRestart.primaryRows);
     run.advanceTo(run.horizon); for (let at = 123457; at < stepped.horizon; at += 123457) stepped.advanceTo(at); stepped.advanceTo(stepped.horizon);
     expect(stepped.evidence()).toEqual(run.evidence());
+    const oneShot = createProductModel2(c.value); oneShot.advanceTo(oneShot.horizon); expect(oneShot.evidence()).toEqual(stepped.evidence());
   }
 });
 
@@ -66,4 +70,22 @@ test("unavailable replica holds due messages until return and primary reads rema
   const f = replicaFixture(1, "replica-preferred"); f.submit(); f.clock.advanceTo(100); f.db.replicaAvailability(false);
   f.clock.advanceTo(1100); expect(f.ha()).toMatchObject({ pendingReplication: 1, replicaAppliedWrites: 0 });
   f.db.replicaAvailability(true); expect(f.ha()).toMatchObject({ pendingReplication: 0, replicaAppliedWrites: 1 });
+});
+
+
+test("automatic hot-key selection preserves a supplied writer epoch for fencing", () => {
+  const f = replicaFixture(); f.config.access = "keyed-hot"; f.db.promoteReplica();
+  const old: Invocation = { callId: "old-keyless", rootId: "old-keyless", operation: "heavy", attempt: 0, offeredAt: 0, message: { request: { kind: "query", writerEpoch: 1 } } };
+  expect(f.db.accept(old, () => {}).admitted).toBe(false);
+  expect(f.db.evidence().reasons["fenced-writer-epoch"]).toBe(1);
+});
+
+
+test("a queued replica-preferred read falls back if replica goes down before it executes", () => {
+  const f = replicaFixture(2, "replica-preferred");
+  if (f.config.activeTransactions.kind !== "known") throw Error("known admission budget");
+  f.config.activeTransactions.value = 1;
+  f.submit(); const read = f.submit("light"); f.clock.advanceTo(50); f.db.replicaAvailability(false); f.clock.advanceTo(200);
+  expect(read.message!.response).toMatchObject({ ok: true, readSource: "primary", rows: [{ key: "k0", version: 2, bytes: 64 }] });
+  expect(f.ha()).toMatchObject({ primaryReads: 1, replicaReads: 0 });
 });

@@ -15,6 +15,7 @@ export function validateDatabaseReplicationProfile(resources: readonly Resource[
   for (const r of resources) if (count(contract.nodes[r.id]?.profileVersion ?? "") !== Number(changedDatabaseReplication(r))) throw Error("Database replication requires its owned profile and matching intent");
 }
 export function validateDatabaseReplicationBindings(resources: readonly Resource[], input: SystemsInput) {
+  for (const db of input.resources) if (db.kind === "relational" && db.replication !== undefined && !resources.some(r => r.id === db.id && r.type === "Database" && r.databaseReplication !== undefined)) throw Error("Database replication requires explicit intent on its owned Database engine");
   for (const r of resources) {
     const db = input.resources.find(d => d.id === r.id);
     if (r.databaseReplication !== undefined && (r.type !== "Database" || db?.kind !== "relational")) throw Error("Database replication requires its owned relational engine");
