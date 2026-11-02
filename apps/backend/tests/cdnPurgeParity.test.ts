@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createModel2Run } from "@infraforge/simulation/model2-run";
 import type { ActionRequest } from "@infraforge/contracts/actions";
+import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
 import { createModel2Engine } from "../simulator/model2Engine";
 import { buildModel2Contract } from "../simulator/contractBuilder";
@@ -44,7 +45,7 @@ test("captured CDN live purge browser bundle equals serialized server replay for
       const snapshots = [];
       for (let second = 0; second < 10; second++) {
         const requests: ActionRequest[] = [];
-        if (mode === "origin-down" && second === 1) requests.push({kind: "chaos", parameters: {type: "crash", resourceId: "store"}});
+        if (mode === "origin-down" && second === 1) requests.push({kind: "chaos", parameters: {type: DeploymentChaosNames.Crash, resourceId: "store"}});
         if (mode !== "baseline" && second === (mode === "origin-down" ? 2 : 1)) requests.push({kind: "intervention", parameters: {interventionId: "cdn-purge", revision: 1, target: {resourceId: "cdn"}, parameters: {}}});
         for (const request of requests) {
           const applied = browser.apply(request);
