@@ -1,6 +1,6 @@
 import { applicationFlow } from "./flow";
 import { sampleAppCpu } from "./demand";
-import { carryCause, causeFields, type Cause } from "../workload/cause";
+import { carryCause, causeFields, seedCause, type Cause } from "../workload/cause";
 import { requireKnown } from "../../reality/quantity";
 import type { EventClock } from "../time";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
@@ -86,7 +86,9 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
       const memoryAccepted = !full && memory.acquire(work.callId, work.operation, false);
       if (full || !memoryAccepted) {
         if (!full) allocationRejected++;
-        rejected++; causal?.({ atUs: kernel.now, kind: "app-rejected", resource: config.id, work, detail: {} }); done("rejected"); return { admitted: false, cancel: () => "already-finished", state: () => "finished" };
+        // Retry captures identify the actual queue refusal; historical cause bytes stay unchanged.
+        const cause = full && work.clientAttempt !== undefined ? seedCause("backend-rejected", config.id) : undefined;
+        rejected++; causal?.({ atUs: kernel.now, kind: "app-rejected", resource: config.id, work, detail: causeFields(cause) }); done("rejected", cause); return { admitted: false, cancel: () => "already-finished", state: () => "finished" };
       }
       admitted++;
       causal?.({ atUs: kernel.now, kind: "app-admitted", resource: config.id, work, detail: {} });
