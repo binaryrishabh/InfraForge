@@ -74,6 +74,7 @@ export interface WorkStation {
 }
 export interface WorkRouter { id: string; kind: "router"; backends: string[] }
 export interface WorkloadInput {
+  workloadObjective?: import("@infraforge/domain/workload").WorkloadObjective;
   failureCauseProfile?: "failure-cause/1";
   modelVersion: "2";
   workloadVersion: "m2b/1";

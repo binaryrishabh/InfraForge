@@ -1,5 +1,5 @@
 import { validateLedger } from "../../reality/ledger";
-import { clientRetryError } from "@infraforge/domain/workload";
+import { clientRetryError, workloadObjectiveError } from "@infraforge/domain/workload";
 import { requireKnown, type Quantity, type Unit } from "../../reality/quantity";
 import { micros } from "../time";
 import { ingestTrace, rateRows, validateRate } from "./arrivals";
@@ -9,6 +9,7 @@ import { WORKLOAD_LIMITS as caps } from "./policy";
 
 export function validateWorkload(input: WorkloadInput) {
   const errors = validateLedger(input.ledger);
+  const objectiveError = workloadObjectiveError(input.workloadObjective); if (objectiveError) errors.push(objectiveError);
   if (input.failureCauseProfile !== undefined && input.failureCauseProfile !== "failure-cause/1") errors.push("Unsupported failure cause profile");
   const ledger = new Map(input.ledger.map((e) => [e.id, e]));
   if (input.modelVersion !== "2" || input.workloadVersion !== "m2b/1" || !input.seed?.trim() || input.ledger.some((e) => e.modelVersion !== "2" || !e.validityDomain?.trim())) errors.push("Explicit internal M2B version/seed/ledger validity domain required");

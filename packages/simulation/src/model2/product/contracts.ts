@@ -64,6 +64,7 @@ export interface ControllerProfile {
   manual: Array<{ id: string; at: Quantity<"us">; desired: Quantity<"count"> }>;
 }
 export interface ProductContract {
+  workloadObjective?: import("@infraforge/domain/workload").WorkloadObjective;
   trafficEvidenceProfile?: "traffic-evidence/2";
   clientRetry?: import("@infraforge/domain/workload").ClientRetry;
   securityProfile?: "canvas-security/1";

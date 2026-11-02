@@ -1,5 +1,6 @@
 import { LB_RATE_LIMIT_PROFILE, lbRateLimitChanges, validateLbRateLimitBindings } from "./lbRateLimit";
 import { checkClientRetry } from "./clientRetry";
+import { checkObjective } from "./objective";
 import { checkCpuDynamics } from "./workloadDynamics";
 import { RESOURCE_PORTS, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbHealthError, lbAdmissionError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
@@ -168,10 +169,11 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (diagnostics.length) return { ok: false, diagnostics };
     checkCpuDynamics(design.workload, contract);
     checkClientRetry(design.workload, contract);
+    checkObjective(design.workload, contract);
     const app = contract.application!;
     if (app.schema !== "infraforge-application/1" || !app.version || !app.id || !app.validityDomain || !app.provenance.length || !app.operations.some((o) => o.id === app.controlOperation)) throw Error("Versioned application provenance/validity, operations and explicit control operation required");
     phase = "provenance"; const provenance = derivedLedger(contract.ledger);
-    const runtime: SystemsInput = { ...(contract.securityProfile ? { securityProfile: contract.securityProfile } : {}), ...(contract.failureCauseProfile ? { failureCauseProfile: contract.failureCauseProfile } : {}), modelVersion: "2", workloadVersion: "m2g/1", seed: contract.seed, ledger: provenance.ledger, profiles: [...app.demands].sort((a, b) => a.id < b.id ? -1 : 1), resources: [], operations: [], arrivals: [], faults: [], horizon: contract.horizon, sampleInterval: contract.sampleInterval, limits: contract.limits, interventions: [], links: [], paths: [], networkInterventions: [], endpoints: {}, dataInterventions: [], asyncInterventions: [], systems: { operation: app.controlOperation, identities: [{ id: "$caller", zone: "external", address: contract.caller.address }], listeners: [], firewalls: [], connections: [], instrumentation: [], interventions: [], commands: [] } };
+    const runtime: SystemsInput = { ...(contract.workloadObjective ? { workloadObjective: { ...contract.workloadObjective } } : {}), ...(contract.securityProfile ? { securityProfile: contract.securityProfile } : {}), ...(contract.failureCauseProfile ? { failureCauseProfile: contract.failureCauseProfile } : {}), modelVersion: "2", workloadVersion: "m2g/1", seed: contract.seed, ledger: provenance.ledger, profiles: [...app.demands].sort((a, b) => a.id < b.id ? -1 : 1), resources: [], operations: [], arrivals: [], faults: [], horizon: contract.horizon, sampleInterval: contract.sampleInterval, limits: contract.limits, interventions: [], links: [], paths: [], networkInterventions: [], endpoints: {}, dataInterventions: [], asyncInterventions: [], systems: { operation: app.controlOperation, identities: [{ id: "$caller", zone: "external", address: contract.caller.address }], listeners: [], firewalls: [], connections: [], instrumentation: [], interventions: [], commands: [] } };
     const pools: CompiledPool[] = [], expansion = new Map<string, string[]>(), roleIds = new Map<string, string>();
     const resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
     for (const r of resources) {

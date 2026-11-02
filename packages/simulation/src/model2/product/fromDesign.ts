@@ -1,8 +1,9 @@
 import { LB_RATE_LIMIT_PROFILE, lbRateLimitChanges, lbRateLimit } from "./lbRateLimit";
 import { CLIENT_RETRY_PROFILE, compileClientRetry } from "./clientRetry";
+import { compileObjective } from "./objective";
 import { arrivalVersion, compileCpuDynamics } from "./workloadDynamics";
 import type { AdapterProfile } from "@infraforge/contracts/run-inputs";
-import { clientRetryError, workloadDynamicsError } from "@infraforge/domain/workload";
+import { clientRetryError, workloadDynamicsError, workloadObjectiveError } from "@infraforge/domain/workload";
 import { findSku, CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog";
 import { RESOURCE_PORTS, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbHealthError, lbAdmissionError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
 import type { Quantity, Unit } from "../../reality/quantity";
@@ -49,7 +50,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
   const error = (path: string, message: string) => refused.push({ code: "DESIGN_NOT_RUNNABLE", path, message, severity: "error" });
   try {
     boundedProduct(saved);
-    const dynamicsError = workloadDynamicsError(saved.workload.workloadDynamics) ?? clientRetryError(saved.workload.clientRetry);
+    const dynamicsError = workloadDynamicsError(saved.workload.workloadDynamics) ?? clientRetryError(saved.workload.clientRetry) ?? workloadObjectiveError(saved.workload.workloadObjective);
     if (dynamicsError) throw Error(dynamicsError);
     const design = savedPoolPolicies(saved), resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
     // New captures record cause evidence when saved retry, breaker, flow or limiter intent needs it.
@@ -529,6 +530,7 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     };
     compileCpuDynamics(design.workload, contract);
     compileClientRetry(design.workload, contract);
+    compileObjective(design.workload, contract);
     inspect(contract, "contract");
     const compiled = compileProduct(saved, contract);
     if (!compiled.ok) return { refused: compiled.diagnostics.map((d) => ({ ...d, message: `This design cannot run with the default profile: ${d.message}` })) };

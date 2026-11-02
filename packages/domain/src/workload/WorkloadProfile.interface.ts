@@ -7,7 +7,10 @@ export interface WorkloadProfile {
   payloadSize: "light" | "medium" | "heavy";
   workloadDynamics?: WorkloadDynamics;
   clientRetry?: ClientRetry;
+  workloadObjective?: WorkloadObjective;
 }
+
+export interface WorkloadObjective { version: 1; maxResponseMs: number; targetSuccessPercent: number }
 
 // Total attempts include the original. Writes are never retried.
 export interface ClientRetry { version: 1; maxAttempts: number; backoffMs: number }
