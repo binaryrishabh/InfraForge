@@ -71,7 +71,7 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
 
   return {
     evidence: () => run.evidence(),
-    interventionOptions: () => options,
+    interventionOptions: () => options.filter(o => o.interventionId !== "db-promote-replica" || (run.simulatedSeconds * SECOND < run.horizon && !run.actions.some(a => a.kind === "intervention" && a.request.interventionId === "db-promote-replica" && "resourceId" in a.request.target && "resourceId" in o.target && a.request.target.resourceId === o.target.resourceId) && (last?.metrics["resourceId" in o.target ? o.target.resourceId : ""]?.health !== "failed"))),
     applicationFlowEvidence: () => run.applicationFlowEvidence(),
     get simulatedSeconds() { return run.simulatedSeconds; },
     get horizonSeconds() { return run.horizon / SECOND; },
@@ -173,7 +173,7 @@ export type Model2Run = ReturnType<typeof createModel2Run>;
 
 function metric(m: LiveProjection["metrics"][string] | undefined): ResourceMetrics {
   if (!m) return { cpu: null, memory: null, health: ResourceHealth.UNKNOWN };
-  return { ...(m.monitoring ? { monitoring: m.monitoring } : {}), ...(m.objectStorage ? { objectStorage: m.objectStorage } : {}), ...(m.database ? { database: m.database } : {}), ...(m.cache ? { cache: m.cache } : {}), ...(m.cdn ? { cdn: m.cdn } : {}), ...(m.security ? { security: m.security } : {}), ...(m.asyncQueue ? { asyncQueue: m.asyncQueue } : {}), cpu: m.cpu === null ? null : round(m.cpu), memory: m.memory === null ? null : round(m.memory), health: m.health as ResourceHealthType,
+  return { ...(m.monitoring ? { monitoring: m.monitoring } : {}), ...(m.objectStorage ? { objectStorage: m.objectStorage } : {}), ...(m.databaseReplication ? { databaseReplication: m.databaseReplication } : {}), ...(m.database ? { database: m.database } : {}), ...(m.cache ? { cache: m.cache } : {}), ...(m.cdn ? { cdn: m.cdn } : {}), ...(m.security ? { security: m.security } : {}), ...(m.asyncQueue ? { asyncQueue: m.asyncQueue } : {}), cpu: m.cpu === null ? null : round(m.cpu), memory: m.memory === null ? null : round(m.memory), health: m.health as ResourceHealthType,
     ...(m.rps === null ? {} : { rps: m.rps }), ...(m.connections === null ? {} : { connections: m.connections }), ...(m.replicas ? { replicas: m.replicas } : {}) };
 }
 const round = (value: number) => Math.round(value * 10) / 10;

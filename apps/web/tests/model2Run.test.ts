@@ -296,3 +296,26 @@ test("pool-reset worker refuses invalid intent and matches complete serialized s
   expect(replay.evidence().network.poolResets!.rows[0]).toMatchObject({actionId: "a1", pathId: "app-1-db:app-1:db", closedConnections: 1, freshOpens: {opened: 1, pending: 0}});
   expect(h.seconds()[1]!.logs.some(l => l.message.includes("Reset connection pool applied") && l.message.includes("one-shot"))).toBe(true);
 });
+
+
+test("database promotion worker gates fixed/terminal runs, removes spent capability and records replay time", () => {
+  const resources: Resource[] = [at("app", T.VirtualMachine, 0), { ...at("db", T.Database, 1), databaseReplication: { version: 1, enabled: true, replicationDelayMs: 2000, readPolicy: "replica-preferred" } }];
+  const input = { resources, connectionLines: [line("app", "db", T.VirtualMachine, T.Database)], adapterProfiles: ["db-replication/1" as const], workloadProfile: resolveWorkload({ targetThroughput: 600, throughputUnit: "per-minute", trafficShape: "steady", readWriteRatio: 0.5, payloadSize: "light" }), seed: "ha-worker" };
+  const request = { kind: "intervention" as const, parameters: { interventionId: "db-promote-replica", revision: 1, target: { resourceId: "db" }, parameters: {} } };
+  const h = harness({ input, horizonSeconds: 4, stopAtSecond: 4 }); h.tick();
+  expect(h.seconds()[0]!.interventions.options.some(o => o.interventionId === request.parameters.interventionId)).toBe(true);
+  h.host.handle({ type: "action", id: "promote", request });
+  expect(h.messages.at(-1)).toMatchObject({ type: "action", ok: true, outcome: { intervention: { atUs: 1_000_001 } } });
+  h.tick(); expect(h.seconds()[1]!.interventions.options.some(o => o.interventionId === request.parameters.interventionId)).toBe(false);
+  h.host.handle({ type: "action", id: "second", request }); expect(h.messages.at(-1)).toMatchObject({ ok: false });
+  h.tick(2); h.host.handle({ type: "action", id: "terminal", request }); expect(h.messages.at(-1)).toMatchObject({ ok: false });
+  expect(h.seconds().at(-1)!.interventions.options).toEqual([]);
+  for (const lock of [{ challengeId: "fixed" }, { experiment: { fault: DeploymentChaosNames.Crash, resourceId: "db", atSimulatedSecond: 2 } },
+    { scenario: { version: 1 as const, visibility: "revealed" as const, steps: [{ id: "cpu", atSecond: 2, request: { interventionId: "cpu-capacity", revision: 1, target: { resourceId: "db" }, parameters: { cores: 0.5, duration: 1 } } }] } }]) {
+    const locked = harness({ input, horizonSeconds: 5, stopAtSecond: 5, ...lock }); locked.tick();
+    expect(locked.seconds()[0]!.interventions.options).toEqual([]);
+    locked.host.handle({ type: "action", id: "forbidden", request }); expect(locked.messages.at(-1)).toMatchObject({ ok: false });
+    expect(locked.host.actions()).toEqual([]);
+  }
+  expect(() => compileScenario({ version: 1, visibility: "revealed", steps: [{ id: "promote", atSecond: 1, request: request.parameters }] }, input, 5)).toThrow("Free World");
+});

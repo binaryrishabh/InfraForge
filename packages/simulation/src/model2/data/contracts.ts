@@ -30,7 +30,7 @@ export interface AsideConfig {
 }
 export type DataResource = RelationalConfig | CacheConfig | AsideConfig;
 export type DataIntervention = { id: string; at: Quantity<"us"> } & (
-  { kind: "flush"; target: string } | { kind: "session-capacity"; target: string; sessions: Quantity<"count">; duration: Quantity<"us"> } | { kind: "cpu-capacity"; target: string; cores: Quantity<"cores">; duration: Quantity<"us"> });
+  { kind: "db-promote-replica"; target: string } | { kind: "flush"; target: string } | { kind: "session-capacity"; target: string; sessions: Quantity<"count">; duration: Quantity<"us"> } | { kind: "cpu-capacity"; target: string; cores: Quantity<"cores">; duration: Quantity<"us"> });
 export interface DataInput extends Omit<NetworkInput, "workloadVersion" | "resources"> {
   workloadVersion: "m2e/1" | "m2e-pg/1" | "m2e-pg/2";
   resources: Array<NetworkInput["resources"][number] | DataResource>;

@@ -62,10 +62,10 @@ function InterventionControl({ deploymentId, resources, fixedTarget }: Props) {
           </Select> : <Input id={id} type="number" min={p.min} max={interventionMaximum(p, bounds)} step={p.kind === "integer" ? 1 : "any"} value={valueFor(p.name)} onChange={e => setValues({...values, [`${target}:${chosen.id}:${p.name}`]: e.target.value})} />
         }</Field>)}
         {"edgeId" in option.target && <p className="text-xs">Resolved transport targets: {option.resolvedTargets.join(", ")}. Affected paths: {option.affectedPaths.join(", ")}.</p>}
-        <p className="text-xs">{chosen.endPolicy === "timed" ? "Restores the authored baseline when the duration ends. Existing effects remain." : chosen.id === "pool-reset" ? "Applies once. Current connections close; subsequent work can open fresh connections. Completed writes remain." : "Applies once. Deleted cache entries stay deleted until refilled."}</p>
+        <p className="text-xs">{chosen.endPolicy === "timed" ? "Restores the authored baseline when the duration ends. Existing effects remain." : chosen.id === "db-promote-replica" ? "Promotes the replica to be the writer. Writes the replica has not received yet are lost." : chosen.id === "pool-reset" ? "Applies once. Current connections close; subsequent work can open fresh connections. Completed writes remain." : "Applies once. Deleted cache entries stay deleted until refilled."}</p>
         {chosen.id === "cdn-purge" && <p className="text-xs">Removes the CDN's currently cached entries. The next request must fetch from the origin again.</p>}
         {touched && validationReason && <p role="status" className="text-xs text-warn">{validationReason}{/[.!?]$/.test(validationReason) ? "" : "."}</p>}
-        <Button variant="secondary" size="sm" icon={<Zap size={14} aria-hidden="true" />} loading={busy} disabled={!!error} onClick={() => void inject()}>{chosen.id === "cdn-purge" ? chosen.label : `Apply ${chosen.label.toLowerCase()}`}</Button>
+        <Button variant="secondary" size="sm" icon={<Zap size={14} aria-hidden="true" />} loading={busy} disabled={!!error} onClick={() => void inject()}>{(chosen.id === "cdn-purge" || chosen.id === "db-promote-replica") ? chosen.label : `Apply ${chosen.label.toLowerCase()}`}</Button>
       </> : <p className="text-xs">{capabilities ? "No supported intervention for this target." : "Intervention capabilities are Unknown until the browser run reports them."}</p>}
     </div>
   </ControlBlock>;

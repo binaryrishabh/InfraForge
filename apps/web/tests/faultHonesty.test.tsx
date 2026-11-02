@@ -106,3 +106,14 @@ test("parallel edges with identical display names fall back to distinct ids and 
   expect(html).toContain(">parallel-edge-8 (request)</option>");
   expect(html).not.toContain(">Upload API → Orders database (request)</option>");
 });
+
+
+test("Database promotion shows exact consequence copy only for a supported unlocked selected Database", () => {
+  capabilities([{ interventionId: "db-promote-replica", revision: 1, target: { resourceId: "db" }, resolvedTargets: ["db"], affectedPaths: [] }]);
+  const node = (controls = true, ended = false) => renderToStaticMarkup(<NodeLive deploymentId="run" resource={resources[1]!} resources={resources} controls={controls} ended={ended} />);
+  expect(node()).toContain("Promote database replica</option>");
+  expect(node()).toContain("Promotes the replica to be the writer. Writes the replica has not received yet are lost.");
+  expect(node()).toMatch(/<button(?![^>]* disabled=)[^>]*>.*?Promote database replica<\/button>/s);
+  expect(node(false)).not.toContain("Promote database replica"); expect(node(false, true)).not.toContain("Promote database replica");
+  restore!(); restore = undefined; capabilities([]); expect(node()).not.toContain("Promote database replica");
+});

@@ -36,7 +36,7 @@ export function createRunHost(post: (message: FromWorker) => void, timers: Timer
         logs.push({timestamp: new Date().toISOString(), source: "model-2", severity: "info", message: `Scenario step applied: ${step.id} at second ${second}.`});
       }
       const applicationFlow = run.applicationFlowEvidence();
-      post({ type: "second", ...(applicationFlow ? { applicationFlow } : {}), view: run.view(), interventions: {options: run.interventionOptions(), remainingSeconds: Math.max(0, Math.floor(run.horizonSeconds - second - 0.000001))}, logs, burnRatePerHourUsd: run.burnRatePerHourUsd() });
+      post({ type: "second", ...(applicationFlow ? { applicationFlow } : {}), view: run.view(), interventions: {options: start.challengeId || start.experiment || start.scenario || second >= start.stopAtSecond ? [] : run.interventionOptions(), remainingSeconds: Math.max(0, Math.floor(run.horizonSeconds - second - 0.000001))}, logs, burnRatePerHourUsd: run.burnRatePerHourUsd() });
       if (second >= start.stopAtSecond) { finish(); return; }
     } catch (error) {
       finished = true;

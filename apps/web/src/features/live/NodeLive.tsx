@@ -38,7 +38,7 @@ export function NodeLive({ deploymentId, resource, resources, controls, ended = 
           <MeterRow label="MEM" value={metric.memory} />
           <p className="if-num mt-1 flex justify-between text-xs text-ink-2"><span>{metric.rps ?? "Unknown"} requests/s</span>{metric.connections !== undefined && <span>{plural(metric.connections, "connection")}</span>}</p>
         </>}
-        {effects.map((chaos, index) => <p key={chaos.intervention?.actionId ?? index} className="if-num mt-1 text-xs font-semibold text-fail">Fault active: {(chaos.intervention ? `${chaos.intervention.label} ${JSON.stringify(chaos.intervention.parameters)}; restores at ${chaos.intervention.restoreAtUs} us` : CHAOS_LABELS[chaos.chaosType!])} Ã‚Â· {chaos.remainingTicks} s left</p>)}
+        {effects.map((chaos, index) => <p key={chaos.intervention?.actionId ?? index} className="if-num mt-1 text-xs font-semibold text-fail">Fault active: {(chaos.intervention ? `${chaos.intervention.label} ${JSON.stringify(chaos.intervention.parameters)}; restores at ${chaos.intervention.restoreAtUs} us` : CHAOS_LABELS[chaos.chaosType!])} · {chaos.remainingTicks} s left</p>)}
         {restarting && <p className="if-num mt-1 text-xs font-semibold text-warn">Restarting on a new size</p>}
       </div>
       {resource.type === "Database" && <DatabaseReplicationReadings metrics={metric} />}

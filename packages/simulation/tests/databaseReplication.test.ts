@@ -1,25 +1,9 @@
 import { expect, test } from "bun:test";
-import { relationalDatabase } from "../src/model2/data/database";
-import { EventKernel } from "../src/model2/time";
-import type { DataReply, RelationalConfig } from "../src/model2/data/contracts";
-import type { Invocation } from "../src/model2/workload/contracts";
-import { dataFixture } from "./dataFixture";
-import { databaseDesign, prepareDatabase } from "./databaseReplication.fixture";
+import type { DataReply } from "../src/model2/data/contracts";
+import { replicaFixture, databaseDesign, prepareDatabase } from "./databaseReplication.fixture";
 import { contractFromDesign } from "../src/model2/product/fromDesign";
 import { compileProduct } from "../src/model2/product/compiler";
 
-export function replicaFixture(delay = 2, policy: "primary" | "replica-preferred" = "primary") {
-  const config = dataFixture({ dbCpu: 100 }).resources.find(r => r.kind === "relational") as RelationalConfig;
-  config.replication = { version: 1, enabled: true, replicationDelayMs: delay, readPolicy: policy };
-  const clock = new EventKernel(10000), db = relationalDatabase(config, clock);
-  let sequence = 0;
-  const submit = (operation = "heavy", key = "k0") => {
-    const id = `work-${sequence++}`;
-    const work: Invocation = { rootId: id, callId: id, sessionId: id, operation, attempt: 0, offeredAt: clock.now, message: { request: { kind: "query", key } } };
-    db.accept(work, () => db.closeSession(id)); return work;
-  };
-  return { config, clock, db, submit, ha: () => db.evidence().databaseReplication! };
-}
 
 test("replication applies exactly at commit plus modeled delay, pending drains and idle lag is zero", () => {
   for (const delay of [1, 7]) {

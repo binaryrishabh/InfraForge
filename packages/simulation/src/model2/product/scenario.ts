@@ -26,6 +26,7 @@ export function scenarioError(value: unknown, evaluationSecond: number): string 
     const error = interventionError(step.request, {remainingSeconds: evaluationSecond - Number(step.atSecond) - 1});
     if (error) return error;
     const request = step.request as ChallengeScenario["steps"][number]["request"];
+    if (request.interventionId === "db-promote-replica") return "Database promotion is available only in Free World live runs.";
     const duration = Number(request.parameters.duration ?? 0);
     if (Number(step.atSecond) + duration >= evaluationSecond) return "Scenario effects must end before evaluation.";
   }

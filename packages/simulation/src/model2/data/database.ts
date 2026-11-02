@@ -14,7 +14,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
   const pg2 = config.semantics === "postgresql-keyed/2", pg = pg2 || config.semantics === "postgresql-keyed/1";
   if (io && !pg) throw Error("Finite IO requires PostgreSQL session semantics");
   const cpu = ownedCpu ?? cpuScheduler(config.id, requireKnown(config.execution.cores, "cores"), kernel), locks = lockManager();
-  const rows = new Map(config.initial.map((r) => [r.key, { version: r.version, bytes: requireKnown(r.bytes, "bytes") }]));
+  let rows = new Map(config.initial.map((r) => [r.key, { version: r.version, bytes: requireKnown(r.bytes, "bytes") }]));
   const replication = config.replication ? databaseReplica(config.replication, config.id, kernel, rows) : undefined;
   const keyspace = new Set(config.keys);
   const phaseUs = { queued: 0, lock: 0, cpu: 0, io: 0, wait: 0, commit: 0 }, phaseEntries = { ...phaseUs };
@@ -128,6 +128,13 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     pumping = false;
   };
   return {
+    promoteReplica() {
+      if (!replication) throw Error("Database replication disabled");
+      if (!replication.canPromote()) { replication.promote(); return; }
+      const wasPaused = paused; paused = true;
+      for (const t of [...active.values(), ...queue.values()]) finish(t, false, "writer-promoted");
+      rows = replication.promote(); paused = wasPaused; pump();
+    },
     replicaAvailability(value: boolean) { replication?.available(value); },
     openSession,
     sessionAlive: (id: string) => sessions.has(id),

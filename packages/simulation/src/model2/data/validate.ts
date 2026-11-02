@@ -74,7 +74,11 @@ export function validateData(input: DataInput) {
   const ids = new Set<string>(), spans = new Map<string, number>();
   for (const i of [...input.dataInterventions].sort((a, b) => requireKnown(a.at, "us") - requireKnown(b.at, "us"))) {
     if (!i.id || ids.has(i.id)) throw new Error("Duplicate data intervention"); ids.add(i.id); const at = num(i.at, "us"), r = resources.get(i.target);
-    if (i.kind === "flush") { if (r?.kind !== "cache") throw new Error("Flush targets cache only"); }
+    if (i.kind === "db-promote-replica") {
+      if (r?.kind !== "relational" || !r.replication?.enabled) throw Error("Promotion requires an enabled database replica");
+      const key = `promote:${i.target}`; if (spans.has(key)) throw Error("Database replica already promoted"); spans.set(key, at);
+    }
+    else if (i.kind === "flush") { if (r?.kind !== "cache") throw new Error("Flush targets cache only"); }
     else {
       if (r?.kind !== "relational") throw new Error("Data capacity intervention requires relational resource");
       const key = JSON.stringify([i.kind, i.target]); if (at < (spans.get(key) ?? 0)) throw new Error("Overlapping data interventions"); spans.set(key, micros(at + num(i.duration, "us", 1)));
