@@ -26,6 +26,8 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
   return { horizon: runtime.horizon, advanceTo: runtime.advanceTo,
     // Cheap current reads for live views: one resource's counters now, and replica counts. No history is copied.
     inspect: (id: string) => network?.inspect?.(id) ?? network?.observe(id),
+    inspectData: runtime.inspectData,
+    inspectCdn: runtime.inspectCdn,
     applicationFlowEvidence: () => flow?.measure(),
     appliedInterventions: () => [...applied.values()],
     activeInterventions: () => [...active.values()],

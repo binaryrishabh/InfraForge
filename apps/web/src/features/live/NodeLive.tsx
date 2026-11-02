@@ -5,6 +5,7 @@ import { useSimulationStore } from "@/features/monitoring/store/simulationStore"
 import { MeterRow } from "@/features/canvas/components/node/MeterRow";
 import { AsyncQueueReadings } from "@/features/canvas/components/inspector/AsyncSection";
 import { SecurityReadings } from "@/features/canvas/components/inspector/SecuritySection";
+import { DataDeliveryReadings } from "./DataDeliveryReadings";
 import { CHAOS_LABELS } from "@/features/monitoring/chaosLabels";
 import { FaultControl } from "./controls/FaultControl";
 import { PoolControl } from "./controls/PoolControl";
@@ -38,6 +39,7 @@ export function NodeLive({ deploymentId, resource, resources, controls, ended = 
         {effects.map((chaos, index) => <p key={chaos.intervention?.actionId ?? index} className="if-num mt-1 text-xs font-semibold text-fail">Fault active: {(chaos.intervention ? `${chaos.intervention.label} ${JSON.stringify(chaos.intervention.parameters)}; restores at ${chaos.intervention.restoreAtUs} us` : CHAOS_LABELS[chaos.chaosType!])} · {chaos.remainingTicks} s left</p>)}
         {restarting && <p className="if-num mt-1 text-xs font-semibold text-warn">Restarting on a new size</p>}
       </div>
+      <DataDeliveryReadings type={resource.type} metrics={metric} />
       {(resource.asyncQueue?.enabled || metric?.asyncQueue) && <section aria-label="Upload queue measurements" className="border-b border-line px-4 py-4"><AsyncQueueReadings metrics={metric?.asyncQueue} /></section>}
       {(resource.type === RESOURCE_TYPES.Firewall || resource.listenerSettings || metric?.security) && <section aria-label="Security measurements" className="border-b border-line px-4 py-4 text-sm"><SecurityReadings metrics={metric?.security} /></section>}
       {controls && <>

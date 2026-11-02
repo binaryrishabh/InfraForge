@@ -3,12 +3,16 @@ import { compileProduct } from "./compiler";
 import { withTimeline, type TimedAction } from "./timeline";
 import type { CompiledProduct, ProductContract, SavedProductDesign } from "./contracts";
 import type { CausalObserver } from "../workload/causal";
+import { dataDeliveryLive } from "./dataDeliveryLive";
 
 // One simulated second at a time, projected onto the canvas nodes the person drew.
 // Values Model 2 does not know stay null ("Unknown"); they are never shown as zero.
 export type LiveValue = number | null;
 export type LiveHealth = "healthy" | "degraded" | "saturated" | "failed" | "unknown";
 export interface LiveNodeMetrics {
+  database?: import("@infraforge/contracts/telemetry").DatabaseMetrics;
+  cache?: import("@infraforge/contracts/telemetry").CacheMetrics;
+  cdn?: import("@infraforge/contracts/telemetry").CdnMetrics;
   security?: import("@infraforge/contracts/telemetry").SecurityMetrics;
   asyncQueue?: import("@infraforge/contracts/telemetry").AsyncQueueMetrics;
   cpu: LiveValue; memory: LiveValue; connections: LiveValue; rps: LiveValue; errorRate: LiveValue; health: LiveHealth;
@@ -124,6 +128,10 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         metrics[node] = { cpu, memory: null, connections: sessions ?? queued + serving, rps: completed, errorRate,
           health: down ? "failed" : (cpu ?? 0) >= 95 || (errorRate ?? 0) > 0.05 ? "saturated" : (cpu ?? 0) >= 80 || (errorRate ?? 0) > 0.01 ? "degraded" : "healthy",
           ...(pool ? { replicas: pool } : {}) };
+      }
+      const deliveryResources = compiled.input.resources.filter(r => metrics[r.id] && ["relational", "cache", "cdn"].includes(r.kind));
+      if (deliveryResources.length) {
+        for (const resource of deliveryResources) Object.assign(metrics[resource.id]!, dataDeliveryLive(resource, runtime, runtime.inspect(resource.id), compiled.input.resources));
       }
       for (const resource of compiled.input.resources) {
         if (resource.kind !== "delivery-queue" || !compiled.semantic.nodes.find((n) => n.id === resource.id)?.profile.includes("canvas-async/1")) continue;
