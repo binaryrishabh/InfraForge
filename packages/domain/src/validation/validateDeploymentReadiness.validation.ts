@@ -97,7 +97,7 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
     }
     for (const resource of resources) {
         if (!connectedIds.has(resource.id) && !(resources.length === 1 && resource.type === RESOURCE_TYPES.VirtualMachine)) {
-            errors.push(`${resource.id} is isolated â€” connect it or remove it`);
+            errors.push(`${resource.id} is isolated — connect it or remove it`);
         }
     }
     const topology = computeTopology(resources, connections);
