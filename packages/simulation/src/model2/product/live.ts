@@ -26,7 +26,7 @@ export interface LiveProjection {
   simulatedSeconds: number;
   offeredRps: number; completedRps: number; failedRps: number;
   // Caller response times of requests that completed during this second; null when none completed.
-  latencyMs: { p50: LiveValue; p95: LiveValue };
+  latencyMs: { p50: LiveValue; p95: LiveValue; p99: LiveValue };
   metrics: Record<string, LiveNodeMetrics>;
   overallHealth: "healthy" | "degraded" | "saturated" | "critical";
 }
@@ -160,7 +160,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
       }
       if (security) previousSecurity = new Map(security.edges.map(e => [e.path, { denied: e.denied, backendDeliveries: e.backendDeliveries }]));
       const offered = caller.offered - previousCaller.offered, completedRps = caller.completed - previousCaller.completed, failedRps = caller.failed - previousCaller.failed;
-      const sorted = responses.sort((a, b) => a - b), latencyMs = { p50: percentile(sorted, 0.5), p95: percentile(sorted, 0.95) };
+      const sorted = responses.sort((a, b) => a - b), latencyMs = { p50: percentile(sorted, 0.5), p95: percentile(sorted, 0.95), p99: percentile(sorted, 0.99) };
       const lost = ratio(failedRps, offered) ?? 0, nodes = Object.values(metrics);
       const overallHealth = lost > 0.2 || nodes.some((m) => m.health === "failed") && lost > 0.05 ? "critical"
         : lost > 0.05 || nodes.some((m) => m.health === "saturated") ? "saturated"

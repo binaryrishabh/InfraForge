@@ -11,6 +11,7 @@ const MAX_CPU_HISTORY = 30;
 const EMPTY_ACTIVE_CHAOS: ChaosEffect[] = [];
 
 interface SimulationStoreState {
+  traffic?: SimulationSnapshot["traffic"];
   applicationFlow?: SimulationSnapshot["applicationFlow"];
   deploymentId: string | null;
   metrics: Record<string, ResourceMetrics>;
@@ -35,6 +36,7 @@ interface SimulationStoreState {
 }
 
 const initialState = {
+  traffic: undefined as SimulationSnapshot["traffic"],
   applicationFlow: undefined as SimulationSnapshot["applicationFlow"],
   deploymentId: null as string | null,
   metrics: {} as Record<string, ResourceMetrics>,
@@ -101,6 +103,7 @@ export const useSimulationStore = create<SimulationStoreState>()((set, get) => (
       }
 
       return {
+        traffic: snapshot.traffic,
         applicationFlow: snapshot.applicationFlow,
         deploymentId: snapshot.deploymentId,
         metrics: snapshot.metrics,

@@ -34,7 +34,7 @@ const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction:
   restarting: z.array(boundedId).max(500).optional(), pools: boundedMap(pool).optional(),
   installedSkus: boundedMap(boundedId).optional(),
   traffic: z.object({offeredRps: amount.max(100_000_000), completedRps: amount.max(100_000_000), failedRps: amount.max(100_000_000),
-    latencyMs: z.object({p50: amount.max(3_600_000).nullable(), p95: amount.max(3_600_000).nullable()}).strict()}).strict().optional(),
+    latencyMs: z.object({p50: amount.max(3_600_000).nullable(), p95: amount.max(3_600_000).nullable(), p99: amount.max(3_600_000).nullable().optional()}).strict()}).strict().optional(),
   metrics: z.unknown().optional() });
 const terminal = checkpoint.extend({ version: z.literal(1), kind: z.literal("terminal"), capturedAt: timestamp,
   topologyRevision: z.number().int().nonnegative(), simulatedSeconds: amount, accumulatedCostUsd: amount,

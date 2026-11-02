@@ -66,7 +66,7 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
           intervention: {actionId: r.actionId, label: INTERVENTIONS.find(d => d.id === r.interventionId)!.label, parameters: r.parameters, restoreAtUs: r.endUs!, ...(edgeIds.length ? {edgeIds} : {})}}));
       })],
     traffic: last ? { offeredRps: last.offeredRps, completedRps: last.completedRps, failedRps: last.failedRps, latencyMs: last.latencyMs }
-      : { offeredRps: 0, completedRps: 0, failedRps: 0, latencyMs: { p50: null, p95: null } },
+      : { offeredRps: 0, completedRps: 0, failedRps: 0, latencyMs: { p50: null, p95: null, p99: null } },
   });
 
   return {

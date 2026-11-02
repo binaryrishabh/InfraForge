@@ -1,3 +1,4 @@
+import { TrafficReadings } from "./TrafficReadings";
 import { Link } from "react-router-dom";
 import { Lock } from "lucide-react";
 import type { ChallengeBrief } from "@infraforge/contracts/challenges";
@@ -56,6 +57,7 @@ export function LivePanel({ tab, onTab, deploymentId, run, status, completed, ti
     <div className="flex h-full min-h-0 flex-col">
       <Tabs idBase="live" label="Run details" items={items} value={tab} onChange={onTab} className="shrink-0 px-2" />
       <div className={tab === "events" ? "min-h-0 flex-1" : "if-scroll min-h-0 flex-1 overflow-y-auto"}>
+        {tab !== "events" && <TrafficReadings />}
         <TabPanel idBase="live" id={tab} className={tab === "events" ? "h-full" : undefined}>
           {tab === "controls" && (run && challenge ? <ChallengeConditions run={run} brief={brief} /> : !isLive ? (
             <p className="px-4 py-6 text-sm text-ink-3">Controls are available while the run is live.</p>
