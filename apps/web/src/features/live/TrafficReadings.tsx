@@ -16,6 +16,11 @@ export function TrafficReadings() {
         ["Attempts/s", traffic.clientRetry.attemptRps], ["Retries issued", traffic.clientRetry.retriesIssued],
         ["Recovered", traffic.clientRetry.recovered], ["Exhausted", traffic.clientRetry.exhausted],
         ["Gave up (deadline)", traffic.clientRetry.givenUp], ["Load factor", traffic.clientRetry.extraLoadFactor?.toFixed(2).replace(/\.?0+$/, "")],
+        ...(traffic.clientRetry.attemptsTimedOut === undefined ? [] : [
+          ["Timed-out attempts", traffic.clientRetry.attemptsTimedOut], ["Wasted completions", traffic.clientRetry.wastedCompletions],
+          ["Timeout cancellations requested", traffic.clientRetry.timeoutCancellationsRequested], ["Confirmed at entry", traffic.clientRetry.timeoutCancellationsConfirmed],
+          ["Recovered after timeout", traffic.clientRetry.recoveredByTimeoutRetry],
+        ]),
       ] as const).map(([label, value]) => <div key={label}><dt className="text-xs text-ink-3">{label}</dt><dd>{value ?? "Unknown"}</dd></div>)}</dl>
       <p className="mt-2 text-xs text-ink-3">Offered requests/s counts originals. Attempts include retries. Retry counters are cumulative; response time includes retry delays.</p>
     </div>}

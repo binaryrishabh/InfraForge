@@ -50,7 +50,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
   // Caller outcomes are counted as they happen, so a second's totals never need the run's history.
   const caller = { offered: 0, completed: 0, failed: 0 };
   const retryPolicy = compiled.input.operations.find(o => o.clientRetry)?.clientRetry;
-  const retries = retryPolicy ? clientRetryEvidence(retryPolicy.maxAttempts) : undefined;
+  const retries = retryPolicy ? clientRetryEvidence(retryPolicy.maxAttempts, retryPolicy.attemptTimeoutMs) : undefined;
   let previousAttempts = 0;
   let responses: number[] = [];
   const observe: CausalObserver = (event) => {

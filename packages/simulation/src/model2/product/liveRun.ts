@@ -54,7 +54,7 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
   let last: LiveProjection | null = null;
   const emptyLatency = initial.trafficEvidenceProfile ? latencyEvidence(0).measure(0).latency : undefined;
   const showP99 = input.adapterProfiles?.includes("traffic-evidence/2") || input.workloadProfile.workloadDynamics || input.workloadProfile.clientRetry;
-  const emptyRetries = input.workloadProfile.clientRetry ? { ...clientRetryEvidence(input.workloadProfile.clientRetry.maxAttempts).measure(), attemptRps: 0 } : undefined;
+  const emptyRetries = input.workloadProfile.clientRetry ? { ...clientRetryEvidence(input.workloadProfile.clientRetry.maxAttempts, input.workloadProfile.clientRetry.attemptTimeoutMs).measure(), attemptRps: 0 } : undefined;
   const emptyObjective = input.workloadProfile.workloadObjective ? objectiveEvidence(input.workloadProfile.workloadObjective, run.horizon).measure(0, 0, []) : undefined;
   const loggedInterventions = new Set<string>();
 

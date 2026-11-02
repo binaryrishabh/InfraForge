@@ -27,7 +27,7 @@ export function describeObjective(w: WorkloadProfile) {
 }
 
 export function describeClientRetry(w: WorkloadProfile) {
-  return w.clientRetry ? `Client retries: up to ${w.clientRetry.maxAttempts} attempts, backoff ${w.clientRetry.backoffMs} ms, reads only` : "Client retries: none";
+  return w.clientRetry ? `Client retries: up to ${w.clientRetry.maxAttempts} attempts, backoff ${w.clientRetry.backoffMs} ms${w.clientRetry.attemptTimeoutMs === undefined ? "" : `, attempt timeout ${w.clientRetry.attemptTimeoutMs} ms`}, reads only` : "Client retries: none";
 }
 
 export function describeWorkloadDynamics(w: WorkloadProfile) {

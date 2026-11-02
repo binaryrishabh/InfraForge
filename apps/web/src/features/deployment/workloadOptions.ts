@@ -18,10 +18,10 @@ export function withWorkloadDynamics(p: WorkloadProfile, patch: Partial<Omit<Wor
   return next;
 }
 
-export function withClientRetry(p: WorkloadProfile, maxAttempts: number, backoffMs = p.clientRetry?.backoffMs ?? 200): WorkloadProfile {
+export function withClientRetry(p: WorkloadProfile, maxAttempts: number, backoffMs = p.clientRetry?.backoffMs ?? 200, attemptTimeoutMs: number | null = p.clientRetry?.attemptTimeoutMs ?? null): WorkloadProfile {
   const next = { ...p };
   if (maxAttempts === 0) delete next.clientRetry;
-  else next.clientRetry = { version: 1, maxAttempts, backoffMs };
+  else next.clientRetry = { version: 1, maxAttempts, backoffMs, ...(attemptTimeoutMs === null ? {} : { attemptTimeoutMs }) };
   return next;
 }
 

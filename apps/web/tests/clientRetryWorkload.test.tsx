@@ -15,8 +15,8 @@ test("retry choices preserve presets, turn fully off, show exact backoff and obe
   expect(withClientRetry(on, 0)).not.toHaveProperty("clientRetry");
   expect(original).not.toHaveProperty("clientRetry");
   const html = renderToStaticMarkup(<ClientRetryControls profile={on} onChange={() => {}} disabled />);
-  for (const text of ["Client retries", "Off", "2 attempts", "3 attempts", "4 attempts", "50 ms", "200 ms", "1000 ms", "Clients retry rejected reads after a delay. Retries add load, so an overloaded system can get worse. Writes and rate-limited requests are not retried."]) expect(html).toContain(text);
-  expect(html.match(/disabled=""/g)).toHaveLength(7);
+  for (const text of ["Client retries", "Off", "2 attempts", "3 attempts", "4 attempts", "50 ms", "200 ms", "1000 ms", "A client gives up on a slow attempt and tries again, possibly while the first request is still running. Abandoned work that still finishes is wasted load. Writes and rate-limited requests are not retried."]) expect(html).toContain(text);
+  expect(html.match(/disabled=""/g)).toHaveLength(11);
   const custom = renderToStaticMarkup(<ClientRetryControls profile={withClientRetry(on, 3, 17)} onChange={() => {}} disabled={false} />);
   expect(custom).toContain("17 ms");
 });
