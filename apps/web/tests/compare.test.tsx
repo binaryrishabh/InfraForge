@@ -21,6 +21,13 @@ const comparison: RunComparison = { version: 1, runs: [run, { ...run, id: "b" }]
   outcomes: [], resources: [], costs: [{ field: "Accumulated simulated cost", unit: "USD", earlier: 0.01, later: 0.02, delta: null, withheldReason: "Matching exact durations required." }], gates: [[], []],
   challengeConditions: null, observed: [{ id: "recorded", message: "Only recorded facts.", sources: ["runInputs"] }], interpreted: [], unknown: [{ id: "legacy", message: "Legacy provenance unknown.", sources: ["runInputs"] }] };
 const render = (v: React.ReactNode) => renderToStaticMarkup(<MemoryRouter>{v}</MemoryRouter>);
+test("traffic comparisons spell out each run's captured arrivals and application CPU variability", () => {
+  const workload = { targetThroughput: 600, throughputUnit: "per-minute" as const, trafficShape: "steady" as const, payloadSize: "light" as const };
+  const data: RunComparison = { ...comparison, runs: [{ ...run, workload }, { ...run, id: "b", workload: { ...workload,
+    workloadDynamics: { version: 1, arrivalProcess: "poisson", applicationCpuCv: 0.5 } } }] };
+  const html = render(<CompareContent loading={false} error={null} data={data} retry={() => {}} />);
+  for (const text of ["Even arrivals", "Fixed app CPU (CV 0)", "Poisson arrivals", "Variable app CPU: Moderate (CV 0.5)"]) expect(html).toContain(text);
+});
 test("compare loading/errors/legacy evidence do not invent final-state deltas", () => {
   expect(render(<CompareContent loading error={null} data={null} retry={() => {}} />)).toContain('role="status"');
   const error = render(<CompareContent loading={false} error="Session ended" data={null} retry={() => {}} />);

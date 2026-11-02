@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import type { RunComparison } from "@infraforge/contracts/reports";
-import { formatDate } from "@/lib/format";
+import { describeWorkload, formatDate } from "@/lib/format";
 import { Button } from "@/ui/Button";
 import { HealthMark } from "@/ui/HealthMark";
 import { Loading, Notice } from "@/ui/Page";
@@ -52,6 +52,7 @@ export function CompareView({ comparison: c }: { comparison: RunComparison }) {
             <Link className="mt-1 block truncate text-[17px] font-semibold text-ink underline-offset-4 hover:underline" to={`/runs/${r.id}`}>{r.infrastructureName}</Link>
             <p className="text-xs text-ink-3">{runStatus(r.status).label} · {formatDate(r.createdAt)}</p>
             <p className="if-num mt-0.5 break-all text-[11px] text-ink-3">{r.id}</p>
+            <p className="mt-2 text-xs text-ink-2">{r.workload ? describeWorkload(r.workload) : "Workload unavailable"}</p>
           </div>
         ))}
       </div>
