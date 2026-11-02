@@ -1,4 +1,5 @@
 import type { AdapterProfile } from "@infraforge/contracts/run-inputs";
+import { workloadDynamicsError } from "@infraforge/domain/workload";
 import { findSku, CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog";
 import { RESOURCE_PORTS, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbHealthError, lbAdmissionError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
 import type { Quantity, Unit } from "../../reality/quantity";
@@ -45,6 +46,8 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
   const error = (path: string, message: string) => refused.push({ code: "DESIGN_NOT_RUNNABLE", path, message, severity: "error" });
   try {
     boundedProduct(saved);
+    const dynamicsError = workloadDynamicsError(saved.workload.workloadDynamics);
+    if (dynamicsError) throw Error(dynamicsError);
     const design = savedPoolPolicies(saved), resources = [...design.resources].sort((a, b) => a.id < b.id ? -1 : 1);
     // New canvas runs with retry/breaker intent record observational cause evidence; no learner control, and no decision depends on it.
     const profiles = history && "adapterProfiles" in history ? history.adapterProfiles : history ? [] : currentAdapterProfiles(resources);
