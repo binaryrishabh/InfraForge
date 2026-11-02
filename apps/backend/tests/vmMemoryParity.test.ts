@@ -3,12 +3,26 @@ import { mkdir, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createModel2Run } from "@infraforge/simulation/model2-run";
+import type { Resource, VmMemory } from "@infraforge/domain/resource";
+import type { WorkloadProfile } from "@infraforge/domain/workload";
 import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
 import { createModel2Engine } from "../simulator/model2Engine";
 import { buildModel2Contract } from "../simulator/contractBuilder";
-import { memoryDesign, tightMemory } from "../../../packages/simulation/tests/vmMemory.fixture";
 import { VmMemorySchema } from "../reports/vmMemorySchema";
 import { readRecords } from "../reports/records";
+
+const tightMemory: VmMemory = { version: 1, baselineMiB: 1024, requestMiB: 128, activeMiB: 0 };
+function memoryDesign(memory?: VmMemory) {
+  const resources: Resource[] = [
+    { id: "lb", type: "Load Balancer", x: 0, y: 0, lbAdmission: { version: 1, maxActive: 128, maxQueued: 128, queueWaitMs: 1000 } },
+    { id: "app", type: "Virtual Machine", x: 1, y: 0, vmExecution: { version: 1, workers: 1, queuedRequests: 1000 }, ...(memory ? { vmMemory: memory } : {}) },
+    { id: "db", type: "Database", x: 2, y: 0 },
+  ];
+  const connections = [{ id: "lb-app", sourceId: "lb", sourceType: "Load Balancer" as const, targetId: "app", targetType: "Virtual Machine" as const, port: 80 },
+    { id: "app-db", sourceId: "app", sourceType: "Virtual Machine" as const, targetId: "db", targetType: "Database" as const, port: 5432 }];
+  const workload: WorkloadProfile = { targetThroughput: 36000, throughputUnit: "per-minute", trafficShape: "steady", readWriteRatio: 1, payloadSize: "light" };
+  return { resources, connections, workload };
+}
 
 test("browser memory evidence/live equals official replay with load actions and client retries", async () => {
   const path = resolve(import.meta.dir, `../../../.cache/memory-browser-${process.pid}.mjs`);
@@ -18,7 +32,7 @@ test("browser memory evidence/live equals official replay with load actions and 
     const diagnostics = await new Response(build.stderr).text(); if (await build.exited !== 0) throw Error(diagnostics);
     const browserRun: typeof createModel2Run = (await import(pathToFileURL(path).href)).createModel2Run;
     for (const mode of ["historical", "generous", "tight", "active", "retry", "lb-retry", "flow", "replicas"] as const) {
-      const d = memoryDesign(true, mode === "historical" ? undefined : mode === "generous" ? { ...tightMemory, baselineMiB: 0, requestMiB: 1 } : mode === "active" ? { ...tightMemory, activeMiB: 16 } : tightMemory);
+      const d = memoryDesign(mode === "historical" ? undefined : mode === "generous" ? { ...tightMemory, baselineMiB: 0, requestMiB: 1 } : mode === "active" ? { ...tightMemory, activeMiB: 16 } : tightMemory);
       if (mode === "retry") d.workload.clientRetry = { version: 1, maxAttempts: 3, backoffMs: 50 };
       if (mode === "lb-retry") d.resources.find(r => r.id === "lb")!.retry = { enabled: true, maxAttempts: 2, backoffMs: 10, jitterRatio: 0, maxConcurrentRetries: 8, retryOn: ["backendFailure"] };
       if (mode === "flow") d.resources.find(r => r.id === "app")!.applicationFlow = { schema: "application-flow/2", operations: { read: { steps: [{ id: "cpu", kind: "compute" }, { id: "data", kind: "data", edge: "app-db", operation: "read" }] } } };
