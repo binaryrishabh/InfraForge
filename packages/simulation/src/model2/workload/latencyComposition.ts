@@ -30,7 +30,7 @@ export interface LatencySample {
   categoriesUs: Partial<Record<LatencyCategory, number>>; unattributedUs: number; bounded: boolean;
 }
 interface Interval { category: OwnedCategory; start: number; end: number; scope: string }
-interface Root { start: number; open: Map<string, Omit<Interval, "end">>; intervals: Interval[]; paths: Map<string, number | null>; bounded: boolean; transitions: number }
+interface Root { start: number; open: Map<string, Omit<Interval, "end">>; intervals: Interval[]; paths: Map<string, number | null>; attemptStops?: Map<string, number>; bounded: boolean; transitions: number }
 export const LATENCY_ROOT_BOUNDARIES = 128;
 const priority: OwnedCategory[] = ["failedClientAttempt", "clientRetryDelay", "dependency", "failedAttempt", "applicationQueue", "applicationService", "loadBalancerPending", "connectionWait", "networkTransit"];
 
@@ -80,7 +80,11 @@ export function latencyComposition(maxLiveRoots: number, completed: (sample: Lat
     if (e.kind === "latency-lb-attempt-start") open(`lb-attempt:${id}`, "failedAttempt");
     if (e.kind === "latency-lb-attempt-terminal") close(`lb-attempt:${id}`, e.detail.outcome !== "completed");
     if (e.kind === "client-attempt-issued") { close("retry"); open("client-attempt", "failedClientAttempt", "$caller"); }
-    if (e.kind === "client-attempt-terminal") close("client-attempt", e.detail.outcome !== "completed");
+    if (e.kind === "client-attempt-terminal") {
+      close("client-attempt", e.detail.outcome !== "completed");
+      // Abandoned remote work cannot own any of the winning attempt's response time.
+      if (e.detail.timedOut) (root.attemptStops ??= new Map()).set(e.work!.callId, e.atUs);
+    }
     if (e.kind === "client-retry-scheduled") open("retry", "clientRetryDelay", "$caller");
   };
   return { observe, get liveRoots() { return roots.size; } };
@@ -89,7 +93,7 @@ export function latencyComposition(maxLiveRoots: number, completed: (sample: Lat
 function partition(rootId: string, root: Root, terminal: CausalEvent): LatencySample {
   const responseUs = terminal.detail.responseUs as number, categoriesUs: LatencySample["categoriesUs"] = {};
   // Unclosed boundaries cannot prove ownership. They stay in the remainder.
-  const paths = [...root.paths].filter((p): p is [string, number] => p[1] !== null).map(([id, end]) => ({ parts: callParts(id), end }));
+  const paths = [...root.paths, ...(root.attemptStops ?? [])].filter((p): p is [string, number] => p[1] !== null).map(([id, end]) => ({ parts: callParts(id), end }));
   const intervals = root.bounded ? root.intervals.map(i => {
     const scope = callParts(i.scope);
     const stops = paths.filter(p => p.parts.length <= scope.length && p.parts.every((v, n) => v === scope[n])).map(p => p.end);
