@@ -20,7 +20,10 @@ import type { ObjectStoragePolicy } from "./ObjectStoragePolicy.interface";
 
 import type { FirewallCapacity } from "./FirewallCapacity.interface";
 
+import type { DatabaseReplication } from "./DatabaseReplication.interface";
+
 export interface Resource {
+  databaseReplication?: DatabaseReplication;
   firewallCapacity?: FirewallCapacity;
   objectStoragePolicy?: ObjectStoragePolicy;
   dataKeyspace?: DataKeyspace;

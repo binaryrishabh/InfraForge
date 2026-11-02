@@ -10,6 +10,7 @@ export interface Statement {
 }
 export interface TransactionPlan { statements: Statement[]; statementTimeout: Quantity<"us">; lockTimeout: Quantity<"us">; transactionTimeout: Quantity<"us">; commitWait: Quantity<"us">; durability: "logical-only" | "authored-log-ack" }
 export interface RelationalConfig {
+  replication?: import("@infraforge/domain/resource").DatabaseReplication;
   // Opt-in selection for canvas requests without a recorded key; supplied keys always win.
   access?: "keyed-uniform" | "keyed-hot";
   id: string; kind: "relational"; semantics: "read-committed-keyed/1" | "postgresql-keyed/1" | "postgresql-keyed/2";

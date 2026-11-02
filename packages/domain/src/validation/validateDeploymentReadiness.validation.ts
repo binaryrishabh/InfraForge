@@ -11,6 +11,7 @@ import { monitoringPolicyError } from "../resource/MonitoringPolicy.interface";
 import { cdnCachePolicyError } from "../resource/CdnCachePolicy.interface";
 import { vmCpuQuotaError } from "../resource/VmCpuQuota.interface";
 import { vmExecutionError } from "../resource/VmExecution.interface";
+import { databaseReplicationError } from "../resource/DatabaseReplication.interface";
 import { dbConcurrencyError } from "../resource/DbConcurrency.interface";
 import { lbAdmissionError } from "../resource/LbAdmission.interface";
 import { lbHealthError } from "../resource/LbHealth.interface";
@@ -60,6 +61,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
         if (quotaMessage) errors.push(`${resource.id}: ${quotaMessage}`);
         const executionMessage = vmExecutionError(resource.type, resource.vmExecution, resource.asyncWorker?.enabled);
         if (executionMessage) errors.push(`${resource.id}: ${executionMessage}`);
+        const replicationMessage = databaseReplicationError(resource.type, resource.databaseReplication);
+        if (replicationMessage) errors.push(`${resource.id}: ${replicationMessage}`);
         const concurrencyMessage = dbConcurrencyError(resource.type, resource.dbConcurrency);
         if (concurrencyMessage) errors.push(`${resource.id}: ${concurrencyMessage}`);
         const admissionMessage = lbAdmissionError(resource.type, resource.lbAdmission);

@@ -3,6 +3,7 @@ export type * from "./LiveView.interface";
 export type * from "./PoolSnapshot.interface";
 export type * from "./ResourceMetrics.interface";
 export type * from "./DataDeliveryMetrics.interface";
+export type * from "./DatabaseReplicationMetrics.interface";
 export type * from "./ObservabilityMetrics.interface";
 export type * from "./SecurityMetrics.interface";
 export type * from "./SimulationLog.interface";

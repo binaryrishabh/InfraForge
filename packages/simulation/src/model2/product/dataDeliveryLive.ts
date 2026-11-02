@@ -4,14 +4,14 @@ import type { createProductModel2 } from "./run";
 
 type Runtime = ReturnType<typeof createProductModel2>;
 type Source = Pick<Runtime, "inspectData" | "inspectCdn">;
-type Readings = Pick<ResourceMetrics, "database" | "cache" | "cdn">;
+type Readings = Pick<ResourceMetrics, "databaseReplication" | "database" | "cache" | "cdn">;
 
 // Select the same resource-owned evidence used by official results. No retained result history is counted.
 export function dataDeliveryLive(resource: CompiledProduct["input"]["resources"][number], source: Source, current: unknown, resources: CompiledProduct["input"]["resources"]): Readings {
   if (resource.kind === "relational") {
     const db = source.inspectData.database(resource.id);
     const state = current as { serving?: number; waiting?: number; queued?: number; rejected?: number; sessionRefused?: number } | undefined;
-    return { database: { version: 1, serving: state?.serving ?? null, waiting: state?.waiting ?? null, queued: state?.queued ?? null,
+    return { ...(resource.replication ? { databaseReplication: db?.databaseReplication ?? { version: 1 as const, currentWriter: null, replicaState: null, primaryCommittedWrites: null, replicaAppliedWrites: null, pendingReplication: null, lagMs: null, oldestPendingAgeMs: null, primaryGeneration: null, replicaGeneration: null } } : {}), database: { version: 1, serving: state?.serving ?? null, waiting: state?.waiting ?? null, queued: state?.queued ?? null,
       rejected: state?.rejected ?? null, sessionRefused: state?.sessionRefused ?? null, "query-queue-full": db?.reasons["query-queue-full"] ?? null } };
   }
   if (resource.kind === "cache") {

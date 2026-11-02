@@ -12,6 +12,7 @@ export { monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT
 export { CDN_MAX_WAITERS, CDN_COALESCING_HELP, CDN_WAITERS_HELP, CDN_TTL_MAX_SECONDS, CDN_TTL_HELP, CDN_TTL_SCOPE, cdnCachePolicyError, type CdnCachePolicy } from "./CdnCachePolicy.interface";
 export { VM_CPU_LIMIT_MAX, VM_CPU_QUOTA_PERIOD_US, VM_CPU_QUOTA_HELP, vmCpuQuotaError, type VmCpuQuota } from "./VmCpuQuota.interface";
 export { VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, type VmExecution } from "./VmExecution.interface";
+export { databaseReplicationError, DATABASE_REPLICATION_DELAY_MAX_MS, type DatabaseReplication } from "./DatabaseReplication.interface";
 export { DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, dbConcurrencyError, type DbConcurrency } from "./DbConcurrency.interface";
 export { LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, lbAdmissionError, type LbAdmission } from "./LbAdmission.interface";
 export { LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbHealthError, type LbHealth } from "./LbHealth.interface";

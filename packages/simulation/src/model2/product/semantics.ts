@@ -3,7 +3,7 @@ import type { SystemsInput } from "../systems/contracts";
 import type { SemanticSpec } from "./contracts";
 const fields: Record<string, string[]> = {
   compute: ["cores", "workers", "scheduler", "quota", "memory", "queueCapacity", "profiles", "context", "cancellation", "downstream", "downstreamByOperation", "applicationFlow"],
-  relational: ["semantics", "execution", "maxSessions", "activeTransactions", "pendingQueries", "keys", "initial", "plans", "access"],
+  relational: ["replication", "semantics", "execution", "maxSessions", "activeTransactions", "pendingQueries", "keys", "initial", "plans", "access"],
   cache: ["semantics", "execution", "capacity", "entryOverhead", "policy", "ttl", "initial", "commandCpu"],
   "cache-aside": ["execution", "cache", "database", "keys", "access", "coalesce", "onCacheFailure", "invalidateWrites", "operations"],
   "load-balancer": ["backends", "policy", "maxOutstanding", "maxPending", "pendingTimeout", "health", "retry"],

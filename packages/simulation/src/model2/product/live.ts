@@ -13,6 +13,7 @@ export type LiveHealth = "healthy" | "degraded" | "saturated" | "failed" | "unkn
 export interface LiveNodeMetrics {
   monitoring?: import("@infraforge/contracts/telemetry").MonitoringMetrics;
   objectStorage?: import("@infraforge/contracts/telemetry").ObjectStorageMetrics;
+  databaseReplication?: import("@infraforge/contracts/telemetry").DatabaseReplicationMetrics;
   database?: import("@infraforge/contracts/telemetry").DatabaseMetrics;
   cache?: import("@infraforge/contracts/telemetry").CacheMetrics;
   cdn?: import("@infraforge/contracts/telemetry").CdnMetrics;
