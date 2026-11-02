@@ -3,6 +3,10 @@ export interface DatabaseReplicationMetrics {
   currentWriter: "primary" | "replica" | "none" | null;
   primaryProcessState?: "available" | "unavailable" | "fenced" | null;
   replicaProcessState?: "available" | "unavailable" | "writer" | null;
+  sessionInvalidations?: number | null;
+  connectionInvalidations?: number | null;
+  failedWritesWithoutWriter?: number | null;
+  regressedKeyCount?: number | null;
   replicaState: "available" | "unavailable" | "promoted" | null;
   writerEpoch: number | null;
   primaryEpoch: number | null;

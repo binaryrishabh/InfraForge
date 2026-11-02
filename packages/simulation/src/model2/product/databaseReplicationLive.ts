@@ -6,6 +6,11 @@ type Evidence = ReturnType<ReturnType<typeof relationalDatabase>["evidence"]>["d
 export function databaseReplicationLive(value: Evidence): DatabaseReplicationMetrics {
   return { version: 1,
     currentWriter: value?.currentWriter ?? null,
+    primaryProcessState: value?.primaryProcessState ?? null,
+    replicaProcessState: value?.replicaProcessState ?? null,
+    sessionInvalidations: value?.sessionInvalidations ?? null,
+    connectionInvalidations: value?.connectionInvalidations ?? null,
+    failedWritesWithoutWriter: value?.failedWritesWithoutWriter ?? null,
     replicaState: value?.replicaState ?? null,
     writerEpoch: value?.writerEpoch ?? null,
     primaryEpoch: value?.primaryEpoch ?? null,
@@ -27,7 +32,8 @@ export function databaseReplicationLive(value: Evidence): DatabaseReplicationMet
     promotionCount: value?.promotionCount ?? null,
     promotionAtUs: value?.promotionAtUs ?? null,
     lostOperations: value?.lostOperations ?? null,
-    regressedKeys: value?.regressedKeys ?? null,
+    regressedKeyCount: value?.regressedKeys.length ?? null,
+    regressedKeys: value?.regressedKeys.slice(0, 8).map(row => ({ ...row })) ?? null,
     fencedWriteRejections: value?.fencedWriteRejections ?? null,
     fencedReplicationRejections: value?.fencedReplicationRejections ?? null,
   };
