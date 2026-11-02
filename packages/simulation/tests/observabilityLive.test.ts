@@ -73,6 +73,7 @@ test("one-shot and stepped advancement produce identical observability views and
     const ids = f.saved.resources.map(r => r.id), stepped = createLiveModel2(f.compiled, ids), oneShot = createLiveModel2(f.compiled, ids);
     let view;
     for (let second = 0; second < 4; second++) { stepped.advanceSecond(); view = stepped.project(); }
+    if (!view) throw Error("Expected four projected seconds");
     oneShot.catchUp(3, 3); oneShot.advanceSecond(); expect(oneShot.project()).toEqual(view);
     f.runtime.advanceTo(4_000_000);
     expect(stepped.evidence()).toEqual(f.runtime.evidence()); expect(oneShot.evidence()).toEqual(f.runtime.evidence());
