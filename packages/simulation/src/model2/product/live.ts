@@ -25,6 +25,7 @@ export interface LiveNodeMetrics {
   replicas?: { ready: number; total: number };
 }
 export interface LiveProjection {
+  latency?: import("@infraforge/contracts/telemetry").LatencyMetrics;
   clientRetry?: import("@infraforge/contracts/telemetry").ClientRetryLiveMetrics;
   simulatedSeconds: number;
   offeredRps: number; completedRps: number; failedRps: number;
@@ -54,7 +55,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
     retries?.observe(event);
     if (event.kind === "caller-offered") caller.offered++;
     else if (event.kind === "caller-terminal") {
-      if (event.detail.outcome === "completed") { caller.completed++; responses.push(event.detail.responseUs as number); } else caller.failed++;
+      if (event.detail.outcome === "completed") { caller.completed++; if (!compiled.trafficEvidenceProfile) responses.push(event.detail.responseUs as number); } else caller.failed++;
     }
   };
   const runtime = createProductModel2(compiled, undefined, observe);
@@ -167,7 +168,8 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
       }
       if (security) previousSecurity = new Map(security.edges.map(e => [e.path, { denied: e.denied, backendDeliveries: e.backendDeliveries }]));
       const offered = caller.offered - previousCaller.offered, completedRps = caller.completed - previousCaller.completed, failedRps = caller.failed - previousCaller.failed;
-      const sorted = responses.sort((a, b) => a - b), latencyMs = { p50: percentile(sorted, 0.5), p95: percentile(sorted, 0.95), p99: percentile(sorted, 0.99) };
+      const measured = runtime.latencyEvidence(now);
+      const sorted = responses.sort((a, b) => a - b), latencyMs = measured?.latencyMs ?? { p50: percentile(sorted, 0.5), p95: percentile(sorted, 0.95), p99: percentile(sorted, 0.99) };
       const lost = ratio(failedRps, offered) ?? 0, nodes = Object.values(metrics);
       const overallHealth = lost > 0.2 || nodes.some((m) => m.health === "failed") && lost > 0.05 ? "critical"
         : lost > 0.05 || nodes.some((m) => m.health === "saturated") ? "saturated"
@@ -176,7 +178,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
       const retryCounts = retries?.measure();
       const clientRetry = retryCounts ? { ...retryCounts, attemptRps: retryCounts.totalAttempts - previousAttempts } : undefined;
       previousAttempts = retryCounts?.totalAttempts ?? 0;
-      return { ...(clientRetry ? { clientRetry } : {}), simulatedSeconds: now / SECOND, offeredRps: offered, completedRps, failedRps, latencyMs, metrics, overallHealth };
+      return { ...(measured ? { latency: measured.latency } : {}), ...(clientRetry ? { clientRetry } : {}), simulatedSeconds: now / SECOND, offeredRps: offered, completedRps, failedRps, latencyMs, metrics, overallHealth };
     },
   };
 }

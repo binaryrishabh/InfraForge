@@ -1,6 +1,7 @@
 export type * from "./ChaosEffect.interface";
 export type * from "./LiveView.interface";
 export type * from "./ClientRetryMetrics.interface";
+export type * from "./LatencyMetrics.interface";
 export type * from "./PoolSnapshot.interface";
 export type * from "./ResourceMetrics.interface";
 export type * from "./DataDeliveryMetrics.interface";

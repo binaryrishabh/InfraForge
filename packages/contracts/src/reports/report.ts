@@ -77,7 +77,7 @@ export interface ReportTopology {
 }
 
 export interface ReportCheckpoint {
-  traffic?: { clientRetry?: import("../telemetry/ClientRetryMetrics.interface").ClientRetryLiveMetrics; offeredRps: number; completedRps: number; failedRps: number; latencyMs: {p50: number | null; p95: number | null; p99?: number | null} };
+  traffic?: { latency?: import("../telemetry/LatencyMetrics.interface").LatencyMetrics; clientRetry?: import("../telemetry/ClientRetryMetrics.interface").ClientRetryLiveMetrics; offeredRps: number; completedRps: number; failedRps: number; latencyMs: {p50: number | null; p95: number | null; p99?: number | null} };
   capturedAt?: string;
   topologyRevision?: number;
   speed?: number;
