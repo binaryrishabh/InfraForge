@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { captureRunInputs } from "../deployments/runInputs";
 import { createModel2Run } from "@infraforge/simulation/model2-run";
 import { readRecords } from "../reports/records";
@@ -12,7 +13,7 @@ test("optional objective survives live checkpoints and terminal reports, includi
     const run = createModel2Run(input, 1);
     if (enabled) expect(run.view().traffic.objective).toMatchObject({ status: "unknown", measuredFraction: null, bestCaseFraction: null, worstCaseFraction: null });
     else expect(run.view().traffic).not.toHaveProperty("objective");
-    run.apply({ kind: "chaos", parameters: { type: "network-delay", resourceId: "app" } });
+    run.apply({ kind: "chaos", parameters: { type: DeploymentChaosNames.NetworkDelay, resourceId: "app" } });
     run.advance(); const view = run.view(), limits: string[] = [];
     const records = readRecords({ runInputs: input, stages: [], timeline: [], chaosEvents: [], simulationState: view,
       terminalSnapshot: { ...view, version: 1, kind: "terminal", capturedAt: "2026-11-03T00:00:00.000Z", topologyRevision: 0, accumulatedCostUsd: 0 } }, limits);
