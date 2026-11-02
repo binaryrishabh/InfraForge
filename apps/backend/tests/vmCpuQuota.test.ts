@@ -26,7 +26,7 @@ test("quota capture is explicit, strict and composes with VM execution", () => {
   expect(buildContractFromRunInputs({ ...old, adapterProfiles: saved.adapterProfiles }, 3)).toHaveProperty("refused");
   expect(() => readRunInputs({ ...saved, adapterProfiles: [...saved.adapterProfiles!, ...saved.adapterProfiles!] })).toThrow();
   const combined = layout(25); Object.assign(combined.resources[0]!, { vmExecution: { version: 1, workers: 4, queuedRequests: 32 } });
-  expect(captureRunInputs(combined, workload, "quota").adapterProfiles).toEqual(["vm-execution/1", "vm-cpu-quota/1"]);
+  expect(captureRunInputs(combined, workload, "quota").adapterProfiles).toEqual(["vm-execution/1", "vm-cpu-quota/1", "traffic-evidence/2"]);
   expect(compareInputs(saved, captureRunInputs(layout(50), workload, "quota"))).toMatchObject({ grade: "one-change-design", design: { reconfigured: [{ id: "app", fields: [{ field: "vmCpuQuota" }] }] } });
 });
 

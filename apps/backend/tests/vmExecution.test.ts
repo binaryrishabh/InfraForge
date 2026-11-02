@@ -28,7 +28,7 @@ test("layout/live/captured schemas preserve partial bounded execution limits and
 });
 
 test("capture opts in only for explicit VM limits; missing, duplicate and mismatched profiles refuse", () => {
-  const old = captureRunInputs(layout(), workload, "vm-capture"); expect(old.adapterProfiles).toEqual([]);
+  const old = captureRunInputs(layout(), workload, "vm-capture"); expect(old.adapterProfiles).toEqual(["traffic-evidence/2"]);
   expect(buildContractFromRunInputs({ ...old, adapterProfiles: [...old.adapterProfiles!, "vm-execution/1"] }, 5)).toHaveProperty("refused");
   for (const setting of [{ version: 1 as const, workers: 1 }, { version: 1 as const, queuedRequests: 0 }, { version: 1 as const, workers: 8, queuedRequests: 2 }]) {
     const captured = captureRunInputs(layout(setting), workload, "vm-capture"), saved = readRunInputs(JSON.parse(JSON.stringify(captured)));

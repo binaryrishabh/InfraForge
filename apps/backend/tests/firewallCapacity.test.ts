@@ -9,7 +9,7 @@ import { configuration, designDifference } from "../comparison/design";
 test("save/live/capture/replay/comparison preserve optional firewall capacity", () => {
   const old = firewallLayout();
   expect(configuration(old.resources[2]!)).not.toHaveProperty("firewallCapacity");
-  expect(captureRunInputs(old, firewallWorkload).adapterProfiles).toEqual([]);
+  expect(captureRunInputs(old, firewallWorkload).adapterProfiles).toEqual(["traffic-evidence/2"]);
   for (const maxFlows of [1, 2, 100000]) {
     const layout = firewallLayout(3), policy = { version: 1 as const, maxFlows };
     layout.resources[2]!.firewallCapacity = policy;

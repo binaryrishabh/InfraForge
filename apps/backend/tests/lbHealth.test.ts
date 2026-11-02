@@ -32,7 +32,7 @@ test("layout/live/captured schemas preserve partial health policy and refuse mal
 
 test("only new explicit health intent captures a profile; historical, missing, duplicate and mismatched profiles refuse", () => {
   for (const setting of [undefined, { version: 1 as const }]) {
-    const old = captureRunInputs(layout(setting), workload, "health-capture"); expect(old.adapterProfiles).toEqual([]);
+    const old = captureRunInputs(layout(setting), workload, "health-capture"); expect(old.adapterProfiles).toEqual(["traffic-evidence/2"]);
     expect(buildContractFromRunInputs({ ...old, adapterProfiles: undefined }, 3)).toHaveProperty("contract");
     expect(buildContractFromRunInputs({ ...old, adapterProfiles: ["lb-health/1"] }, 3)).toHaveProperty("refused");
   }

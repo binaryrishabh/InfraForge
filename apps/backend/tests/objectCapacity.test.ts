@@ -9,7 +9,7 @@ import { configuration, designDifference } from "../comparison/design";
 test("save/live/capture/replay/comparison preserve optional object capacity with Queue Depth 2", () => {
   const old = capacityLayout();
   expect(configuration(old.resources[3]!)).not.toHaveProperty("objectStoragePolicy");
-  expect(captureRunInputs(old, capacityWorkload).adapterProfiles).toEqual([]);
+  expect(captureRunInputs(old, capacityWorkload).adapterProfiles).toEqual(["traffic-evidence/2"]);
   for (const capacityMiB of [1, 2, 8589934591]) {
     const layout = capacityLayout(3), policy = { version: 1 as const, capacityMiB };
     layout.resources[3]!.objectStoragePolicy = policy;

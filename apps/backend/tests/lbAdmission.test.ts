@@ -45,7 +45,7 @@ test("layout/live/captured schemas preserve bounded partial admission and refuse
 
 test("only new explicit admission captures select the profile; missing, duplicate and mismatched profiles refuse", () => {
   for (const setting of [undefined, { version: 1 as const }]) {
-    const old = captureRunInputs(layout(setting), workload, "lb-capture"); expect(old.adapterProfiles).toEqual([]);
+    const old = captureRunInputs(layout(setting), workload, "lb-capture"); expect(old.adapterProfiles).toEqual(["traffic-evidence/2"]);
     expect(buildContractFromRunInputs({ ...old, adapterProfiles: undefined }, 3)).toHaveProperty("contract");
     expect(buildContractFromRunInputs({ ...old, adapterProfiles: ["lb-admission/1"] }, 3)).toHaveProperty("refused");
   }

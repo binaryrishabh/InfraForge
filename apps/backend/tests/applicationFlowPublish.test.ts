@@ -32,7 +32,7 @@ test("/3 saves/reloads without defaults and captures its exact required profiles
   expect(() => readRunInputs({ ...input, adapterProfiles: ["application-flow/4"] })).toThrow();
   for (const schema of ["application-flow/1", "application-flow/2"] as const) { const old = structuredClone(d); old.resources[0]!.applicationFlow!.schema = schema; expect(LayoutSchema.safeParse(old).success).toBe(false); }
   const legacy = canvas(); delete legacy.resources[0]!.applicationFlow;
-  expect(captureRunInputs(legacy, workload, "old").adapterProfiles).toEqual([]);
+  expect(captureRunInputs(legacy, workload, "old").adapterProfiles).toEqual(["traffic-evidence/2"]);
 });
 
 for (const cause of [false, true]) test(`browser/server publish evidence and serialized terminal capture match, cause=${cause}`, () => {

@@ -42,10 +42,10 @@ test("V2 captures model/catalog provenance and V1 reads without invented metadat
 
 test("captures record current implicit profiles and old V1/V2 rows retain JSON and hash identity", () => {
   const design = structuredClone(layout);
-  expect(captureRunInputs(design).adapterProfiles).toEqual([]);
+  expect(captureRunInputs(design).adapterProfiles).toEqual(["traffic-evidence/2"]);
   design.resources.find(r => r.type === "Load Balancer")!.retry = DEFAULT_RETRY_SETTINGS;
   const captured = captureRunInputs(design, workload, "profile-json");
-  expect(captured.adapterProfiles).toEqual(["failure-cause/1"]);
+  expect(captured.adapterProfiles).toEqual(["failure-cause/1", "traffic-evidence/2"]);
   expect(readRunInputs(JSON.parse(JSON.stringify(captured)))).toEqual(captured);
   for (const version of [1, 2] as const) {
     const old = {...captured, version}; delete old.adapterProfiles;

@@ -44,7 +44,7 @@ test("layout/live/captured schemas preserve partial bounded execution limits and
 });
 
 test("capture opts in only for explicit query limits; missing, duplicate and mismatched profiles refuse", () => {
-  const old = captureRunInputs(layout(), workload, "query-capture"); expect(old.adapterProfiles).toEqual(["data-keyspace/1"]);
+  const old = captureRunInputs(layout(), workload, "query-capture"); expect(old.adapterProfiles).toEqual(["data-keyspace/1", "traffic-evidence/2"]);
   expect(buildContractFromRunInputs({ ...old, adapterProfiles: [...old.adapterProfiles!, "data-db-concurrency/1"] }, 5)).toHaveProperty("refused");
   for (const setting of [{ version: 1 as const, activeQueries: 1 }, { version: 1 as const, queuedQueries: 0 }, { version: 1 as const, activeQueries: 8, queuedQueries: 2 }]) {
     const captured = captureRunInputs(layout(setting), workload, "query-capture"), saved = readRunInputs(JSON.parse(JSON.stringify(captured)));

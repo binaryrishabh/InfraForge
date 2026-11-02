@@ -8,7 +8,7 @@ import { databaseLayout, databaseWorkload } from "./databaseReplication.fixture"
 
 test("replication persists through save/live/capture/replay/comparison and rejects invalid intent", () => {
   const layout = databaseLayout(); delete layout.resources.at(-1)!.databaseReplication; delete layout.resources.at(-1)!.dataKeyspace;
-  expect(captureRunInputs(layout, databaseWorkload).adapterProfiles).toEqual([]);
+  expect(captureRunInputs(layout, databaseWorkload).adapterProfiles).toEqual(["traffic-evidence/2"]);
   expect(configuration(layout.resources.at(-1)!)).not.toHaveProperty("databaseReplication");
   const policy = { version: 1 as const, enabled: true as const, replicationDelayMs: 60000, readPolicy: "replica-preferred" as const };
   layout.resources.at(-1)!.databaseReplication = policy;
