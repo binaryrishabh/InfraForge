@@ -6,10 +6,23 @@ import { contractFromDesign } from "../src/model2/product/fromDesign";
 import { compileProduct } from "../src/model2/product/compiler";
 import { createProductModel2 } from "../src/model2/product/run";
 import { quantities } from "./workloadFixture";
+import { keyedUniform } from "../src/model2/random";
 
 const rate = (extra: Partial<RateArrivals> = {}): RateArrivals => ({ schema: "infraforge-rate-arrivals/2", provenance: "test", startUs: 0, endUs: 100000000,
   intervalUs: 1000, readFraction: 0.8, readOperation: "read", writeOperation: "write", changes: [], ...extra });
 const rows = (r = rate(), seed = "traffic") => [...openRows({ id: "product-workload", kind: "rate", rate: r }, seed)];
+
+test("microsecond quantization cannot move a pre-boundary arrival into a zero-load interval", () => {
+  let checked = 0;
+  for (let i = 0; i < 20; i++) {
+    const seed = `zero-boundary-${i}`, gap = -Math.log1p(-keyedUniform(seed, "product-workload", JSON.stringify([0]), "arrival-gap")) * 10000;
+    if (gap % 1 < 0.5) continue;
+    checked++; const boundary = Math.ceil(gap);
+    const sample = rows(rate({ intervalUs: 10000, endUs: boundary + 1000, changes: [{ atUs: boundary, fraction: 0 }] }), seed);
+    expect(sample.length).toBeGreaterThan(0); expect(sample.every(r => r.atUs < boundary)).toBe(true);
+  }
+  expect(checked).toBeGreaterThan(0);
+});
 
 test("Poisson is seeded, bounded, statistically consistent in count and independent operation choice", () => {
   const a = rows(); expect(rows()).toEqual(a); expect(JSON.stringify(rows(rate(), "other")) === JSON.stringify(a)).toBe(false);
@@ -54,8 +67,9 @@ test("normal product stored traces and stepped live generation agree with peaks 
   a.contract.ledger.push(...ledger);
   const stored = compileProduct(d, a.contract), live = compileProduct(d, { ...a.contract, arrival: { ...a.contract.arrival, generated: true } });
   if (!stored.ok || !live.ok) throw Error(JSON.stringify({ stored, live }));
-  const source = live.value.input.arrivals[0]!; expect(source.kind).toBe("rate");
-  expect([...openRows(source, a.contract.seed)]).toEqual([...openRows(stored.value.input.arrivals[0]!, a.contract.seed)]);
+  const source = live.value.input.arrivals[0]!, trace = stored.value.input.arrivals[0]!; expect(source.kind).toBe("rate");
+  if (source.kind !== "rate" || trace.kind !== "trace") throw Error("Product arrivals must materialize the requested live/trace form");
+  expect([...openRows(source, a.contract.seed)]).toEqual([...openRows(trace, a.contract.seed)]);
   const one = createProductModel2(stored.value), stepped = createProductModel2(live.value);
   one.advanceTo(5000000); for (let t = 100000; t <= 5000000; t += 100000) stepped.advanceTo(t);
   const x = stepped.evidence(), y = one.evidence(); expect(x.counts).toEqual(y.counts); expect(x.results).toEqual(y.results); expect(x.resources).toEqual(y.resources);

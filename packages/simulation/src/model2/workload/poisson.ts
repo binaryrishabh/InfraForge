@@ -2,7 +2,7 @@ import { keyedUniform } from "../random";
 import type { RateArrivals, TraceRow } from "./contracts";
 import { WORKLOAD_LIMITS } from "./policy";
 
-export const POISSON_PROVENANCE = "product-arrivals/2: seeded Poisson integrated exponential hazard across piecewise-constant peak/load intervals; independent keyed arrival-operation read choice; integer microsecond rounding";
+export const POISSON_PROVENANCE = "product-arrivals/2: seeded Poisson integrated exponential hazard across piecewise-constant peak/load intervals; independent keyed arrival-operation read choice; floor to integer microseconds within the active rate interval";
 
 // Integrate one hazard per arrival across every rate boundary, including stopped traffic.
 export function* poissonRows(r: RateArrivals, seed: string, sourceId: string): Generator<TraceRow> {
@@ -31,7 +31,8 @@ export function* poissonRows(r: RateArrivals, seed: string, sourceId: string): G
       const intensity = fraction * multiplier / r.intervalUs, available = intensity * (boundary - time);
       if (hazard >= available) { hazard -= available; time = boundary; continue; }
       time += hazard / intensity;
-      const atUs = Math.round(time);
+      // Flooring preserves the interval of an event just before a rate boundary.
+      const atUs = Math.floor(time);
       if (!Number.isSafeInteger(atUs)) throw Error("Poisson timestamp outside safe microsecond domain");
       if (atUs >= r.endUs) return;
       const read = keyedUniform(seed, sourceId, JSON.stringify([index]), "arrival-operation") < r.readFraction;
