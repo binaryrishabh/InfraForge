@@ -20,7 +20,7 @@ export function resolveIntervention(design: SavedProductDesign, contract: Produc
       resolvedTargets = [resource.id];
     } else {
       if (!resource || resource.type !== d.targetKind || !spec || spec.controller || role?.config.kind !== d.mechanism || material?.kind !== d.mechanism) throw Error("INTERVENTION_ROLE: target lacks a fixed declared mechanism role");
-      if ((d.id === "db-promote-replica" || d.id === "db-fail-primary") && (material.kind !== "relational" || !material.replication?.enabled)) throw Error("INTERVENTION_ROLE: enabled database replica required");
+      if ((d.id === "db-promote-replica" || d.id === "db-fail-primary" || d.id === "db-fail-replica") && (material.kind !== "relational" || !material.replication?.enabled)) throw Error("INTERVENTION_ROLE: enabled database replica required");
       if (d.id === "cpu-capacity" || d.id === "session-capacity") {
         if (material.kind !== "relational") throw Error("INTERVENTION_ROLE: relational execution required");
         authoredBaseline = d.id === "cpu-capacity" ? requireKnown(material.execution.cores, "cores") : requireKnown(material.maxSessions, "count");
@@ -76,8 +76,11 @@ export function compileInterventions(design: SavedProductDesign, contract: Produ
     if (row.atUs > requireKnown(input.horizon, "us")) throw Error("INTERVENTION_HORIZON: action is outside the run");
     const {interventionId: kind, parameters} = row.request;
     const durationUs = INTERVENTIONS.find(d => d.id === kind)!.endPolicy === "one-shot" ? undefined : Number(parameters.duration) * SECOND, endUs = durationUs === undefined ? null : row.atUs + durationUs;
-    if (kind === "db-fail-primary" && contract.faults.some(f => f.kind === "Crash" && option.resolvedTargets.includes(f.target) && requireKnown(f.at, "us") < endUs! && requireKnown(f.at, "us") + requireKnown(f.duration, "us") + (f.restart ? requireKnown(f.restart, "us") : 0) > row.atUs)) throw Error("INTERVENTION_OVERLAP: database member outage overlaps resource Crash");
+    if ((kind === "db-fail-primary" || kind === "db-fail-replica") && contract.faults.some(f => f.kind === "Crash" && option.resolvedTargets.includes(f.target) && requireKnown(f.at, "us") < endUs! && requireKnown(f.at, "us") + requireKnown(f.duration, "us") + (f.restart ? requireKnown(f.restart, "us") : 0) > row.atUs)) throw Error("INTERVENTION_OVERLAP: database member outage overlaps resource Crash");
+    const sameDatabase = (other: typeof row) => "resourceId" in other.request.target && "resourceId" in row.request.target && other.request.target.resourceId === row.request.target.resourceId;
+    if (kind === "db-fail-replica" && rows.some(other => sameDatabase(other) && other.request.interventionId === "db-promote-replica" && other.atUs <= row.atUs)) throw Error("INTERVENTION_ROLE: promoted writer is no longer a replica");
     if (kind === "db-promote-replica") {
+      if (rows.some(other => sameDatabase(other) && other.request.interventionId === "db-fail-replica" && other.atUs <= row.atUs && other.atUs + Number(other.request.parameters.duration) * SECOND > row.atUs)) throw Error("INTERVENTION_PROMOTION: database replica unavailable during member outage");
       if (receipts.some(old => old.interventionId === kind && old.resolvedTargets.some(id => option.resolvedTargets.includes(id)))) throw Error("INTERVENTION_PROMOTION: replica already promoted; v1 has no second replica");
       if (contract.faults.some(f => f.kind === "Crash" && option.resolvedTargets.includes(f.target) && requireKnown(f.at, "us") <= row.atUs && requireKnown(f.at, "us") + requireKnown(f.duration, "us") + (f.restart ? requireKnown(f.restart, "us") : 0) >= row.atUs)) throw Error("INTERVENTION_PROMOTION: database replica unavailable during resource crash");
     }
@@ -120,7 +123,7 @@ export function compileInterventions(design: SavedProductDesign, contract: Produ
       else if (kind === "consumer-outage") input.asyncInterventions.push({...common, kind: "consumer-state", available: false, duration: duration!});
       else if (kind === "pool-reset") input.networkInterventions.push({...common, kind: "reset", evidenceActionId: row.id});
       else if (kind === "db-promote-replica") input.dataInterventions.push({...common, kind});
-      else if (kind === "db-fail-primary") input.dataInterventions.push({...common, kind, duration: duration!});
+      else if (kind === "db-fail-primary" || kind === "db-fail-replica") input.dataInterventions.push({...common, kind, duration: duration!});
       else if (kind === "flush") input.dataInterventions.push({...common, kind});
       else if (kind === "cdn-purge") input.systems.interventions.push({...common, kind});
       else if (kind === "session-capacity") input.dataInterventions.push({...common, kind, duration: duration!, sessions: q("sessions", Number(parameters.sessions), "count")});

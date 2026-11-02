@@ -6,7 +6,7 @@ import { interventionOptions } from "../src/model2/product/interventions";
 import { withTimeline } from "../src/model2/product/timeline";
 import { scenarioError } from "../src/model2/product/scenario";
 
-export const failPrimary = { interventionId: "db-fail-primary", revision: 1, target: { resourceId: "db" }, parameters: { duration: 2 } };
+const failPrimary = { interventionId: "db-fail-primary", revision: 1, target: { resourceId: "db" }, parameters: { duration: 2 } };
 
 test("primary-only failure aborts work, invalidates sessions, preserves replica and returns the unpromoted writer", () => {
   for (const policy of ["primary", "replica-preferred"] as const) {
@@ -48,4 +48,16 @@ test("primary outage permits explicit promotion while replica survives", () => {
   const c = compileProduct(design, f.contract); if (!c.ok) throw Error(JSON.stringify(c));
   const run = createProductModel2(c.value); run.advanceTo(4_000_000);
   expect(run.inspectData.database("db")!.databaseReplication).toMatchObject({ currentWriter: "replica", writerEpoch: 2, primaryProcessState: "fenced" });
+});
+
+test("primary outage with and without promotion is deterministic one-shot versus irregular stepping", () => {
+  for (const promoted of [false, true]) {
+    const design = databaseDesign(); design.resources.at(-1)!.databaseReplication = { version: 1, enabled: true, replicationDelayMs: 2000, readPolicy: "replica-preferred" };
+    const f = prepareDatabase(design); f.contract.interventions = [{ id: "fail", atUs: 1_000_001, request: failPrimary }];
+    if (promoted) f.contract.interventions.push({ id: "promote", atUs: 2_000_001, request: promote });
+    const c = compileProduct(design, f.contract); if (!c.ok) throw Error(JSON.stringify(c));
+    const one = createProductModel2(c.value), stepped = createProductModel2(c.value); one.advanceTo(one.horizon);
+    for (let at = 123457; at < stepped.horizon; at += 123457) stepped.advanceTo(at);
+    stepped.advanceTo(stepped.horizon); expect(stepped.evidence()).toEqual(one.evidence());
+  }
 });

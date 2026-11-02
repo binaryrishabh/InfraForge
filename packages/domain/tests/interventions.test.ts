@@ -1,6 +1,16 @@
 import { expect, test } from "bun:test";
 import { INTERVENTIONS, interventionError } from "../src/resource";
 const request = { interventionId: "session-capacity", revision: 1, target: { resourceId: "db" }, parameters: { sessions: 0, duration: 1 } };
+
+test("database member failures declare only bounded duration and require an enabled replica", () => {
+  for (const interventionId of ["db-fail-primary", "db-fail-replica"]) {
+    expect(INTERVENTIONS.find(d => d.id === interventionId)).toMatchObject({ revision: 1, targetKind: "Database", mechanism: "relational", reversible: true, endPolicy: "timed", requires: ["fixed relational role", "enabled replica"], parameters: [{ name: "duration", kind: "integer", unit: "s", min: 1, max: "remaining-seconds" }] });
+    const request = { interventionId, revision: 1, target: { resourceId: "db" }, parameters: { duration: 2 } };
+    expect(interventionError(request)).toBeNull();
+    for (const parameters of [{}, { duration: 0 }, { duration: 1.5 }, { duration: 301 }, { duration: 2, force: true }]) expect(interventionError({ ...request, parameters })).not.toBeNull();
+    expect(interventionError(request, { remainingSeconds: 1 })).not.toBeNull();
+  }
+});
 test("CDN purge is a strict versioned resource-only parameterless one-shot", () => {
   expect(INTERVENTIONS.find(d => d.id === "cdn-purge")).toEqual({id: "cdn-purge", revision: 1, label: "Purge CDN cache", targetKind: "CDN", mechanism: "cdn", parameters: [], reversible: false, endPolicy: "one-shot", requires: ["fixed CDN role"]});
   const purge = {interventionId: "cdn-purge", revision: 1, target: {resourceId: "cdn"}, parameters: {}};
@@ -21,7 +31,7 @@ test("consumer outage is duration-only, timed and reversible for a background wo
 });
 test("capabilities round-trip as data and enforce product policy at contextual boundaries", () => {
   expect(JSON.parse(JSON.stringify(INTERVENTIONS))).toEqual(INTERVENTIONS);
-  expect(INTERVENTIONS.map(d => d.id)).toEqual(["db-fail-primary", "db-promote-replica", "consumer-outage", "pool-reset", "deny-port", "session-capacity", "cpu-capacity", "flush", "cdn-purge", "delay", "bandwidth", "partition"]);
+  expect(INTERVENTIONS.map(d => d.id)).toEqual(["db-fail-primary", "db-fail-replica", "db-promote-replica", "consumer-outage", "pool-reset", "deny-port", "session-capacity", "cpu-capacity", "flush", "cdn-purge", "delay", "bandwidth", "partition"]);
   expect(interventionError(request, { remainingSeconds: 1 })).toBeNull();
   for (const parameters of [{sessions: -1, duration: 1}, {sessions: 513, duration: 1}, {sessions: 0.5, duration: 1}, {sessions: Infinity, duration: 1}, {sessions: 0, duration: 301}, {sessions: 0}, {sessions: 0, duration: 1, extra: true}])
     expect(interventionError({...request, parameters}, {authoredBaseline: 512})).toContain("INTERVENTION_");

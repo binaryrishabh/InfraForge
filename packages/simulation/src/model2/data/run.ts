@@ -30,7 +30,7 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
       const config = input.resources.find((r) => r.id === id)!;
       if (modules.has(config.kind)) return modules.create(config, { clock: extension?.clockFor?.(id, kernel) ?? kernel, send, causal: extension?.causal, cpu: extension?.cpuFor?.(id, kernel), databaseIo: config.kind === "relational" ? extension?.databaseIoFor?.(id, kernel) : undefined });
     },
-    disconnected(target, session) { databases.get(target)?.closeSession(session); extension?.disconnected?.(target, session); },
+    disconnected(target, session) { databases.get(target)?.connectionClosed(session); databases.get(target)?.closeSession(session); extension?.disconnected?.(target, session); },
     connection(path, kernel, send, context) {
       const external = extension?.connection?.(path, kernel, send, context);
       const config = input.resources.find(r => r.id === path.target);
@@ -63,10 +63,10 @@ export function createDataRuntime(authored: DataInput, extension?: NetworkExtens
         const clock = extension?.clockFor?.(i.target, kernel) ?? kernel;
         const apply = (active: boolean) => {
           const config = input.resources.find((r) => r.id === i.target)!;
-          if (i.kind === "db-promote-replica" || i.kind === "db-fail-primary") {
+          if (i.kind === "db-promote-replica" || i.kind === "db-fail-primary" || i.kind === "db-fail-replica") {
             const db = databases.get(i.target)!;
-            const invalid = i.kind === "db-promote-replica" ? db.promoteReplica() : db.primaryAvailability(!active);
-            db.recordConnectionInvalidations(context.invalidateSessions(i.target, invalid));
+            const invalid = i.kind === "db-promote-replica" ? db.promoteReplica() : i.kind === "db-fail-primary" ? db.primaryAvailability(!active) : db.replicaAvailability(!active);
+            context.invalidateSessions(i.target, invalid);
           }
           else if (i.kind === "flush") caches.get(i.target)!.flush();
           else if (config.kind === "relational") {

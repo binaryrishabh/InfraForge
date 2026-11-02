@@ -83,3 +83,39 @@ test("Database promotion durable request scopes the owner and run, refuses malfo
   await processRunActions("run", replay, () => {}); await recordReplayActions("run", replay);
   expect(rows).toHaveLength(1); expect(JSON.stringify(replay.model2.evidence())).toBe(evidence);
 });
+
+test("both database member outages persist timed receipts, survive a lost completion reply and replay once", async () => {
+  for (const interventionId of ["db-fail-primary", "db-fail-replica"]) {
+    rows.length = 0; deployment.actionSequence = 0;
+    const request = { kind: "intervention" as const, parameters: { interventionId, revision: 1, target: { resourceId: "db" }, parameters: { duration: 2 } } };
+    await expect(requestRunAction("run", "other-owner", request)).rejects.toThrow("not found");
+    await expect(requestRunAction("run", "owner", { ...request, parameters: { ...request.parameters, parameters: { duration: 2, force: true } } })).rejects.toThrow("Invalid");
+    deployment.challengeId = "challenge"; await expect(requestRunAction("run", "owner", request)).rejects.toThrow("fixed conditions"); deployment.challengeId = null;
+    deployment.status = "completed"; await expect(requestRunAction("run", "owner", request)).rejects.toThrow("live run"); deployment.status = "live";
+    expect(rows).toHaveLength(0);
+    await requestRunAction("run", "owner", request);
+    const run = instance(); run.model2.advance();
+    await processRunActions("run", run, () => {});
+    expect(rows[0]).toMatchObject({ status: "running", outcome: { intervention: { interventionId, atUs: 1_000_001, endUs: 3_000_001 } } });
+    await processRunActions("run", run, () => {}); expect(run.model2.actions).toHaveLength(1);
+    run.model2.advance();
+    expect(run.model2.evidence().data.databases[0]!.databaseReplication).toMatchObject(interventionId === "db-fail-primary" ? { currentWriter: "none", primaryProcessState: "unavailable", replicaProcessState: "available" } : { currentWriter: "primary", primaryProcessState: "available", replicaProcessState: "unavailable" });
+    run.model2.advance(); await recordActionCompletions(run); expect(rows[0]!.status).toBe("running");
+    run.model2.advance(); loseCompletionReply = true;
+    await expect(recordActionCompletions(run)).rejects.toThrow("completion committed but reply lost");
+    await flushAcknowledgement(run); await processRunActions("run", run, () => {});
+    const completed = actionDto(rows[0]!);
+    expect(completed).toMatchObject({ status: "completed", completedSimulatedSeconds: 4, outcome: { interventionEnded: true, intervention: { endUs: 3_000_001 } } });
+    expect(run.model2.evidence().data.databases[0]!.databaseReplication).toMatchObject({ currentWriter: "primary", primaryProcessState: "available", replicaProcessState: "available" });
+    expect(run.actions.size).toBe(0); expect(run.model2.actions).toHaveLength(1);
+    const replay = instance(); replay.replay = { next: 0, actions: [{ atSecond: 1, request }] }; replay.model2.advance();
+    rows.length = 0; deployment.actionSequence = 0;
+    await recordReplayActions("run", replay); replay.replay.next = 0; await recordReplayActions("run", replay); expect(rows).toHaveLength(1);
+    await processRunActions("run", replay, () => {});
+    for (let second = 2; second <= 4; second++) replay.model2.advance();
+    await recordActionCompletions(replay);
+    expect(replay.model2.evidence()).toEqual(run.model2.evidence());
+    expect(actionDto(rows[0]!)).toMatchObject({ status: "completed", outcome: completed.outcome });
+    await processRunActions("run", replay, () => {}); expect(rows).toHaveLength(1); expect(replay.model2.actions).toHaveLength(1);
+  }
+});

@@ -76,6 +76,7 @@ export function validateData(input: DataInput) {
     if (!i.id || ids.has(i.id)) throw new Error("Duplicate data intervention"); ids.add(i.id); const at = num(i.at, "us"), r = resources.get(i.target);
     if (i.kind === "db-promote-replica") {
       if (r?.kind !== "relational" || !r.replication?.enabled) throw Error("Promotion requires an enabled database replica");
+      if (input.dataInterventions.some(other => other.kind === "db-fail-replica" && other.target === i.target && num(other.at, "us") <= at && num(other.at, "us") + num(other.duration, "us", 1) > at)) throw Error("Database replica unavailable during member outage");
       const key = `promote:${i.target}`; if (spans.has(key)) throw Error("Database replica already promoted"); spans.set(key, at);
     }
     else if (i.kind === "flush") { if (r?.kind !== "cache") throw new Error("Flush targets cache only"); }
@@ -83,9 +84,11 @@ export function validateData(input: DataInput) {
       if (r?.kind !== "relational") throw new Error("Data capacity intervention requires relational resource");
       const key = JSON.stringify([i.kind, i.target]); if (at < (spans.get(key) ?? 0)) throw new Error("Overlapping data interventions"); spans.set(key, micros(at + num(i.duration, "us", 1)));
       if (i.kind === "session-capacity") { if (num(i.sessions, "count") > (r.semantics.startsWith("postgresql-keyed/") ? POSTGRES_SESSION_CAP : caps.sessions)) throw new Error("Session limit budget"); }
-      else if (i.kind === "db-fail-primary") {
+      else if (i.kind === "db-fail-primary" || i.kind === "db-fail-replica") {
         if (!r.replication?.enabled) throw Error("Member outage requires an enabled database replica");
         if (at + num(i.duration, "us", 1) > horizon) throw Error("Member outage exceeds run horizon");
+        if (i.kind === "db-fail-replica" && spans.has(`promote:${i.target}`)) throw Error("Promoted writer is no longer a replica");
+        if (input.networkInterventions.some(other => other.kind === "service-state" && !other.alive && other.target === i.target && num(other.at, "us") < at + num(i.duration, "us", 1) && num(other.at, "us") + num(other.duration, "us", 1) > at)) throw Error("Member outage overlaps resource availability");
       } else num(i.cores, "cores", 0, false);
     }
   }

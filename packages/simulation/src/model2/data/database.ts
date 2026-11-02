@@ -25,6 +25,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
   const sessions = new Map<string, Tx | undefined>(), active = new Map<string, Tx>(), queue = new Map<string, Tx>();
   const sessionMembers = new Map<string, "primary" | "replica">();
   const sessionEpochs = new Map<string, number>();
+  const invalidatedSessions = new Set<string>();
   let sessionInvalidations = 0, connectionInvalidations = 0, failedWritesWithoutWriter = 0;
   const sessionMember = () => replication?.currentWriter() === "replica" || replication?.currentWriter() === "none" && replication.sourceAvailable("replica") ? "replica" as const : "primary" as const;
   let activeArea = 0, activeAnchor = kernel.now;
@@ -140,7 +141,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     pumping = false;
   };
   return {
-    recordConnectionInvalidations(count: number) { connectionInvalidations += count; },
+    connectionClosed(id: string) { if (invalidatedSessions.delete(id)) connectionInvalidations++; },
     primaryAvailability(value: boolean) {
       if (!replication) throw Error("Database replication disabled");
       replication.primaryAvailability(value);
@@ -148,6 +149,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
       const wasPaused = paused; paused = true;
       const invalid = [...sessions.keys()].filter(id => sessionMembers.get(id) === "primary");
       sessionInvalidations += invalid.length;
+      for (const id of invalid) invalidatedSessions.add(id);
       for (const id of invalid) closeSlot(id);
       for (const t of [...active.values(), ...queue.values()]) if (invalid.includes(t.session) || t.readSource === "primary") finish(t, false, "database-primary-unavailable");
       paused = wasPaused; pump(); return invalid;
@@ -158,6 +160,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
       const wasPaused = paused; paused = true;
       rows = replication.promote();
       const invalid = [...sessions.keys()]; sessionInvalidations += invalid.length;
+      for (const id of invalid) invalidatedSessions.add(id);
       for (const id of invalid) closeSlot(id);
       for (const t of [...active.values(), ...queue.values()]) {
         const writes = t.plan.statements.some(s => s.kind === "write" || s.kind === "insert");
@@ -166,7 +169,17 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
       }
       paused = wasPaused; pump(); return invalid;
     },
-    replicaAvailability(value: boolean) { replication?.available(value); },
+    replicaAvailability(value: boolean) {
+      replication?.available(value);
+      if (!replication || value) return [];
+      const wasPaused = paused; paused = true;
+      const invalid = [...sessions.keys()].filter(id => sessionMembers.get(id) === "replica");
+      sessionInvalidations += invalid.length;
+      for (const id of invalid) invalidatedSessions.add(id);
+      for (const id of invalid) closeSlot(id);
+      for (const t of [...active.values(), ...queue.values()]) if (invalid.includes(t.session) || active.has(t.work.callId) && t.readSource === "replica") finish(t, false, "database-replica-unavailable");
+      paused = wasPaused; pump(); return invalid;
+    },
     openSession,
     sessionAlive: (id: string) => sessions.has(id),
     accept(work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt {
