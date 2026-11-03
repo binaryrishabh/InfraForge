@@ -90,6 +90,7 @@ export function computeResource(config: ComputeResource, profiles: Map<string, C
         const cause = !full ? seedCause("memory-limit", config.id) : work.clientAttempt !== undefined ? seedCause("backend-rejected", config.id) : undefined;
         rejected++; causal?.({ atUs: kernel.now, kind: "app-rejected", resource: config.id, work, detail: causeFields(cause) }); done("rejected", cause); return { admitted: false, cancel: () => "already-finished", state: () => "finished" };
       }
+      if (causal?.lbAccounting && (paused || active.size >= workers)) causal({ atUs: kernel.now, kind: "app-queued", resource: config.id, work, detail: {} });
       admitted++;
       causal?.({ atUs: kernel.now, kind: "app-admitted", resource: config.id, work, detail: {} });
       const call: Call = { work, done, phase: "queued", waitRemaining: 0, waitSince: kernel.now };
