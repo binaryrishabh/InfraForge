@@ -27,6 +27,7 @@ COPY apps/backend/comparison ./apps/backend/comparison/
 COPY apps/backend/reruns ./apps/backend/reruns/
 COPY apps/backend/actions ./apps/backend/actions/
 COPY apps/backend/browserRuns ./apps/backend/browserRuns/
+COPY apps/backend/replay ./apps/backend/replay/
 COPY apps/backend/capabilities ./apps/backend/capabilities/
 COPY apps/backend/challenges ./apps/backend/challenges/
 COPY apps/backend/scripts ./apps/backend/scripts/

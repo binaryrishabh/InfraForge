@@ -113,6 +113,9 @@ apps/backend/actions/**
 !apps/backend/browserRuns/
 apps/backend/browserRuns/**
 !apps/backend/browserRuns/*.ts
+!apps/backend/replay/
+apps/backend/replay/**
+!apps/backend/replay/*.ts
 !apps/backend/capabilities/
 apps/backend/capabilities/**
 !apps/backend/capabilities/*.ts
