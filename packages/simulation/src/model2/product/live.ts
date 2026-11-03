@@ -1,3 +1,4 @@
+import { wholeRunEvidence } from "./wholeRun";
 import { createProductModel2 } from "./run";
 import { compileProduct } from "./compiler";
 import { withTimeline, type TimedAction } from "./timeline";
@@ -26,6 +27,7 @@ export interface LiveNodeMetrics {
   replicas?: { ready: number; total: number };
 }
 export interface LiveProjection {
+  wholeRun?: import("@infraforge/contracts/telemetry").WholeRunMetrics;
   objective?: import("@infraforge/contracts/telemetry").ObjectiveMetrics;
   latency?: import("@infraforge/contracts/telemetry").LatencyMetrics;
   clientRetry?: import("@infraforge/contracts/telemetry").ClientRetryLiveMetrics;
@@ -49,12 +51,14 @@ const percentile = (sorted: number[], p: number) => sorted.length ? sorted[Math.
 export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
   // Caller outcomes are counted as they happen, so a second's totals never need the run's history.
   const caller = { offered: 0, completed: 0, failed: 0 };
+  const wholeRun = compiled.trafficEvidenceProfile ? wholeRunEvidence() : undefined;
   const retryPolicy = compiled.input.operations.find(o => o.clientRetry)?.clientRetry;
   const retries = retryPolicy ? clientRetryEvidence(retryPolicy.maxAttempts, retryPolicy.attemptTimeoutMs) : undefined;
   let previousAttempts = 0;
   let responses: number[] = [];
   const observe: CausalObserver = (event) => {
     retries?.observe(event);
+    wholeRun?.observe(event);
     if (event.kind === "caller-offered") caller.offered++;
     else if (event.kind === "caller-terminal") {
       if (event.detail.outcome === "completed") { caller.completed++; if (!compiled.trafficEvidenceProfile) responses.push(event.detail.responseUs as number); } else caller.failed++;
@@ -185,7 +189,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
       const retryCounts = retries?.measure();
       const clientRetry = retryCounts ? { ...retryCounts, attemptRps: retryCounts.totalAttempts - previousAttempts } : undefined;
       previousAttempts = retryCounts?.totalAttempts ?? 0;
-      return { ...(compiled.input.workloadObjective ? { objective: runtime.measureObjective()! } : {}), ...(measured ? { latency: measured.latency } : {}), ...(clientRetry ? { clientRetry } : {}), simulatedSeconds: now / SECOND, offeredRps: offered, completedRps, failedRps, latencyMs, metrics, overallHealth };
+      return { ...(wholeRun ? { wholeRun: wholeRun.measure(now / SECOND) } : {}), ...(compiled.input.workloadObjective ? { objective: runtime.measureObjective()! } : {}), ...(measured ? { latency: measured.latency } : {}), ...(clientRetry ? { clientRetry } : {}), simulatedSeconds: now / SECOND, offeredRps: offered, completedRps, failedRps, latencyMs, metrics, overallHealth };
     },
   };
 }

@@ -26,5 +26,5 @@ export interface SimulationSnapshot {
     liveTopology?: RunTopology;
     topologyRevision?: number;
     // Model 2: caller traffic during the last simulated second; latency is null when nothing completed.
-    traffic?: { objective?: import("./ObjectiveMetrics.interface").ObjectiveMetrics; latency?: import("./LatencyMetrics.interface").LatencyMetrics; clientRetry?: import("./ClientRetryMetrics.interface").ClientRetryLiveMetrics; offeredRps: number; completedRps: number; failedRps: number; latencyMs: { p50: number | null; p95: number | null; p99?: number | null } };
+    traffic?: { wholeRun?: import("./WholeRunMetrics.interface").WholeRunMetrics; objective?: import("./ObjectiveMetrics.interface").ObjectiveMetrics; latency?: import("./LatencyMetrics.interface").LatencyMetrics; clientRetry?: import("./ClientRetryMetrics.interface").ClientRetryLiveMetrics; offeredRps: number; completedRps: number; failedRps: number; latencyMs: { p50: number | null; p95: number | null; p99?: number | null } };
 }

@@ -1,3 +1,4 @@
+import { wholeRunEvidence } from "./wholeRun";
 import { latencyEvidence } from "./latencyEvidence";
 import { interventionOptions, incomingMaterializedLinks } from "./interventions";
 import { INTERVENTIONS, interventionError } from "@infraforge/domain/resource";
@@ -52,6 +53,7 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
   let target = 1;
   let chaos: Array<{ type: ChaosType; resourceId: string; endsAt: number; duration: number }> = [];
   let last: LiveProjection | null = null;
+  const emptyWholeRun = initial.trafficEvidenceProfile ? wholeRunEvidence().measure(0) : undefined;
   const emptyLatency = initial.trafficEvidenceProfile ? latencyEvidence(0).measure(0).latency : undefined;
   const showP99 = input.adapterProfiles?.includes("traffic-evidence/2") || input.workloadProfile.workloadDynamics || input.workloadProfile.clientRetry;
   const emptyRetries = input.workloadProfile.clientRetry ? { ...clientRetryEvidence(input.workloadProfile.clientRetry.maxAttempts, input.workloadProfile.clientRetry.attemptTimeoutMs).measure(), attemptRps: 0 } : undefined;
@@ -73,8 +75,8 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
           intervention: {actionId: r.actionId, label: INTERVENTIONS.find(d => d.id === r.interventionId)!.label, parameters: r.parameters, restoreAtUs: r.endUs!, ...(edgeIds.length ? {edgeIds} : {})}}));
       })],
     // Captured historical views retain their exact latency shape; explicit dynamics opt into the new readout.
-    traffic: last ? { ...(last.objective ? { objective: last.objective } : {}), ...(last.latency ? { latency: last.latency } : {}), ...(last.clientRetry ? { clientRetry: last.clientRetry } : {}), offeredRps: last.offeredRps, completedRps: last.completedRps, failedRps: last.failedRps, latencyMs: showP99 ? last.latencyMs : { p50: last.latencyMs.p50, p95: last.latencyMs.p95 } }
-      : { ...(emptyObjective ? { objective: emptyObjective } : {}), ...(emptyLatency ? { latency: emptyLatency } : {}), ...(emptyRetries ? { clientRetry: emptyRetries } : {}), offeredRps: 0, completedRps: 0, failedRps: 0, latencyMs: { p50: null, p95: null, ...(showP99 ? { p99: null } : {}) } },
+    traffic: last ? { ...(last.wholeRun ? { wholeRun: last.wholeRun } : {}), ...(last.objective ? { objective: last.objective } : {}), ...(last.latency ? { latency: last.latency } : {}), ...(last.clientRetry ? { clientRetry: last.clientRetry } : {}), offeredRps: last.offeredRps, completedRps: last.completedRps, failedRps: last.failedRps, latencyMs: showP99 ? last.latencyMs : { p50: last.latencyMs.p50, p95: last.latencyMs.p95 } }
+      : { ...(emptyWholeRun ? { wholeRun: emptyWholeRun } : {}), ...(emptyObjective ? { objective: emptyObjective } : {}), ...(emptyLatency ? { latency: emptyLatency } : {}), ...(emptyRetries ? { clientRetry: emptyRetries } : {}), offeredRps: 0, completedRps: 0, failedRps: 0, latencyMs: { p50: null, p95: null, ...(showP99 ? { p99: null } : {}) } },
   });
 
   return {
