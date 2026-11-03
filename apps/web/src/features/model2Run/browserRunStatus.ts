@@ -32,7 +32,8 @@ export const useBrowserRunStatus = create<Store>((set) => ({
   set: (id, state) => set((s) => ({ runs: { ...s.runs, [id]: state } })),
   setDeadline: (id, at) => set((s) => ({ deadlines: { ...s.deadlines, [id]: at } })),
   clear: (id) => set((s) => {
-    const { [id]: _state, ...runs } = s.runs, { [id]: _deadline, ...deadlines } = s.deadlines;
+    const runs = { ...s.runs }, deadlines = { ...s.deadlines };
+    delete runs[id]; delete deadlines[id];
     return { runs, deadlines };
   }),
 }));
