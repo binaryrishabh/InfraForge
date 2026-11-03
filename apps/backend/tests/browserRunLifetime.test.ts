@@ -20,5 +20,6 @@ test("the learner is told the real seconds left, consistent with when the server
 test("a cancel says why only with the one known reason, and refuses anything else", () => {
   expect(CancelSchema.parse({})).toEqual({});
   expect(CancelSchema.parse({ reason: "browser-error" })).toEqual({ reason: "browser-error" });
+  expect(CancelSchema.parse({ reason: "discarded" })).toEqual({ reason: "discarded" });
   for (const body of [{ reason: "anything" }, { reason: "browser-error", extra: 1 }, { message: "text" }]) expect(CancelSchema.safeParse(body).success).toBe(false);
 });

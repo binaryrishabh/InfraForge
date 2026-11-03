@@ -4,7 +4,10 @@ import { ArrowRight, Radio } from "lucide-react";
 import { toast } from "sonner";
 import { getChallenge, listChallenges } from "@/api/challenges.api";
 import { getAllInfrastructure } from "@/api/infrastructure.api";
-import { getLiveDeployments, type LiveDeploymentSummary } from "@/api/deployment.api";
+import { discardBrowserRun, getLiveDeployments, type LiveDeploymentSummary } from "@/api/deployment.api";
+import { browserRunFor } from "@/features/model2Run/browserRuns";
+import { useBrowserRunStatus } from "@/features/model2Run/browserRunStatus";
+import { describeBrowserRunCard } from "../browserRunCard";
 import { getRunHistory } from "@/api/reports.api";
 import { useRequest } from "@/api/useRequest";
 import { relativeTime, plural } from "@/lib/format";
@@ -29,10 +32,20 @@ function ChallengeVisual({ id }: { id: string }) {
 
 /* The one thing to do next, set large. Everything else on Home is the record of what
 has already happened. */
-function NextStep({ next }: { next: Next }) {
+export function NextStep({ next, onChanged = () => {} }: { next: Next; onChanged?: () => void }) {
   const navigate = useNavigate();
   const { open, busy } = useOpenChallenge();
   const [entering, setEntering] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
+  // What this tab still holds of a browser run decides what Home can honestly say about it.
+  const runId = next.kind === "live" ? next.run.id : "";
+  const heldState = useBrowserRunStatus((s) => s.runs[runId]?.kind);
+  const discard = async (run: LiveDeploymentSummary) => {
+    setDiscarding(true);
+    try { await discardBrowserRun(run.id); toast.info("The run was discarded."); onChanged(); }
+    catch { toast.error("The run could not be discarded. Try again."); }
+    finally { setDiscarding(false); }
+  };
   const enter = async (run: LiveDeploymentSummary) => {
     setEntering(true);
     try { await reenterRun(run.id, run.infrastructureName); navigate("/design"); }
@@ -53,6 +66,13 @@ function NextStep({ next }: { next: Next }) {
       </div>
     </section>
   );
+  if (next.kind === "live" && next.run.status === "browser") {
+    const card = describeBrowserRunCard(browserRunFor(next.run.id) ? "worker" : heldState ?? "nothing", next.run.infrastructureName, relativeTime(next.run.createdAt));
+    return frame(card.eyebrow, card.title, card.body, <>
+      <Button variant="primary" size="lg" loading={entering} disabled={discarding} icon={<Radio size={16} aria-hidden="true" />} onClick={() => void enter(next.run)}>{card.open}</Button>
+      {card.canDiscard && <Button variant="secondary" size="lg" loading={discarding} disabled={entering} onClick={() => void discard(next.run)}>Discard this run</Button>}
+    </>);
+  }
   if (next.kind === "live") return frame("A run is live", next.run.infrastructureName, `${plural(next.run.resourceCount, "resource")}, live since ${relativeTime(next.run.createdAt)}. It keeps running on the server until it is stopped${next.run.challengeId ? " or reaches its evaluation second" : ""}.`,
     <Button variant="primary" size="lg" loading={entering} icon={<Radio size={16} aria-hidden="true" />} onClick={() => void enter(next.run)}>Return to the run</Button>);
   if (next.kind === "free") return frame("Next step", "Every challenge has a recent met attempt.", "Design something of your own, run it against the traffic you choose, and compare runs as you change one thing at a time.",
@@ -78,7 +98,7 @@ export function HomePage() {
       safe(getRunHistory(5), { runs: [], nextCursor: null }), safe(getAllInfrastructure(), [])]);
     return { live, challenges, runs: history.runs, designs };
   }, []);
-  const { data, loading } = useRequest(load);
+  const { data, loading, retry } = useRequest(load);
   const name = user?.name ? `, ${user.name.split(" ")[0]}` : "";
   // A brand-new account has nothing to come back to yet.
   const returning = !!data && (data.runs.length > 0 || data.designs.length > 0 || data.challenges.some((c) => c.attempts > 0));
@@ -89,7 +109,7 @@ export function HomePage() {
         <h1 className="text-[15px] font-semibold text-ink-2">{data ? (returning ? `Welcome back${name}.` : `Welcome${name}. Start with the first station.`) : "Home"}</h1>
       </header>
       {loading || !data ? <Loading label="Gathering your work…" /> : <>
-        <NextStep next={next!} />
+        <NextStep next={next!} onChanged={retry} />
         <Section title="Your lines" className="mt-12" aside={<Link to="/challenges" className="text-sm font-medium text-accent hover:underline">All challenges</Link>}>
           <CurriculumLine challenges={data.challenges} next={next && "challenge" in next ? next.challenge.id : null} />
         </Section>

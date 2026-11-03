@@ -113,7 +113,8 @@ deploymentRouter.post("/:deploymentId/cancel", async (req, res) => {
   const reason = CancelSchema.safeParse(req.body ?? {});
   if (!reason.success) throw new ValidationError("A valid cancel reason is required.");
   // A crashed browser worker and a stop before the first second both leave nothing to replay; the timeline says which.
-  const message = reason.data.reason === "browser-error" ? "The learner's browser stopped this run unexpectedly; nothing was recorded." : "Stopped before its first simulated second; nothing was recorded.";
+  const message = reason.data.reason === "browser-error" ? "The learner's browser stopped this run unexpectedly; nothing was recorded."
+    : reason.data.reason === "discarded" ? "Discarded by the learner before it finished; nothing was recorded." : "Stopped before its first simulated second; nothing was recorded.";
   const closed = await prisma.$executeRaw`UPDATE "Deployment" SET status = 'failed', "updatedAt" = CURRENT_TIMESTAMP,
     timeline = COALESCE(timeline::jsonb, '[]'::jsonb) || jsonb_build_array(jsonb_build_object(
       'timestamp', CURRENT_TIMESTAMP, 'event', 'Deployment Failed', 'message', ${message}::text))

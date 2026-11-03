@@ -11,7 +11,7 @@ export const SubmissionSchema = z.object({
   actions: z.array(z.object({ atSecond: z.number().int().min(0), request: ActionRequestSchema }).strict()).max(MAX_RUN_ACTIONS),
 }).strict();
 // Why a browser closes a run it never submitted. Omitted means it stopped before its first simulated second.
-export const CancelSchema = z.object({ reason: z.enum(["browser-error"]).optional() }).strict();
+export const CancelSchema = z.object({ reason: z.enum(["browser-error", "discarded"]).optional() }).strict();
 export type BrowserSubmission = z.infer<typeof SubmissionSchema>;
 
 const REPLAYABLE = new Set(["load", "chaos", "pool-scale", "intervention"]);

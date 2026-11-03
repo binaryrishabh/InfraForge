@@ -27,6 +27,11 @@ export const getLiveDeployments = async (): Promise<LiveDeploymentSummary[]> => 
   return response.data.deployments;
 }
 
+// Closes a browser run that cannot continue, so it no longer counts against the learner's runs.
+export const discardBrowserRun = async (deploymentId: string): Promise<void> => {
+  await axios.post(`${API_URL}/deployments/${deploymentId}/cancel`, { reason: "discarded" });
+}
+
 // Create new deployment
 export const createDeployment = async(infrastructureId: string, workloadProfile?: WorkloadProfile): Promise<Deployment> => {
   await requireRunCompatibility();
