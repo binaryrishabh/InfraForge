@@ -141,9 +141,10 @@ test("fast server batches freeze on every due boundary and pending durable row",
   expect(instance.model2.simulatedSeconds).toBe(5);
   expect(instance.model2.actions[0]).toMatchObject({atUs: 2_000_001});
 });
-test("the scenario migration is additive and the latest registered guard definition", async () => {
+test("the scenario migration remains registered alongside the latest additive guard definition", async () => {
   const {ADDITIVE_MIGRATIONS} = await import("../release/migrations");
   expect(ADDITIVE_MIGRATIONS.has("20261030010000_challenge_scenarios")).toBe(true);
+  expect([...ADDITIVE_MIGRATIONS].at(-1)).toBe("20261103000000_workload_variant_reruns");
   const sql = await readFile(new URL("../prisma/migrations/20261030010000_challenge_scenarios/migration.sql", import.meta.url), "utf8");
   expect(sql).toContain('UNIQUE INDEX "RunAction_deploymentId_scenarioStepId_key"');
   expect(sql).toContain("step->'request' = NEW.parameters");
