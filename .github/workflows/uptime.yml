@@ -1,0 +1,45 @@
+name: Uptime probe
+
+# An independent outside check that production answers. A failed run is the alert: GitHub emails the repository
+# owner when a scheduled workflow fails. It only reads two public endpoints and never touches production state.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: uptime-probe
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    name: Backend and frontend answer
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check the public endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Three tries 20 seconds apart, so a single dropped request does not raise a false alarm.
+          probe() {
+            local url="$1" expect="$2" body
+            for attempt in 1 2 3; do
+              if body="$(curl --silent --show-error --max-time 15 --fail "$url")" && grep -q "$expect" <<<"$body"; then
+                echo "ok: $url"
+                return 0
+              fi
+              echo "attempt $attempt failed: $url" >&2
+              sleep 20
+            done
+            return 1
+          }
+          failed=0
+          probe "https://infraforge-backend.lapwork.in/health/ready" '"success":true' || failed=1
+          probe "https://infraforge.lapwork.in/release.json" '"sha"' || failed=1
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::InfraForge did not answer its public health checks."
+            exit 1
+          fi
