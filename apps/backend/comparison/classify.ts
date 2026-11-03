@@ -76,7 +76,7 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
       "Accumulated-cost delta requires exact matching simulated durations."),
     metric("Design monthly estimate (CostEstimate gate)", "USD/month", monthly[0], monthly[1], starting.facets.catalog === "same",
       "Monthly-estimate delta requires compatible captured catalog provenance.")];
-  const traffic = compareTraffic(a, b, available && exact);
+  const traffic = compareTraffic(a, b, available && exact, [input(rows[0].runInputs), input(rows[1].runInputs)]);
   if (lineage === "source-and-rerun" && starting.grade === "one-change-workload") {
     const earlier = input(rows[0].runInputs)!, later = input(rows[1].runInputs)!;
     const facts = workloadChangeFacts(earlier, later, !!strongest);

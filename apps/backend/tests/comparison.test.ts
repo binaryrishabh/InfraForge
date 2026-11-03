@@ -47,9 +47,19 @@ test("traffic rows use recorded values, explicit windows and deterministic earli
     expect(withheld.every(m => m.delta === null && m.withheldReason === "Exact final-state evidence is required for a delta.")).toBe(true);
   }
   expect(pair()).not.toHaveProperty("traffic");
-  expect(classifyComparison(a, row("b"))).not.toHaveProperty("traffic");
+  // Evidence recorded for only one run is shown as such: the other side stays Unknown (never zero) and no delta is made up.
+  const oneSided = classifyComparison(a, row("b")).traffic!;
+  expect(oneSided).toHaveLength(5);
+  for (const m of oneSided) {
+    expect(m).toMatchObject({ later: null, delta: null });
+    expect(m.earlier).not.toBeNull();
+    expect(m.withheldReason).toBe("Recorded for the earlier run but not the later run. Traffic outcomes were not recorded for that run. A direct comparison is unavailable.");
+  }
   const unknown = classifyComparison(a, { ...b, terminalSnapshot: { ...terminal, traffic: { ...later, latencyMs: { p50: null, p95: null } } } });
-  expect(unknown.traffic?.map(m => m.field)).toEqual(["Completed requests/s, last measured second", "Failed requests/s, last measured second"]);
+  expect(unknown.traffic?.map(m => [m.field, m.delta === null])).toEqual([
+    ["p50 response time, last measured second", true], ["p95 response time, last measured second", true], ["p99 response time, last measured second", true],
+    ["Completed requests/s, last measured second", false], ["Failed requests/s, last measured second", false]]);
+  expect(unknown.traffic![0]!.withheldReason).toBe("Recorded for the earlier run but not the later run. This measurement is Unknown for that run. A direct comparison is unavailable.");
 });
 
 test("orders ties by ID and compares deterministic normalized final state without wall identifiers", () => {

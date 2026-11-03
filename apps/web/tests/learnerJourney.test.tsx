@@ -68,6 +68,12 @@ test("a learner's random-traffic run shows the same engine numbers live, in the 
   const compareText = text(renderToStaticMarkup(<MemoryRouter><CompareContent loading={false} error={null} retry={() => {}} data={comparison} /></MemoryRouter>));
   expect(compareText).toContain("Traffic outcomes");
   expect(compareText).not.toContain("Exact rerun");
+  // Retries and the objective exist only in the later run: the comparison says so, with the real reason and no invented zeros.
+  expect(compareText).toContain("Recorded for the later run but not the earlier run. Client retries were off in that run. A direct comparison is unavailable.");
+  expect(compareText).toContain("No service objective was set in that run.");
+  const retryRow = comparison.traffic!.find(r => r.field === "Client retry load factor, whole run")!;
+  expect(retryRow).toMatchObject({ earlier: null, delta: null });
+  expect(retryRow.later).toBe(poisson!.live.at(-1)!.clientRetry!.extraLoadFactor);
   console.info("learner-journey", JSON.stringify({ grade: comparison.starting.grade, headline: comparison.headline, lineage: comparison.lineage,
     evenLast: evenLive.latencyMs, poissonLast: finalLive.latencyMs, poissonRetry: finalLive.clientRetry, objective: finalLive.objective?.status,
     trafficRows: comparison.traffic?.map(r => [r.field, r.earlier, r.later, r.delta, r.withheldReason ?? null]) }));
