@@ -27,7 +27,7 @@ export function createWorkloadVariantInput(value: unknown, variant: WorkloadVari
   if (canonical(validated) !== canonical(candidate) || compareInputs(source, validated).grade !== "one-change-workload") {
     throw new Error("The candidate must have exactly one recorded workload change with every other captured input unchanged.");
   }
-  return candidate;
+  return validated;
 }
 
 export function buildWorkloadVariantOptions(source: StoredRun, input: RunInputs | null, exactReason: string | null,

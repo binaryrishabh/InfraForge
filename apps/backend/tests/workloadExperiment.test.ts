@@ -27,7 +27,7 @@ test("official one-dimension workload experiments preserve inputs, deterministic
     expect(choice.available).toBe(true);
     const candidate = createWorkloadVariantInput(input, choice.variant);
     expect(candidate.seed).toBe(input.seed); expect(withoutDynamics(candidate)).toEqual(withoutDynamics(input));
-    expect(rerunInputHash(candidate)).toBe(choice.inputHash);
+    expect(rerunInputHash(candidate)).toBe(choice.inputHash!);
     return candidate;
   });
   const runs = [a, ...candidates.map((candidate, i) => measure(candidate, ["b", "c-moderate", "c-high"][i]!, options.matchedStop.target!, a.row.id))];

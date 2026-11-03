@@ -65,7 +65,7 @@ test("variant creation refuses other owners, stale hash, source deletion/change 
   reset(); const deleted = request(); onShare = () => {source = null;};
   expect((await post(deleted)).status).toBe(404); expect(writes).toHaveLength(0);
   reset(); const changed = request(); onShare = () => {source!.runInputs = {...input, seed: "changed"};};
-  const conflict = await post(changed); expect(conflict.status).toBe(409); expect((await conflict.json()).message).toContain("The source run changed since preview");
+  const conflict = await post(changed); expect(conflict.status).toBe(409); expect((await conflict.json() as {message: string}).message).toContain("The source run changed since preview");
   reset(); const noStop = request(); source!.terminalSnapshot = null;
   expect((await post(noStop)).status).toBe(409); expect(writes).toHaveLength(0);
   reset(); const active = request(); onShare = () => {source!.runtimeActive = true;};
@@ -74,6 +74,6 @@ test("variant creation refuses other owners, stale hash, source deletion/change 
 test("strict client body and busy admission retain their existing 400/429 behavior", async () => {
   reset(); expect((await post({...request(), resources: []})).status).toBe(400); expect(locks).toHaveLength(0);
   reset(); capacity = 100000;
-  const busy = await post(request()); expect(busy.status).toBe(429); expect((await busy.json()).message).toContain("capacity is busy");
+  const busy = await post(request()); expect(busy.status).toBe(429); expect((await busy.json() as {message: string}).message).toContain("capacity is busy");
   expect(writes).toHaveLength(0); expect(outbox).toHaveLength(0);
 });
