@@ -44,7 +44,7 @@ export function TrafficChangeChoices({ options, selected, onSelect }: { options:
   );
 }
 
-export function TrafficExperimentForm({ id, options, close, onBusy }: { id: string; options: RerunOptions; close: () => void; onBusy: (value: boolean) => void }) {
+export function TrafficExperimentForm({ id, options, close, onBusy, sourceActions = 0 }: { id: string; options: RerunOptions; close: () => void; onBusy: (value: boolean) => void; sourceActions?: number }) {
   const availability = useCapabilityAvailability();
   const variants = options.workloadVariant;
   const [selected, setSelected] = useState<string | null>(null);
@@ -80,6 +80,7 @@ export function TrafficExperimentForm({ id, options, close, onBusy }: { id: stri
             <div className="mt-3"><StartingInputs starting={choice.preview} detailed /></div></details>}
         </div>
         <SourceInputFacts workload={options.workload} seed={options.seed} />
+        {sourceActions > 0 && <Notice tone="warn" title="Your actions are not repeated">{sourceActions === 1 ? "This run included 1 action of yours, such as a fault or a load change." : `This run included ${sourceActions} actions of yours, such as faults or load changes.`} A traffic experiment runs the design without them, so the comparison will show different recorded actions and cannot credit any difference to the traffic change alone.</Notice>}
         <Notice tone="info">{SAME_SEED_NOTE}</Notice>
         <label className="flex items-start gap-2.5 rounded-md border border-line px-3 py-2.5 text-ink">
           <input type="checkbox" className="mt-0.5 accent-[var(--if-ink)]" checked={matched} disabled={!options.matchedStop.available} onChange={(e) => setMatched(e.target.checked)} />
@@ -98,17 +99,17 @@ export function TrafficExperimentForm({ id, options, close, onBusy }: { id: stri
   );
 }
 
-function Request({ id, close, onBusy }: { id: string; close: () => void; onBusy: (value: boolean) => void }) {
+function Request({ id, close, onBusy, sourceActions }: { id: string; close: () => void; onBusy: (value: boolean) => void; sourceActions: number }) {
   const load = useCallback(() => getRerunOptions(id), [id]);
   const { data, loading, error, retry } = useRequest(load, "The experiment options could not be loaded.");
   if (loading) return <Loading label="Loading the captured traffic settings…" />;
   if (error || !data) return <div role="alert"><p>{error}</p><Button className="mt-2" size="sm" onClick={retry}>Try again</Button></div>;
   if (!data.workloadVariant.available) return <Notice tone="warn" title="This run cannot be used for a traffic experiment">{data.workloadVariant.reason ?? "No supported traffic change is available."}</Notice>;
-  return <TrafficExperimentForm id={id} options={data} close={close} onBusy={onBusy} />;
+  return <TrafficExperimentForm id={id} options={data} close={close} onBusy={onBusy} sourceActions={sourceActions} />;
 }
 
 /* Starts a new official run of the same captured design and seed with exactly one traffic setting changed. */
-export function TrafficExperimentDialog({ id, eligible }: { id: string; eligible: boolean }) {
+export function TrafficExperimentDialog({ id, eligible, sourceActions = 0 }: { id: string; eligible: boolean; sourceActions?: number }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   return (
@@ -116,7 +117,7 @@ export function TrafficExperimentDialog({ id, eligible }: { id: string; eligible
       <Button variant="secondary" size="sm" disabled={!eligible} icon={<FlaskConical size={14} aria-hidden="true" />} onClick={() => setOpen(true)}>Change traffic and run again…</Button>
       <Dialog open={open} onOpenChange={setOpen} busy={busy} size="lg" title="Change traffic and run again"
         description="Run this run's captured design again with exactly one traffic setting changed, then compare the two recorded runs.">
-        {open && <Request id={id} close={() => setOpen(false)} onBusy={setBusy} />}
+        {open && <Request id={id} close={() => setOpen(false)} onBusy={setBusy} sourceActions={sourceActions} />}
       </Dialog>
     </>
   );

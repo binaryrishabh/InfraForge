@@ -21,6 +21,16 @@ export function describeWorkload(w: WorkloadProfile) {
   return [rate, shape, reads, `${w.payloadSize} payloads`, describeWorkloadDynamics(w), describeClientRetry(w), describeObjective(w)].filter(Boolean).join(" · ");
 }
 
+/** A first look at a workload: only the settings that are not the plain defaults, so a preset reads at a glance.
+Reports and comparisons keep the full description above. */
+export function describeWorkloadBrief(w: WorkloadProfile) {
+  const rate = `${w.targetThroughput.toLocaleString()} requests per ${w.throughputUnit === "per-minute" ? "minute" : "hour"}`;
+  const shape = w.trafficShape === "peak" ? `bursts to ${w.peakMultiplier ?? 3}×` : "steady";
+  const reads = w.readWriteRatio !== undefined ? `${Math.round(w.readWriteRatio * 100)}% reads` : null;
+  const dynamics = w.workloadDynamics && (w.workloadDynamics.arrivalProcess !== "even" || w.workloadDynamics.applicationCpuCv !== 0) ? describeWorkloadDynamics(w) : null;
+  return [rate, shape, reads, `${w.payloadSize} payloads`, dynamics, w.clientRetry ? describeClientRetry(w) : null, w.workloadObjective ? describeObjective(w) : null].filter(Boolean).join(" · ");
+}
+
 export function describeObjective(w: WorkloadProfile) {
   return w.workloadObjective ? `Service objective: ${w.workloadObjective.targetSuccessPercent}% within ${w.workloadObjective.maxResponseMs} ms` : "Service objective: none";
 }

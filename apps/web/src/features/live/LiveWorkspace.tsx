@@ -16,6 +16,7 @@ import { Dialog } from "@/ui/Dialog";
 import { HealthMark } from "@/ui/HealthMark";
 import { RunBar } from "./RunBar";
 import { BrowserRunNotice } from "./BrowserRunNotice";
+import { LiveGuidePanel } from "./LiveGuidePanel";
 import { LivePanel, type LiveTab } from "./LivePanel";
 import { GateList } from "./GatesPanel";
 import { useStopRun } from "./useStopRun";
@@ -116,6 +117,7 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
                 <Button variant="ghost" size="sm" onClick={leaveRun}>Back to the designer</Button>
               </div>
             )}
+            {!wide && !panelOpen && isLive && !challenge && <LiveGuidePanel deploymentId={deploymentId} resources={resources} />}
             {showTimetable && <LiveTimetable deploymentId={deploymentId} resources={resources} seconds={seconds} plan={plan} evaluation={deployment?.evaluationStopAtSimulatedSeconds ?? null} />}
             <div className="flex h-10 shrink-0 items-center justify-between border-t border-line bg-surface px-3 text-xs text-ink-3">
               <span className="min-w-0 truncate" title="Design edits are unavailable during a Model 2 run. Stop and return to the designer to make changes."><span className="if-num">{plural(resources.length, "resource")} · revision {deployment?.topologyRevision ?? 0}{challenge ? " · design locked for this attempt" : " · design locked for this run"}</span>

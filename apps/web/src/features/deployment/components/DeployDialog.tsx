@@ -7,7 +7,7 @@ import { useState, type FormEvent } from "react";
 import { Play } from "lucide-react";
 import type { WorkloadProfile, ResolvedWorkloadProfile } from "@infraforge/domain/workload";
 import { INFRASTRUCTURE_NAME_MAX_LENGTH, validateInfrastructureName } from "@infraforge/domain/validation";
-import { describeWorkload, requestsPerSecond, plural } from "@/lib/format";
+import { describeWorkload, describeWorkloadBrief, requestsPerSecond, plural } from "@/lib/format";
 import { Dialog } from "@/ui/Dialog";
 import { defaultDesignName } from "@/lib/designName";
 import { Button } from "@/ui/Button";
@@ -51,7 +51,7 @@ export function DeployDialog({ open, onOpenChange, initialName, resourceCount, c
             {PRESETS.map((p) => (
               <label key={p.id} className={cx("flex cursor-pointer gap-2.5 rounded-md border px-3 py-2.5 transition-colors", preset?.id === p.id ? "border-ink bg-surface" : "border-line-strong hover:border-ink-3")}>
                 <input type="radio" name="preset" checked={preset?.id === p.id} onChange={() => setProfile(p.profile)} className="mt-1 accent-[var(--if-ink)]" />
-                <span><span className="block text-sm font-semibold text-ink">{p.label}</span><span className="block text-xs text-ink-3">{describeWorkload(p.profile)}</span></span>
+                <span><span className="block text-sm font-semibold text-ink">{p.label}</span><span className="block text-xs text-ink-3">{describeWorkloadBrief(p.profile)}</span></span>
               </label>
             ))}
           </div>

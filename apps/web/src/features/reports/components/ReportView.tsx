@@ -70,7 +70,7 @@ export function ReportView({ report, onStopped }: { report: RunReport; onStopped
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <RerunDialog id={run.id} eligible={eligible} experimentChallenge={report.challenge?.experiment ? report.challenge.challengeId : null} />
-          {!run.challenge && <TrafficExperimentDialog id={run.id} eligible={eligible} />}
+          {!run.challenge && <TrafficExperimentDialog id={run.id} eligible={eligible} sourceActions={report.actions.length} />}
           <ComparePicker id={run.id} eligible={eligible} />
           {!run.challenge && <OpenDesignToImprove sourceId={run.id} designId={run.infrastructureId} eligible={eligible} />}
           {run.sourceRunId && eligible && <ButtonLink to={`/runs/compare?a=${run.sourceRunId}&b=${run.id}`} variant="ghost" size="sm" icon={<GitCompareArrows size={14} aria-hidden="true" />}>Compare with source run</ButtonLink>}

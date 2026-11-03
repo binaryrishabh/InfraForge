@@ -29,6 +29,8 @@ interface SimulationStoreState {
   accumulatedCostUsd: number;
   cpuHistory: Record<string, number[]>;
   activeChaos: ChaosEffect[];
+  // A fault has been active at some point in this run. Cleared when a new run is prepared.
+  faultSeen: boolean;
   applySnapshot: (snapshot: SimulationSnapshot) => void;
   setSpeed: (speed: number) => () => void;
   reset: () => void;
@@ -54,6 +56,7 @@ const initialState = {
   accumulatedCostUsd: 0,
   cpuHistory: {} as Record<string, number[]>,
   activeChaos: EMPTY_ACTIVE_CHAOS,
+  faultSeen: false,
 };
 
 export const useSimulationStore = create<SimulationStoreState>()((set, get) => ({
@@ -121,6 +124,7 @@ export const useSimulationStore = create<SimulationStoreState>()((set, get) => (
         accumulatedCostUsd: snapshot.accumulatedCostUsd ?? 0,
         cpuHistory: nextCpuHistory,
         activeChaos: chaosChanged ? incomingChaos : previousChaos,
+        faultSeen: prev.faultSeen || incomingChaos.length > 0,
       };
     }),
   setSpeed: (speed) => {

@@ -1,4 +1,5 @@
 import { TrafficReadings } from "./TrafficReadings";
+import { LiveGuidePanel } from "./LiveGuidePanel";
 import { RERUN_SENTENCE, RERUN_SUFFIX } from "@/features/reports/runKind";
 import { Link } from "react-router-dom";
 import { Lock } from "lucide-react";
@@ -58,6 +59,7 @@ export function LivePanel({ tab, onTab, deploymentId, run, status, completed, ti
     <div className="flex h-full min-h-0 flex-col">
       <Tabs idBase="live" label="Run details" items={items} value={tab} onChange={onTab} className="shrink-0 px-2" />
       <div className={tab === "events" ? "min-h-0 flex-1" : "if-scroll min-h-0 flex-1 overflow-y-auto"}>
+        {isLive && !challenge && tab === "controls" && <LiveGuidePanel deploymentId={deploymentId} resources={resources} />}
         {tab !== "events" && <TrafficReadings />}
         <TabPanel idBase="live" id={tab} className={tab === "events" ? "h-full" : undefined}>
           {tab === "controls" && (run && challenge ? <ChallengeConditions run={run} brief={brief} /> : !isLive ? (
