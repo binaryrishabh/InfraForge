@@ -2,6 +2,7 @@ import type { RunReport } from "@infraforge/contracts/reports";
 import { formatDate, formatUsd } from "@/lib/format";
 import { HealthMark } from "@/ui/HealthMark";
 import { ReportSection } from "./ReportSection";
+import { TrafficEvidence } from "@/features/live/TrafficEvidence";
 import { measurementId } from "../resourceFocus";
 
 /* Final state: the exact terminal capture when one exists, otherwise the
@@ -28,6 +29,10 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
             {checkpoint.metricsComputedAt ? <>Measurements computed <time dateTime={checkpoint.metricsComputedAt}>{formatDate(checkpoint.metricsComputedAt)}</time>{checkpoint.metricsTopologyRevision !== undefined && ` on topology revision ${checkpoint.metricsTopologyRevision}`}.</>
               : checkpoint.metricsComputedAt === null ? "Measurements are initialized simulator values; no engine tick had computed them." : null}
           </p>
+          {checkpoint.traffic && <div className="mt-5 min-w-0">
+            <h3 className="text-[17px] font-semibold text-ink">Traffic outcomes</h3>
+            <TrafficEvidence traffic={checkpoint.traffic} recordedAt={report.terminal ? "stop" : "checkpoint"} />
+          </div>}
           {checkpoint.resources.length > 0 && (
             <div className="mt-4">
               <table className="hidden w-full text-sm sm:table">
