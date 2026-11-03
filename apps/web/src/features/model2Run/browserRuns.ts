@@ -10,6 +10,10 @@ import type { RunStart, RunSubmission } from "./protocol";
 import { AUTO_STOP_MARGIN_MS, browserRunProblem, dropUnsent, keepUnsent, takeUnsent, useBrowserRunStatus } from "./browserRunStatus";
 import { autoStopDelay, deliver, type DeliveryDeps } from "./browserRunDelivery";
 
+// States after the worker finished or failed. The run's result or its loss is settled in this tab.
+const alreadyRan = (state: ReturnType<typeof useBrowserRunStatus.getState>["runs"][string] | undefined) =>
+  state?.kind === "sending" || state?.kind === "unsent" || state?.kind === "accepted" || state?.kind === "closed" || state?.kind === "crashed";
+
 /* Model 2 runs execute in the browser. While one runs, the live view receives the worker's seconds through the
 same store the server's snapshots used, and the run controls go to the worker. When it ends, the browser submits
 what it did and the server replays it; only that replay becomes the record. */
@@ -27,6 +31,9 @@ export function createBrowserRuns(deps: BrowserRunDeps) {
   const starting = new Map<string, Promise<void>>();
   function startBrowserRun(deploymentId: string, onEnd?: (error?: string) => void) {
     if (active.has(deploymentId)) return Promise.resolve();
+    // The server keeps a run in "browser" until it accepts the submission, so a remounted page or a stale status read
+    // looks like a run waiting to start. This tab already ran it: never start a second worker or overwrite its state.
+    if (alreadyRan(useBrowserRunStatus.getState().runs[deploymentId])) return Promise.resolve();
     let pending = starting.get(deploymentId);
     if (!pending) {
       useBrowserRunStatus.getState().set(deploymentId, { kind: "starting" });
