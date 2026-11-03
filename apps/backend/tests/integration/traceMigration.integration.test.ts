@@ -92,6 +92,7 @@ integration("migration 15 preserves history and enforces bounded immutable sampl
     await rejects(intervention(), /RunAction_kind_check/); // learner interventions need the newest migration
     await db.query(await Bun.file(new URL("20261030000000_intervention_action_kind/migration.sql", directory)).text());
     await db.query(await Bun.file(new URL("20261030010000_challenge_scenarios/migration.sql", directory)).text());
+    await db.query(await Bun.file(new URL("20261103000000_workload_variant_reruns/migration.sql", directory)).text());
     await intervention();
     await insert(resilience, 33, queued);
     await insert(resilience, 34, withQueue({ ...queue, readyDepth: 0, oldestReadyAgeSeconds: null }));

@@ -30,6 +30,7 @@ export function buildRerunOptions(source: StoredRun & { runtimeActive?: boolean 
   const preview = current ? compareInputs(input, current) : null;
   return { source: summarizeRun(source), workload: input?.workloadProfile ?? null, seed: input?.seed ?? null,
     exact: { available: exactReason === null, reason: exactReason },
+    workloadVariant: { available: false, reason: "Workload variant creation is unavailable.", source: null, choices: [] },
     currentDesign: { available: currentReason === null, reason: currentReason, preview, inputHash: current ? rerunInputHash(current) : null,
       modelCatalogCompatible: preview?.facets.model === "same" && preview.facets.catalog === "same" },
     matchedStop: { available: target !== null, target, defaultEnabled: target !== null,

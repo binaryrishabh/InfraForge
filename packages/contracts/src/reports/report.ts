@@ -29,7 +29,7 @@ export interface RunSummary {
   actionCount?: number;
   sourceRunId?: string | null;
   sourceRunName?: string | null;
-  rerunMode?: "exact" | "current-design" | null;
+  rerunMode?: "exact" | "current-design" | "workload-variant" | null;
   autoStopAtSimulatedSeconds?: number | null;
   challenge?: RunChallengeSummary | null;
 }

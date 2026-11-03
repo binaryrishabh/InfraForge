@@ -11,7 +11,7 @@ export interface Deployment {
   infrastructureId: string | null,
   runName: string | null,
   sourceRunId?: string | null,
-  rerunMode?: "exact" | "current-design" | null,
+  rerunMode?: "exact" | "current-design" | "workload-variant" | null,
   autoStopAtSimulatedSeconds?: number | null,
   challengeId?: string | null,
   challengeVersion?: number | null,

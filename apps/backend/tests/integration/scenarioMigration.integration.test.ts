@@ -19,7 +19,7 @@ integration("scenario migration preserves history and guards exact, unique, immu
   try {
     await admin.query(`CREATE DATABASE "${name}" TEMPLATE template0`); created = true;
     const directory = new URL("../../prisma/migrations/", import.meta.url);
-    const folders = (await readdir(directory, {withFileTypes: true})).filter(e => e.isDirectory()).map(e => e.name).sort();
+    const folders = (await readdir(directory, {withFileTypes: true})).filter(e => e.isDirectory()).map(e => e.name).filter(name => name <= "20261030010000_challenge_scenarios").sort();
     expect(folders.at(-1)).toBe("20261030010000_challenge_scenarios");
     for (const folder of folders.slice(0, -1)) await db.query(await Bun.file(new URL(`${folder}/migration.sql`, directory)).text());
     const owner = randomUUID(), design = randomUUID(), legacy = randomUUID(), scenarioRun = randomUUID(), free = randomUUID();
@@ -39,6 +39,7 @@ integration("scenario migration preserves history and guards exact, unique, immu
     await db.query(await Bun.file(new URL(`${folders.at(-1)}/migration.sql`, directory)).text());
     expect((await db.query('SELECT * FROM "Deployment" ORDER BY id')).rows.map(({challengeScenario, ...row}) => {expect(challengeScenario).toBeNull(); return row;})).toEqual(before);
     expect((await db.query('SELECT * FROM "RunAction"')).rows.map(({scenarioStepId, ...row}) => {expect(scenarioStepId).toBeNull(); return row;})).toEqual(actionsBefore);
+    await db.query(await Bun.file(new URL("20261103000000_workload_variant_reruns/migration.sql", directory)).text());
     await checkModel1SchemaGuards(db);
     await insert(scenarioRun, plan);
     await rejects(insert(randomUUID(), {...plan, definitionHash: "0".repeat(64)}), /check constraint/);

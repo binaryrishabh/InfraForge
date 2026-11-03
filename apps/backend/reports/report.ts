@@ -50,7 +50,7 @@ function summary(row: StoredRun, records: Records, challenge = challengeOf(row, 
     learning: row.learningHypothesis && (row.learningIntent === "improvement" || row.learningIntent === "repeat") ?
       { sourceRunId: row.improvementSourceId ?? null, hypothesis: row.learningHypothesis, intent: row.learningIntent } : null,
     sourceRunId: row.sourceRunId ?? null, sourceRunName: row.sourceRun?.runName ?? null,
-    rerunMode: row.rerunMode === "exact" || row.rerunMode === "current-design" ? row.rerunMode : null,
+    rerunMode: row.rerunMode === "exact" || row.rerunMode === "current-design" || row.rerunMode === "workload-variant" ? row.rerunMode : null,
     autoStopAtSimulatedSeconds: row.autoStopAtSimulatedSeconds ?? null,
     challenge: challenge ? { id: challenge.challengeId, version: challenge.version, title: challenge.title, status: challenge.status,
       metCount: challenge.metCount, total: challenge.total } : null,
