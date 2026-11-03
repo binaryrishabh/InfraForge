@@ -4,4 +4,5 @@ export type { WorkloadProfile, WorkloadDynamics, ClientRetry, WorkloadObjective 
 export { workloadObjectiveError } from "./objective";
 export { clientRetryError } from "./clientRetry";
 export { workloadDynamicsError } from "./workloadDynamics";
+export { requestsPerSecond } from "./requestsPerSecond";
 export { applyWorkloadVariant, describeWorkloadVariantSource, workloadVariantError, type WorkloadVariant, type WorkloadVariantSource } from "./workloadVariant";

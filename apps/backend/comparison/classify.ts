@@ -8,6 +8,7 @@ import { metric, normalizedFinalState } from "./outcomes";
 import { compareTraffic } from "./traffic";
 import { reviewDesignChanges } from "../challenges/designChanges";
 import { canonical } from "./design";
+import { workloadChangeFacts, workloadChangeTraffic } from "./workloadChange";
 
 const input = (v: unknown) => { try { return readRunInputs(v); } catch { return null; } };
 type Attempt = StoredRun & { sourceRunId?: string | null };
@@ -30,6 +31,8 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
     !affectingActions(reports[0].actions).length && !affectingActions(reports[1].actions).length;
   const deterministicState = deterministic ? normalizedFinalState(a!) === normalizedFinalState(b!) ? "matches" : "differs" : "not-established";
   const strongest = available && exact && matchedDuration && conduct.code === "same" && starting.grade !== "side-by-side-only";
+  const lineage = rows[1].improvementSourceId === rows[0].id || rows[0].improvementSourceId === rows[1].id ? "source-and-improvement" :
+    rows[1].sourceRunId === rows[0].id || rows[0].sourceRunId === rows[1].id ? "source-and-rerun" : rows[0].sourceRunId && rows[0].sourceRunId === rows[1].sourceRunId ? "siblings" : "unrelated";
   const fact = (id: string, message: string, sources: string[]): ReportStatement => ({ id, message, sources });
   const attempts = rows.every((r) => r.challengeId);
   const challengeConditions = !attempts ? null : conditions(rows[0]) === conditions(rows[1]) ? "same" as const : "different" as const;
@@ -74,6 +77,12 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
     metric("Design monthly estimate (CostEstimate gate)", "USD/month", monthly[0], monthly[1], starting.facets.catalog === "same",
       "Monthly-estimate delta requires compatible captured catalog provenance.")];
   const traffic = compareTraffic(a, b, available && exact);
+  if (lineage === "source-and-rerun" && starting.grade === "one-change-workload") {
+    const earlier = input(rows[0].runInputs)!, later = input(rows[1].runInputs)!;
+    const facts = workloadChangeFacts(earlier, later, !!strongest);
+    observed.push(...facts.observed); interpreted.push(...facts.interpreted); unknown.push(...facts.unknown);
+    traffic.push(...workloadChangeTraffic(earlier, later, a, b, available && exact));
+  }
   return { version: 1, runs: [reports[0].run, reports[1].run], available,
     ...(traffic.length ? { traffic } : {}),
     designChangeReview: challengeConditions === "same" && input(rows[0].runInputs) && input(rows[1].runInputs) ? reviewDesignChanges(input(rows[0].runInputs)!, input(rows[1].runInputs)!) : null,
@@ -81,8 +90,7 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
       "Both complete retained windows share recorded experiment conditions. These are facts from one model-1 pair, not a controlled or statistical claim." :
       "Different, missing or incomplete experiment evidence permits descriptive retained-window facts only. A partial-window peak is not a full-window maximum." },
     unavailableReason: available ? null : "Both runs must be inactive before comparing final evidence. Stop the live run or wait for deployment gates.",
-    lineage: rows[1].improvementSourceId === rows[0].id || rows[0].improvementSourceId === rows[1].id ? "source-and-improvement" :
-      rows[1].sourceRunId === rows[0].id || rows[0].sourceRunId === rows[1].id ? "source-and-rerun" : rows[0].sourceRunId && rows[0].sourceRunId === rows[1].sourceRunId ? "siblings" : "unrelated",
+    lineage,
     headline: !available || starting.grade === "side-by-side-only" ? "descriptive-only" : deterministicState === "differs" ? "determinism-mismatch" :
       deterministicState === "matches" ? "determinism-match" : strongest ? "matched-pair" : "starting-inputs-only",
     starting, conduct, evidence: { code: !a || !b ? "missing" : exact ? "both-exact" : reports.some((r) => r.terminal) ? "exact-and-checkpoint" : "checkpoints-only",
