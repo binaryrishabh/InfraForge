@@ -6,6 +6,11 @@ on:
   schedule:
     - cron: "*/10 * * * *"
   workflow_dispatch:
+    inputs:
+      simulate_outage:
+        description: Fail on purpose to test that the alert email arrives. Reads and changes nothing in production.
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -19,6 +24,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Simulated outage (alert test)
+        if: ${{ inputs.simulate_outage }}
+        run: |
+          echo "::error::Simulated outage requested. This failure exists only to test that the alert reaches its recipient."
+          exit 1
       - name: Check the public endpoints
         shell: bash
         run: |
