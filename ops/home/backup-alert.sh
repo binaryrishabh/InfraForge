@@ -13,12 +13,8 @@ log=$(journalctl -u infraforge-backup.service -n 25 --no-pager -o cat 2>&1 | tai
 body=$(FROM="$from" TO="$to" HOST="$(hostname)" LOG="$log" python3 -c 'import json, os
 print(json.dumps({"from": os.environ["FROM"], "to": [os.environ["TO"]],
   "subject": "InfraForge backup FAILED on " + os.environ["HOST"],
-  "text": "The daily database backup failed. Last log lines:
-
-" + os.environ["LOG"]
-          + "
-
-Check: systemctl status infraforge-backup"}))')
+  "text": "The daily database backup failed. Last log lines:\n\n" + os.environ["LOG"]
+          + "\n\nCheck: systemctl status infraforge-backup"}))')
 # The key goes to curl through a header file on stdin, never on the command line.
 printf 'Authorization: Bearer %s\n' "$key" | curl -fsS --max-time 20 -H @- -H 'Content-Type: application/json' \
   -d "$body" https://api.resend.com/emails > /dev/null
