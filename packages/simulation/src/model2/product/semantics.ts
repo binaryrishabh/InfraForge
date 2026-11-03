@@ -2,6 +2,7 @@ import { requireKnown } from "../../reality/quantity";
 import type { SystemsInput } from "../systems/contracts";
 import type { SemanticSpec } from "./contracts";
 const fields: Record<string, string[]> = {
+  "event-bus": ["profile", "subscriptions", "capacityMessages", "maxAttempts", "retryDelay", "deliveryTimeout", "deadLetterCapacity"],
   compute: ["cores", "workers", "scheduler", "quota", "memory", "queueCapacity", "profiles", "context", "cancellation", "downstream", "downstreamByOperation", "applicationFlow"],
   relational: ["replication", "semantics", "execution", "maxSessions", "activeTransactions", "pendingQueries", "keys", "initial", "plans", "access"],
   cache: ["semantics", "execution", "capacity", "entryOverhead", "policy", "ttl", "initial", "commandCpu"],
@@ -17,7 +18,7 @@ const fields: Record<string, string[]> = {
 };
 fields["async-publisher"] = ["execution", "broker", "store", "namespace", "objectBytes", "messageBytes", "delay", "publishAttempts"];
 fields["async-worker"] = ["execution", "broker", "store", "database", "databaseOperation", "databaseKey", "namespace", "concurrency", "prefetch", "pollInterval", "cpu", "blockingWait", "ackDelay", "resultBytes", "idempotency", "poisonKeys"];
-const commandKinds = new Set(["dns-authority", "dns-resolver", "cdn", "registry", "artifact-client", "monitor", "telemetry-backend", "object-store", "delivery-queue"]);
+const commandKinds = new Set(["event-bus", "dns-authority", "dns-resolver", "cdn", "registry", "artifact-client", "monitor", "telemetry-backend", "object-store", "delivery-queue"]);
 export function validateMaterializedSemantics(input: SystemsInput, edges: SemanticSpec["edges"], explicitListeners: ReadonlySet<string> = new Set()) {
   const resources = new Map(input.resources.map((r) => [r.id, r]));
   const paths = new Map(input.paths.map((p) => [p.id, p])), pairs = new Set(input.paths.map((p) => JSON.stringify([p.source, p.target]))), dials = new Map(input.systems.connections.map((d) => [d.path, d]));

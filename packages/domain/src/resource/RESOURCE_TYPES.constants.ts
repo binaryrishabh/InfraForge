@@ -10,6 +10,7 @@ export const RESOURCE_TYPES = {
   ObjectStorage: "Object Storage",
   MessageQueue: "Message Queue",
   MonitoringAgent: "Monitoring Agent",
+  EventBus: "Event Bus",
 } as const;
 
 export type ResourceType = (typeof RESOURCE_TYPES)[keyof typeof RESOURCE_TYPES];
