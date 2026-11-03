@@ -13,6 +13,7 @@ import { clientRetryEvidence } from "../workload/clientRetryEvidence";
 export type LiveValue = number | null;
 export type LiveHealth = "healthy" | "degraded" | "saturated" | "failed" | "unknown";
 export interface LiveNodeMetrics {
+  gateway?: import("@infraforge/contracts/telemetry").ResourceMetrics["gateway"];
   eventBus?: import("@infraforge/contracts/telemetry").ResourceMetrics["eventBus"];
   vmMemory?: import("@infraforge/contracts/telemetry").VmMemoryMetrics;
   rateLimit?: import("@infraforge/contracts/telemetry").LbRateLimitMetrics;
@@ -170,6 +171,13 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
       for (const resource of compiled.input.resources) if (resource.kind === "event-bus" && metrics[resource.id]) {
         const bus = runtime.inspectEventBus(resource.id);
         if (bus) metrics[resource.id]!.eventBus = { version: 1, accepted: bus.accepted, invalid: bus.invalid, subscriptions: bus.subscriptions.map(({ deadLetters: _letters, ...row }) => row) };
+      }
+      for (const resource of compiled.input.resources) if (resource.kind === "api-gateway" && metrics[resource.id]) {
+        const gateway = runtime.inspectGateway(resource.id);
+        if (gateway) {
+          const { id: _id, events: _events, omitted: _omitted, service: _service, authentication: _auth, physicalTiming: _timing, ...readings } = gateway;
+          metrics[resource.id]!.gateway = { version: 1, ...readings, routes: readings.routes.map(({ id, target, path, method, received, admitted, rejected, tokens, capacity }) => ({ id, target, path, method, received, admitted, rejected, tokens, capacity })) };
+        }
       }
       const security = runtime.inspectSecurity();
       if (security) for (const node of nodeIds) {

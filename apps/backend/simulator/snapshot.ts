@@ -8,14 +8,14 @@ export function buildSnapshot(deploymentId: string, instance: SimulationInstance
     loadFraction: view.loadFraction, metrics: view.metrics, logs, health: view.overallHealth,
     pools: view.pools, spawnedVms: view.spawnedVms, restarting: view.restarting,
     activeChaos: view.activeChaos, speed: instance.speed,
-    burnRatePerHourUsd: view.burnRatePerHourUsd, accumulatedCostUsd: instance.accumulatedCostUsd,
+    burnRatePerHourUsd: view.burnRatePerHourUsd, accumulatedCostUsd: view.burnRatePerHourUsd === undefined ? undefined : instance.accumulatedCostUsd,
     liveTopology: instance.topology, topologyRevision: instance.topologyRevision, ...(view.traffic ? { traffic: view.traffic } : {}) };
 }
 
 export function captureSnapshot(deploymentId: string, instance: SimulationInstance, kind: "terminal" | "checkpoint") {
   const snapshot = buildSnapshot(deploymentId, instance, [...instance.pendingLogs]), view = liveView(instance);
   const applicationFlow = instance.model2.applicationFlowEvidence();
-  return structuredClone({ ...snapshot, ...(applicationFlow ? { applicationFlow } : {}), version: 1, kind, capturedAt: snapshot.timestamp,
+  return structuredClone({ ...snapshot, ...(applicationFlow ? { applicationFlow } : {}), ...(view.burnRatePerHourUsd === undefined ? { version: 2, costCoverage: "unknown" } : { version: 1 }), kind, capturedAt: snapshot.timestamp,
     topologyRevision: instance.topologyRevision,
     metricsComputedAt: instance.metricsComputedAt, metricsTopologyRevision: instance.metricsTopologyRevision,
     overallHealth: snapshot.health, targetLoadFraction: view.targetLoadFraction,

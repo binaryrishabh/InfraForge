@@ -25,6 +25,7 @@ export function computeTopology(
     }
     const targets = new Set(connectionLines.map((c) => c.targetId));
     const entryTypes: ResourceType[] = [
+        RESOURCE_TYPES.ApiGateway,
         RESOURCE_TYPES.DNS,
         RESOURCE_TYPES.CDN,
         RESOURCE_TYPES.Firewall,

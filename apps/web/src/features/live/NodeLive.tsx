@@ -48,6 +48,7 @@ export function NodeLive({ deploymentId, resource, resources, controls, ended = 
       {(resource.lbRateLimit || metric?.rateLimit) && <LbRateLimitReadings metrics={metric?.rateLimit} />}
       <DataDeliveryReadings type={resource.type} metrics={metric} />
       {resource.type === "Event Bus" && <EventBusReadings metrics={metric?.eventBus} />}
+      {resource.type === "API Gateway" && <GatewayReadings metrics={metric?.gateway} />}
       <ObservabilityReadings type={resource.type} metrics={metric} />
       {(resource.asyncQueue?.enabled || metric?.asyncQueue) && <section aria-label="Upload queue measurements" className="border-b border-line px-4 py-4"><AsyncQueueReadings metrics={metric?.asyncQueue} /></section>}
       {(resource.type === RESOURCE_TYPES.Firewall || resource.listenerSettings || metric?.security) && <section aria-label="Security measurements" className="border-b border-line px-4 py-4 text-sm"><SecurityReadings metrics={metric?.security} firewall={resource.type === RESOURCE_TYPES.Firewall} /></section>}
@@ -60,3 +61,4 @@ export function NodeLive({ deploymentId, resource, resources, controls, ended = 
   );
 }
 import { EventBusReadings } from "./EventBusReadings";
+import { GatewayReadings } from "./GatewayReadings";

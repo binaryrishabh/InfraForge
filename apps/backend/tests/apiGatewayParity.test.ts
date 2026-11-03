@@ -26,6 +26,7 @@ test("browser gateway routing, throttles, missing routes, validation and failure
       const browser = browserRun(input, 2), server = createModel2Engine(input, 2, buildModel2Contract);
       for (let second = 1; second <= 2; second++) { browser.advance(); server.advance(); expect(browser.evidence()).toEqual(server.evidence()); expect(browser.view()).toEqual(server.view()); }
       const e = browser.evidence(), g = e.asynchronous.gateways![0]!;
+      expect(browser.view().metrics.gateway!.gateway!.received).toBe(g.received);
       if (scenario === "healthy") expect(g.completed).toBe(20);
       if (scenario === "throttle") expect(g.throttled).toBe(8);
       if (scenario === "failed") expect(g.upstreamFailed).toBe(10);

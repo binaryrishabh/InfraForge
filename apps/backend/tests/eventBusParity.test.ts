@@ -26,6 +26,7 @@ test("browser bundle and official server replay agree for healthy and failed sub
       const browser = browserRun(input, 3), server = createModel2Engine(input, 3, buildModel2Contract);
       for (let second = 1; second <= 3; second++) { browser.advance(); server.advance(); expect(browser.evidence()).toEqual(server.evidence()); expect(browser.view()).toEqual(server.view()); }
       const e = browser.evidence().asynchronous;
+      expect(browser.view().metrics.bus!.eventBus!.accepted).toBe(e.eventBuses![0]!.accepted);
       expect(e.eventBuses![0]!.subscriptions[1]!.delivered).toBe(24);
       expect(e.workers[1]!.effects).toBeGreaterThan(0);
       if (fail) { expect(e.eventBuses![0]!.subscriptions[0]!.deadLettered).toBeGreaterThan(0); expect(e.workers[0]!.effects).toBe(0); }

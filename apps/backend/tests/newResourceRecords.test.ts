@@ -1,0 +1,29 @@
+import { expect, test } from "bun:test";
+import { gatewayLayout, gatewayWorkload } from "./apiGateway.fixture";
+import { eventBusLayout, eventBusWorkload } from "./eventBus.fixture";
+import { captureRunInputs } from "../deployments/runInputs";
+import { createModel2Engine } from "../simulator/model2Engine";
+import { buildModel2Contract } from "../simulator/contractBuilder";
+import { captureSnapshot } from "../simulator/snapshot";
+import { readRecords } from "../reports/records";
+import type { SimulationInstance } from "../simulator/instance";
+
+for (const kind of ["gateway", "bus"] as const) test(`${kind} official terminal retains bounded counters and explicitly unknown price`, () => {
+  const layout = kind === "gateway" ? gatewayLayout() : eventBusLayout(), workload = kind === "gateway" ? gatewayWorkload : eventBusWorkload;
+  const input = captureRunInputs(layout, workload, "new-resource-records"), model2 = createModel2Engine(input, 2, buildModel2Contract);
+  model2.advance(); model2.advance();
+  const instance: SimulationInstance = { model2, tickCount: 2, pendingLogs: [], speed: 1, lastCheckpointAt: 0, accumulatedCostUsd: undefined, topology: layout, topologyRevision: 0, actions: new Map(), acknowledge: null, metricsComputedAt: "2026-11-04T00:00:00.000Z", metricsTopologyRevision: 0 };
+  const snapshot = captureSnapshot("run", instance, "terminal");
+  expect(snapshot).toMatchObject({ version: 2, costCoverage: "unknown" });
+  const row = { stages: [], timeline: [], chaosEvents: [], runInputs: input, terminalSnapshot: snapshot };
+  const limits: string[] = [], records = readRecords(row, limits);
+  expect(records.terminal).not.toBeNull(); expect(limits).toEqual([]);
+  expect(records.terminal!.resources.find(r => r.id === kind)![kind === "bus" ? "eventBus" : "gateway"]).toBeDefined();
+  expect(records.terminal!.accumulatedCostUsd).toBeUndefined();
+  expect(readRecords({ ...row, terminalSnapshot: { ...snapshot, version: 1 } }, []).terminal).toBeNull();
+  expect(readRecords({ ...row, terminalSnapshot: { ...snapshot, costCoverage: undefined } }, []).terminal).toBeNull();
+  const corrupt = structuredClone(snapshot);
+  if (kind === "gateway") corrupt.metrics.gateway!.gateway!.completed++;
+  else corrupt.metrics.bus!.eventBus!.subscriptions[0]!.delivered++;
+  expect(readRecords({ ...row, terminalSnapshot: corrupt }, []).terminal).toBeNull();
+});

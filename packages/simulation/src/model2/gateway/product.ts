@@ -1,4 +1,4 @@
-import { apiGatewayError, resolveApiGateway, type ApiRoute, type Resource, type ConnectionLine } from "@infraforge/domain/resource";
+import { apiGatewayError, resolveApiGateway, defaultApiRoutes, type ApiRoute, type Resource, type ConnectionLine } from "@infraforge/domain/resource";
 import { requireKnown, type Quantity, type Unit } from "../../reality/quantity";
 import type { CommandConfig } from "../messaging/contracts";
 import type { SystemsInput } from "../systems/contracts";
@@ -9,7 +9,7 @@ export function gatewayRoutes(r: Resource, connections: readonly ConnectionLine[
   if (r.apiGateway?.routes) return r.apiGateway.routes;
   const edges = connections.filter(e => e.sourceId === r.id).sort((a, b) => a.id < b.id ? -1 : 1);
   if (!edges[0]) throw Error("Connect API Gateway to an upstream VM or load balancer");
-  return [{ id: "read", edge: edges[0].id, path: "/read", method: "GET" }, { id: "write", edge: (edges[1] ?? edges[0]).id, path: "/write", method: "POST" }, ...edges.slice(2).map(e => ({ id: e.id, edge: e.id, path: `/${e.id}`, method: "ANY" as const }))];
+  return defaultApiRoutes(edges);
 }
 type Q = <U extends Unit>(id: string, value: number, unit: U, sentence?: string, authored?: boolean) => Quantity<U>;
 export function gatewayTemplate(r: Resource, connections: readonly ConnectionLine[], command: CommandConfig, q: Q, requestEnvelopeBytes: Quantity<"bytes">): Omit<GatewayConfig, "id"> {

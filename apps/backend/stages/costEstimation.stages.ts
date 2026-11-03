@@ -5,8 +5,8 @@ import type { Resource } from "@infraforge/domain/resource";
 import type { DeploymentStageResult } from "../types/DeploymentStageResult.interface";
 
 export const runCostEstimation = (resources: Resource[]): DeploymentStageResult => {
-  const unpriced = resources.filter(r => r.type === "Event Bus").map(r => r.id);
-  if (unpriced.length) return { status: "warning", summary: "Model cost Unknown: no price profile for Event Bus.", details: { unknownResources: unpriced } };
+  const unpriced = resources.filter(r => (r.type === "Event Bus" || r.type === "API Gateway")).map(r => r.id);
+  if (unpriced.length) return { status: "warning", summary: "Model cost Unknown: no price profile for this resource.", details: { unknownResources: unpriced } };
   let monthlyEstimate = 0;
   const breakdown: Record<string, number> = {};
   const lineItems: Array<{ resourceId: string; type: string; provider?: string; skuId?: string; skuLabel?: string; monthlyUsd: number }> = [];

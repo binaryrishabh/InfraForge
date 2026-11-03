@@ -16,7 +16,7 @@ export function apiGateway(config: GatewayConfig, clock: EventKernel, send: Deli
   let received = 0, admitted = 0, completed = 0, invalid = 0, missingRoute = 0, throttled = 0, overloaded = 0, gatewayFailed = 0, upstreamFailed = 0, timedOut = 0, cancelled = 0, paused = false;
   const events: Array<{ atUs: number; route: string | null; status: number }> = []; let omitted = 0;
   const record = (reply: GatewayReply) => { if (events.length < 2048) events.push({ atUs: clock.now, route: reply.route ?? null, status: reply.status }); else omitted++; };
-  const respond = (work: Invocation, done: RemoteCompletion, reply: GatewayReply, cause?: Cause) => { work.message ??= {}; work.message.response = reply; record(reply); done(reply.ok ? "completed" : "rejected", cause ? carryCause(cause) : undefined); };
+  const respond = (work: Invocation, done: RemoteCompletion, reply: GatewayReply, cause?: Cause) => { work.message ??= { request: undefined }; work.message.response = reply; record(reply); done(reply.ok ? "completed" : "rejected", cause ? carryCause(cause) : undefined); };
   const refusal = (work: Invocation, done: RemoteCompletion, status: GatewayReply["status"], reason: string, route?: string): Receipt => {
     respond(work, done, { ok: false, status, reason, ...(route ? { route } : {}) });
     return { admitted: false, state: () => "finished", cancel: () => "already-finished" };
@@ -26,7 +26,7 @@ export function apiGateway(config: GatewayConfig, clock: EventKernel, send: Deli
       received++;
       const request = work.message?.request as GatewayRequest | undefined;
       const path = request?.path ?? `/${work.operation}`, method = request?.method ?? (work.operation === "write" ? "POST" : "GET"), body = work.message?.bodyBytes?.request ?? 0, bytes = body + requireKnown(config.requestEnvelopeBytes, "bytes");
-      if ((request !== undefined && (!request || typeof request !== "object" || Array.isArray(request) || request.kind !== "gateway-request" || request.path === undefined || request.method === undefined || Object.keys(request).some(k => !["kind", "path", "method"].includes(k)))) || typeof path !== "string" || path.length > 256 || !/^\/[a-zA-Z0-9/_-]*$/.test(path) || !["GET", "POST"].includes(method) || !Number.isSafeInteger(bytes) || bytes < 0 || bytes > maxBytes) { invalid++; return refusal(work, done, 400, "invalid-request"); }
+      if ((request !== undefined && (!request || typeof request !== "object" || Array.isArray(request) || request.kind !== "gateway-request" || typeof request.path !== "string" || !["GET", "POST"].includes(request.method) || Object.keys(request).some(k => !["kind", "path", "method"].includes(k)))) || typeof path !== "string" || path.length > 256 || !/^\/[a-zA-Z0-9/_-]*$/.test(path) || !["GET", "POST"].includes(method) || !Number.isSafeInteger(body) || body < 0 || !Number.isSafeInteger(bytes) || bytes < 0 || bytes > maxBytes) { invalid++; return refusal(work, done, 400, "invalid-request"); }
       const route = routes.find(r => r.path === path && (r.method === "ANY" || r.method === method));
       if (!route) { missingRoute++; return refusal(work, done, 404, "missing-route"); }
       if (paused || live.size >= maxInFlight || live.has(work.callId)) { overloaded++; return refusal(work, done, 503, "gateway-capacity", route.id); }
@@ -36,7 +36,7 @@ export function apiGateway(config: GatewayConfig, clock: EventKernel, send: Deli
       const finish = (reply: GatewayReply, cause?: Cause, cancel = false) => {
         if (terminal) return; terminal = true; cancelTimeout(); cancelDispatch?.(); live.delete(work.callId);
         if (cancel) cancelled++; else if (reply.ok) completed++; else if (reply.status === 504) timedOut++; else if (reply.status === 503) gatewayFailed++; else upstreamFailed++;
-        if (cancel) { work.message ??= {}; work.message.response = reply; record(reply); done("cancelled"); }
+        if (cancel) { work.message ??= { request: undefined }; work.message.response = reply; record(reply); done("cancelled"); }
         else respond(work, done, reply, cause);
       };
       const cancelTimeout = clock.schedule(clock.now + timeout, 1, JSON.stringify(["gateway-timeout", config.id, work.callId]), () => { finish({ ok: false, status: 504, reason: "upstream-timeout-ambiguous", route: route.id }); receipt?.cancel(); });

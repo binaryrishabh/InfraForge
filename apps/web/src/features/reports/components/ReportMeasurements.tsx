@@ -61,6 +61,7 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
                   </li>
                 ))}
               </ul>
+              {checkpoint.resources.filter(r => r.eventBus || r.gateway).map(r => <div key={r.id} className="mt-4"><h3 className="font-semibold">{r.id}</h3>{r.eventBus && <EventBusReadings metrics={r.eventBus} />}{r.gateway && <GatewayReadings metrics={r.gateway} />}</div>)}
               {report.guidedReview && <a href="#guided-review" className="mt-3 inline-block text-sm font-medium text-accent underline">Back to guided review</a>}
             </div>
           )}
@@ -78,3 +79,5 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
     </>
   );
 }
+import { EventBusReadings } from "@/features/live/EventBusReadings";
+import { GatewayReadings } from "@/features/live/GatewayReadings";

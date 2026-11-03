@@ -9,6 +9,7 @@ import { ClientRetryLiveSchema } from "./clientRetrySchema";
 import { VmMemorySchema } from "./vmMemorySchema";
 import { ObjectiveSchema } from "./objectiveSchema";
 import { DeploymentChaosNames } from "@infraforge/domain/resource";
+import { EventBusMetricsSchema, GatewayMetricsSchema } from "./newResourceSchema";
 
 const text = z.string().min(1).max(4000);
 const timestamp = z.iso.datetime({ offset: true });
@@ -24,7 +25,7 @@ const stage = z.object({ name: text, status: z.enum(["pending", "running", "comp
   message: text, startedAt: timestamp, completedAt: timestamp, details: z.unknown().optional() });
 // Model 2 records a value it does not model as null ("unknown"); reports treat it as not recorded, never as zero.
 const health = z.enum(["healthy", "degraded", "saturated", "failed", "unknown"]);
-const metrics = z.object({ vmMemory: VmMemorySchema.optional(), cpu: amount.max(100).nullable().optional(), memory: amount.max(100).nullable().optional(),
+const metrics = z.object({ eventBus: EventBusMetricsSchema.optional(), gateway: GatewayMetricsSchema.optional(), vmMemory: VmMemorySchema.optional(), cpu: amount.max(100).nullable().optional(), memory: amount.max(100).nullable().optional(),
   rps: amount.optional(), connections: amount.optional(), health: health.optional() });
 const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction: amount.optional(),
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).optional(), accumulatedCostUsd: amount.optional(),
@@ -45,6 +46,8 @@ const terminal = checkpoint.extend({ version: z.literal(1), kind: z.literal("ter
   topologyRevision: z.number().int().nonnegative(), simulatedSeconds: amount, accumulatedCostUsd: amount,
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]),
   metrics: boundedMap(metrics.extend({ cpu: amount.max(100).nullable(), memory: amount.max(100).nullable(), health })) });
+const unknownCostTerminal = terminal.extend({ version: z.literal(2), costCoverage: z.literal("unknown"), accumulatedCostUsd: z.undefined().optional(), burnRatePerHourUsd: z.undefined().optional() });
+const terminalRecord = z.discriminatedUnion("version", [terminal, unknownCostTerminal]);
 
 export function readRecords(value: unknown, limits: string[]) {
   const list = <T>(input: unknown, schema: z.ZodType<T>, field: string): T[] => {
@@ -129,7 +132,7 @@ function readCheckpoint(value: unknown, limits: string[]): ReportCheckpoint | nu
 
 function readTerminal(value: unknown, limits: string[]): ReportCheckpoint | null {
   if (value == null) return null;
-  const parsed = terminal.safeParse(value);
+  const parsed = terminalRecord.safeParse(value);
   if (!parsed.success) { limits.push("The terminal record is malformed; no exact final-state claim is made from it."); return null; }
   return readCheckpoint(parsed.data, limits);
 }

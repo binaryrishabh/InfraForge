@@ -10,6 +10,11 @@ export interface ApiGatewaySettings {
   routes?: ApiRoute[];
 }
 export const resolveApiGateway = (s?: ApiGatewaySettings) => ({ maxRequestBytes: s?.maxRequestBytes ?? 1048576, maxInFlight: s?.maxInFlight ?? 256, upstreamTimeoutMs: s?.upstreamTimeoutMs ?? 1000 });
+export function defaultApiRoutes(connections: readonly { id: string }[]): ApiRoute[] {
+  const edges = [...connections].sort((a, b) => a.id < b.id ? -1 : 1);
+  if (!edges[0]) return [];
+  return [{ id: "read", edge: edges[0].id, path: "/read", method: "GET" }, { id: "write", edge: (edges[1] ?? edges[0]).id, path: "/write", method: "POST" }, ...edges.slice(2).map(e => ({ id: e.id, edge: e.id, path: `/${e.id}`, method: "ANY" as const }))];
+}
 export const gatewayPath = (value: unknown): value is string => typeof value === "string" && value.length <= 256 && /^\/[a-zA-Z0-9/_-]*$/.test(value);
 export function apiGatewayError(type: string, value: unknown): string | undefined {
   if (value === undefined) return;

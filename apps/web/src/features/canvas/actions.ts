@@ -1,3 +1,4 @@
+import { apiGatewayError } from "@infraforge/domain/resource";
 import { eventBusError } from "@infraforge/domain/resource";
 import { toast } from "sonner";
 import { validateConnection } from "@infraforge/domain/validation";
@@ -25,7 +26,7 @@ function editable(store: Store, quiet = false) {
 const snap = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
 
 const PREFIX: Record<ResourceType, string> = {
-  "Event Bus": "bus", DNS: "dns", CDN: "cdn", Firewall: "fw", "Load Balancer": "lb", "Virtual Machine": "vm", "Container Registry": "registry",
+  "API Gateway": "gateway", "Event Bus": "bus", DNS: "dns", CDN: "cdn", Firewall: "fw", "Load Balancer": "lb", "Virtual Machine": "vm", "Container Registry": "registry",
   Cache: "cache", Database: "db", "Object Storage": "storage", "Message Queue": "queue", "Monitoring Agent": "monitor",
 };
 // Short readable ids (vm-1, db-2) that never reuse an id still reachable through undo or redo.
@@ -115,7 +116,7 @@ export function deleteConnection(connectionId: string) {
   toast("Connection removed", { action: { label: "Undo", onClick: undo }, duration: 5000 });
 }
 
-const TRACKED = ["eventBus", "databaseReplication", "name", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts"] as const;
+const TRACKED = ["apiGateway", "eventBus", "databaseReplication", "name", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts"] as const;
 export function updateResource(resourceId: string, patch: Partial<Resource>) {
   const store = useCanvasStore.getState();
   if (!editable(store)) return;
@@ -130,6 +131,7 @@ export function updateResource(resourceId: string, patch: Partial<Resource>) {
   if (vmExecutionError(candidate.type, candidate.vmExecution, candidate.asyncWorker?.enabled)) return;
   if (databaseReplicationError(candidate.type, candidate.databaseReplication)) return;
   if (dbConcurrencyError(candidate.type, candidate.dbConcurrency)) return;
+  if (apiGatewayError(candidate.type, candidate.apiGateway)) return;
   if (eventBusError(candidate.type, candidate.eventBus)) return;
   if (firewallCapacityError(candidate.type, candidate.firewallCapacity)) return;
   if (objectStoragePolicyError(candidate.type, candidate.objectStoragePolicy)) return;
