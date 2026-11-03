@@ -1,3 +1,4 @@
+import { EventBusSection } from "./EventBusSection";
 import { LbRateLimitSection } from "./LbRateLimitSection";
 import { FirewallCapacitySection } from "./FirewallCapacitySection";
 import { ObjectCapacitySection } from "./ObjectCapacitySection";
@@ -73,6 +74,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
       {resource.type === "Firewall" && <FirewallCapacitySection key={`firewall-capacity-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Object Storage" && <ObjectCapacitySection key={`object-capacity-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Cache" && <CachePolicySection key={`cache-policy-${resource.id}`} resource={resource} disabled={locked} />}
+      {resource.type === "Event Bus" && <EventBusSection resource={resource} disabled={locked} />}
       {resource.type === "Monitoring Agent" && <MonitoringCadenceSection key={`monitoring-cadence-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Monitoring Agent" && <MonitoringBufferSection key={`monitoring-buffer-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "CDN" && <CdnTtlSection key={`cdn-ttl-${resource.id}`} resource={resource} disabled={locked} />}

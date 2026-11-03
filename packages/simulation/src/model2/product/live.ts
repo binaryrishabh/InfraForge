@@ -13,6 +13,7 @@ import { clientRetryEvidence } from "../workload/clientRetryEvidence";
 export type LiveValue = number | null;
 export type LiveHealth = "healthy" | "degraded" | "saturated" | "failed" | "unknown";
 export interface LiveNodeMetrics {
+  eventBus?: import("@infraforge/contracts/telemetry").ResourceMetrics["eventBus"];
   vmMemory?: import("@infraforge/contracts/telemetry").VmMemoryMetrics;
   rateLimit?: import("@infraforge/contracts/telemetry").LbRateLimitMetrics;
   monitoring?: import("@infraforge/contracts/telemetry").MonitoringMetrics;
@@ -165,6 +166,10 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         const workers = compiled.input.resources.filter((r) => r.kind === "async-worker" && r.broker === resource.id).map((r) => runtime.inspectWorker(r.id));
         if (metrics[resource.id] && queue && queue.ready > 0 && metrics[resource.id]!.health === "healthy") metrics[resource.id]!.health = "degraded";
         if (metrics[resource.id]) metrics[resource.id]!.asyncQueue = { version: 2, failedAttempts: workers.length && workers.every(Boolean) ? workers.reduce((n, w) => n + w!.failed, 0) : null, wastedCpuSeconds: workers.length && workers.every(Boolean) ? workers.reduce((n, w) => n + w!.failedCpuUs, 0) / SECOND : null, deadLetterOverflowDiscards: queue?.dlqOverflow ?? null, published: queue?.accepted ?? null, completed: workers.length && workers.every(Boolean) ? workers.reduce((n, w) => n + w!.processed, 0) : null, readyDepth: queue?.ready ?? null, oldestReadyAgeSeconds: queue?.oldestReadyAgeUs == null ? null : queue.oldestReadyAgeUs / SECOND, inFlight: queue?.inFlight ?? null, redeliveries: queue?.redelivered ?? null, deadLettered: queue?.deadLettered ?? null };
+      }
+      for (const resource of compiled.input.resources) if (resource.kind === "event-bus" && metrics[resource.id]) {
+        const bus = runtime.inspectEventBus(resource.id);
+        if (bus) metrics[resource.id]!.eventBus = { version: 1, accepted: bus.accepted, invalid: bus.invalid, subscriptions: bus.subscriptions.map(({ deadLetters: _letters, ...row }) => row) };
       }
       const security = runtime.inspectSecurity();
       if (security) for (const node of nodeIds) {

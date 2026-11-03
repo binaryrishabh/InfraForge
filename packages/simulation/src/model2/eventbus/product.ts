@@ -8,7 +8,7 @@ import type { SystemsInput } from "../systems/contracts";
 export const EVENT_BUS_PROFILE = "event-bus/1" as const;
 export const eventBusIntent = (resources: readonly Resource[]) => resources.some(r => r.type === "Event Bus" || r.eventBus !== undefined);
 type Q = <U extends Unit>(id: string, value: number, unit: U, sentence?: string, authored?: boolean) => Quantity<U>;
-export function eventSubscriptions(r: Resource, connections: readonly ConnectionLine[]) {
+export function eventSubscriptions(r: Resource, connections: readonly ConnectionLine[]): import("@infraforge/domain/resource").EventSubscription[] {
   return r.eventBus?.subscriptions ?? connections.filter(e => e.sourceId === r.id).sort((a, b) => a.id < b.id ? -1 : 1).map(e => ({ id: e.id, edge: e.id }));
 }
 export function eventBusTemplate(r: Resource, connections: readonly ConnectionLine[], command: CommandConfig, q: Q): Omit<EventBusConfig, "id"> {

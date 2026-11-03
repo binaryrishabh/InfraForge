@@ -117,6 +117,7 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
       return logs;
     },
     burnRatePerHourUsd() {
+      if (input.resources.some(r => r.type === "Event Bus")) return undefined;
       let monthly = 0;
       for (const r of input.resources) {
         const price = (r.skuId ? findSku(r.skuId)?.monthlyPriceUsd : undefined) ?? GENERIC_MONTHLY_USD[r.type] ?? 10;

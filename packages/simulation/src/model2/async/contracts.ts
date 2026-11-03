@@ -1,8 +1,8 @@
 import type { Quantity } from "../../reality/quantity";
 import type { ComputeResource } from "../compute/contracts";
 import type { DataInput } from "../data/contracts";
-export interface ServiceDemand { cpu: Quantity<"cpu-us">; wait: Quantity<"us"> }
-export interface CommandConfig { execution: ComputeResource; concurrency: Quantity<"count">; pending: Quantity<"count">; timeout: Quantity<"us">; demands: Record<string, ServiceDemand> }
+import type { CommandConfig, MessageBody } from "../messaging/contracts";
+export type { CommandConfig, ServiceDemand, MessageBody } from "../messaging/contracts";
 export interface BrokerConfig extends CommandConfig {
   id: string; kind: "delivery-queue"; profile: "visibility-work-queue/1";
   capacityMessages: Quantity<"count">; capacityBytes: Quantity<"bytes">; lease: Quantity<"us">; retention: Quantity<"us">; maxAttempts: Quantity<"count">;
@@ -20,7 +20,6 @@ export interface WorkerConfig {
 export type AsyncResource = BrokerConfig | ObjectConfig | PublisherConfig | WorkerConfig | import("../eventbus/contracts").EventBusConfig;
 export type AsyncIntervention = { id: string; target: string; at: Quantity<"us">; duration: Quantity<"us"> } & ({ kind: "consumer-state"; available: boolean } | { kind: "object-access"; reads: boolean; writes: boolean } | { kind: "object-capacity"; bytes: Quantity<"bytes"> });
 export interface AsyncInput extends Omit<DataInput, "workloadVersion" | "resources"> { workloadVersion: "m2f/1"; resources: Array<DataInput["resources"][number] | AsyncResource>; asyncInterventions: AsyncIntervention[] }
-export interface MessageBody { key: string; namespace: string; objectKey: string; bytes: number }
 export interface QueueRequest { kind: "publish" | "receive" | "ack" | "nack"; logicalId?: string; body?: MessageBody; delayUs?: number; consumer?: string; receipt?: string; action?: "requeue" | "discard" | "dead-letter" }
 export interface Delivery { id: string; logicalId: string; publishAttempt: string; attempt: number; consumer: string; receipt: string; deliveredAt: number; leaseUntil: number; body: MessageBody }
 export interface QueueReply { ok: boolean; reason?: string; acceptedId?: string; deduplicated?: boolean; delivery?: Delivery; empty?: boolean; durability?: "logical-ownership-only" }

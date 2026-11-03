@@ -17,7 +17,7 @@ export function InstanceSection({ resource, disabled }: { resource: Resource; di
   const category: SkuCategory = vm ? "Virtual Machine" : "Database";
   const perCpu = vm ? SIMULATION_CONSTANTS.RPS_PER_VCPU : SIMULATION_CONSTANTS.QPS_PER_VCPU;
   const unit = vm ? "rps" : "qps";
-  const options = [{ id: "", label: "Generic", detail: `${CAPACITY[resource.type].rps} ${unit}${vm ? "" : ` · ${SIMULATION_CONSTANTS.MAX_DB_CONNECTIONS} connections`}`, price: null as number | null },
+  const options = [{ id: "", label: "Generic", detail: `${CAPACITY[resource.type]?.rps ?? "Unknown"} ${unit}${vm ? "" : ` · ${SIMULATION_CONSTANTS.MAX_DB_CONNECTIONS} connections`}`, price: null as number | null },
     ...skusFor(provider, category).map((sku) => ({ id: sku.skuId, label: sku.label, price: sku.monthlyPriceUsd,
       detail: `${Math.round(sku.vCpu * sku.baselineFactor * perCpu)} ${unit}${sku.maxConnections !== undefined ? ` · ${sku.maxConnections} connections` : ""}` }))];
   const name = `sku-${resource.id}`;

@@ -4,6 +4,7 @@ import type { ResourceType } from "@infraforge/domain/resource";
 /* What each resource does in the model, in plain words. Deliberately no product names:
 the simulator models roles and declared capacity, not any particular cloud's service. */
 export const ROLE_SUBLABELS: Record<ResourceType, string> = {
+  "Event Bus": "Delivers events to independent subscriptions",
   DNS: "Turns names into addresses",
   CDN: "Serves cached content near users",
   Firewall: "Filters traffic at the edge",
@@ -21,7 +22,8 @@ export const ROLE_SUBLABELS: Record<ResourceType, string> = {
 20000 -> "20k", 160 -> "160". Reads from the shared CAPACITY table so the
 label tracks any future constant change in one place. */
 export function capacityLabel(type: ResourceType): string {
-  const rps = CAPACITY[type].rps;
+  const rps = CAPACITY[type]?.rps;
+  if (rps === undefined) return "Capacity Unknown";
   const compact = rps >= 1000 ? `${Math.round(rps / 1000)}k` : `${rps}`;
   return `${compact} rps`;
 }

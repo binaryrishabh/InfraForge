@@ -1,4 +1,4 @@
-import type { CommandConfig, MessageBody } from "../async/contracts";
+import type { CommandConfig, MessageBody } from "../messaging/contracts";
 import type { Quantity } from "../../reality/quantity";
 
 export interface EventBusConfig extends CommandConfig {

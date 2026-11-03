@@ -6,7 +6,7 @@ import type { EventBusConfig } from "../src/model2/eventbus/contracts";
 import type { Deliver } from "../src/model2/compute/run";
 import type { Invocation, RemoteCompletion } from "../src/model2/workload/contracts";
 
-function setup(capacity = 2, prefix?: string) {
+function setup(capacity = 2, prefix?: string, hang = false) {
   const broker = prepare(design()).compiled.input.resources.find(r => r.kind === "delivery-queue")!;
   if (broker.kind !== "delivery-queue") throw Error("queue missing");
   const q = <U extends "count" | "us">(value: number, unit: U) => ({ kind: "known" as const, value, unit, provenance: ["test"] });
@@ -16,7 +16,7 @@ function setup(capacity = 2, prefix?: string) {
   const send: Deliver = (target, work, done) => {
     calls.push({ target, work, done });
     if (target === "q2" || slow) { work.message!.response = { ok: true }; done("completed"); }
-    else done("rejected");
+    else if (!hang) done("rejected");
     return { admitted: true, state: () => "finished", cancel: () => "already-finished" };
   };
   const bus = eventBus(config, kernel, send);
@@ -54,4 +54,13 @@ test("deterministic stepped delivery equals one-shot delivery", () => {
   const a = setup(), b = setup(); a.publish(); b.publish();
   for (let at = 500; at <= 10000; at += 500) a.kernel.advanceTo(at);
   b.kernel.advanceTo(10000); expect(a.bus.evidence()).toEqual(b.bus.evidence());
+});
+test("lost confirmations time out with bounded retry and late duplicate callbacks cannot settle twice", () => {
+  const f = setup(1, undefined, true); f.publish(); f.kernel.advanceTo(10000);
+  const slow = f.calls.filter(c => c.target === "q1"); expect(slow).toHaveLength(3);
+  expect(new Set(slow.map(c => (c.work.message!.request as { logicalId: string }).logicalId)).size).toBe(1);
+  const before = f.bus.evidence();
+  for (const call of slow) { call.work.message!.response = { ok: true }; call.done("completed"); call.done("completed"); }
+  expect(f.bus.evidence()).toEqual(before);
+  expect(before.subscriptions[0]).toMatchObject({ pending: 0, deadLettered: 1, retried: 2, delivered: 0 });
 });

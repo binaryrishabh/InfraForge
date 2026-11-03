@@ -3,6 +3,7 @@ import { RESOURCE_TYPES, type ResourceType } from "@infraforge/domain/resource";
 export type ResourceCategory = "entry" | "traffic" | "compute" | "data" | "messaging" | "observe";
 
 export const CATEGORY_OF: Record<ResourceType, ResourceCategory> = {
+  [RESOURCE_TYPES.EventBus]: "messaging",
   [RESOURCE_TYPES.DNS]: "entry",
   [RESOURCE_TYPES.CDN]: "entry",
   [RESOURCE_TYPES.Firewall]: "traffic",

@@ -65,7 +65,7 @@ export function RunBar({ run, deploymentId, phase, challengeTitle, onStop, stopp
         {target && <div><dt className="if-eyebrow !text-[10px]">{target.reason === "evaluation" ? "Evaluation" : "Matched stop"}</dt>
           <dd className="if-num text-[13px] leading-tight text-ink-2">{formatClock(target.seconds)} <span className="text-ink-3">· {Math.max(0, target.seconds - seconds)} s left</span></dd></div>}
         <div className="hidden md:block"><dt className="if-eyebrow !text-[10px]">Model cost</dt>
-          <dd className="if-num text-[13px] leading-tight text-ink-2">{formatUsd(spent, 3)} <span className="text-ink-3">· {formatUsd(burn)}/h</span></dd></div>
+          <dd className="if-num text-[13px] leading-tight text-ink-2">{spent === undefined ? "Unknown" : formatUsd(spent, 3)} <span className="text-ink-3">· {burn === undefined ? "Unknown" : formatUsd(burn)}/h</span></dd></div>
       </dl>
       <div className="flex shrink-0 items-center gap-2">
         {phase !== "finished" && phase !== "failed" && <SpeedControl deploymentId={deploymentId} enabled={live} />}

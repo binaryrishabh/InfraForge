@@ -1,7 +1,7 @@
 import { RESOURCE_TYPES, type ResourceType } from "@infraforge/domain/resource";
 
 // Generic fallback capacity for resources WITHOUT a selected SKU.
-export const CAPACITY: Record<ResourceType, { rps: number; source: string }> = {
+export const CAPACITY: Partial<Record<ResourceType, { rps: number; source: string }>> = {
   [RESOURCE_TYPES.DNS]: { rps: 5000, source: "named" },
   [RESOURCE_TYPES.CDN]: { rps: 20000, source: "edge" },
   [RESOURCE_TYPES.Firewall]: { rps: 15000, source: "waf" },

@@ -10,7 +10,7 @@ export function FlowSection({ resource, disabled }: { resource: Resource; disabl
   const resources = useCanvasStore(s => s.resources);
   const connected = edges.filter(e => e.sourceId === resource.id && resources.some(r => r.id === e.targetId && ["Virtual Machine", "Load Balancer"].includes(r.type)));
   const dataEdges = edges.filter(e => e.sourceId === resource.id && resources.some(r => r.id === e.targetId && ["Database", "Cache"].includes(r.type)));
-  const publishEdges = edges.filter(e => e.sourceId === resource.id && resources.some(r => r.id === e.targetId && r.type === "Message Queue" && r.asyncQueue?.enabled));
+  const publishEdges = edges.filter(e => e.sourceId === resource.id && resources.some(r => r.id === e.targetId && (r.type === "Event Bus" || (r.type === "Message Queue" && r.asyncQueue?.enabled))));
   const flow = resource.applicationFlow, steps = flow?.operations[operation]?.steps;
   const commit = (rows: FlowStep[] | undefined) => {
     const operations = { ...flow?.operations };
@@ -57,7 +57,7 @@ export function FlowSection({ resource, disabled }: { resource: Resource; disabl
             {!publishEdges.some(e => e.id === s.edge) && s.edge && <option value={s.edge}>Missing publish edge: {s.edge}</option>}
             {publishEdges.map(e => <option key={e.id} value={e.id}>{resources.find(r => r.id === e.targetId)?.name || e.targetId} ({e.id})</option>)}
           </select>
-          <p className="text-xs text-ink-3">Upload object, then publish; wait for broker confirmation of logical ownership. Physical durability Unknown. Worker completion is separate. One sequential write step; no retry or rollback. Use a fixed entry producer and one worker sharing the same object store.</p>
+          <p className="text-xs text-ink-3">Upload object, then publish; wait for broker confirmation of logical ownership. Physical durability Unknown. Worker completion is separate. One sequential write step; no retry or rollback. Use a fixed entry producer and queue workers sharing the same object store.</p>
         </>}
         {s.kind === "parallel" && <>
           {s.branches.map((b, j) => <div key={b.id}>{picker(b, c => patch(i, { ...s, branches: s.branches.map((v, n) => n === j ? c : v) }))}
@@ -74,7 +74,7 @@ export function FlowSection({ resource, disabled }: { resource: Resource; disabl
     {error && <p role="alert">{error}</p>}
     {dangling && <p role="alert">Call {dangling.id}: choose an existing connected service edge.</p>}
     {steps?.filter(s => s.kind === "data").map(s => !dataEdges.some(e => e.id === s.edge) && <p key={s.id} role="alert">Data {s.id}: choose an existing attached database or cache edge.</p>)}
-    {steps?.filter(s => s.kind === "publish").map(s => !publishEdges.some(e => e.id === s.edge) && <p key={s.id} role="alert">Publish {s.id}: choose an existing attached enabled upload queue edge.</p>)}
+    {steps?.filter(s => s.kind === "publish").map(s => !publishEdges.some(e => e.id === s.edge) && <p key={s.id} role="alert">Publish {s.id}: choose an existing attached enabled upload queue or Event Bus edge.</p>)}
     {steps?.some(s => s.kind === "parallel" && new Set(s.branches.map(b => b.edge)).size !== s.branches.length) && <p role="alert">Parallel siblings must use distinct service paths.</p>}
     {steps?.some(s => s.kind === "parallel" && s.branches.some(b => (b.operation ?? operation) === "write")) && <p role="alert">Parallel calls must be read-only or idempotent; canvas writes are non-idempotent.</p>}
     {steps?.some(s => s.kind === "data" && s.operation === "write" && dataEdges.some(e => e.id === s.edge && resources.find(r => r.id === e.targetId)?.type === "Database") && dataEdges.some(e => resources.find(r => r.id === e.targetId)?.type === "Cache")) && <p role="alert">Use a cache write to update the database and invalidate the attached cache.</p>}

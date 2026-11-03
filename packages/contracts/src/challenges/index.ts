@@ -258,7 +258,7 @@ export interface ChallengePreflight {
   valid: boolean;
   errors: string[];
   warnings: string[];
-  monthlyEstimateUsd: number;
+  monthlyEstimateUsd?: number;
   checks: PreflightCheck[];
   resourceTypes: ResourceType[];
   // For a resilience challenge: whether the design still contains the experiment's target, as required.
