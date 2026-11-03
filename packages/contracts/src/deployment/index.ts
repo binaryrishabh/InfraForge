@@ -7,6 +7,7 @@ export * from "./DeploymentStatus.enum";
 export type * from "./DeploymentTimeline.interface";
 export * from "./DeploymentTimelineEventNames.enum";
 export type * from "./CapabilityAvailability.interface";
+export type * from "./ReplayQueueStatus.interface";
 
 // Browser replay contract 2 includes sequential confirm-wait publish. Increase when new
 // browser actions or replay semantics require a newer server.
