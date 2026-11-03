@@ -9,6 +9,7 @@ import { VmExecutionSection } from "./VmExecutionSection";
 import { DatabaseReplicationSection } from "./DatabaseReplicationSection";
 import { DbConcurrencySection } from "./DbConcurrencySection";
 import { LbAdmissionSection } from "./LbAdmissionSection";
+import { LbSelectionSection } from "./LbSelectionSection";
 import { LbHealthSection } from "./LbHealthSection";
 import { CachePolicySection } from "./CachePolicySection";
 import { MonitoringCadenceSection } from "./MonitoringCadenceSection";
@@ -79,6 +80,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
       {resource.type === RESOURCE_TYPES.LoadBalancer && <AutoscalingSection key={`pool-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <LbRateLimitSection resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <LbAdmissionSection key={`admission-${resource.id}`} resource={resource} disabled={locked} />}
+      {resource.type === RESOURCE_TYPES.LoadBalancer && <LbSelectionSection key={`selection-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <LbHealthSection key={`health-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <RetrySection key={`retry-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <CircuitBreakerSection key={`breaker-${resource.id}`} resource={resource} disabled={locked} />}

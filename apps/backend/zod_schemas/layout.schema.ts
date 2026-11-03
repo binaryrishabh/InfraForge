@@ -1,6 +1,6 @@
 import { lbRateLimitError, LB_RATE_BURST_MAX, LB_RATE_MIN_RPS, LB_RATE_MAX_RPS } from "@infraforge/domain/resource";
 import * as z from "zod";
-import { firewallCapacityError, FIREWALL_FLOW_CAPACITY_MAX, objectStoragePolicyError, OBJECT_STORAGE_CAPACITY_MAX_MIB, monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT_MAX_ATTEMPTS, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmMemoryError, VM_MEMORY_MAX_MIB, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, databaseReplicationError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { firewallCapacityError, FIREWALL_FLOW_CAPACITY_MAX, objectStoragePolicyError, OBJECT_STORAGE_CAPACITY_MAX_MIB, monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT_MAX_ATTEMPTS, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmMemoryError, VM_MEMORY_MAX_MIB, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbSelectionError, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, databaseReplicationError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -40,6 +40,7 @@ const ResourceSchema = z.object({
     z.object({ version: z.literal(1), ttlSeconds: z.number().int().min(1).max(CDN_TTL_MAX_SECONDS) }).strict(),
     z.object({ version: z.literal(2), ttlSeconds: z.number().int().min(1).max(CDN_TTL_MAX_SECONDS).optional(), coalesce: z.boolean(), maxWaiters: z.number().int().min(1).max(CDN_MAX_WAITERS).optional() }).strict(),
   ]).optional(),
+  lbSelection: z.object({ version: z.literal(1), policy: z.enum(["round-robin", "least-outstanding"]) }).strict().optional(),
   lbHealth: z.object({ version: z.literal(1), intervalSeconds: z.number().int().min(1).max(LB_HEALTH_SECONDS_MAX).optional(), timeoutSeconds: z.number().int().min(1).max(LB_HEALTH_SECONDS_MAX).optional(), unhealthyAfter: z.number().int().min(1).max(LB_HEALTH_THRESHOLD_MAX).optional(), healthyAfter: z.number().int().min(1).max(LB_HEALTH_THRESHOLD_MAX).optional() }).strict().optional(),
   lbRateLimit: z.object({ version: z.literal(1), burstRequests: z.number().int().min(1).max(LB_RATE_BURST_MAX), sustainedRequestsPerSecond: z.number().finite().min(LB_RATE_MIN_RPS).max(LB_RATE_MAX_RPS) }).strict().optional(),
   lbAdmission: z.object({ version: z.literal(1), maxActive: z.number().int().min(1).max(LB_ACTIVE_MAX).optional(), maxQueued: z.number().int().min(0).max(LB_QUEUED_MAX).optional(), queueWaitMs: z.number().int().min(1).max(LB_QUEUE_WAIT_MAX_MS).optional() }).strict().optional(),
@@ -87,6 +88,8 @@ const ResourceSchema = z.object({
   if (monitoringMessage) ctx.addIssue({ code: "custom", path: ["monitoringPolicy"], message: monitoringMessage });
   const cdnMessage = cdnCachePolicyError(resource.type, resource.cdnCachePolicy);
   if (cdnMessage) ctx.addIssue({ code: "custom", path: ["cdnCachePolicy"], message: cdnMessage });
+  const selectionMessage = lbSelectionError(resource.type, resource.lbSelection);
+  if (selectionMessage) ctx.addIssue({ code: "custom", path: ["lbSelection"], message: selectionMessage });
   const healthMessage = lbHealthError(resource.type, resource.lbHealth);
   if (healthMessage) ctx.addIssue({ code: "custom", path: ["lbHealth"], message: healthMessage });
   const rateLimitMessage = lbRateLimitError(resource.type, resource.lbRateLimit);
