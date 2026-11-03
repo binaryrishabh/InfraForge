@@ -27,7 +27,7 @@ test("traffic outcomes reuse metric rendering, with withheld reasons and the per
     traffic: [{ field: "p99 response time, last measured second", unit: "ms", earlier: 10, later: 15, delta: null,
       withheldReason: "Exact final-state evidence is required for a delta." }] }} />);
   for (const text of ["Traffic outcomes", "p99 response time, last measured second", "Exact final-state evidence is required for a delta.",
-    "Latency percentiles describe the last measured second of each run; one pair does not establish a general difference."]) expect(html).toContain(text);
+    "Latency rows label the last measured second or the whole run. Whole-run percentiles still come from one seed; one pair does not establish a general difference."]) expect(html).toContain(text);
   const old = render(<CompareContent loading={false} error={null} data={comparison} retry={() => {}} />);
   expect(old).not.toContain("Traffic outcomes");
   expect(old).not.toContain("Latency percentiles describe");

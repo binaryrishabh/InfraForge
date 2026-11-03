@@ -13,6 +13,9 @@ export function compareTraffic(a: ReportCheckpoint | null | undefined, b: Report
   for (const p of ["p50", "p95", "p99"] as const) {
     add(`${p} response time, last measured second`, "ms", earlier.latencyMs[p], later.latencyMs[p]);
   }
+  for (const p of ["p50", "p95", "p99"] as const) {
+    add(`${p} response time, whole run (upper bucket bound, within 3%)`, "ms", earlier.wholeRun?.percentiles[p]?.highMs, later.wholeRun?.percentiles[p]?.highMs);
+  }
   add("Completed requests/s, last measured second", "requests/s", earlier.completedRps, later.completedRps);
   add("Failed requests/s, last measured second", "requests/s", earlier.failedRps, later.failedRps);
   add("Client retry load factor, whole run", "attempts/original", earlier.clientRetry?.extraLoadFactor, later.clientRetry?.extraLoadFactor);

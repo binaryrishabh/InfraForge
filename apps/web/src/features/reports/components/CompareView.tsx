@@ -95,7 +95,7 @@ export function CompareView({ comparison: c }: { comparison: RunComparison }) {
       </ReportSection>
       {!!c.traffic?.length && <ReportSection number={k()} title="Traffic outcomes">
         <CompareMetrics metrics={c.traffic} caption="Recorded traffic outcomes" />
-        <p className="mt-3 text-xs text-ink-3">Latency percentiles describe the last measured second of each run; one pair does not establish a general difference.</p>
+        <p className="mt-3 text-xs text-ink-3">Latency rows label the last measured second or the whole run. Whole-run percentiles still come from one seed; one pair does not establish a general difference.</p>
       </ReportSection>}
       <ReportSection number={k()} title="Cost">
         <p className="mb-3 text-ink-3">Educational model output, not a cloud bill. Hourly burn, accumulated cost and the design's monthly estimate are separate measures.</p>
