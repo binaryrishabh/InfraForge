@@ -30,7 +30,10 @@ export async function admitDeployment(tx: Prisma.TransactionClient, data: Prisma
     tx.deployment.count({ where: serverWorkWhere }),
     tx.deployment.count({ where: { status: "pending" } }),
   ]);
-  if (owner >= limits.perOwner || global >= limits.global || queued >= limits.queued) {
+  if (owner >= limits.perOwner) {
+    throw new AppError(`You already have ${owner} unfinished runs. Open Home to continue or discard one, then start again.`, 429);
+  }
+  if (global >= limits.global || queued >= limits.queued) {
     throw new AppError("Simulation capacity is busy. Stop an existing run or retry later.", 429);
   }
   const run = await tx.deployment.create({ data });
