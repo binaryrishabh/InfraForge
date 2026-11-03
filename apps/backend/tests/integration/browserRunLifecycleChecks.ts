@@ -2,6 +2,7 @@ import { expect } from "bun:test";
 import { fileURLToPath } from "node:url";
 import { readOperationalLimits, reservationWhere, serverWorkWhere } from "../../deployments/operationalLimits";
 import { readRunInputs } from "../../deployments/runInputs";
+import { ReplayQueueStatusSchema } from "../../replay/contract";
 import { childEnvironment, until, type LocalHarness } from "./localHarness";
 import { spawnOwned } from "./ownedProcess";
 import type { SessionFixtures } from "./sessionFixtures";
@@ -109,6 +110,12 @@ export async function checkBrowserRunLifecycle(h: LocalHarness, sessions: Sessio
     expect(accepted).toMatchObject({ status: "pending", browserSubmission: submission });
     expect(outbox).toHaveLength(1);
     expect(outbox[0]).toMatchObject({ eventType: "deployment-replay", payload: { deploymentId: submitted }, status: "pending" });
+    // The owned worker is stopped, so GET must expose the durable pending replay without racing completion.
+    const replayResponse = await h.request(`/deployments/${submitted}`);
+    const replay = ReplayQueueStatusSchema.parse(replayResponse.replay);
+    expect(replay).toMatchObject({ state: "queued", position: expect.any(Number), runsAhead: expect.any(Number) });
+    expect(replayResponse.deployment).toMatchObject({ id: submitted, status: "pending" });
+    await asOther(`/deployments/${submitted}`, undefined, "GET", 404);
     await expectReplayCapacity();
     await h.request(`/deployments/${submitted}/submit`, submission, "POST", 409);
     expect(await read(submitted)).toEqual(accepted);

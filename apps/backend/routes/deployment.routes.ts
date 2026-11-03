@@ -16,6 +16,7 @@ import { DeploymentStatus, RUN_CONTRACT } from "@infraforge/contracts/deployment
 import { reportRouter } from "../reports/routes";
 import { actionRouter } from "../actions/routes";
 import { rerunRouter } from "../reruns/routes";
+import { deploymentReadResponse, replayQueueQuery } from "../replay/deploymentResponse";
 
 export const deploymentRouter = Router();
 deploymentRouter.use(reportRouter);
@@ -65,7 +66,7 @@ deploymentRouter.get("/:deploymentId", async (req, res) => {
   if (!parsed.success) throw new ValidationError("A valid deployment ID is required.");
   const deployment = await prisma.deployment.findUnique({ where: { id: parsed.data.deploymentId, ownerId: res.locals.userId } });
   if (!deployment) throw new NotFoundError("Run not found");
-  res.json({ success: true, deployment });
+  res.json(await deploymentReadResponse(deployment, take => prisma.deployment.findMany({ ...replayQueueQuery, take })));
 });
 
 // Everything the browser needs to run a Model 2 run exactly as the server will replay it.
