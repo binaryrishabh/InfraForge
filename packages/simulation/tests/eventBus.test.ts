@@ -35,6 +35,7 @@ test("one publication fans out independently and failure exhausts only its subsc
   const e = f.bus.evidence();
   expect(e.accepted).toBe(1);
   expect(e.subscriptions[0]).toMatchObject({ accepted: 1, delivered: 0, retried: 2, pending: 0, deadLettered: 1 });
+  expect(e.subscriptions[0]!.deadLetters[0]!.body).toEqual({ key: "event", namespace: "uploads", objectKey: "event", bytes: 128 });
   expect(e.subscriptions[1]).toMatchObject({ accepted: 1, delivered: 1, retried: 0, pending: 0 });
   expect(f.calls.filter(c => c.target === "q2")).toHaveLength(1);
 });

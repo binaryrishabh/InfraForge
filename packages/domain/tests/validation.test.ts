@@ -12,7 +12,7 @@ describe("connection eligibility", () => {
   test("preserves allowed, forbidden, terminal and unknown-source results", () => {
     expect(validateConnection(RESOURCE_TYPES.DNS, RESOURCE_TYPES.CDN)).toEqual({ valid: true, message: "Connection valid" });
     expect(validateConnection(RESOURCE_TYPES.DNS, RESOURCE_TYPES.Database)).toEqual({
-      valid: false, message: "DNS cannot connect to Database. Allowed: CDN, Load Balancer, Virtual Machine",
+      valid: false, message: "DNS cannot connect to Database. Allowed: API Gateway, CDN, Load Balancer, Virtual Machine",
     });
     expect(validateConnection(RESOURCE_TYPES.ObjectStorage, RESOURCE_TYPES.Database)).toEqual({
       valid: false, message: "Object Storage cannot connect to any resource",
