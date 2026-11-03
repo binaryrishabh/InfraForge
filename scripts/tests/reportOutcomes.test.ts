@@ -16,9 +16,11 @@ test("product Poisson retry and timeout evidence survives terminal records, repo
   expect(proof.comparisonMarkupMatches).toBe(true);
   expect(proof.timeoutAttempts).toBeGreaterThan(0);
   expect(proof.changedDeltas.some(delta => delta !== 0)).toBe(true);
-  expect(proof.changedDeltas[5]).toBeLessThan(0);
-  expect(proof.changedDeltas[6]).toBeGreaterThan(0);
-  expect(proof.changedDeltas[8]).toBeLessThan(0);
-  expect(proof.rows).toHaveLength(9);
+  // Rows are found by name so adding comparison rows cannot silently shift what is asserted.
+  const delta = (field: string) => proof.rows.find(row => row.field.startsWith(field))!.delta!;
+  expect(delta("Client retry load factor")).toBeLessThan(0);
+  expect(delta("Objective: requests in time, worst-case")).toBeGreaterThan(0);
+  expect(delta("Timed-out attempts")).toBeLessThan(0);
+  expect(proof.rows).toHaveLength(12);
   console.info("report-outcomes-proof", JSON.stringify(proof.numbers));
 });

@@ -40,8 +40,11 @@ function measure(timeout: number, id: string) {
     memoryMatches: JSON.stringify(parsed.terminal!.resources.find(r => r.id === "app")!.vmMemory) === JSON.stringify(engine.view().metrics.app!.vmMemory) };
 }
 
+// Same order as the comparison rows: last-second percentiles, whole-run percentile bounds, then the remaining measures.
 const values = (t: NonNullable<ReportCheckpoint["traffic"]>) => [
-  t.latencyMs.p50, t.latencyMs.p95, t.latencyMs.p99, t.completedRps, t.failedRps,
+  t.latencyMs.p50, t.latencyMs.p95, t.latencyMs.p99,
+  t.wholeRun!.percentiles.p50!.highMs, t.wholeRun!.percentiles.p95!.highMs, t.wholeRun!.percentiles.p99!.highMs,
+  t.completedRps, t.failedRps,
   t.clientRetry!.extraLoadFactor, t.objective!.worstCaseFraction! * 100, t.objective!.bestCaseFraction! * 100, t.clientRetry!.attemptsTimedOut,
 ];
 
@@ -89,7 +92,7 @@ export async function reportOutcomeProof() {
   return { runs, limits: [...a.limits, ...b.limits, ...repeat.limits], rows,
     repeatIdentical: JSON.stringify(b.evidence) === JSON.stringify(repeat.evidence),
     originalsIdentical: a.evidence.counts.offered === b.evidence.counts.offered && a.engineTraffic.offeredRps === b.engineTraffic.offeredRps,
-    rowsMatch: rows.length === 9 && rows.every((m, i) => m.earlier === av[i] && m.later === bv[i] && m.delta === bv[i]! - av[i]!),
+    rowsMatch: rows.length === 12 && rows.every((m, i) => m.earlier === av[i] && m.later === bv[i] && m.delta === bv[i]! - av[i]!),
     comparisonMarkupMatches, timeoutAttempts: a.engineTraffic.clientRetry!.attemptsTimedOut!, changedDeltas: rows.map(m => m.delta),
     numbers: { seed: "report-outcomes-proof", seconds: 4, attemptTimeoutMs: [5, 20], originals: a.evidence.counts.offered,
       runs: [a.engineTraffic, b.engineTraffic], rows } };
