@@ -5,6 +5,7 @@ import { prepare, design } from "./asyncCanvas.fixture";
 import type { EventBusConfig } from "../src/model2/eventbus/contracts";
 import type { Deliver } from "../src/model2/compute/run";
 import type { Invocation, RemoteCompletion } from "../src/model2/workload/contracts";
+import { deliveryQueue } from "../src/model2/async/broker";
 
 function setup(capacity = 2, prefix?: string, hang = false) {
   const broker = prepare(design()).compiled.input.resources.find(r => r.kind === "delivery-queue")!;
@@ -27,7 +28,7 @@ function setup(capacity = 2, prefix?: string, hang = false) {
     let completions = 0; bus.accept(work, () => completions++); kernel.advanceTo(kernel.now + 300);
     expect(completions).toBe(1); return work.message!.response;
   };
-  return { kernel, bus, calls, publish, recover: () => { slow = true; } };
+  return { kernel, config, bus, calls, publish, recover: () => { slow = true; } };
 }
 test("one publication fans out independently and failure exhausts only its subscription", () => {
   const f = setup(); f.publish(); f.kernel.advanceTo(10000);
@@ -63,4 +64,18 @@ test("lost confirmations time out with bounded retry and late duplicate callback
   for (const call of slow) { call.work.message!.response = { ok: true }; call.done("completed"); call.done("completed"); }
   expect(f.bus.evidence()).toEqual(before);
   expect(before.subscriptions[0]).toMatchObject({ pending: 0, deadLettered: 1, retried: 2, delivered: 0 });
+});
+test("an ambiguous delivery retries the real queue and only queue deduplication suppresses duplicate ownership", () => {
+  for (const deduplicatePublishes of [false, true]) {
+    const config = setup().config, broker = prepare(design()).compiled.input.resources.find(r => r.kind === "delivery-queue")!;
+    if (broker.kind !== "delivery-queue") throw Error("queue"); broker.deduplicatePublishes = deduplicatePublishes;
+    const clock = new EventKernel(100000), queue = deliveryQueue(broker, clock); let replies = 0;
+    const bus = eventBus({ ...config, subscriptions: [{ id: "one", target: "queue" }] }, clock, (_target, work, done) => queue.accept(work, outcome => { if (++replies > 1) done(outcome); }));
+    const work: Invocation = { rootId: "one", callId: JSON.stringify(["one"]), attempt: 1, offeredAt: 0, operation: "write", message: { request: { kind: "publish", logicalId: "one", body: { key: "one", namespace: "uploads", objectKey: "one", bytes: 128 } } } };
+    bus.accept(work, () => {}); clock.advanceTo(10000);
+    expect(bus.evidence().subscriptions[0]).toMatchObject({ delivered: 1, retried: 1, pending: 0 });
+    expect(queue.evidence().accepted).toBe(deduplicatePublishes ? 1 : 2);
+    expect(queue.evidence().duplicatePublishes).toBe(deduplicatePublishes ? 1 : 0);
+    expect(queue.evidence().messages).toHaveLength(deduplicatePublishes ? 1 : 2);
+  }
 });

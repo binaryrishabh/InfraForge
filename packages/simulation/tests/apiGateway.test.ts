@@ -19,7 +19,7 @@ function setup(hang = false) {
     const receipt = gateway.accept(work, () => completions++); clock.advanceTo(clock.now + 200);
     return { work, reply: () => work.message!.response as GatewayReply, completions: () => completions, receipt };
   };
-  return { clock, gateway, calls, send, fail: () => { fail = true; } };
+  return { clock, gateway, calls, send, fail: () => { fail = true; }, recover: () => { fail = false; } };
 }
 test("exact routes dispatch different upstreams and route budgets do not interfere", () => {
   const f = setup(); expect(f.send("/orders").reply().status).toBe(200);
@@ -37,6 +37,8 @@ test("validation, missing route and upstream failure have different real outcome
   expect(f.send("/orders/child").reply().status).toBe(404);
   f.fail(); expect(f.send("/payments", "POST").reply().status).toBe(502);
   expect(f.gateway.evidence()).toMatchObject({ invalid: 2, missingRoute: 2, upstreamFailed: 1, completed: 0, pending: 0 });
+  f.recover(); expect(f.send("/payments", "POST").reply().status).toBe(200);
+  expect(f.gateway.evidence()).toMatchObject({ upstreamFailed: 1, completed: 1, pending: 0 });
 });
 test("bounded outstanding requests time out once and late completions cannot double count", () => {
   const f = setup(true), a = f.send("/payments", "POST"), b = f.send("/payments", "POST");
