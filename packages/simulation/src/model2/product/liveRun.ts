@@ -222,7 +222,10 @@ function coresOf(contract: ProductContract, node: string) {
   const config = primary?.config as { kind?: string; cores?: { kind: string; value?: number } } | undefined;
   return config?.kind === "compute" && config.cores?.kind === "known" ? config.cores.value ?? null : null;
 }
-// What changed in one second, in plain words.
+const requests = (count: number) => `${count} request${count === 1 ? "" : "s"}`;
+
+// What changed in one second, in plain words. Failures are counted when requests finish and arrivals when they
+// arrive, so with queues, timeouts or retries the two counts describe different requests and are not a ratio.
 function transitions(before: LiveProjection | null, after: LiveProjection, types: Map<string, string>): SimulationLog[] {
   const logs: SimulationLog[] = [], timestamp = new Date().toISOString();
   for (const [id, m] of Object.entries(after.metrics)) {
@@ -233,6 +236,6 @@ function transitions(before: LiveProjection | null, after: LiveProjection, types
       message: `${id} now has ${m.replicas.total} replica${m.replicas.total === 1 ? "" : "s"} (${m.replicas.ready} ready).` });
   }
   if (before && before.overallHealth !== after.overallHealth) logs.push({ timestamp, source: "model-2", severity: after.overallHealth === "critical" ? "error" : after.overallHealth === "healthy" ? "info" : "warn",
-    message: `System health is now ${after.overallHealth}: ${after.failedRps} of ${after.offeredRps} requests failed in the last second.` });
+    message: `System health is now ${after.overallHealth}. In the last second ${requests(after.failedRps)} finished as failures and ${requests(after.offeredRps)} newly arrived; these can be different requests.` });
   return logs;
 }
