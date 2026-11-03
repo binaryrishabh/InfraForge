@@ -25,6 +25,7 @@ import type { FirewallCapacity } from "./FirewallCapacity.interface";
 import type { DatabaseReplication } from "./DatabaseReplication.interface";
 
 export interface Resource {
+  eventBus?: import("./EventBus.interface").EventBusSettings;
   databaseReplication?: DatabaseReplication;
   firewallCapacity?: FirewallCapacity;
   objectStoragePolicy?: ObjectStoragePolicy;

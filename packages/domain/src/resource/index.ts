@@ -30,3 +30,4 @@ export { DEFAULT_ASYNC_QUEUE_SETTINGS, DEFAULT_ASYNC_WORKER_SETTINGS, asyncSetti
 export { FLOW_OPERATIONS, applicationFlowError, type ApplicationFlow, type FlowOperation, type FlowStep, type FlowCall, type FlowData, type FlowPublish } from "./ApplicationFlow.interface";
 
 export { lbRateLimitError, LB_RATE_BURST_MAX, LB_RATE_MIN_RPS, LB_RATE_MAX_RPS, type LbRateLimit } from "./LbRateLimit.interface";
+export * from "./EventBus.interface";
