@@ -11,9 +11,8 @@ export function formatClock(total: number) {
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 }
 
-export function requestsPerSecond(w: Pick<WorkloadProfile, "targetThroughput" | "throughputUnit">) {
-  return w.targetThroughput / (w.throughputUnit === "per-minute" ? 60 : 3600);
-}
+// One definition of the configured rate, shared with the comparison.
+export { requestsPerSecond } from "@infraforge/domain/workload";
 
 export function describeWorkload(w: WorkloadProfile) {
   const rate = `${w.targetThroughput.toLocaleString()} requests per ${w.throughputUnit === "per-minute" ? "minute" : "hour"}`;
