@@ -9,8 +9,8 @@ import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
 import { readRecordedExperiment } from "../challenges/experiment";
 import { verifiedScenario } from "../challenges/scenario";
 import { findChallenge } from "../challenges/registry";
-import { runtimeHorizon } from "../deployments/operationalLimits";
-import { checkSubmission } from "../browserRuns/submission";
+import { lifetimeRemainingSeconds, runtimeHorizon } from "../deployments/operationalLimits";
+import { CancelSchema, checkSubmission } from "../browserRuns/submission";
 import { storedJson } from "../utils/json";
 import { DeploymentStatus, RUN_CONTRACT } from "@infraforge/contracts/deployment";
 import { reportRouter } from "../reports/routes";
@@ -81,7 +81,8 @@ deploymentRouter.get("/:deploymentId/browser-run", async (req, res) => {
   const definition = run.challengeId && run.challengeVersion ? findChallenge(run.challengeId, run.challengeVersion)?.definition : null;
   const scenario = run.challengeScenario == null ? null : definition ? verifiedScenario(run.challengeScenario, definition, input) : null;
   if (run.challengeScenario != null && !scenario) throw new ConflictError("The recorded scenario is unavailable.");
-  res.json({ success: true, browserRun: { input, horizonSeconds, stopAtSecond: run.evaluationStopAtSimulatedSeconds ?? horizonSeconds,
+  // Real seconds left before the server closes an unsent run. The browser counts down from this, not from its own clock.
+  res.json({ success: true, browserRun: { input, horizonSeconds, stopAtSecond: run.evaluationStopAtSimulatedSeconds ?? horizonSeconds, lifetimeRemainingSeconds: lifetimeRemainingSeconds(run.createdAt),
     ...(run.challengeId ? {challengeId: run.challengeId} : {}), ...(scenario ? {scenario: {version: scenario.version, visibility: scenario.visibility, steps: scenario.steps}} : {}),
     ...(plan ? { experiment: { fault: plan.fault, resourceId: plan.targetResourceId, atSimulatedSecond: plan.atSimulatedSecond } } : {}) } });
 });
@@ -109,9 +110,13 @@ deploymentRouter.post("/:deploymentId/submit", async (req, res) => {
 deploymentRouter.post("/:deploymentId/cancel", async (req, res) => {
   const parsed = DeploymentIdSchema.safeParse(req.params);
   if (!parsed.success) throw new ValidationError("A valid deployment ID is required.");
+  const reason = CancelSchema.safeParse(req.body ?? {});
+  if (!reason.success) throw new ValidationError("A valid cancel reason is required.");
+  // A crashed browser worker and a stop before the first second both leave nothing to replay; the timeline says which.
+  const message = reason.data.reason === "browser-error" ? "The learner's browser stopped this run unexpectedly; nothing was recorded." : "Stopped before its first simulated second; nothing was recorded.";
   const closed = await prisma.$executeRaw`UPDATE "Deployment" SET status = 'failed', "updatedAt" = CURRENT_TIMESTAMP,
     timeline = COALESCE(timeline::jsonb, '[]'::jsonb) || jsonb_build_array(jsonb_build_object(
-      'timestamp', CURRENT_TIMESTAMP, 'event', 'Deployment Failed', 'message', 'Stopped before its first simulated second; nothing was recorded.'::text))
+      'timestamp', CURRENT_TIMESTAMP, 'event', 'Deployment Failed', 'message', ${message}::text))
     WHERE id = ${parsed.data.deploymentId} AND "ownerId" = ${res.locals.userId} AND status = 'browser'`;
   if (!closed) throw new ConflictError("This run is not waiting for the browser.");
   res.json({ success: true });

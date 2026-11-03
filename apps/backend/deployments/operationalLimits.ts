@@ -25,6 +25,10 @@ export function runtimeHorizon(recorded: number | null, limits = operationalLimi
   if (recorded !== null && (!Number.isSafeInteger(recorded) || recorded <= 0)) throw new Error("Invalid recorded run horizon");
   return Math.min(recorded ?? limits.freeformSeconds, limits.runtimeSeconds);
 }
+// Whole real seconds a run has left before the server closes it, never below zero.
+export function lifetimeRemainingSeconds(createdAt: Date, now = Date.now(), limits = operationalLimits) {
+  return Math.max(0, Math.floor(limits.lifetimeSeconds - (now - createdAt.getTime()) / 1000));
+}
 export function lifetimeExpired(createdAt: Date, now = Date.now(), limits = operationalLimits) {
   return now - createdAt.getTime() >= limits.lifetimeSeconds * 1000;
 }

@@ -15,6 +15,7 @@ import { Button, ButtonLink } from "@/ui/Button";
 import { Dialog } from "@/ui/Dialog";
 import { HealthMark } from "@/ui/HealthMark";
 import { RunBar } from "./RunBar";
+import { BrowserRunNotice } from "./BrowserRunNotice";
 import { LivePanel, type LiveTab } from "./LivePanel";
 import { GateList } from "./GatesPanel";
 import { useStopRun } from "./useStopRun";
@@ -84,6 +85,7 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
   return (
     <div data-theme="ink" className="flex h-dvh flex-col overflow-hidden bg-bg text-ink">
       <RunBar run={deployment} deploymentId={deploymentId} phase={phase} challengeTitle={brief?.data?.title ?? null} onStop={stop} stopping={stopping} />
+      <BrowserRunNotice deploymentId={deploymentId} onLeave={leaveRun} />
       {plan && deployment?.evaluationStopAtSimulatedSeconds != null && <ExperimentStrip plan={plan} evaluationSeconds={deployment.evaluationStopAtSimulatedSeconds} compact={!!showTimetable} />}
       <CanvasDnd>
         <div className="relative flex min-h-0 flex-1">
