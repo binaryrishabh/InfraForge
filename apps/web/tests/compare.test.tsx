@@ -21,6 +21,17 @@ const comparison: RunComparison = { version: 1, runs: [run, { ...run, id: "b" }]
   outcomes: [], resources: [], costs: [{ field: "Accumulated simulated cost", unit: "USD", earlier: 0.01, later: 0.02, delta: null, withheldReason: "Matching exact durations required." }], gates: [[], []],
   challengeConditions: null, observed: [{ id: "recorded", message: "Only recorded facts.", sources: ["runInputs"] }], interpreted: [], unknown: [{ id: "legacy", message: "Legacy provenance unknown.", sources: ["runInputs"] }] };
 const render = (v: React.ReactNode) => renderToStaticMarkup(<MemoryRouter>{v}</MemoryRouter>);
+
+test("traffic outcomes reuse metric rendering, with withheld reasons and the percentile caution", () => {
+  const html = render(<CompareContent loading={false} error={null} retry={() => {}} data={{ ...comparison,
+    traffic: [{ field: "p99 response time, last measured second", unit: "ms", earlier: 10, later: 15, delta: null,
+      withheldReason: "Exact final-state evidence is required for a delta." }] }} />);
+  for (const text of ["Traffic outcomes", "p99 response time, last measured second", "Exact final-state evidence is required for a delta.",
+    "Latency percentiles describe the last measured second of each run; one pair does not establish a general difference."]) expect(html).toContain(text);
+  const old = render(<CompareContent loading={false} error={null} data={comparison} retry={() => {}} />);
+  expect(old).not.toContain("Traffic outcomes");
+  expect(old).not.toContain("Latency percentiles describe");
+});
 test("traffic comparisons spell out each run's captured arrivals and application CPU variability", () => {
   const workload = { targetThroughput: 600, throughputUnit: "per-minute" as const, trafficShape: "steady" as const, payloadSize: "light" as const };
   const data: RunComparison = { ...comparison, runs: [{ ...run, workload }, { ...run, id: "b", workload: { ...workload,

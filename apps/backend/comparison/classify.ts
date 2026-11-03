@@ -5,6 +5,7 @@ import { readRunInputs } from "../deployments/runInputs";
 import { compareInputs } from "./inputs";
 import { affectingActions, compareConduct } from "./conduct";
 import { metric, normalizedFinalState } from "./outcomes";
+import { compareTraffic } from "./traffic";
 import { reviewDesignChanges } from "../challenges/designChanges";
 import { canonical } from "./design";
 
@@ -72,7 +73,9 @@ export function classifyComparison(first: StoredRun & { sourceRunId?: string | n
       "Accumulated-cost delta requires exact matching simulated durations."),
     metric("Design monthly estimate (CostEstimate gate)", "USD/month", monthly[0], monthly[1], starting.facets.catalog === "same",
       "Monthly-estimate delta requires compatible captured catalog provenance.")];
+  const traffic = compareTraffic(a, b, available && exact);
   return { version: 1, runs: [reports[0].run, reports[1].run], available,
+    ...(traffic.length ? { traffic } : {}),
     designChangeReview: challengeConditions === "same" && input(rows[0].runInputs) && input(rows[1].runInputs) ? reviewDesignChanges(input(rows[0].runInputs)!, input(rows[1].runInputs)!) : null,
     experimentEvidence: { comparable: traceComparable, traces: traceFacts, reason: traceComparable ?
       "Both complete retained windows share recorded experiment conditions. These are facts from one model-1 pair, not a controlled or statistical claim." :

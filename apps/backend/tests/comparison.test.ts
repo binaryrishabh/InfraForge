@@ -30,6 +30,28 @@ function action(kind = "load", seconds = 5, parameters: object = { targetLoadFra
 }
 const pair = (a: Partial<StoredRun> = {}, b: Partial<StoredRun> = {}) => classifyComparison(row("a", a), row("b", b));
 
+test("traffic rows use recorded values, explicit windows and deterministic earlier/later order", () => {
+  const traffic = { offeredRps: 12, completedRps: 10, failedRps: 2, latencyMs: { p50: 3, p95: 7, p99: 11 } };
+  const later = { ...traffic, completedRps: 11, latencyMs: { p50: 4, p95: 8, p99: 12 } };
+  const a = row("a", { terminalSnapshot: { ...terminal, traffic } });
+  const b = row("b", { terminalSnapshot: { ...terminal, traffic: later } });
+  const c = classifyComparison(a, b);
+  expect(c.traffic).toHaveLength(5);
+  expect(c.traffic?.[0]).toEqual({ field: "p50 response time, last measured second", unit: "ms", earlier: 3, later: 4, delta: 1 });
+  expect(c.traffic?.find(m => m.field.startsWith("Completed"))?.delta).toBe(1);
+  expect(JSON.stringify(classifyComparison(b, a))).toBe(JSON.stringify(c));
+  expect(JSON.stringify(classifyComparison(a, b))).toBe(JSON.stringify(c));
+  for (const changes of [{ status: "live" }, { runtimeActive: true }, { terminalSnapshot: null, simulationState: { ...terminal, traffic: later } }]) {
+    const withheld = classifyComparison(a, { ...b, ...changes }).traffic!;
+    expect(withheld).toHaveLength(5);
+    expect(withheld.every(m => m.delta === null && m.withheldReason === "Exact final-state evidence is required for a delta.")).toBe(true);
+  }
+  expect(pair()).not.toHaveProperty("traffic");
+  expect(classifyComparison(a, row("b"))).not.toHaveProperty("traffic");
+  const unknown = classifyComparison(a, { ...b, terminalSnapshot: { ...terminal, traffic: { ...later, latencyMs: { p50: null, p95: null } } } });
+  expect(unknown.traffic?.map(m => m.field)).toEqual(["Completed requests/s, last measured second", "Failed requests/s, last measured second"]);
+});
+
 test("orders ties by ID and compares deterministic normalized final state without wall identifiers", () => {
   const c = classifyComparison(row("b", { terminalSnapshot: { ...terminal, capturedAt: "2026-10-13T11:00:00.000Z", deploymentId: "b" } }), row("a"));
   expect(c.runs.map((r) => r.id)).toEqual(["a", "b"]);

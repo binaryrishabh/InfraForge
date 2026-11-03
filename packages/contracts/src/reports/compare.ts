@@ -39,6 +39,7 @@ export interface RunComparison {
   conduct: { code: "same" | "different" | "unknown"; actions: [RunAction[], RunAction[]]; speedNote: string; reasons: string[] };
   evidence: { code: "both-exact" | "exact-and-checkpoint" | "checkpoints-only" | "missing"; states: [ReportCheckpoint | null, ReportCheckpoint | null]; matchedDuration: boolean | null; deterministicState: "matches" | "differs" | "not-established" };
   outcomes: CompareMetric[];
+  traffic?: CompareMetric[];
   resources: Array<{ id: string; earlierHealth?: string; laterHealth?: string; metrics: CompareMetric[] }>;
   costs: CompareMetric[];
   gates: [ReportStage[], ReportStage[]];
