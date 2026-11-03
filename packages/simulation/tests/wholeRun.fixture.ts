@@ -12,4 +12,3 @@ export function wholeRunFixture(marked = true, timeout = 20) {
   if (!c.ok) throw Error(JSON.stringify(c));
   return { design, compiled: c.value };
 }
-

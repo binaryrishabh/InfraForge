@@ -3,7 +3,6 @@ import { wholeRunFixture } from "./wholeRun.fixture";
 import { createProductModel2 } from "../src/internalProduct";
 import { createLiveModel2 } from "../src/model2/product/live";
 
-
 test("whole-run bounds conserve original callers and match independent causal samples through every second", () => {
   const { compiled, design } = wholeRunFixture();
   const samples: number[] = [];
