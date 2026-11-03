@@ -419,6 +419,37 @@ or old unauthenticated contracts. Database restore/forward repair requires a sep
 approved plan and rehearsed backup. Frontend recovery is a separate compatible Vercel
 promotion after backend acceptance.
 
+### A defect found after a release that applied a migration
+
+A release that changed the migration fingerprint cannot be undone with the ordinary `rollback`
+command. `assertRollbackCompatible` in `scripts/release/sequence.ts` refuses it by design, because
+the previous application image does not describe the database the migration left behind. The state
+file in `/var/lib/infraforge/releases/accepted.json` records both fingerprints; while `current` and
+`previous` differ, treat the previous image as retained evidence, not as a rollback target.
+
+This applies even when the migration is additive and the old application would run against it. For
+example `20261103000000_workload_variant_reruns` only widens the `rerunMode` check and adds a trigger
+branch used by `workload-variant` runs. That makes a forward fix safe to reason about; it does not
+make the rollback tool willing. Do not try the command in production to find out.
+
+If the application is defective after such a release:
+
+1. Keep production serving the accepted release unless it is unsafe. Record the exact accepted SHA
+   and both fingerprints before doing anything.
+2. Write the smallest forward fix on a branch from the accepted commit. When the defect is in one
+   feature, prefer a fix that refuses or hides that feature over a data change. For
+   `workload-variant` runs this means making `RerunOptions.workloadVariant.available` false; stored
+   variant runs stay valid and readable, and the database needs no change.
+3. Validate the exact SHA with the normal `Validate workspaces` run, then release it through the
+   normal `Release InfraForge` workflow. A fix that adds no migration keeps the fingerprint, so the
+   release sequence can restore the stopped containers if that release itself fails before start.
+4. Never edit the database by hand, remove the release lock, or build images on the host. A defect
+   that corrupts data needs the separate approved plan and rehearsed backup described above.
+5. Frontend recovery is a separate compatible Vercel promotion after the backend is accepted.
+
+Only a release attempt that fails before it is accepted, with an unchanged fingerprint, is restored
+automatically. Nothing here is automatic for a release that has already been accepted.
+
 ## Validation and historical material
 
 CI preserves build/type/lint/workspace/tooling/challenge/boundary/audit checks,
