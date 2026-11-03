@@ -12,6 +12,7 @@ for (const kind of ["gateway", "bus"] as const) test(`${kind} official terminal 
   const layout = kind === "gateway" ? gatewayLayout() : eventBusLayout(), workload = kind === "gateway" ? gatewayWorkload : eventBusWorkload;
   const input = captureRunInputs(layout, workload, "new-resource-records"), model2 = createModel2Engine(input, 2, buildModel2Contract);
   model2.advance(); model2.advance();
+  expect(() => model2.apply({ kind: "chaos", parameters: { type: "crash", resourceId: kind } })).toThrow("Crash unsupported");
   const instance: SimulationInstance = { model2, tickCount: 2, pendingLogs: [], speed: 1, lastCheckpointAt: 0, accumulatedCostUsd: undefined, topology: layout, topologyRevision: 0, actions: new Map(), acknowledge: null, metricsComputedAt: "2026-11-04T00:00:00.000Z", metricsTopologyRevision: 0 };
   const snapshot = captureSnapshot("run", instance, "terminal");
   expect(snapshot).toMatchObject({ version: 2, costCoverage: "unknown" });
