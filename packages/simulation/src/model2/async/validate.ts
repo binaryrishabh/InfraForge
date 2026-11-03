@@ -1,3 +1,4 @@
+import { validateGateway } from "../gateway/validate";
 import { requireKnown, type Quantity, type Unit } from "../../reality/quantity";
 import type { AsyncInput, AsyncResource } from "./contracts";
 import type { DataInput } from "../data/contracts";
@@ -5,7 +6,7 @@ import { validateData } from "../data/validate";
 import { ASYNC_LIMITS as caps } from "./policy";
 import { micros } from "../time";
 import { validateEventBus } from "../eventbus/validate";
-export const isAsync = (r: AsyncInput["resources"][number]): r is AsyncResource => ["event-bus", "delivery-queue", "object-store", "async-publisher", "async-worker"].includes(r.kind);
+export const isAsync = (r: AsyncInput["resources"][number]): r is AsyncResource => ["api-gateway", "event-bus", "delivery-queue", "object-store", "async-publisher", "async-worker"].includes(r.kind);
 // Databases with PostgreSQL semantics (per-connection sessions) run under the PostgreSQL data revision.
 const dataRevision = (i: AsyncInput) => i.resources.some((r) => r.kind === "relational" && r.semantics === "postgresql-keyed/2") ? "m2e-pg/2" as const : i.resources.some((r) => r.kind === "relational" && r.semantics === "postgresql-keyed/1") ? "m2e-pg/1" as const : "m2e/1" as const;
 export const dataAdapter = (i: AsyncInput): DataInput => ({ ...i, workloadVersion: dataRevision(i), resources: i.resources.map((r) => isAsync(r) ? { ...r.execution, id: r.id, downstream: undefined } : r) });
@@ -22,10 +23,11 @@ export function validateAsync(i: AsyncInput) {
   }
   for (const r of i.resources) if (isAsync(r)) {
     if (r.execution.id !== r.id || r.execution.downstream || r.execution.quota || r.execution.memory.coverage !== "partial" || r.execution.memory.policy !== "observe" || Object.keys(r.execution.memory).some((k) => !["coverage", "policy"].includes(k)) || i.interventions.some((f) => f.target === r.id) || i.faults.some((f) => f.target === r.id) || i.dataInterventions.some((f) => f.target === r.id)) throw Error("Async resources own execution/fault policy; process memory Unknown");
-    if (r.kind === "event-bus" || r.kind === "delivery-queue" || r.kind === "object-store") {
+    if (r.kind === "api-gateway" || r.kind === "event-bus" || r.kind === "delivery-queue" || r.kind === "object-store") {
       if (n(r.concurrency, "count", 1) > caps.concurrency) throw Error("Command concurrency budget"); n(r.pending, "count"); micros(horizon + n(r.timeout, "us", 1));
-      const commands = r.kind === "event-bus" ? ["publish"] : r.kind === "delivery-queue" ? ["publish", "receive", "ack", "nack"] : ["put", "get", "head", "delete"];
+      const commands = r.kind === "api-gateway" ? ["route"] : r.kind === "event-bus" ? ["publish"] : r.kind === "delivery-queue" ? ["publish", "receive", "ack", "nack"] : ["put", "get", "head", "delete"];
       for (const command of commands) { const d = r.demands[command]; if (!d) throw Error("Missing async command demand"); n(d.cpu, "cpu-us", Number.MIN_VALUE, false); micros(horizon + n(d.wait, "us")); }
+      if (r.kind === "api-gateway") { validateGateway(r, i); continue; }
       if (r.kind === "event-bus") { validateEventBus(r, i); continue; }
       if (r.kind === "delivery-queue") {
         if (r.profile !== "visibility-work-queue/1" || n(r.capacityMessages, "count", 1) > caps.messages || n(r.dlqMessages, "count") > caps.messages || n(r.maxAttempts, "count", 1) > caps.attempts || r.consumers.length > caps.consumers || new Set(r.consumers.map((c) => c.id)).size !== r.consumers.length || typeof r.deduplicatePublishes !== "boolean") throw Error("Invalid delivery queue profile/budget");

@@ -1,3 +1,4 @@
+import { API_GATEWAY_PROFILE, gatewayIntent, validateGatewayBindings } from "../gateway/product";
 import { EVENT_BUS_PROFILE, eventBusIntent, validateEventBusBindings } from "../eventbus/product";
 import { validateBusPublish } from "../eventbus/flow";
 import { LB_RATE_LIMIT_PROFILE, lbRateLimitChanges, validateLbRateLimitBindings } from "./lbRateLimit";
@@ -73,6 +74,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (cachePolicyChanges(design.resources) !== contract.version.includes(`/${CACHE_POLICY_PROFILE}`)) error("CACHE_POLICY_VERSION", "version", "Changed cache intent requires its explicit data-cache-policy/1 contract version and matching saved intent");
     if (cacheCapacityChanges(design.resources) !== contract.version.includes(`/${CACHE_CAPACITY_PROFILE}`)) error("CACHE_CAPACITY_VERSION", "version", "Logical cache capacity requires its explicit data-cache-capacity/1 contract version and matching saved intent");
     if (queueIdempotencyChanges(design.resources) !== contract.version.includes(`/${QUEUE_IDEMPOTENCY_PROFILE}`)) error("QUEUE_IDEMPOTENCY_VERSION", "version", "Idempotent result writes require the explicit queue-idempotency/1 contract version and matching saved intent");
+    if (gatewayIntent(design.resources) !== contract.version.includes(`/${API_GATEWAY_PROFILE}`)) error("GATEWAY_VERSION", "version", "Gateway requires its captured version and matching intent");
     if (eventBusIntent(design.resources) !== contract.version.includes(`/${EVENT_BUS_PROFILE}`)) error("EVENT_BUS_VERSION", "version", "Event Bus requires its captured version and matching intent");
     if (queueCapacityChanges(design.resources) !== contract.version.includes(`/${QUEUE_CAPACITY_PROFILE}`)) error("QUEUE_CAPACITY_VERSION", "version", "Queue capacity requires its explicit queue-capacity/1 contract version and matching saved intent");
     if (vmMemoryChanges(design.resources) !== contract.version.includes(`/${VM_MEMORY_PROFILE}`)) error("VM_MEMORY_VERSION", "version", "Modeled memory requires its explicit vm-memory/1 contract version and matching saved intent");
@@ -139,7 +141,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "databaseReplication", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "databaseReplication", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -386,6 +388,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateQueueIdempotencyBindings(design.resources, runtime);
     validateQueueCapacityBindings(design.resources, runtime);
     validateEventBusBindings(design.resources, design.connections, runtime);
+    validateGatewayBindings(design.resources, design.connections, runtime);
     validateDatabaseReplicationBindings(design.resources, runtime);
     validateDbConcurrencyBindings(design.resources, runtime);
     validateLbRateLimitBindings(design.resources, runtime);

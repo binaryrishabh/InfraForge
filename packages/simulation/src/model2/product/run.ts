@@ -42,7 +42,7 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
     appliedInterventions: () => [...applied.values()],
     activeInterventions: () => [...active.values()],
     inspectSecurity: runtime.inspectSecurity,
-    inspectEventBus: runtime.inspectEventBus, inspectQueue: runtime.inspectQueue,
+    inspectGateway: runtime.inspectGateway, inspectEventBus: runtime.inspectEventBus, inspectQueue: runtime.inspectQueue,
     inspectWorker: runtime.inspectWorker,
     pools: () => controllers.map((c) => c.status()),
     // Whether a resource is up and taking work right now (a crash makes it neither).

@@ -13,6 +13,7 @@ export const RESOURCE_PORTS: Record<ResourceType, number> = {
   [RESOURCE_TYPES.ObjectStorage]: 443,     // S3-style HTTPS API (was 0)
   [RESOURCE_TYPES.MessageQueue]: 5672,
   [RESOURCE_TYPES.MonitoringAgent]: 9090,
+  [RESOURCE_TYPES.ApiGateway]: 443,
   [RESOURCE_TYPES.EventBus]: 443,
 } as const;
 

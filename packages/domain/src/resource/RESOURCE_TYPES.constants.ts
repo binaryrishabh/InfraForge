@@ -10,6 +10,7 @@ export const RESOURCE_TYPES = {
   ObjectStorage: "Object Storage",
   MessageQueue: "Message Queue",
   MonitoringAgent: "Monitoring Agent",
+  ApiGateway: "API Gateway",
   EventBus: "Event Bus",
 } as const;
 

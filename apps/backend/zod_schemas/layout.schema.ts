@@ -1,3 +1,4 @@
+import { apiGatewayError } from "@infraforge/domain/resource";
 import { eventBusError } from "@infraforge/domain/resource";
 import { lbRateLimitError, LB_RATE_BURST_MAX, LB_RATE_MIN_RPS, LB_RATE_MAX_RPS } from "@infraforge/domain/resource";
 import * as z from "zod";
@@ -25,6 +26,7 @@ const CachePolicySchema = z.discriminatedUnion("version", [CachePolicyV1Schema, 
 }).strict()]);
 
 const ResourceSchema = z.object({
+  apiGateway: z.object({ version: z.literal(1), maxRequestBytes: z.number().int().min(0).max(1048576).optional(), maxInFlight: z.number().int().min(1).max(10000).optional(), upstreamTimeoutMs: z.number().int().min(1).max(60000).optional(), routes: z.array(z.object({ id: z.string().min(1).max(64), edge: z.string().min(1).max(64), path: z.string().min(1).max(256), method: z.enum(["GET", "POST", "ANY"]), burstRequests: z.number().int().min(1).max(10000).optional(), requestsPerSecond: z.number().int().min(1).max(10000).optional() }).strict()).min(1).max(16).optional() }).strict().optional(),
   eventBus: z.object({ version: z.literal(1), capacityMessages: z.number().int().min(1).max(10000).optional(), maxAttempts: z.number().int().min(1).max(10).optional(), retryDelayMs: z.number().int().min(1).max(60000).optional(), deliveryTimeoutMs: z.number().int().min(1).max(60000).optional(), deadLetterCapacity: z.number().int().min(0).max(10000).optional(), subscriptions: z.array(z.object({ id: z.string().min(1).max(64), edge: z.string().min(1).max(64), filter: z.object({ keyPrefix: z.string().min(1).max(128) }).strict().optional() }).strict()).min(1).max(16).optional() }).strict().optional(),
   id: ResourceIdSchema,
   type: z.enum(RESOURCE_TYPES),
@@ -81,6 +83,8 @@ const ResourceSchema = z.object({
   region: z.string().optional(),
   name: z.string().optional(),
 }).catchall(z.json()).superRefine((resource, ctx) => {
+  const gatewayMessage = apiGatewayError(resource.type, resource.apiGateway);
+  if (gatewayMessage) ctx.addIssue({ code: "custom", path: ["apiGateway"], message: gatewayMessage });
   const busMessage = eventBusError(resource.type, resource.eventBus);
   if (busMessage) ctx.addIssue({ code: "custom", path: ["eventBus"], message: busMessage });
   const firewallMessage = firewallCapacityError(resource.type, resource.firewallCapacity);

@@ -25,7 +25,7 @@ export function apiGateway(config: GatewayConfig, clock: EventKernel, send: Deli
     accept(work: Invocation, done: RemoteCompletion): Receipt {
       received++;
       const request = work.message?.request as GatewayRequest | undefined;
-      const path = request?.path ?? `/${work.operation}`, method = request?.method ?? (work.operation === "write" ? "POST" : "GET"), bytes = work.message?.bodyBytes?.request ?? 0;
+      const path = request?.path ?? `/${work.operation}`, method = request?.method ?? (work.operation === "write" ? "POST" : "GET"), body = work.message?.bodyBytes?.request ?? 0, bytes = body + requireKnown(config.requestEnvelopeBytes, "bytes");
       if ((request !== undefined && (!request || typeof request !== "object" || Array.isArray(request) || request.kind !== "gateway-request" || request.path === undefined || request.method === undefined || Object.keys(request).some(k => !["kind", "path", "method"].includes(k)))) || typeof path !== "string" || path.length > 256 || !/^\/[a-zA-Z0-9/_-]*$/.test(path) || !["GET", "POST"].includes(method) || !Number.isSafeInteger(bytes) || bytes < 0 || bytes > maxBytes) { invalid++; return refusal(work, done, 400, "invalid-request"); }
       const route = routes.find(r => r.path === path && (r.method === "ANY" || r.method === method));
       if (!route) { missingRoute++; return refusal(work, done, 404, "missing-route"); }
