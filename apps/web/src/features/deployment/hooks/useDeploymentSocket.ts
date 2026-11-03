@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getSpecificDeployment } from "@/api/deployment.api";
 import { startBrowserRun } from "@/features/model2Run/browserRuns";
+import { acceptsServerSnapshot, useBrowserRunStatus } from "@/features/model2Run/browserRunStatus";
 import { Publish } from "@infraforge/contracts/events";
 import { WebSocketMessage } from "@infraforge/contracts/events";
 import { DeploymentStatus, type DeploymentStatusType } from "@infraforge/contracts/deployment";
@@ -167,6 +168,8 @@ export function useDeploymentSocket(deploymentId: string) {
                         ws.close();
                         break;
                     case Publish.publishSimulationSnapshot:
+                        // The official replay of a run this tab ran restarts at second 0: keep the learner's own view.
+                        if (!acceptsServerSnapshot(useBrowserRunStatus.getState().runs[deploymentId])) break;
                         useSimulationStore.getState().applySnapshot(data as SimulationSnapshot);
                         if (data.liveTopology && typeof data.topologyRevision === "number") {
                             useCanvasStore.getState().applyLiveTopology(deploymentId, data.liveTopology, data.topologyRevision);

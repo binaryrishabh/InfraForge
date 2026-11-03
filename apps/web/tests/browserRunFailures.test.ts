@@ -164,3 +164,11 @@ test("a run near the server's real-time limit is stopped by itself so its result
   await new Promise((resolve) => setTimeout(resolve, 20));
   expect(stops).toBe(1);
 });
+
+test("a tab that ran the simulation ignores the server's replay snapshots, and a tab that did not still shows them", async () => {
+  const { acceptsServerSnapshot } = await import("../src/features/model2Run/browserRunStatus");
+  expect(acceptsServerSnapshot(undefined)).toBe(true);
+  for (const state of [{ kind: "running" }, { kind: "sending", attempt: 1, busy: false }, { kind: "accepted" }, { kind: "unsent", reason: "x" }, { kind: "closed", reason: "x" }, { kind: "crashed", reason: "x" }] as BrowserRunState[]) {
+    expect(acceptsServerSnapshot(state)).toBe(false);
+  }
+});

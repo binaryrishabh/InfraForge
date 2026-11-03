@@ -61,3 +61,7 @@ export function browserRunProblem(id: string): string | null {
 export const AUTO_STOP_MARGIN_MS = 90_000;
 // Warn this long before the cutoff.
 export const LIFETIME_WARNING_MS = 10 * 60_000;
+
+/** Whether this tab should show a snapshot the server published for the run. A tab that ran the simulation itself already
+shows the run. The server's official replay of it restarts at second 0 and would rewind the learner's screen. */
+export const acceptsServerSnapshot = (state: BrowserRunState | undefined) => state === undefined;

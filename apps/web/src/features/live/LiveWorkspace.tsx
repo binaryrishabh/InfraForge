@@ -86,7 +86,7 @@ export function LiveWorkspace({ deploymentId }: { deploymentId: string }) {
   return (
     <div data-theme="ink" className="flex h-dvh flex-col overflow-hidden bg-bg text-ink">
       <RunBar run={deployment} deploymentId={deploymentId} phase={phase} challengeTitle={brief?.data?.title ?? null} onStop={stop} stopping={stopping} />
-      <BrowserRunNotice deploymentId={deploymentId} onLeave={leaveRun} />
+      <BrowserRunNotice deploymentId={deploymentId} onLeave={leaveRun} finished={phase === "finished" || phase === "failed"} />
       {plan && deployment?.evaluationStopAtSimulatedSeconds != null && <ExperimentStrip plan={plan} evaluationSeconds={deployment.evaluationStopAtSimulatedSeconds} compact={!!showTimetable} />}
       <CanvasDnd>
         <div className="relative flex min-h-0 flex-1">

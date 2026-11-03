@@ -28,11 +28,12 @@ export function BrowserRunNoticeView({ message, sending, onSendAgain, onLeave }:
 
 /* Tells the learner what has happened to the run in their tab: whether it is running, being sent, saved by the
 server, or lost, and what they can do. Only a run the server accepted is ever described as received. */
-export function BrowserRunNotice({ deploymentId, onLeave }: { deploymentId: string; onLeave: () => void }) {
+export function BrowserRunNotice({ deploymentId, onLeave, finished = false }: { deploymentId: string; onLeave: () => void; finished?: boolean }) {
   const state = useBrowserRunStatus((s) => s.runs[deploymentId]);
   const deadline = useBrowserRunStatus((s) => s.deadlines[deploymentId]);
   const now = useNow(state?.kind === "running" && deadline !== undefined);
-  const message = describeBrowserRun(state, deadline === undefined ? null : deadline - now);
+  // Once the run is finished its report link is on the page, so "the report appears when it finishes" would be stale.
+  const message = state?.kind === "accepted" && finished ? null : describeBrowserRun(state, deadline === undefined ? null : deadline - now);
   if (!message) return null;
   return <BrowserRunNoticeView message={message} sending={state?.kind === "sending"} onSendAgain={() => void sendAgain(deploymentId)} onLeave={onLeave} />;
 }
