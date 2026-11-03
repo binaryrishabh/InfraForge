@@ -31,3 +31,4 @@ export { FLOW_OPERATIONS, applicationFlowError, type ApplicationFlow, type FlowO
 
 export { lbRateLimitError, LB_RATE_BURST_MAX, LB_RATE_MIN_RPS, LB_RATE_MAX_RPS, type LbRateLimit } from "./LbRateLimit.interface";
 export * from "./EventBus.interface";
+export * from "./ApiGateway.interface";
