@@ -21,6 +21,7 @@ import { checkCredentials } from "./credentialChecks";
 import { checkLearningExperiments } from "./learningChecks";
 import { checkOperationalDeadline } from "./operationalChecks";
 import { checkBrowserRun, submitBrowserRun } from "./browserRunChecks";
+import { checkBrowserRunLifecycle } from "./browserRunLifecycleChecks";
 import { checkScenarioAttempts } from "./scenarioChecks";
 
 type Event = Record<string, any>;
@@ -555,6 +556,9 @@ integration("local deployment lifecycle", () => {
       evidence.learning = await checkLearningExperiments(harness, sessions, infrastructureIds, deploymentIds);
       phase("Model 2 browser run, submission and server replay");
       await checkBrowserRun(harness, infrastructureIds, deploymentIds);
+      phase("browser run lifetime, cancellation, submission and abandonment persistence");
+      await harness.stop("worker");
+      evidence.browserLifecycle = await checkBrowserRunLifecycle(harness, sessions, infrastructureIds, deploymentIds);
       evidence.result = "passed";
     } catch (error) {
       evidence.result = "failed";
