@@ -90,10 +90,13 @@ test("a controlled traffic experiment compares a source run with one changed set
     expect(c.starting.facets).toMatchObject({ seed: "same", topology: "same", model: "same", catalog: "same", workload: "different" });
     const text = compareText(c);
     expect(text).not.toContain("Exact rerun");
-    for (const phrase of ["Traffic outcomes", "Configured target rate (requests/s)", "Original requests offered, whole run", "The same seed does not mean identical random draws",
+    for (const phrase of ["Traffic outcomes", "Configured target rate (starting input)", "Original requests offered, whole run", "The same seed does not mean identical",
       "one pair, one seed", "Another seed may differ"]) expect(text).toContain(phrase);
   }
   expect(runs[1]!.report.run.rerunMode).toBe("workload-variant");
+  expect(compareText(arrival)).toContain("identical random draws or identical offered requests when the arrival process differs");
+  expect(compareText(work)).toContain("identical service times when application work variability differs");
+  expect(compareText(work)).not.toContain("when the arrival process differs");
   expect(compareText(arrival)).toContain("Arrival process: even → poisson");
   // The verdict block names the change in the learner's words, before any detail.
   expect(compareText(arrival)).toContain("Changed between the runs Arrival pattern: Even → Random (Poisson)");
@@ -101,7 +104,7 @@ test("a controlled traffic experiment compares a source run with one changed set
   expect(compareText(work)).toContain("Application CPU variability: fixed (CV 0) → moderate (CV 0.5)");
   // Configured and observed traffic stay separate: the target rate is identical, the sampled originals are not.
   const rows = new Map(arrival.traffic!.map(r => [r.field, r]));
-  expect(rows.get("Configured target rate (requests/s)")).toMatchObject({ earlier: 600, later: 600, delta: null });
+  expect(rows.get("Configured target rate (starting input)")).toMatchObject({ earlier: 600, later: 600, delta: 0 });
   const offered = rows.get("Original requests offered, whole run")!;
   expect(offered.earlier).toBe(runs[0]!.evidence.counts.offered); expect(offered.later).toBe(runs[1]!.evidence.counts.offered);
   expect(offered.delta).toBe(offered.later! - offered.earlier!);

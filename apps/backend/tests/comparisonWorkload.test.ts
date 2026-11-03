@@ -33,9 +33,9 @@ test("linked one-workload pairs describe before/after, preserved conditions and 
   const cpu = createWorkloadVariantInput(input, {dimension: "application-cpu-variability", value: "moderate"});
   expect(compare({runInputs: cpu}).observed.find(f => f.id === "workload-change")?.message).toContain("Application CPU variability: fixed (CV 0) → moderate (CV 0.5)");
 });
-test("configured targets are descriptive; whole-run originals use recorded totals and equal exact durations", () => {
+test("configured targets show their difference as a starting input; whole-run originals use recorded totals and equal exact durations", () => {
   const rows = compare().traffic!;
-  expect(rows.find(m => m.field === "Configured target rate (requests/s)")).toMatchObject({earlier: workload.targetThroughput / 3600, later: workload.targetThroughput / 3600, delta: null});
+  expect(rows.find(m => m.field === "Configured target rate (starting input)")).toMatchObject({earlier: workload.targetThroughput / 3600, later: workload.targetThroughput / 3600, delta: 0});
   expect(rows.find(m => m.field === "Original requests offered, whole run")).toMatchObject({earlier: 107, later: 107, delta: 0});
   expect(rows.find(m => m.field === "Original requests completed, whole run")?.earlier).toBe(100);
   expect(rows.find(m => m.field.startsWith("Original requests failed"))?.earlier).toBe(4);

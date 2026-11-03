@@ -19,7 +19,7 @@ export function workloadChangeFacts(a: RunInputs, b: RunInputs, strongest: boole
   if (!descriptions.length) descriptions.push(`Workload dynamics capture: ${JSON.stringify(a.workloadProfile.workloadDynamics) ?? "omitted"} → ${JSON.stringify(b.workloadProfile.workloadDynamics) ?? "omitted"} (resolved settings match)`);
   return {
     observed: [statement("workload-change", `${descriptions.join("; ")}. Matching recorded starting conditions: topology, resources and their settings, seed, model/catalog, adapter profiles and other workload fields.`, ["runInputs"])],
-    interpreted: strongest ? [statement("workload-pair", `Within this pair, workload is the only recorded starting-input difference. For this seed, this simulated stop time and InfraForge model ${a.version === 2 ? a.simulationModelVersion : "Unknown"}, the observed differences followed that change. The same seed does not mean identical random draws or identical offered requests when the arrival process differs. Configured average rate is not the exact offered count of a finite Poisson sample. Another seed may differ.`, ["runInputs", "RunAction", "terminalSnapshot"])] : [],
+    interpreted: strongest ? [statement("workload-pair", `Within this pair, workload is the only recorded starting-input difference. For this seed, this simulated stop time and InfraForge model ${a.version === 2 ? a.simulationModelVersion : "Unknown"}, the observed differences followed that change. ${left.arrivalProcess !== right.arrivalProcess ? "The same seed does not mean identical random draws or identical offered requests when the arrival process differs. Configured average rate is not the exact offered count of a finite Poisson sample." : "The same seed does not mean identical service times when application work variability differs."} Another seed may differ.`, ["runInputs", "RunAction", "terminalSnapshot"])] : [],
     unknown: [statement("workload-pair", "This is one pair, one seed. It cannot establish statistical significance, general superiority, production reliability or real provider behavior; it is not a provider claim.", ["comparison.scope"])],
   };
 }
@@ -40,8 +40,8 @@ function originalTotals(state: ReportCheckpoint | null | undefined): Array<numbe
 
 export function workloadChangeTraffic(a: RunInputs, b: RunInputs, earlier: ReportCheckpoint | null | undefined,
   later: ReportCheckpoint | null | undefined, exact: boolean): CompareMetric[] {
-  const rows = [metric("Configured target rate (requests/s)", "requests/s", requestsPerSecond(a.workloadProfile), requestsPerSecond(b.workloadProfile), false,
-    "Configured target rates describe starting inputs; observed original-request totals are recorded separately.")];
+  // A configured rate is a starting input, so its difference is always computable; observed totals follow separately.
+  const rows = [metric("Configured target rate (starting input)", "requests/s", requestsPerSecond(a.workloadProfile), requestsPerSecond(b.workloadProfile), true)];
   const x = originalTotals(earlier), y = originalTotals(later);
   const sameDuration = earlier?.simulatedSeconds !== undefined && earlier.simulatedSeconds === later?.simulatedSeconds;
   ["Original requests offered, whole run", "Original requests completed, whole run", "Original requests failed (including deadline/abandonment), whole run"].forEach((field, i) => {
