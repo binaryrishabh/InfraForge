@@ -10,6 +10,7 @@ import { StartingInputs } from "./StartingInputs";
 import { ActionTimeline } from "./ActionTimeline";
 import { ReportSection, Statement } from "./ReportSection";
 import { runKind, runStatus } from "../runKind";
+import { workloadChangeLines } from "../workloadChange";
 import { STAGE_LABEL, STAGE_STATUS_LABEL } from "../labels";
 import { DesignChangeSummary } from "@/features/challenges/components/DesignChangeSummary";
 
@@ -65,6 +66,9 @@ export function CompareView({ comparison: c }: { comparison: RunComparison }) {
           <div><dt className="text-xs text-ink-3">Final evidence</dt><dd className="text-ink">{EVIDENCE[c.evidence.code]}</dd></div>
           <div><dt className="text-xs text-ink-3">Conduct (actions)</dt><dd className="text-ink">{c.conduct.code === "same" ? "Same recorded actions." : c.conduct.code === "different" ? "Different recorded actions." : "Cannot be established."}</dd></div>
           <div><dt className="text-xs text-ink-3">Lineage</dt><dd className="text-ink">{LINEAGE[c.lineage]}</dd></div>
+          {c.starting.grade === "one-change-workload" && c.starting.workload.length > 0 && <div className="sm:col-span-3"><dt className="text-xs text-ink-3">Changed between the runs</dt>
+            <dd className="text-ink"><ul className="list-disc pl-5">{workloadChangeLines(c.starting.workload).map(line => <li key={line}>{line}</li>)}</ul>
+              <span className="text-ink-2">The design, resource settings, seed, model and catalog, and every other workload setting are the same in both runs.</span></dd></div>}
           {c.challengeConditions && <div className="sm:col-span-3"><dt className="text-xs text-ink-3">Challenge conditions</dt><dd className="text-ink">{c.challengeConditions === "same"
             ? "Same challenge version, rules, workload, seed, evaluation second and scheduled fault."
             : "Different challenge versions or recorded conditions; their results were judged by different rules."}</dd></div>}

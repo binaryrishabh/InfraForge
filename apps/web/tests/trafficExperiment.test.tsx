@@ -66,3 +66,17 @@ test("the entry is a small action, disabled while the source is running, and tra
   const html = render(<HistoryContent loading={false} error={null} runs={[{ ...options.source, id: "child", sourceRunId: "source", sourceRunName: "Original source", rerunMode: "workload-variant" }]} retry={() => {}} />);
   expect(html).toContain("Traffic experiment"); expect(html).not.toContain("Exact rerun");
 });
+
+test("changed workload settings are named in plain words, including omitted dynamics as the historical default", async () => {
+  const { workloadChangeLines } = await import("../src/features/reports/workloadChange");
+  const dyn = (arrivalProcess: string, applicationCpuCv: number) => ({ version: 1, arrivalProcess, applicationCpuCv });
+  const diff = (field: string, earlier: unknown, later: unknown) => ({ field, earlier, later }) as StartingComparison["workload"][number];
+  expect(workloadChangeLines([diff("workloadDynamics", null, dyn("poisson", 0))])).toEqual(["Arrival pattern: Even → Random (Poisson)"]);
+  expect(workloadChangeLines([diff("workloadDynamics", null, dyn("even", 0.5))])).toEqual(["Application work variability: Fixed (CV 0) → Moderate (CV 0.5)"]);
+  expect(workloadChangeLines([diff("workloadDynamics", dyn("poisson", 0.5), dyn("even", 1))])).toEqual(
+    ["Arrival pattern: Random (Poisson) → Even", "Application work variability: Moderate (CV 0.5) → High (CV 1)"]);
+  expect(workloadChangeLines([diff("workloadDynamics", dyn("poisson", 0.25), null)])).toEqual(
+    ["Arrival pattern: Random (Poisson) → Even", "Application work variability: Custom (CV 0.25) → Fixed (CV 0)"]);
+  expect(workloadChangeLines([diff("targetThroughput", 1000, 2000), diff("clientRetry", null, { maxAttempts: 3 })])).toEqual(
+    ["Configured target rate: 1000 → 2000", 'Client retries: not set → {"maxAttempts":3}']);
+});
