@@ -32,3 +32,10 @@ test("a failed subscriber transport leaves the other worker receiving its events
   expect(e.eventBuses![0]!.subscriptions[1]).toMatchObject({ delivered: 4, retried: 0, pending: 0 });
   expect(e.workers.map(w => w.effects)).toEqual([0, 4]);
 });
+test("saved subscription filters survive canonical capture and change only their own downstream effect", () => {
+  const saved = eventBusDesign(); saved.resources.find(r => r.id === "bus")!.eventBus!.subscriptions = [{ id: "first", edge: "e2", filter: { keyPrefix: "never-matches" } }, { id: "second", edge: "e3" }];
+  const f = prepare(saved), c = compileProduct(saved, withRunLength(f.contract, 2, "bus-proof")); if (!c.ok) throw Error(JSON.stringify(c));
+  const runtime = createProductModel2(c.value); runtime.advanceTo(2_000_000);
+  expect(runtime.evidence().asynchronous.workers.map(w => w.effects)).toEqual([0, 4]);
+  expect(runtime.evidence().asynchronous.eventBuses![0]!.subscriptions[0]).toMatchObject({ accepted: 0, filtered: 4, pending: 0 });
+});

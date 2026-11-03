@@ -30,6 +30,7 @@ export function validateEventBusBindings(resources: readonly Resource[], connect
     if (runtime?.kind !== "event-bus") throw Error("Event Bus requires its own runtime owner");
     for (const [key, quantity, unit, scale] of [["capacityMessages", runtime.capacityMessages, "count", 1], ["maxAttempts", runtime.maxAttempts, "count", 1], ["retryDelayMs", runtime.retryDelay, "us", 1000], ["deliveryTimeoutMs", runtime.deliveryTimeout, "us", 1000], ["deadLetterCapacity", runtime.deadLetterCapacity, "count", 1]] as const) if (requireKnown(quantity, unit) !== expected[key] * scale) throw Error("Event Bus policy must match saved intent");
     const subscriptions = eventSubscriptions(r, connections).map(s => ({ id: s.id, target: connections.find(e => e.id === s.edge && e.sourceId === r.id)?.targetId, ...(s.filter ? { keyPrefix: s.filter.keyPrefix } : {}) }));
-    if (JSON.stringify(runtime.subscriptions) !== JSON.stringify(subscriptions)) throw Error("Event Bus subscriptions must match saved edge and filter intent");
+    const actual = runtime.subscriptions.map(s => ({ id: s.id, target: s.target, ...(s.keyPrefix === undefined ? {} : { keyPrefix: s.keyPrefix }) }));
+    if (JSON.stringify(actual) !== JSON.stringify(subscriptions)) throw Error("Event Bus subscriptions must match saved edge and filter intent");
   }
 }
