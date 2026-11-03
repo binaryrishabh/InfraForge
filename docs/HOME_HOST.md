@@ -107,12 +107,20 @@ To restore: `rclone copyto r2:infraforge-backups/home/daily/<file> /tmp/<file>`,
 If the daily backup fails, systemd runs `infraforge-backup-alert.service`, which emails the owner
 through Resend with the app's existing `RESEND_API_KEY` and `TRANSACTIONAL_EMAIL_FROM` (read from
 `/etc/infraforge/release.env`, never printed). The recipient is the single line `ALERT_EMAIL=<address>`
-in `/etc/infraforge/ops/alert.env` (root, 0600). Install or update:
+in `/etc/infraforge/ops/alert.env` (root, 0600). The owner chooses the recipient at run time;
+there is no default or environment fallback. Install or update from the checkout:
 
 ```bash
-sudo install -o root -g root -m 0750 ops/home/backup-alert.sh /usr/local/sbin/infraforge-backup-alert
-sudo install -o root -g root -m 0644 ops/home/infraforge-backup-alert.service ops/home/infraforge-backup.service /etc/systemd/system/
-sudo systemctl daemon-reload
+sudo bash ops/home/install-backup-alert.sh --email "$OWNER_CHOSEN_RECIPIENT"
 ```
 
-Test it once with `sudo systemctl start infraforge-backup-alert` (sends one alert email).
+The installer requires both sender/key lines in `release.env` (presence only), installs the alert
+script as 0755 and its unit as 0644, and adds `infraforge-backup.service.d/10-alert.conf` with
+`OnFailure=infraforge-backup-alert.service`. It preserves the installed backup unit, reloads systemd
+and verifies the effective hook. Identical runs change nothing; output masks the recipient.
+
+Add `--dry-run` to preview every action. `--root DIR` stages all destinations under an existing
+directory and skips systemctl (run as root to stage root ownership). No email is sent by default.
+For one explicit test, add `--send-test` to a real install, then check the chosen inbox; it cannot
+be combined with `--root` or `--dry-run`. To remove just the four installed files and reload:
+`sudo bash ops/home/install-backup-alert.sh --uninstall` (no recipient or keys required).
