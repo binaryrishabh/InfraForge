@@ -1,4 +1,5 @@
 import { LIFETIME_WARNING_MS, type BrowserRunState } from "./browserRunStatus";
+import type { ReplayQueueStatus } from "@infraforge/contracts/deployment";
 import { MAX_ATTEMPTS } from "./browserRunDelivery";
 
 export interface BrowserRunMessage {
@@ -11,9 +12,23 @@ export interface BrowserRunMessage {
 
 const minutes = (ms: number) => Math.max(1, Math.ceil(ms / 60_000));
 
+/** A rough wait in words. The estimate is a guide from the server's queue, never a promise. */
+export function roughWait(seconds: number) {
+  if (seconds < 90) return `about ${Math.max(5, Math.round(seconds / 5) * 5)} seconds`;
+  return `about ${Math.round(seconds / 60)} min`;
+}
+
+// What the server's queue says about this run, in plain words. Unknown stays unsaid rather than guessed.
+function describeReplay(replay: ReplayQueueStatus | null | undefined): string {
+  if (!replay || replay.state === "unknown") return "";
+  const wait = replay.estimatedWaitSeconds === null ? "" : ` Rough estimate: ${roughWait(replay.estimatedWaitSeconds)} in total.`;
+  if (replay.state === "queued") return ` It is number ${replay.position} in the queue, with ${replay.runsAhead} ${replay.runsAhead === 1 ? "run" : "runs"} ahead.${wait}`;
+  return ` It is being replayed now.${wait}`;
+}
+
 /** What to tell the learner about the run in their tab, or null when there is nothing to say. Never claims a run is
 saved or verified unless the server has accepted it. */
-export function describeBrowserRun(state: BrowserRunState | undefined, remainingMs: number | null): BrowserRunMessage | null {
+export function describeBrowserRun(state: BrowserRunState | undefined, remainingMs: number | null, replay?: ReplayQueueStatus | null): BrowserRunMessage | null {
   if (!state) return null;
   switch (state.kind) {
     case "starting":
@@ -33,6 +48,7 @@ export function describeBrowserRun(state: BrowserRunState | undefined, remaining
     case "crashed":
       return { tone: "fail", title: "The simulation stopped unexpectedly", body: `Nothing from this run was saved. ${state.reason}`, action: "leave" };
     case "accepted":
-      return { tone: "info", title: "Received by the server", body: "The server is replaying your run to produce the official result. The report appears when it finishes." };
+      return { tone: "info", title: replay?.state === "queued" ? "Waiting for a replay slot" : "Received by the server",
+        body: `The server is replaying your run to produce the official result. The report appears when it finishes.${describeReplay(replay)}` };
   }
 }

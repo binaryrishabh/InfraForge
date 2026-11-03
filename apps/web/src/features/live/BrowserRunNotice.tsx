@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { sendAgain } from "@/features/model2Run/browserRuns";
 import { describeBrowserRun, type BrowserRunMessage } from "@/features/model2Run/browserRunMessages";
 import { useBrowserRunStatus } from "@/features/model2Run/browserRunStatus";
+import { useReplayStatus } from "./useReplayStatus";
 import { Button } from "@/ui/Button";
 import { Notice } from "@/ui/Page";
 
@@ -32,8 +33,9 @@ export function BrowserRunNotice({ deploymentId, onLeave, finished = false }: { 
   const state = useBrowserRunStatus((s) => s.runs[deploymentId]);
   const deadline = useBrowserRunStatus((s) => s.deadlines[deploymentId]);
   const now = useNow(state?.kind === "running" && deadline !== undefined);
+  const replay = useReplayStatus(deploymentId, state?.kind === "accepted" && !finished);
   // Once the run is finished its report link is on the page, so "the report appears when it finishes" would be stale.
-  const message = state?.kind === "accepted" && finished ? null : describeBrowserRun(state, deadline === undefined ? null : deadline - now);
+  const message = state?.kind === "accepted" && finished ? null : describeBrowserRun(state, deadline === undefined ? null : deadline - now, replay);
   if (!message) return null;
   return <BrowserRunNoticeView message={message} sending={state?.kind === "sending"} onSendAgain={() => void sendAgain(deploymentId)} onLeave={onLeave} />;
 }

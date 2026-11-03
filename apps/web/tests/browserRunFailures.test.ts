@@ -2,7 +2,7 @@ import { beforeEach, expect, test } from "bun:test";
 import { createBrowserRuns } from "../src/features/model2Run/browserRuns";
 import { useBrowserRunStatus, type BrowserRunState } from "../src/features/model2Run/browserRunStatus";
 import { MAX_ATTEMPTS, autoStopDelay, deliver, retryDelay, type DeliveryDeps } from "../src/features/model2Run/browserRunDelivery";
-import { describeBrowserRun } from "../src/features/model2Run/browserRunMessages";
+import { describeBrowserRun, roughWait } from "../src/features/model2Run/browserRunMessages";
 
 // A fake network: each call to send() consumes the next scripted outcome (an HTTP status, 0 for no response, or "ok").
 function network(script: Array<number | "ok">, serverStatus: string | null = null) {
@@ -171,4 +171,19 @@ test("a tab that ran the simulation ignores the server's replay snapshots, and a
   for (const state of [{ kind: "running" }, { kind: "sending", attempt: 1, busy: false }, { kind: "accepted" }, { kind: "unsent", reason: "x" }, { kind: "closed", reason: "x" }, { kind: "crashed", reason: "x" }] as BrowserRunState[]) {
     expect(acceptsServerSnapshot(state)).toBe(false);
   }
+});
+
+test("the received notice shows the server's queue position and a rough wait, and says nothing it does not know", () => {
+  const queued = describeBrowserRun({ kind: "accepted" }, null, { state: "queued", position: 3, runsAhead: 4, estimatedWaitSeconds: 95, basis: "x" })!;
+  expect(queued.title).toBe("Waiting for a replay slot");
+  expect(queued.body).toContain("number 3 in the queue, with 4 runs ahead"); expect(queued.body).toContain("Rough estimate: about 2 min in total.");
+  const first = describeBrowserRun({ kind: "accepted" }, null, { state: "queued", position: 1, runsAhead: 1, estimatedWaitSeconds: 13, basis: "x" })!;
+  expect(first.body).toContain("with 1 run ahead"); expect(first.body).toContain("about 15 seconds");
+  const replaying = describeBrowserRun({ kind: "accepted" }, null, { state: "replaying", position: null, runsAhead: 0, estimatedWaitSeconds: null, basis: "x" })!;
+  expect(replaying.body).toContain("It is being replayed now."); expect(replaying.body).not.toContain("Rough estimate");
+  for (const replay of [null, undefined, { state: "unknown", position: null, runsAhead: null, estimatedWaitSeconds: null, basis: "x" } as const]) {
+    const plain = describeBrowserRun({ kind: "accepted" }, null, replay)!;
+    expect(plain.title).toBe("Received by the server"); expect(plain.body).not.toMatch(/number \d|Rough estimate|replayed now/);
+  }
+  expect(roughWait(4)).toBe("about 5 seconds"); expect(roughWait(600)).toBe("about 10 min");
 });
