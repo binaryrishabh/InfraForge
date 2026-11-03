@@ -3,17 +3,17 @@ import { errorMessage } from "@/api/errorMessage";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { RotateCw } from "lucide-react";
-import type { RerunMode, RerunOptions } from "@infraforge/contracts/reports";
-import { createRerun, getRerunOptions } from "@/api/reports.api";
+import type { RerunOptions } from "@infraforge/contracts/reports";
+import { createRerun, getRerunOptions, type PlainRerunMode } from "@/api/reports.api";
 import { useRequest } from "@/api/useRequest";
 import { Button } from "@/ui/Button";
 import { Dialog } from "@/ui/Dialog";
 import { Loading, Notice } from "@/ui/Page";
 import { cx } from "@/ui/cx";
-import { useCanvasStore } from "@/features/canvas/store/canvasStore";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { StartingInputs } from "./StartingInputs";
 import { SourceInputFacts } from "./SourceInputFacts";
+import { enterCreatedRun } from "../enterCreatedRun";
 
 function ModeCard({ checked, disabled, onChange, title, body, reason }: { checked: boolean; disabled: boolean; onChange: () => void; title: string; body: string; reason: string | null }) {
   return (
@@ -26,7 +26,7 @@ function ModeCard({ checked, disabled, onChange, title, body, reason }: { checke
 }
 
 export function RerunChoices({ options, mode, onMode, matched, onMatched }: {
-  options: RerunOptions; mode: RerunMode; onMode: (mode: RerunMode) => void; matched: boolean; onMatched: (value: boolean) => void;
+  options: RerunOptions; mode: PlainRerunMode; onMode: (mode: PlainRerunMode) => void; matched: boolean; onMatched: (value: boolean) => void;
 }) {
   return (
     <div className="flex flex-col gap-4 break-words text-sm">
@@ -54,7 +54,7 @@ export function RerunChoices({ options, mode, onMode, matched, onMatched }: {
 
 function Form({ id, options, close, onBusy }: { id: string; options: RerunOptions; close: () => void; onBusy: (value: boolean) => void }) {
   const availability = useCapabilityAvailability();
-  const [mode, setMode] = useState<RerunMode>(options.exact.available ? "exact" : "current-design");
+  const [mode, setMode] = useState<PlainRerunMode>(options.exact.available ? "exact" : "current-design");
   const [matched, setMatched] = useState(options.matchedStop.defaultEnabled);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,13 +70,7 @@ function Form({ id, options, close, onBusy }: { id: string; options: RerunOption
       try {
         const run = await createRerun(id, mode, matched, mode === "current-design" ? options.currentDesign.inputHash ?? undefined : undefined);
         if (!mounted.current || !owner || useAuthStore.getState().user?.id !== owner) return;
-        if (!run.liveTopology) throw new Error("No captured topology");
-        const store = useCanvasStore.getState();
-        store.loadRunTopology(run.id, run.liveTopology, run.topologyRevision, run.infrastructureId, run.runName);
-        store.setIsDeploying(true); store.setLiveLocked(false);
-        // A rerun is always a freeform run, even when its source was a challenge attempt.
-        store.setCurrentChallengeId(null);
-        navigate("/design"); close();
+        enterCreatedRun(run, navigate); close();
       } catch (error) { setError(errorMessage(error, "The rerun was not created. The source or design may have changed, or your session ended. Close and reopen to refresh.")); }
       finally { if (mounted.current) { setBusy(false); onBusy(false); } }
     }}>

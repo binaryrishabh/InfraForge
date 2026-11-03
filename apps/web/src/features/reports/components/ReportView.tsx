@@ -16,6 +16,7 @@ import { ReportMeasurements } from "./ReportMeasurements";
 import { ActionTimeline } from "./ActionTimeline";
 import { ComparePicker } from "./ComparePicker";
 import { RerunDialog } from "./RerunDialog";
+import { TrafficExperimentDialog } from "./TrafficExperimentDialog";
 import { RunFamily } from "./RunFamily";
 import { OpenDesignToImprove } from "./OpenDesignToImprove";
 import { runKind, runStatus } from "../runKind";
@@ -69,6 +70,7 @@ export function ReportView({ report, onStopped }: { report: RunReport; onStopped
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <RerunDialog id={run.id} eligible={eligible} experimentChallenge={report.challenge?.experiment ? report.challenge.challengeId : null} />
+          {!run.challenge && <TrafficExperimentDialog id={run.id} eligible={eligible} />}
           <ComparePicker id={run.id} eligible={eligible} />
           {!run.challenge && <OpenDesignToImprove sourceId={run.id} designId={run.infrastructureId} eligible={eligible} />}
           {run.sourceRunId && eligible && <ButtonLink to={`/runs/compare?a=${run.sourceRunId}&b=${run.id}`} variant="ghost" size="sm" icon={<GitCompareArrows size={14} aria-hidden="true" />}>Compare with source run</ButtonLink>}

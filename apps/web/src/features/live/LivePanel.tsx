@@ -1,4 +1,5 @@
 import { TrafficReadings } from "./TrafficReadings";
+import { RERUN_SENTENCE, RERUN_SUFFIX } from "@/features/reports/runKind";
 import { Link } from "react-router-dom";
 import { Lock } from "lucide-react";
 import type { ChallengeBrief } from "@infraforge/contracts/challenges";
@@ -64,7 +65,7 @@ export function LivePanel({ tab, onTab, deploymentId, run, status, completed, ti
           ) : (
             <>
               {run?.sourceRunId && <p className="border-b border-line px-4 py-3 text-sm text-ink-2">
-                {run.rerunMode === "exact" ? "Exact rerun" : "Rerun with the current design"} of <Link className="font-medium text-accent hover:underline" to={`/runs/${run.sourceRunId}`}>its source run</Link>. Source actions are not replayed.</p>}
+                {RERUN_SENTENCE[run.rerunMode ?? "current-design"]} <Link className="font-medium text-accent hover:underline" to={`/runs/${run.sourceRunId}`}>its source run</Link>{RERUN_SUFFIX[run.rerunMode ?? "current-design"]}. Source actions are not replayed.</p>}
               <LoadControl deploymentId={deploymentId} />
               <PoolControl deploymentId={deploymentId} />
               <p className="border-b border-line px-4 py-3 text-sm text-ink-3">Resizing and design edits during a Model 2 run are unavailable. Stop, edit in the designer and start a new run.</p>

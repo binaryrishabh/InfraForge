@@ -26,7 +26,7 @@ test("improve opens saved design through existing canvas state, resets live cont
 test("canvas matching copy distinguishes unsaved actual deployment, source inputs and descriptive provenance", () => {
   const options: RerunOptions = { source: { id: "source", infrastructureId: "design", infrastructureName: "Source name", status: "torn-down", createdAt: "", updatedAt: "", resourceCount: 1, workload: null, workloadSource: "captured", chaosEventCount: 0, topologyRevision: 0, hasReportData: true },
     seed: "original-seed", workload: { targetThroughput: 123456, throughputUnit: "per-minute", trafficShape: "peak", peakMultiplier: 4, readWriteRatio: 0.7, payloadSize: "heavy" },
-    exact: { available: false, reason: "Legacy" }, currentDesign: { available: true, reason: null, preview: null, inputHash: "hash", modelCatalogCompatible: false }, matchedStop: { available: false, target: null, defaultEnabled: false, reason: "No exact duration" } };
+    exact: { available: false, reason: "Legacy" }, currentDesign: { available: true, reason: null, preview: null, inputHash: "hash", modelCatalogCompatible: false }, workloadVariant: { available: false, reason: "Not used here", source: null, choices: [] }, matchedStop: { available: false, target: null, defaultEnabled: false, reason: "No exact duration" } };
   const html = renderToStaticMarkup(<CanvasMatchPreview options={options} />);
   expect(html).toContain("Match Source name"); expect(html).toContain("including unsaved edits");
   expect(html).toContain("Running saves this canvas"); expect(html).toContain("changed preview is refused");

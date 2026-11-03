@@ -14,6 +14,7 @@ import { Tag } from "@/ui/Tag";
 import { ConfirmDialog } from "@/ui/ConfirmDialogs";
 import { useSimulationStore } from "@/features/monitoring/store/simulationStore";
 import { PHASE, stopTarget, type RunPhase } from "./runState";
+import { RERUN_LABEL } from "@/features/reports/runKind";
 
 const SPEEDS = [0, 1, 10, 60] as const;
 
@@ -55,7 +56,7 @@ export function RunBar({ run, deploymentId, phase, challengeTitle, onStop, stopp
         <p className="truncate text-[15px] font-semibold leading-tight text-ink">{run?.runName ?? "Run"}</p>
         <p className="flex items-center gap-2 text-[11.5px] leading-tight text-ink-3">
           <StatusMark size="sm" kind={PHASE[phase].kind} label={PHASE[phase].label} />
-          {run?.challengeId ? <span>Challenge attempt</span> : run?.rerunMode ? <span>{run.rerunMode === "exact" ? "Exact rerun" : "Rerun, current design"}</span> : <span>Freeform run</span>}
+          {run?.challengeId ? <span>Challenge attempt</span> : run?.rerunMode ? <span>{RERUN_LABEL[run.rerunMode]}</span> : <span>Freeform run</span>}
         </p>
       </div>
       {challengeTitle && <Tag tone="neutral" className="max-lg:hidden" icon={<Lock size={11} aria-hidden="true" />}><span className="max-w-[22ch] truncate">{challengeTitle}</span></Tag>}

@@ -10,6 +10,7 @@ const options: RerunOptions = { source: { id: "source", infrastructureId: null, 
   chaosEventCount: 0, topologyRevision: 0, hasReportData: true },
   workload: { targetThroughput: 500000, throughputUnit: "per-hour", payloadSize: "medium", trafficShape: "steady" }, seed: "captured-seed",
   exact: { available: true, reason: null }, currentDesign: { available: false, reason: "Original design deleted", preview: null, inputHash: null, modelCatalogCompatible: false },
+  workloadVariant: { available: false, reason: "Not used here", source: null, choices: [] },
   matchedStop: { available: true, target: 620, defaultEnabled: true, reason: null } };
 const render = (v: React.ReactNode) => renderToStaticMarkup(<MemoryRouter>{v}</MemoryRouter>);
 test("rerun choices are explicit, native and preserve workload, seed and stop context", () => {

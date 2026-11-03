@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { RunComparison, RunReport } from "@infraforge/contracts/reports";
-import type { SimulationSnapshot } from "@infraforge/contracts/simulation";
+import type { SimulationSnapshot } from "@infraforge/contracts/telemetry";
 import { WORKLOAD_PRESETS, withClientRetry, withObjective, withWorkloadDynamics } from "../src/features/deployment/workloadOptions";
 import { TrafficReadings } from "../src/features/live/TrafficReadings";
 import { useSimulationStore } from "../src/features/monitoring/store/simulationStore";
