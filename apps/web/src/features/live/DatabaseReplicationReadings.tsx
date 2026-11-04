@@ -41,6 +41,10 @@ export function DatabaseReplicationReadings({ metrics }: { metrics?: ResourceMet
   return <section aria-label="Database replication measurements" className="border-b border-line px-4 py-4 text-sm">
     <p>Educational async replication. Lag is the age of the oldest unapplied commit.</p>
     <p>Regressed keys: {values.regressedKeyCount == null ? "Unknown" : values.regressedKeyCount}. Details (up to 8): {values.regressedKeys == null ? "Unknown" : values.regressedKeys.length ? values.regressedKeys.map(r => `${r.key}: ${r.primaryVersion} → ${r.promotedVersion}`).join(", ") : "None"}</p>
+    {metrics?.database?.readRouting && <div>
+      <p>Read routing: {metrics.database.readRouting.policy}. Stale reads: {metrics.database.readRouting.staleReads}; oldest missed commit age at read: {metrics.database.readRouting.maxStaleReadAgeMs} ms.</p>
+      <dl>{(["primary", "replica"] as const).map(member => { const m = metrics.database!.readRouting!.members[member]; return <div key={member}><dt>{member} sessions / active / queued</dt><dd>{m.sessions} / {m.active} / {m.queued}; session refusals {m.sessionRefused}, query refusals {m.queryRefused}; CPU {m.consumedCoreUs} core-us</dd></div>; })}</dl>
+    </div>}
     <dl>{fields.map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{display(key)}</dd></div>)}</dl>
   </section>;
 }

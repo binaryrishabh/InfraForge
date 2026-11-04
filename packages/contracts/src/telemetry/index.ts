@@ -10,6 +10,7 @@ export type * from "./LbAccountingMetrics.interface";
 export type * from "./VmMemoryMetrics.interface";
 export type * from "./DataDeliveryMetrics.interface";
 export type * from "./DatabaseReplicationMetrics.interface";
+export type * from "./DatabaseReadRoutingMetrics.interface";
 export type * from "./ObservabilityMetrics.interface";
 export type * from "./SecurityMetrics.interface";
 export type * from "./SimulationLog.interface";

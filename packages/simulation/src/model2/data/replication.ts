@@ -1,13 +1,13 @@
-import type { DatabaseReplication } from "@infraforge/domain/resource";
+import type { DatabaseReplication, DatabaseReadRouting } from "@infraforge/domain/resource";
 import type { EventClock } from "../time";
 
 type Row = { version: number; bytes: number };
 type PrimaryProcessState = "available" | "unavailable" | "fenced";
 type ReplicaProcessState = "available" | "unavailable" | "writer";
 // One atomic commit per message. Fixed delay and the kernel's ordering preserve commit order.
-export function databaseReplica(config: DatabaseReplication, id: string, clock: EventClock, primary: Map<string, Row>) {
+export function databaseReplica(config: DatabaseReplication, id: string, clock: EventClock, primary: Map<string, Row>, routing?: { config: DatabaseReadRouting; stale(ageMs: number): void }) {
   const replica = new Map([...primary].map(([key, row]) => [key, { ...row }]));
-  const pending = new Map<number, { at: number; ready: boolean; apply(): void }>();
+  const pending = new Map<number, { at: number; keys: string[]; ready: boolean; apply(): void }>();
   let primaryCommittedWrites = 0, replicaAppliedWrites = 0, primaryGeneration = 0, replicaGeneration = 0;
   let promoted = false, replicaCommittedWrites = 0, promotionAtUs: number | null = null, lostOperations = 0;
   let regressedKeys: Array<{ key: string; primaryVersion: number; promotedVersion: number }> = [];
@@ -39,20 +39,24 @@ export function databaseReplica(config: DatabaseReplication, id: string, clock: 
       if (!value && !crashRestore) { crashRestore = { primary: primaryProcessState, replica: replicaProcessState }; primaryProcessState = "unavailable"; replicaProcessState = "unavailable"; }
       else if (value && crashRestore) { primaryProcessState = crashRestore.primary; replicaProcessState = crashRestore.replica; crashRestore = undefined; drainReady(); }
     },
-    readSource(readOnly: boolean) { return promoted || readOnly && replicaProcessState !== "unavailable" && config.readPolicy === "replica-preferred" ? "replica" as const : "primary" as const; },
+    readSource(readOnly: boolean) { return promoted || readOnly && replicaProcessState !== "unavailable" && (routing ? routing.config.policy === "replica-preferred" : config.readPolicy === "replica-preferred") ? "replica" as const : "primary" as const; },
     read(key: string, source: "primary" | "replica") { return (source === "replica" ? replica : primary).get(key); },
     observed(source: "primary" | "replica", keys: string[], observed: Array<Row & { key: string }>) {
       if (source === "primary") { primaryReads++; return; }
       replicaReads++;
       const stale = keys.some(key => (observed.find(row => row.key === key)?.version ?? 0) < ((promoted ? replica : primary).get(key)?.version ?? 0));
-      if (stale) staleReplicaReads++; else freshReplicaReads++;
+      if (stale) {
+        staleReplicaReads++;
+        const missing = routing && [...pending.values()].find(work => work.keys.some(key => keys.includes(key) && (observed.find(row => row.key === key)?.version ?? 0) < (primary.get(key)?.version ?? 0)));
+        if (missing) routing!.stale((clock.now - missing.at) / 1000);
+      } else freshReplicaReads++;
     },
     commit(writes: Map<string, Row>) {
       if (!writes.size) return;
       if (promoted) { replicaCommittedWrites++; replicaGeneration++; return; }
       const generation = ++primaryGeneration, payload = [...writes].map(([key, row]) => [key, { ...row }] as const);
       const epoch = writerEpoch;
-      const work = { at: clock.now, ready: false, apply() {
+      const work = { at: clock.now, keys: [...writes.keys()], ready: false, apply() {
         if (epoch !== writerEpoch) { fencedReplicationRejections++; return; }
         if (replicaProcessState === "unavailable") { work.ready = true; return; }
         for (const [key, row] of payload) replica.set(key, row);

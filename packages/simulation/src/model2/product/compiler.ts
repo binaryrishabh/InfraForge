@@ -7,7 +7,7 @@ import { LB_RATE_LIMIT_PROFILE, lbRateLimitChanges, validateLbRateLimitBindings 
 import { checkClientRetry } from "./clientRetry";
 import { checkObjective } from "./objective";
 import { checkCpuDynamics } from "./workloadDynamics";
-import { RESOURCE_PORTS, vmMemoryError, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, vmMemoryError, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -41,6 +41,7 @@ import { QUEUE_CAPACITY_PROFILE, queueCapacityChanges, validateQueueCapacityBind
 import { VM_MEMORY_PROFILE, vmMemoryChanges, validateVmMemoryBindings } from "./vmMemory";
 import { VM_CPU_QUOTA_PROFILE, vmCpuQuotaChanges, validateVmCpuQuotaBindings } from "./vmCpuQuota";
 import { VM_EXECUTION_PROFILE, vmExecutionChanges, validateVmExecutionBindings } from "./vmExecution";
+import { validateDatabaseReadRoutingProfile, validateDatabaseReadRoutingBindings } from "./databaseReadRouting";
 import { validateDatabaseReplicationProfile, validateDatabaseReplicationBindings } from "./databaseReplication";
 import { DB_CONCURRENCY_PROFILE, dbConcurrencyChanges, validateDbConcurrencyBindings } from "./dbConcurrency";
 import { LB_SELECTION_PROFILE, lbSelectionChanges, validateLbSelectionBindings } from "./lbSelection";
@@ -65,6 +66,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
   try {
     boundedProduct(design); boundedProduct(contract);
     design = savedPoolPolicies(design);
+    validateDatabaseReadRoutingProfile(design.resources, contract);
     validateDatabaseReplicationProfile(design.resources, contract);
     validateFirewallCapacityProfile(design.resources, contract);
     validateObjectCapacityProfile(design.resources, contract);
@@ -130,6 +132,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (quotaError) error("INVALID_VM_CPU_QUOTA", `resources.${r.id}.vmCpuQuota`, quotaError);
       const executionError = vmExecutionError(r.type, r.vmExecution, r.asyncWorker?.enabled);
       if (executionError) error("INVALID_VM_EXECUTION", `resources.${r.id}.vmExecution`, executionError);
+      const routingError = databaseReadRoutingError(r.type, r.databaseReadRouting, r.databaseReplication);
+      if (routingError) error("INVALID_DB_READ_ROUTING", `resources.${r.id}.databaseReadRouting`, routingError);
       const replicationError = databaseReplicationError(r.type, r.databaseReplication);
       if (replicationError) error("INVALID_DB_REPLICATION", `resources.${r.id}.databaseReplication`, replicationError);
       const dbError = dbConcurrencyError(r.type, r.dbConcurrency);
@@ -150,7 +154,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["serverless", "scheduler", "apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "databaseReplication", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["serverless", "scheduler", "apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -400,6 +404,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateSchedulerBindings(design.resources, design.connections, runtime);
     validateEventBusBindings(design.resources, design.connections, runtime);
     validateGatewayBindings(design.resources, design.connections, runtime);
+    validateDatabaseReadRoutingBindings(design.resources, runtime);
     validateDatabaseReplicationBindings(design.resources, runtime);
     validateDbConcurrencyBindings(design.resources, runtime);
     validateLbRateLimitBindings(design.resources, runtime);
