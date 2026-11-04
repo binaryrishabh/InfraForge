@@ -31,3 +31,16 @@ test("a downstream outage produces bounded retry attempts and missed invocations
   const e = runtime.evidence().asynchronous.schedulers![0]!;
   expect(e.failed).toBeGreaterThan(0); expect(e.retried).toBe(e.failed * 2); expect(e.missed).toBe(100); expect(e.active).toBe(0);
 });
+test("overlap and period change downstream application work in controlled canvas runs", () => {
+  const run = (overlap: "skip" | "allow" | "queue", periodMs = 1) => {
+    const d = schedulerDesign(); Object.assign(d.resources[1]!.scheduler!, { overlap, periodMs, queueCapacity: 4 });
+    const f = prepare(d), c = compileProduct(d, withRunLength(f.contract, 2, "scheduler-load")); if (!c.ok) throw Error(JSON.stringify(c));
+    const r = createProductModel2(c.value); r.advanceTo(2_000_000); return { timer: r.evidence().asynchronous.schedulers![0]!, app: r.inspect("app") };
+  };
+  const skip = run("skip"), allow = run("allow"), queue = run("queue"), slow = run("skip", 20);
+  expect(allow.timer.completed).toBeGreaterThan(skip.timer.completed);
+  expect(queue.timer.completed).toBeGreaterThan(skip.timer.completed);
+  expect(slow.timer.completed).toBe(100);
+  expect(allow.app).toHaveProperty("completed", allow.timer.completed + 2);
+  expect(run("allow")).toEqual(allow);
+});
