@@ -35,14 +35,14 @@ test("browser gateway routing, throttles, missing routes, validation and failure
       const e = browser.evidence(), g = e.asynchronous.gateways![0]!;
       const metrics = browser.view().metrics.gateway!.gateway!;
       expect(GatewayMetricsSchema.parse(metrics)).toEqual(metrics);
-      expect(metrics.routes[0]!.outcomes).toEqual(g.routes[0]!.outcomes);
+      expect(metrics.routes[0]!.admitted).toBe(g.routes[0]!.admitted);
       expect(browser.view().metrics.gateway!.gateway!.received).toBe(g.received);
       if (scenario === "healthy") expect(g.completed).toBe(20);
       if (scenario === "throttle") expect(g.throttled).toBe(8);
       if (scenario === "failed") expect(g.upstreamFailed).toBe(10);
       if (scenario === "missing") expect(g.missingRoute).toBe(10);
       if (scenario === "invalid") expect(g.invalid).toBe(20);
-      if (scenario === "saturation") expect(g.routes[0]!.outcomes.upstreamFailed).toBeGreaterThan(0);
+      if (scenario === "saturation") expect(metrics.routes[0]!.outcomes!.upstreamFailed).toBeGreaterThan(0);
       else expect(e.resources.find(r => r.id === "writeApp")!.completed).toBe(scenario === "invalid" ? 0 : 10);
     }
   } finally { for (const path of [entry, output]) if (await Bun.file(path).exists()) await unlink(path); }

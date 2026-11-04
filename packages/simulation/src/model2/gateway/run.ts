@@ -21,6 +21,7 @@ export function apiGateway(config: GatewayConfig, clock: EventKernel, send: Deli
     respond(work, done, { ok: false, status, reason, ...(route ? { route } : {}) });
     return { admitted: false, state: () => "finished", cancel: () => "already-finished" };
   };
+  const evidence = () => ({ id: config.id, received, admitted, completed, invalid, missingRoute, throttled, overloaded, gatewayFailed, upstreamFailed, timedOut, cancelled, pending: live.size, routes: routes.map(r => ({ id: r.id, target: r.target, path: r.path, method: r.method, ...projectTokens(r.state, clock.now) })), events: events.map(e => ({ ...e })), omitted, service: service.evidence(), authentication: "Unknown; no authentication model", physicalTiming: "Unknown; authored logical command demand only" });
   return {
     accept(work: Invocation, done: RemoteCompletion): Receipt {
       received++;
@@ -62,6 +63,8 @@ export function apiGateway(config: GatewayConfig, clock: EventKernel, send: Deli
     },
     pause(value: boolean) { paused = value; service.pause(value); },
     measure: () => ({ id: config.id, paused, received, admitted, rejected: received - admitted, completed, failed: upstreamFailed + timedOut + gatewayFailed, cancelled, queued: 0, serving: 0, waiting: live.size, consumedCoreUs: service.measure().consumedCoreUs, busySlotUs: service.measure().busySlotUs }),
-    evidence: () => ({ id: config.id, received, admitted, completed, invalid, missingRoute, throttled, overloaded, gatewayFailed, upstreamFailed, timedOut, cancelled, pending: live.size, routes: routes.map(r => ({ id: r.id, target: r.target, path: r.path, method: r.method, ...projectTokens(r.state, clock.now), outcomes: { ...r.outcomes } })), events: events.map(e => ({ ...e })), omitted, service: service.evidence(), authentication: "Unknown; no authentication model", physicalTiming: "Unknown; authored logical command demand only" }),
+    evidence,
+    // Additional current readings stay outside the historical raw evidence format.
+    readings() { const e = evidence(); return { ...e, routes: e.routes.map((r, i) => ({ ...r, outcomes: { ...routes[i]!.outcomes } })) }; },
   };
 }
