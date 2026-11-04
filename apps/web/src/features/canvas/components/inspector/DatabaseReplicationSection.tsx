@@ -17,7 +17,7 @@ export function DatabaseReplicationSection({ resource, disabled }: { resource: R
         {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} type="number" min={1} max={DATABASE_REPLICATION_DELAY_MAX_MS} step={1} value={policy.replicationDelayMs} disabled={disabled}
           onChange={event => updateResource(resource.id, { databaseReplication: { ...policy, replicationDelayMs: Number(event.target.value) } })} />}
       </Field>
-      <Field label="Read routing" hint="Each member has its own session, query and CPU budget. Snapshot reads prefer the replica; only an unavailable replica falls back to the writer. Full capacity refuses work.">
+      <Field label="Read routing" hint="Each member has its own session, query and CPU budget. Replica preferred sends snapshot reads to the replica; only an unavailable replica falls back to the writer. Full capacity refuses work.">
         {({ id, describedBy }) => <select id={id} aria-describedby={describedBy} disabled={disabled} value={resource.databaseReadRouting?.policy ?? "legacy"}
           onChange={event => updateResource(resource.id, { databaseReadRouting: event.target.value === "legacy" ? undefined : { version: 1, policy: event.target.value as "primary-only" | "replica-preferred" } })}>
           <option value="legacy">Saved HA routing</option><option value="primary-only">Primary only</option><option value="replica-preferred">Replica preferred</option>
