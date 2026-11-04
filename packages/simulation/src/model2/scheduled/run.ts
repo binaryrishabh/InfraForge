@@ -13,6 +13,7 @@ export function scheduler(config: SchedulerConfig, clock: EventKernel, send: Del
   const active = new Map<number, Trigger>(), queue: Trigger[] = [];
   let paused = false, started = false, latest: Trigger | undefined;
   let due = 0, fired = 0, skippedOverlap = 0, missed = 0, retried = 0, failed = 0, completed = 0, peakActive = 0, peakQueued = 0, rejectedInbound = 0, omitted = 0;
+  const attemptAccounting = { started: 0, failedAttempts: 0, timedOutAttempts: 0, pendingAttempts: 0, retryWaiting: 0, delayedStarts: 0, totalStartDelayUs: 0, maxStartDelayUs: 0 };
   const events: Array<{ atUs: number; trigger: number; attempt: number; outcome: string }> = [];
   const record = (t: Trigger, outcome: string) => { if (events.length < 2048) events.push({ atUs: clock.now, trigger: t.ordinal, attempt: t.attempts, outcome }); else omitted++; };
   const stale = (t: Trigger) => clock.now - t.at > lateness;
@@ -24,14 +25,28 @@ export function scheduler(config: SchedulerConfig, clock: EventKernel, send: Del
   };
   const dispatch = (t: Trigger) => {
     if (paused || stale(t)) { active.delete(t.ordinal); missed++; failed++; record(t, "missed-before-attempt"); drain(); return; }
+    if (t.attempts === 0) {
+      attemptAccounting.started++;
+      const delay = clock.now - t.at;
+      if (delay > 0) attemptAccounting.delayedStarts++;
+      attemptAccounting.totalStartDelayUs += delay;
+      attemptAccounting.maxStartDelayUs = Math.max(attemptAccounting.maxStartDelayUs, delay);
+    }
+    attemptAccounting.pendingAttempts++;
     t.attempts++; fired++; if (t.attempts > 1) retried++;
     let settled = false;
     const settle = (ok: boolean, reason: string) => {
       if (settled) return; settled = true; t.cancel?.(); t.cancel = undefined;
+      attemptAccounting.pendingAttempts--;
+      if (!ok) attemptAccounting.failedAttempts++;
+      if (reason === "timeout-ambiguous") attemptAccounting.timedOutAttempts++;
       record(t, reason);
       if (ok) { active.delete(t.ordinal); completed++; drain(); }
       else if (t.attempts >= attempts) { active.delete(t.ordinal); failed++; missed++; drain(); }
-      else t.cancel = clock.schedule(clock.now + retry, 2, JSON.stringify(["scheduler-retry", config.id, t.ordinal, t.attempts]), () => dispatch(t));
+      else {
+        attemptAccounting.retryWaiting++;
+        t.cancel = clock.schedule(clock.now + retry, 2, JSON.stringify(["scheduler-retry", config.id, t.ordinal, t.attempts]), () => { attemptAccounting.retryWaiting--; dispatch(t); });
+      }
     };
     t.cancel = clock.schedule(clock.now + timeout, 1, JSON.stringify(["scheduler-timeout", config.id, t.ordinal, t.attempts]), () => {
       const receipt = t.receipt; settle(false, "timeout-ambiguous"); receipt?.cancel();
@@ -65,5 +80,7 @@ export function scheduler(config: SchedulerConfig, clock: EventKernel, send: Del
     pause(value: boolean) { paused = value; if (!paused) { const t = latest; latest = undefined; if (t) offer(t); drain(); } },
     measure: () => ({ id: config.id, paused, received: rejectedInbound, admitted: 0, rejected: rejectedInbound, completed: 0, failed: 0, cancelled: 0, queued: queue.length, serving: active.size, waiting: 0, consumedCoreUs: 0, busySlotUs: 0 }),
     evidence: () => ({ id: config.id, due, fired, skippedOverlap, missed, retried, failed, completed, active: active.size, queued: queue.length, retainedLatest: latest ? 1 : 0, peakActive, peakQueued, events: events.map(r => ({ ...r })), omitted, guarantee: "Retries keep a logical invocation identity; duplicate downstream effects possible. Destination owns idempotency; exactly-once and physical scheduler availability Unknown." }),
+    // Current measurements are separate from the captured raw evidence format.
+    readings() { return { ...this.evidence(), attemptAccounting: { ...attemptAccounting } }; },
   };
 }

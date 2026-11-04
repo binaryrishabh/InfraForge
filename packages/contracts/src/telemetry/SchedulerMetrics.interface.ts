@@ -12,4 +12,5 @@ export interface SchedulerMetrics {
   retainedLatest: number;
   peakActive: number;
   peakQueued: number;
+  attemptAccounting?: { started: number; failedAttempts: number; timedOutAttempts: number; pendingAttempts: number; retryWaiting: number; delayedStarts: number; totalStartDelayUs: number; maxStartDelayUs: number };
 }

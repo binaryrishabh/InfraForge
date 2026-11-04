@@ -31,3 +31,11 @@ test("functions are placeable after the completed slice passes", () => {
   useCanvasStore.setState({ resources: [], undoStack: [], redoStack: [], liveLocked: false, isDeploying: false });
   expect(addResource("Serverless Function", { x: 0, y: 0 })?.type).toBe("Serverless Function");
 });
+
+test("function readings show measured phase durations and preserve Unknown in old reports", () => {
+  const metrics = { version: 1 as const, received: 1, admitted: 1, completed: 1, failed: 0, timedOut: 0, cancelled: 0, throttled: 0, unavailable: 0, duplicate: 0, coldStarts: 1, warmStarts: 0, initialized: 1, expired: 0, scaleOut: 0, instances: 1, active: 0, peakInstances: 1, downstreamCalls: 0, downstreamFailed: 0 };
+  expect(renderToStaticMarkup(<ServerlessReadings metrics={metrics} />)).toContain("Initialization time (us)</dt><dd>Unknown");
+  const html = renderToStaticMarkup(<ServerlessReadings metrics={{ ...metrics, lifecycle: { initializing: 0, executing: 0, downstream: 0, settled: 1, totalDurationUs: 20000, maxDurationUs: 20000, initializationUs: 10000, executionUs: 10000, downstreamUs: 0, busyUs: 20000 } }} />);
+  expect(html).toContain("Initialization time (us)</dt><dd>10000"); expect(html).toContain("Total settled duration (us)</dt><dd>20000");
+  expect(html).toContain("Database wait time (us)</dt><dd>0"); expect(html).toContain("Phase times include active invocations");
+});

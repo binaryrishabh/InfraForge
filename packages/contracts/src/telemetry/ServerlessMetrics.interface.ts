@@ -19,4 +19,5 @@ export interface ServerlessMetrics {
   peakInstances: number;
   downstreamCalls: number;
   downstreamFailed: number;
+  lifecycle?: { initializing: number; executing: number; downstream: number; settled: number; totalDurationUs: number; maxDurationUs: number; initializationUs: number; executionUs: number; downstreamUs: number; busyUs: number };
 }

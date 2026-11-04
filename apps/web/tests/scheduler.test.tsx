@@ -31,3 +31,11 @@ test("scheduler is placeable after its vertical slice passes", () => {
   useCanvasStore.setState({ resources: [], undoStack: [], redoStack: [], liveLocked: false, isDeploying: false });
   expect(addResource("Scheduler", { x: 0, y: 0 })?.type).toBe("Scheduler");
 });
+
+test("scheduler readings distinguish original starts from failed attempts and preserve Unknown in old reports", () => {
+  const metrics = { version: 1 as const, due: 1, fired: 3, completed: 0, failed: 1, missed: 1, skippedOverlap: 0, retried: 2, active: 0, queued: 0, retainedLatest: 0, peakActive: 1, peakQueued: 0 };
+  expect(renderToStaticMarkup(<SchedulerReadings metrics={metrics} />)).toContain("Original jobs started</dt><dd>Unknown");
+  const html = renderToStaticMarkup(<SchedulerReadings metrics={{ ...metrics, attemptAccounting: { started: 1, failedAttempts: 3, timedOutAttempts: 0, pendingAttempts: 0, retryWaiting: 0, delayedStarts: 0, totalStartDelayUs: 0, maxStartDelayUs: 0 } }} />);
+  expect(html).toContain("Original jobs started</dt><dd>1"); expect(html).toContain("Failed attempts</dt><dd>3");
+  expect(html).toContain("Jobs waiting for retry</dt><dd>0"); expect(html).toContain("start dispatches downstream work");
+});
