@@ -56,7 +56,10 @@ test("old captured LB intent never gains accounting; mismatched or duplicate pro
   const run = createModel2Run(input, 1); run.advance();
   expect(run.evidence().network.loadBalancers[0]).not.toHaveProperty("accounting");
   expect(run.view().metrics.lb).not.toHaveProperty("lbAccounting");
-  expect(buildContractFromRunInputs({ ...input, resources: input.resources.map(r => ({ ...r, lbSelection: undefined })), adapterProfiles: ["lb-accounting/1"] }, 1)).toHaveProperty("refused");
+  const withoutControls = { ...input, resources: input.resources.map(r => ({ ...r, lbSelection: undefined })),
+    adapterProfiles: input.adapterProfiles!.filter(p => p !== "lb-selection/1") };
+  expect(buildContractFromRunInputs(withoutControls, 1)).toHaveProperty("contract");
+  expect(buildContractFromRunInputs({ ...withoutControls, adapterProfiles: [...withoutControls.adapterProfiles, "lb-accounting/1"] }, 1)).toHaveProperty("refused");
   expect(() => readRunInputs({ ...input, adapterProfiles: ["lb-accounting/1", "lb-accounting/1"] })).toThrow();
   const limits: string[] = [];
   const old = readRecords({ stages: [], timeline: [], chaosEvents: [], simulationState: { simulatedSeconds: 1, metrics: { lb: { cpu: null, memory: null, health: "healthy" } } } }, limits);
