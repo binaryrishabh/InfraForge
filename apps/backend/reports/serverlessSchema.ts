@@ -1,0 +1,5 @@
+import { z } from "zod";
+const count = z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);
+export const ServerlessMetricsSchema = z.object({ version: z.literal(1), received: count, admitted: count, completed: count, failed: count, timedOut: count, cancelled: count, throttled: count, unavailable: count, duplicate: count, coldStarts: count, warmStarts: count, initialized: count, expired: count, scaleOut: count, instances: count.max(128), active: count.max(128), peakInstances: count.max(128), downstreamCalls: count, downstreamFailed: count }).strict().superRefine((s, ctx) => {
+  if (s.received !== s.admitted + s.throttled + s.unavailable + s.duplicate || s.admitted !== s.completed + s.failed + s.timedOut + s.cancelled + s.active || s.coldStarts + s.warmStarts !== s.admitted || s.active > s.instances || s.instances > s.peakInstances || s.peakInstances > s.coldStarts || s.initialized > s.coldStarts || s.expired > s.coldStarts || s.scaleOut > s.coldStarts || s.downstreamFailed > s.downstreamCalls || s.downstreamCalls > s.admitted) ctx.addIssue({ code: "custom", message: "Inconsistent function lifecycle ownership counters" });
+});

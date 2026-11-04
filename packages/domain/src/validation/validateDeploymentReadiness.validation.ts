@@ -1,3 +1,4 @@
+import { serverlessError } from "../resource/Serverless.interface";
 import { schedulerError } from "../resource/Scheduler.interface";
 import { apiGatewayError } from "../resource/ApiGateway.interface";
 import { eventBusError } from "../resource/EventBus.interface";
@@ -52,6 +53,7 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
     const warnings: string[] = [];
     for (const resource of resources) {
         const gatewayMessage = apiGatewayError(resource.type, resource.apiGateway); if (gatewayMessage) errors.push(`${resource.id}: ${gatewayMessage}`);
+        const functionMessage = serverlessError(resource.type, resource.serverless); if (functionMessage) errors.push(`${resource.id}: ${functionMessage}`);
         const schedulerMessage = schedulerError(resource.type, resource.scheduler); if (schedulerMessage) errors.push(`${resource.id}: ${schedulerMessage}`);
         const busMessage = eventBusError(resource.type, resource.eventBus); if (busMessage) errors.push(`${resource.id}: ${busMessage}`);
         const firewallMessage = firewallCapacityError(resource.type, resource.firewallCapacity);

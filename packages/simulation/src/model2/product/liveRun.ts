@@ -117,7 +117,7 @@ export function createModel2Run(input: CapturedModel2Input, horizonSeconds: numb
       return logs;
     },
     burnRatePerHourUsd() {
-      if (input.resources.some(r => (r.type === "Scheduler" || r.type === "Event Bus" || r.type === "API Gateway"))) return undefined;
+      if (input.resources.some(r => (r.type === "Serverless Function" || r.type === "Scheduler" || r.type === "Event Bus" || r.type === "API Gateway"))) return undefined;
       let monthly = 0;
       for (const r of input.resources) {
         const price = (r.skuId ? findSku(r.skuId)?.monthlyPriceUsd : undefined) ?? GENERIC_MONTHLY_USD[r.type] ?? 10;
@@ -192,7 +192,7 @@ export type Model2Run = ReturnType<typeof createModel2Run>;
 
 function metric(m: LiveProjection["metrics"][string] | undefined): ResourceMetrics {
   if (!m) return { cpu: null, memory: null, health: ResourceHealth.UNKNOWN };
-  return { ...(m.scheduler ? { scheduler: m.scheduler } : {}), ...(m.eventBus ? { eventBus: m.eventBus } : {}), ...(m.gateway ? { gateway: m.gateway } : {}), ...(m.vmMemory ? { vmMemory: m.vmMemory } : {}), ...(m.rateLimit ? { rateLimit: m.rateLimit } : {}), ...(m.monitoring ? { monitoring: m.monitoring } : {}), ...(m.objectStorage ? { objectStorage: m.objectStorage } : {}), ...(m.databaseReplication ? { databaseReplication: m.databaseReplication } : {}), ...(m.database ? { database: m.database } : {}), ...(m.cache ? { cache: m.cache } : {}), ...(m.cdn ? { cdn: m.cdn } : {}), ...(m.security ? { security: m.security } : {}), ...(m.asyncQueue ? { asyncQueue: m.asyncQueue } : {}), cpu: m.cpu === null ? null : round(m.cpu), memory: m.memory === null ? null : round(m.memory), health: m.health as ResourceHealthType,
+  return { ...(m.serverless ? { serverless: m.serverless } : {}), ...(m.scheduler ? { scheduler: m.scheduler } : {}), ...(m.eventBus ? { eventBus: m.eventBus } : {}), ...(m.gateway ? { gateway: m.gateway } : {}), ...(m.vmMemory ? { vmMemory: m.vmMemory } : {}), ...(m.rateLimit ? { rateLimit: m.rateLimit } : {}), ...(m.monitoring ? { monitoring: m.monitoring } : {}), ...(m.objectStorage ? { objectStorage: m.objectStorage } : {}), ...(m.databaseReplication ? { databaseReplication: m.databaseReplication } : {}), ...(m.database ? { database: m.database } : {}), ...(m.cache ? { cache: m.cache } : {}), ...(m.cdn ? { cdn: m.cdn } : {}), ...(m.security ? { security: m.security } : {}), ...(m.asyncQueue ? { asyncQueue: m.asyncQueue } : {}), cpu: m.cpu === null ? null : round(m.cpu), memory: m.memory === null ? null : round(m.memory), health: m.health as ResourceHealthType,
     ...(m.rps === null ? {} : { rps: m.rps }), ...(m.connections === null ? {} : { connections: m.connections }), ...(m.replicas ? { replicas: m.replicas } : {}) };
 }
 const round = (value: number) => Math.round(value * 10) / 10;

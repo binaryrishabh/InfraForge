@@ -1,3 +1,5 @@
+import { ServerlessSettingsSchema } from "./serverless.schema";
+import { serverlessError } from "@infraforge/domain/resource";
 import { SchedulerSettingsSchema } from "./scheduler.schema";
 import { schedulerError } from "@infraforge/domain/resource";
 import { apiGatewayError } from "@infraforge/domain/resource";
@@ -28,6 +30,7 @@ const CachePolicySchema = z.discriminatedUnion("version", [CachePolicyV1Schema, 
 }).strict()]);
 
 const ResourceSchema = z.object({
+  serverless: ServerlessSettingsSchema.optional(),
   scheduler: SchedulerSettingsSchema.optional(),
   apiGateway: z.object({ version: z.literal(1), maxRequestBytes: z.number().int().min(0).max(1048576).optional(), maxInFlight: z.number().int().min(1).max(10000).optional(), upstreamTimeoutMs: z.number().int().min(1).max(60000).optional(), routes: z.array(z.object({ id: z.string().min(1).max(64), edge: z.string().min(1).max(64), path: z.string().min(1).max(256), method: z.enum(["GET", "POST", "ANY"]), burstRequests: z.number().int().min(1).max(10000).optional(), requestsPerSecond: z.number().int().min(1).max(10000).optional() }).strict()).min(1).max(16).optional() }).strict().optional(),
   eventBus: z.object({ version: z.literal(1), capacityMessages: z.number().int().min(1).max(10000).optional(), maxAttempts: z.number().int().min(1).max(10).optional(), retryDelayMs: z.number().int().min(1).max(60000).optional(), deliveryTimeoutMs: z.number().int().min(1).max(60000).optional(), deadLetterCapacity: z.number().int().min(0).max(10000).optional(), subscriptions: z.array(z.object({ id: z.string().min(1).max(64), edge: z.string().min(1).max(64), filter: z.object({ keyPrefix: z.string().min(1).max(128) }).strict().optional() }).strict()).min(1).max(16).optional() }).strict().optional(),
@@ -89,6 +92,8 @@ const ResourceSchema = z.object({
 }).catchall(z.json()).superRefine((resource, ctx) => {
   const gatewayMessage = apiGatewayError(resource.type, resource.apiGateway);
   if (gatewayMessage) ctx.addIssue({ code: "custom", path: ["apiGateway"], message: gatewayMessage });
+  const functionMessage = serverlessError(resource.type, resource.serverless);
+  if (functionMessage) ctx.addIssue({ code: "custom", path: ["serverless"], message: functionMessage });
   const schedulerMessage = schedulerError(resource.type, resource.scheduler);
   if (schedulerMessage) ctx.addIssue({ code: "custom", path: ["scheduler"], message: schedulerMessage });
   const busMessage = eventBusError(resource.type, resource.eventBus);
