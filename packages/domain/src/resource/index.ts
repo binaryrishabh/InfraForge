@@ -33,4 +33,5 @@ export { lbRateLimitError, LB_RATE_BURST_MAX, LB_RATE_MIN_RPS, LB_RATE_MAX_RPS, 
 export { lbSelectionError, type LbSelection } from "./LbSelection.interface";
 export * from "./EventBus.interface";
 export * from "./Scheduler.interface";
+export * from "./Serverless.interface";
 export * from "./ApiGateway.interface";
