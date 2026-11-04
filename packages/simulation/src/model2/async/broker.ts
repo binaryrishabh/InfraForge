@@ -48,6 +48,7 @@ export function deliveryQueue(config: BrokerConfig, kernel: EventKernel) {
       ready.delete(m.id); m.state = "in-flight"; m.attempts++; delivered++; if (m.attempts > 1) redelivered++;
       const d: Delivery = { id: m.id, logicalId: m.logicalId, publishAttempt: m.publishAttempt, attempt: m.attempts, consumer: r.consumer!, receipt: JSON.stringify([config.id, m.id, m.attempts]), deliveredAt: kernel.now, leaseUntil: kernel.now + requireKnown(config.lease, "us"), body: { ...m.body } };
       m.delivery = d; consumer.outstanding.add(m.id); record("delivery", m);
+      // Expiry (priority 0) precedes receive/ack command effects (priority 2) at the same time.
       m.cancelLease = kernel.schedule(d.leaseUntil, 0, JSON.stringify(["delivery-expiry", d.receipt]), () => { leaseExpired++; requeue(m, "lease-expired"); });
       if (work.message) work.message.bodyBytes = { response: m.body.bytes }; return { ok: true, delivery: copy(d) };
     }
