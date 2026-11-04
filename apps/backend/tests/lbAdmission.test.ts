@@ -51,7 +51,7 @@ test("only new explicit admission captures select the profile; missing, duplicat
   }
   for (const setting of controls) {
     const input = captureRunInputs(layout(setting), workload, "lb-capture"), saved = readRunInputs(JSON.parse(JSON.stringify(input)));
-    expect(saved).toEqual(input); expect(saved.adapterProfiles).toEqual(["lb-admission/1", "traffic-evidence/2"]);
+    expect(saved).toEqual(input); expect(saved.adapterProfiles).toEqual(["lb-admission/1", "lb-accounting/1", "traffic-evidence/2"]);
     expect(buildContractFromRunInputs(saved, 3)).toHaveProperty("contract");
     for (const adapterProfiles of [undefined, []]) expect(buildContractFromRunInputs({ ...saved, adapterProfiles }, 3)).toHaveProperty("refused");
     expect(() => readRunInputs({ ...saved, adapterProfiles: ["lb-admission/1", "lb-admission/1"] })).toThrow();

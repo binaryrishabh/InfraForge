@@ -7,6 +7,7 @@ import { WholeRunSchema } from "./wholeRunSchema";
 import { LatencySchema } from "./latencySchema";
 import { ClientRetryLiveSchema } from "./clientRetrySchema";
 import { VmMemorySchema } from "./vmMemorySchema";
+import { LbAccountingSchema } from "./lbAccountingSchema";
 import { ObjectiveSchema } from "./objectiveSchema";
 import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { EventBusMetricsSchema, GatewayMetricsSchema } from "./newResourceSchema";
@@ -25,7 +26,7 @@ const stage = z.object({ name: text, status: z.enum(["pending", "running", "comp
   message: text, startedAt: timestamp, completedAt: timestamp, details: z.unknown().optional() });
 // Model 2 records a value it does not model as null ("unknown"); reports treat it as not recorded, never as zero.
 const health = z.enum(["healthy", "degraded", "saturated", "failed", "unknown"]);
-const metrics = z.object({ eventBus: EventBusMetricsSchema.optional(), gateway: GatewayMetricsSchema.optional(), vmMemory: VmMemorySchema.optional(), cpu: amount.max(100).nullable().optional(), memory: amount.max(100).nullable().optional(),
+const metrics = z.object({ lbAccounting: LbAccountingSchema.optional(), eventBus: EventBusMetricsSchema.optional(), gateway: GatewayMetricsSchema.optional(), vmMemory: VmMemorySchema.optional(), cpu: amount.max(100).nullable().optional(), memory: amount.max(100).nullable().optional(),
   rps: amount.optional(), connections: amount.optional(), health: health.optional() });
 const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction: amount.optional(),
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).optional(), accumulatedCostUsd: amount.optional(),

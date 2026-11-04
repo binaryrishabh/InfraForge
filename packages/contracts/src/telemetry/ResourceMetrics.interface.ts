@@ -7,6 +7,7 @@ export interface LbRateLimitMetrics {
 }
 
 export interface ResourceMetrics {
+  lbAccounting?: import("./LbAccountingMetrics.interface").LbAccountingMetrics;
   gateway?: import("./GatewayMetrics.interface").GatewayMetrics;
   eventBus?: import("./EventBusMetrics.interface").EventBusMetrics;
   vmMemory?: import("./VmMemoryMetrics.interface").VmMemoryMetrics;
