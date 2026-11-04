@@ -203,8 +203,8 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
       if (security) for (const node of nodeIds) {
         const policy = security.policies.find(p => p.id === node), unknown = security.omitted > 0;
         const edges = security.edges.filter(e => owner(e.source) === node || owner(e.target) === node).map(e => ({ ...e, lastDenial: unknown ? undefined : e.lastDenial }));
-        // Flow-capacity refusals exist as bounded detail rows, but have no aggregate counter.
-        metrics[node]!.security = { version: 1, evidence: unknown ? "omitted" : "complete", omitted: security.omitted, edges, ...(policy ? { firewall: { occupancy: policy.occupancy, limit: policy.limit, admissions: policy.admissions, generation: policy.generation, policyDenied: policy.policyDenied ?? null, "flow-capacity": null } } : {}) };
+        // Historical captures have no aggregate capacity counter or expiry policy.
+        metrics[node]!.security = { version: 1, evidence: unknown ? "omitted" : "complete", omitted: security.omitted, edges, ...(policy ? { firewall: { occupancy: policy.occupancy, limit: policy.limit, admissions: policy.admissions, generation: policy.generation, policyDenied: policy.policyDenied ?? null, "flow-capacity": policy.capacityRefused ?? null, ...(policy.expired === undefined ? {} : { expired: policy.expired, establishedRequests: policy.establishedRequests, newRequests: policy.newRequests, expiredReturns: policy.expiredReturns }) } } : {}) };
         const incoming = security.edges.filter(e => owner(e.target) === node);
         const denied = incoming.reduce((n, e) => n + e.denied - (previousSecurity.get(e.path)?.denied ?? 0), 0);
         const delivered = incoming.reduce((n, e) => n + e.backendDeliveries - (previousSecurity.get(e.path)?.backendDeliveries ?? 0), 0);

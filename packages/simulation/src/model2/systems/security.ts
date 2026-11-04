@@ -1,3 +1,5 @@
+import { seedCause, type FailureReason } from "../workload/cause";
+import { firewallState, type Flow } from "./firewallState";
 import { requireKnown } from "../../reality/quantity";
 import { copy } from "./copy";
 import type { NetworkContext } from "../network/run";
@@ -14,18 +16,25 @@ export const ipv4 = (address: string): number | undefined => {
 export function securityPlane(input: SystemsInput, kernel: EventKernel, context: NetworkContext, peek: (resolver: string, name: string) => DnsReply | undefined, trace?: Trace) {
   const identities = new Map(input.systems.identities.map((i) => [i.id, i])), paths = new Map(input.paths.map((p) => [p.id, p])), listeners = new Map(input.systems.listeners.map((l) => [JSON.stringify([l.resource, l.protocol, requireKnown(l.port, "count")]), l]));
   const sortRules = (rules: FirewallRule[]) => [...rules].sort((a, b) => requireKnown(a.priority, "count") - requireKnown(b.priority, "count") || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  const policies = new Map(input.systems.firewalls.map((f) => [f.id, { config: f, rules: sortRules(f.rules), flows: new Map<string, { source: string; target: string; port: number; at: number }>(), evaluated: 0, allowed: 0, denied: 0, opened: 0, closed: 0, examined: 0, returns: 0, generation: 1 }]));
-  const sessions = new Map<string, { path: string; target: string; tls: boolean; policies: string[] }>(), events = eventRows();
+  const events = eventRows();
+  const policies = new Map(input.systems.firewalls.map((f) => {
+    const flows = new Map<string, Flow>();
+    return [f.id, { config: f, rules: sortRules(f.rules), flows, state: f.statePolicy ? firewallState(f, flows, kernel, events) : undefined, evaluated: 0, allowed: 0, denied: 0, opened: 0, closed: 0, examined: 0, returns: 0, generation: 1 }];
+  }));
+  const sessions = new Map<string, { path: string; target: string; tls: boolean; policies: string[] }>();
   const opted = input.securityProfile === "canvas-security/1";
-  type Admission = { at: number; connectionId: string; path: string; source: string; target: string; port: number; reason: string; allowed: boolean; firewall?: string; rule?: string; direction?: string; generation?: number; defaultAction?: string };
+  type Admission = { phase?: "request"; at: number; connectionId: string; path: string; source: string; target: string; port: number; reason: string; allowed: boolean; firewall?: string; rule?: string; direction?: string; generation?: number; defaultAction?: string };
   const admissions: Admission[] = []; let omitted = 0, admissionBytes = 0;
   // A call between two roles of one resource instance (ids look like "app#0/main") is in-process: canvas-built ones carry no firewall (fromDesign) and skip the listener check.
   const inProcess = (p: { source: string; target: string }) => p.source !== p.target && p.source.split("/")[0] === p.target.split("/")[0];
   const internalPaths = new Set(input.paths.filter(inProcess).map(p => p.id));
-  const edgeCounts = new Map(input.paths.filter(p => !internalPaths.has(p.id)).map(p => [p.id, { path: p.id, source: p.source, target: p.target, admitted: 0, denied: 0, noListener: 0, backendDeliveries: 0, lastDenial: undefined as Admission | undefined, policyDenied: {} as Record<string, number> }]));
+  const edgeCounts = new Map(input.paths.filter(p => !internalPaths.has(p.id)).map(p => [p.id, { ...(input.systems.connections.some(c => c.path === p.id && c.firewalls.some(id => policies.get(id)!.state)) ? { requestDenied: 0 } : {}), path: p.id, source: p.source, target: p.target, admitted: 0, denied: 0, noListener: 0, backendDeliveries: 0, lastDenial: undefined as Admission | undefined, policyDenied: {} as Record<string, number> }]));
   const record = (row: Admission) => {
-    const c = edgeCounts.get(row.path) ?? { admitted: 0, denied: 0, noListener: 0, lastDenial: undefined as Admission | undefined, policyDenied: {} as Record<string, number> }; // internal hops are not counted
-    if (row.allowed) c.admitted++; else { c.denied++; c.lastDenial = row; if (row.reason === "no-listener") c.noListener++; if (row.firewall) { const key = `${row.firewall}:${row.direction}:${row.rule ?? "default"}`; c.policyDenied[key] = (c.policyDenied[key] ?? 0) + 1; } }
+    const c = edgeCounts.get(row.path); // Internal hops have no edge counter.
+    if (c) {
+      if (row.phase === "request" && !row.allowed) c.requestDenied = (c.requestDenied ?? 0) + 1;
+      if (row.allowed) c.admitted++; else { c.denied++; c.lastDenial = row; if (row.reason === "no-listener") c.noListener++; if (row.firewall && row.reason.startsWith("policy-denied")) { const key = `${row.firewall}:${row.direction}:${row.rule ?? "default"}`; c.policyDenied[key] = (c.policyDenied[key] ?? 0) + 1; } }
+    }
     const bytes = utf8Bytes(JSON.stringify(row));
     if (admissions.length >= Math.min(SYSTEM_LIMITS.events, input.limits.maxTraceRows) || admissionBytes + bytes > (input.limits.maxTraceBytes ?? Infinity)) { omitted++; return; }
     admissions.push(row); admissionBytes += bytes;
@@ -49,14 +58,17 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
     }
     return { allowed: true, rule: "both-directions-permitted" };
   };
-  const inspect = (dial: DialConfig, path: PathConfig, count: boolean) => {
+  const inspect = (dial: DialConfig, path: PathConfig, count: boolean, connection?: string, forward = false): { ok: boolean; reason: string; firewall?: string; direction?: string; rule?: string; generation?: number; defaultAction?: string } => {
     const port = requireKnown(dial.port, "count");
     for (const id of dial.firewalls) {
-      const p = policies.get(id)!, decision = ruleDecision(p, path.source, path.target, port, count);
+      const p = policies.get(id)!;
+      if (forward && (!p.state || p.flows.has(connection!))) continue;
+      const decision = ruleDecision(p, path.source, path.target, port, count);
       if (count) { p.evaluated++; if (decision.allowed) p.allowed++; else p.denied++; }
       if (!decision.allowed) return { ok: false, reason: `policy-denied:${id}:${decision.rule}`, firewall: id, direction: decision.direction, rule: decision.matchedRule, generation: p.generation, ...(decision.matchedRule === undefined ? { defaultAction: p.config.default } : {}) };
-      if (count && p.flows.size >= requireKnown(p.config.maxFlows, "count")) return { ok: false, reason: `flow-capacity:${id}` };
+      if (count && p.flows.size >= requireKnown(p.config.maxFlows, "count")) { if (p.state) p.state.counts.capacityRefused++; return { ok: false, reason: `flow-capacity:${id}`, ...(p.state ? { firewall: id } : {}) }; }
     }
+    if (forward) return { ok: true, reason: "tracked-flow" };
     const listener = listeners.get(JSON.stringify([path.target, dial.protocol, port]));
     if (!listener && !inProcess(path)) return { ok: false, reason: "no-listener" };
     const endpoint = context.endpoint(path.target); if (!endpoint.alive || !endpoint.ready) return { ok: false, reason: "endpoint-not-ready" };
@@ -70,10 +82,32 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
     if (kernel.now < requireKnown(cert.notBefore, "us") || kernel.now >= requireKnown(cert.notAfter, "us")) return { ok: false, reason: "certificate-time" };
     return { ok: true, reason: "authenticated-tls" };
   };
+  const failure = (reason: string): FailureReason => reason.startsWith("policy-denied") ? "policy-denied" : reason.startsWith("flow-capacity") ? "flow-capacity" : ["endpoint-not-ready", "route-unavailable"].includes(reason) ? "unreachable" : "backend-rejected";
+  const remember = (dial: DialConfig, selected: PathConfig, id: string, forward = false) => {
+    for (const policy of dial.firewalls) {
+      const p = policies.get(policy)!; if (forward && !p.state) continue;
+      if (!p.flows.has(id)) { p.flows.set(id, { source: selected.source, target: selected.target, port: requireKnown(dial.port, "count"), at: kernel.now }); p.opened++; if (forward) events.add(kernel.now, "flow-readmitted", id, `${policy}:generation-${p.generation}`); }
+      p.state?.touch(id);
+    }
+  };
   return {
     hook(path: PathConfig, send: (source: string, target: string, work: Invocation, done: (outcome: RemoteOutcome) => void) => Receipt): ConnectionHook {
       const dial = input.systems.connections.find((c) => c.path === path.id)!;
+      const stateful = dial.firewalls.some(id => policies.get(id)!.state);
       return {
+        ...(stateful ? { requestTraffic(id: string) {
+          const session = sessions.get(id); if (!session) return { reason: "reset" as const };
+          const selected = { ...path, target: session.target };
+          for (const policy of session.policies) { const p = policies.get(policy)!; if (p.state) { if (p.flows.has(id)) p.state.counts.establishedRequests++; else p.state.counts.newRequests++; } }
+          const result = inspect(dial, selected, true, id, true);
+          if (!result.ok) {
+            record({ phase: "request", at: kernel.now, connectionId: id, path: path.id, source: selected.source, target: selected.target, port: requireKnown(dial.port, "count"), allowed: false, reason: result.reason, ...("firewall" in result ? { firewall: result.firewall, direction: result.direction, rule: result.rule, generation: result.generation } : {}) });
+            events.add(kernel.now, "request-denied", id, result.reason);
+            return { reason: failure(result.reason), cause: seedCause(failure(result.reason), result.firewall ?? path.target) };
+          }
+          remember(dial, selected, id, true);
+          return undefined;
+        } } : {}),
         ...(opted ? { securityEvidence: true as const, delivered: () => { const c = edgeCounts.get(path.id); if (c) c.backendDeliveries++; } } : {}),
         open(id, done) {
           attempts++; pending.add(id); let stopped = false, receipt: Receipt | undefined;
@@ -81,8 +115,8 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
             if (stopped) return; pending.delete(id);
             const result = inspect(dial, selected, true);
             if (opted) record({ at: kernel.now, connectionId: id, path: path.id, source: selected.source, target: selected.target, port: requireKnown(dial.port, "count"), allowed: result.ok && sessions.size < SYSTEM_LIMITS.flows, reason: result.reason, ...("firewall" in result ? { firewall: result.firewall, direction: result.direction, rule: result.rule, generation: result.generation, ...("defaultAction" in result ? { defaultAction: result.defaultAction } : {}) } : {}) });
-            if (!result.ok || sessions.size >= SYSTEM_LIMITS.flows) { failed++; if (result.reason.startsWith("tls") || result.reason.startsWith("certificate")) { tlsAttempts++; tlsFailed++; } events.add(kernel.now, "connection-denied", id, result.reason); done(undefined, "backend-rejected"); return; }
-            for (const policy of dial.firewalls) { const p = policies.get(policy)!; p.flows.set(id, { source: selected.source, target: selected.target, port: requireKnown(dial.port, "count"), at: kernel.now }); p.opened++; }
+            if (!result.ok || sessions.size >= SYSTEM_LIMITS.flows) { failed++; if (result.reason.startsWith("tls") || result.reason.startsWith("certificate")) { tlsAttempts++; tlsFailed++; } events.add(kernel.now, "connection-denied", id, result.reason); done(undefined, stateful ? failure(result.reason) : "backend-rejected", stateful ? seedCause(failure(result.reason), result.firewall ?? selected.target) : undefined); return; }
+            remember(dial, selected, id);
             const tls = dial.tls.mode === "authenticated"; sessions.set(id, { path: path.id, target: selected.target, tls, policies: [...dial.firewalls] }); established++; if (tls) { tlsAttempts++; tlsEstablished++; }
             events.add(kernel.now, "connection-admitted", id, `${selected.target}:${result.reason}`); done({ target: selected.target, request: [...selected.request], response: [...selected.response] });
           };
@@ -97,8 +131,9 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
           }
           return () => { if (stopped) return false; stopped = true; if (pending.delete(id)) cancelled++; receipt?.cancel(); return true; };
         },
-        close(id) { const session = sessions.get(id); if (!session) return; sessions.delete(id); closed++; for (const policy of session.policies) { const p = policies.get(policy)!; if (p.flows.delete(id)) p.closed++; } },
-        returnTraffic(id) { const session = sessions.get(id); if (!session) return false; for (const policy of session.policies) policies.get(policy)!.returns++; return true; },
+        close(id) { const session = sessions.get(id); if (!session) return; sessions.delete(id); closed++; for (const policy of session.policies) { const p = policies.get(policy)!; p.state?.close(id); if (p.flows.delete(id)) p.closed++; } },
+        returnTraffic(id) { const session = sessions.get(id); if (!session) return false; for (const policy of session.policies) { const p = policies.get(policy)!; if (p.state && !p.flows.has(id)) { p.state.counts.expiredReturns++; return false; } }
+          for (const policy of session.policies) { const p = policies.get(policy)!; p.returns++; p.state?.touch(id); } return true; },
       };
     },
     update(id: string, rules: FirewallRule[]) { const p = policies.get(id)!; p.rules = sortRules(copy(rules)); p.generation++; events.add(kernel.now, "policy-updated", id, "existing admitted flows retained"); if (opted) trace?.("security-policy-updated", id, JSON.stringify({ firewall: id, generation: p.generation, retainedFlows: p.flows.size })); },
@@ -116,7 +151,7 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
       });
       return { scope: "Configured external routes/listeners/policy/readiness; hostname needs a current observed answer", probes, findings, resources: input.resources.map((r) => { const ps = probes.filter((p) => p.target === r.id); return { id: r.id, internetReachability: ps.some((p) => p.reachable === true) ? "reachable" : ps.some((p) => p.reachable === "Unknown") ? "Unknown" : "blocked", reason: ps.length ? "derived-from-probes" : "no-external-path" }; }) };
     },
-    metrics: () => opted ? ({ edges: [...edgeCounts.values()].map(c => ({ ...c, policyDenied: { ...c.policyDenied } })), policies: [...policies.entries()].map(([id,p]) => ({ id, generation: p.generation, occupancy: p.flows.size, limit: requireKnown(p.config.maxFlows, "count"), admissions: p.opened, policyDenied: p.denied })), omitted }) : undefined,
-    evidence: () => ({ ...(opted ? { admission: { rows: admissions.map(r => ({ ...r })), omitted, bytes: admissionBytes }, edges: [...edgeCounts.values()].map(c => ({ ...c, policyDenied: { ...c.policyDenied } })) } : {}), attempts, established, failed, cancelled, pending: pending.size, closed, tlsAttempts, tlsEstablished, tlsFailed, dnsAttempts, dnsFailed, sessions: [...sessions.entries()].map(([id, value]) => ({ id, ...value })), policies: [...policies.entries()].map(([id, p]) => ({ id, generation: p.generation, evaluated: p.evaluated, allowed: p.allowed, denied: p.denied, opened: p.opened, closed: p.closed, rulesExamined: p.examined, returnExchanges: p.returns, rules: copy(p.rules), flows: [...p.flows.entries()].map(([id, flow]) => ({ id, ...flow })) })), events: events.snapshot(), tlsPhysicalDemand: "Unknown; semantic authentication gate only" }),
+    metrics: () => opted ? ({ edges: [...edgeCounts.values()].map(c => ({ ...c, policyDenied: { ...c.policyDenied } })), policies: [...policies.entries()].map(([id,p]) => ({ id, generation: p.generation, occupancy: p.flows.size, limit: requireKnown(p.config.maxFlows, "count"), admissions: p.opened, policyDenied: p.denied, ...(p.state ? { ...p.state.counts } : {}) })), omitted }) : undefined,
+    evidence: () => ({ ...(opted ? { admission: { rows: admissions.map(r => ({ ...r })), omitted, bytes: admissionBytes }, edges: [...edgeCounts.values()].map(c => ({ ...c, policyDenied: { ...c.policyDenied } })) } : {}), attempts, established, failed, cancelled, pending: pending.size, closed, tlsAttempts, tlsEstablished, tlsFailed, dnsAttempts, dnsFailed, sessions: [...sessions.entries()].map(([id, value]) => ({ id, ...value })), policies: [...policies.entries()].map(([id, p]) => ({ id, generation: p.generation, evaluated: p.evaluated, allowed: p.allowed, denied: p.denied, opened: p.opened, closed: p.closed, rulesExamined: p.examined, returnExchanges: p.returns, ...(p.state ? { ...p.state.counts } : {}), rules: copy(p.rules), flows: [...p.flows.entries()].map(([id, flow]) => ({ id, ...flow })) })), events: events.snapshot(), tlsPhysicalDemand: "Unknown; semantic authentication gate only" }),
   };
 }

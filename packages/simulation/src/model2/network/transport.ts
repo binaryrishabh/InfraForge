@@ -68,6 +68,8 @@ export function pathTransport(config: PathConfig, kernel: EventKernel, links: Ma
       cancelAcquire = pool.acquire(key, (acquired) => {
         if (terminal) { acquired.release(); return; }
         lease = acquired; const route = acquired.route ?? config; endpoints = { origin: config.source, destination: route.target }; targets.set(acquired.connection, route.target); state = "serving"; const readyAt = kernel.now; latency.connectionWaitUs += readyAt - start;
+        const denied = hook?.requestTraffic?.(acquired.connection);
+        if (denied) { finish({ ok: false, ambiguous: false, ...denied }); return; }
         observe("acquired");
         trace("connection-acquired", key, acquired.connection, work.rootId, work.attempt, !!config.pool.evidenceProfile);
         cancelTimeout = kernel.schedule(kernel.now + requireKnown(config.pool.responseTimeout, "us"), 1, JSON.stringify(["upstream-timeout", config.id, key]), () => finish({ ok: false, reason: "response-timeout", ambiguous: delivered }));

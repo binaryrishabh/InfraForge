@@ -32,6 +32,7 @@ export interface Resource {
   eventBus?: import("./EventBus.interface").EventBusSettings;
   databaseReplication?: DatabaseReplication;
   databaseReadRouting?: import("./DatabaseReadRouting.interface").DatabaseReadRouting;
+  firewallState?: import("./FirewallState.interface").FirewallState;
   firewallCapacity?: FirewallCapacity;
   objectStoragePolicy?: ObjectStoragePolicy;
   dataKeyspace?: DataKeyspace;

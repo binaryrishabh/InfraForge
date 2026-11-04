@@ -70,5 +70,6 @@ export interface ConnectionHook {
   leaseHeldOnlyWithRemote?: boolean;
   open(id: string, done: (route?: ConnectionRoute, failure?: FailureReason, cause?: Cause) => void): () => boolean;
   close(id: string): void;
+  requestTraffic?(id: string): { reason: FailureReason; cause?: Cause } | undefined;
   returnTraffic?(id: string): boolean;
 }

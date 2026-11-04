@@ -23,15 +23,16 @@ export function SecurityReadings({ metrics, firewall = false }: { metrics?: Secu
   const text = (v: number | null | undefined) => v == null ? "Unknown" : String(v);
   metrics = metrics?.version === 1 ? metrics : undefined;
   const policy = metrics?.firewall;
-  const rows = [["Current flow occupancy", policy?.occupancy], ["Configured flow limit", policy?.limit], ["Admitted opens", policy?.admissions],
-    ["Policy denied opens", policy?.policyDenied], ["Flow capacity refusals", policy?.["flow-capacity"]], ["Policy generation", policy?.generation]] as const;
+  const rows: Array<readonly [string, number | null | undefined]> = [["Current flow occupancy", policy?.occupancy], ["Configured flow limit", policy?.limit], [policy?.expired === undefined ? "Admitted opens" : "Tracked state admissions", policy?.admissions],
+    [policy?.expired === undefined ? "Policy denied opens" : "Policy denied new admissions", policy?.policyDenied], ["Flow capacity refusals", policy?.["flow-capacity"]], ["Policy generation", policy?.generation], ...(policy?.expired === undefined ? [] : [["Expired flow entries", policy.expired], ["Requests with established state", policy.establishedRequests], ["Requests after expiry", policy.newRequests], ["Responses refused after expiry", policy.expiredReturns]] as const)];
   return <div>
     {(firewall || policy) && <><dl>{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{text(value)}</dd></div>)}</dl>
       <p>Flow limit is an educational assumption. Policy denials, flow capacity refusals, TLS failures and listener failures are separate reasons.</p></>}
     {!metrics && <p>Security measurements: Unknown</p>}
     {metrics?.evidence === "omitted" && <p>Security evidence omitted ({metrics.omitted ?? "Unknown"} rows); connection details: Unknown</p>}
     {metrics?.edges.map(e => <div key={e.path}>
-      <p>{e.source} → {e.target}: denied opens {text(e.denied)}; no listener {text(e.noListener)}; backend deliveries {text(e.backendDeliveries)}.</p>
+      <p>{e.source} → {e.target}: {e.requestDenied === undefined ? "denied opens" : "denied admissions"} {text(e.denied)}; no listener {text(e.noListener)}; backend deliveries {text(e.backendDeliveries)}.</p>
+      {e.requestDenied !== undefined && <p>Requests refused on pooled connections: {e.requestDenied}.</p>}
       {e.policyDenied && Object.entries(e.policyDenied).map(([rule,count])=><p key={rule}>Denied by {rule}: {count}</p>)}
       {e.lastDenial && <p>Connection {e.lastDenial.connectionId}: {e.lastDenial.source} → {e.lastDenial.target}:{e.lastDenial.port}, {e.lastDenial.reason}{e.lastDenial.generation ? ` (policy generation ${e.lastDenial.generation})` : ""}.</p>}
     </div>)}
