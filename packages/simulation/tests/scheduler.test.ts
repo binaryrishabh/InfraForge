@@ -67,7 +67,7 @@ test("regression: future triggers and event evidence stay bounded as the trigger
   const run = (limit: number) => {
     const clock = new EventKernel(30000, 4);
     const send: Deliver = (_t, _w, done) => { done("completed"); return { admitted: true, state: () => "finished", cancel: () => "already-finished" }; };
-    const q = (value: number, unit: "us" | "count") => ({ kind: "known" as const, value, unit, provenance: ["test"] });
+    const q = <U extends "us" | "count">(value: number, unit: U) => ({ kind: "known" as const, value, unit, provenance: ["test"] });
     const service = scheduler(schedulerFixture({ period: q(1, "us"), maxTriggers: q(limit, "count") }), clock, send, 20000);
     service.start(); expect(clock.pending).toBe(1); clock.advanceTo(20000);
     return { evidence: service.evidence(), readings: service.readings(), peakPending: clock.peakPending, pending: clock.pending };

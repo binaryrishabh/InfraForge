@@ -25,7 +25,7 @@ test("scheduler accounting distinguishes original starts, failed attempts and re
   expect(a.inspectScheduler("timer")!.attemptAccounting).toMatchObject({ started: 100, failedAttempts: 0, timedOutAttempts: 0, pendingAttempts: 0, retryWaiting: 0 });
   expect(b.inspectScheduler("timer")!.attemptAccounting).toMatchObject({ started: 100, failedAttempts: 300, timedOutAttempts: 0, pendingAttempts: 0, retryWaiting: 0 });
   expect(b.inspectScheduler("timer")).toMatchObject({ due: 100, fired: 300, retried: 200, failed: 100, completed: 0 });
-  expect(a.inspect("app")!.completed).toBeGreaterThan(b.inspect("app")!.completed);
+  expect(a.evidence().resources.find(r => r.id === "app")!.completed).toBeGreaterThan(b.evidence().resources.find(r => r.id === "app")!.completed);
   expect(run(failed).inspectScheduler("timer")).toEqual(b.inspectScheduler("timer"));
 });
 
