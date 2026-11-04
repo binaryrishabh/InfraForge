@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { validateConnection } from "@infraforge/domain/validation";
-import { RESOURCE_PORTS, vmMemoryError, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbHealthError, lbAdmissionError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, type Resource, type ResourceType } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, vmMemoryError, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, type Resource, type ResourceType } from "@infraforge/domain/resource";
 import { useCanvasStore } from "./store/canvasStore";
 import { positionIsOccupied } from "./utils/cardFootprint";
 import { NODE_CARD_WIDTH, DESIGN_CARD_HEIGHT, GRID_SIZE } from "./utils/nodeGeometry";
@@ -114,7 +114,7 @@ export function deleteConnection(connectionId: string) {
   toast("Connection removed", { action: { label: "Undo", onClick: undo }, duration: 5000 });
 }
 
-const TRACKED = ["databaseReplication", "name", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts"] as const;
+const TRACKED = ["databaseReplication", "name", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts"] as const;
 export function updateResource(resourceId: string, patch: Partial<Resource>) {
   const store = useCanvasStore.getState();
   if (!editable(store)) return;
@@ -123,6 +123,7 @@ export function updateResource(resourceId: string, patch: Partial<Resource>) {
   const candidate = { ...resource, ...patch };
   if (lbRateLimitError(candidate.type, candidate.lbRateLimit)) return;
   if (lbAdmissionError(candidate.type, candidate.lbAdmission)) return;
+  if (lbSelectionError(candidate.type, candidate.lbSelection)) return;
   if (lbHealthError(candidate.type, candidate.lbHealth)) return;
   if (vmMemoryError(candidate.type, candidate.vmMemory, candidate.asyncWorker?.enabled)) return;
   if (vmCpuQuotaError(candidate.type, candidate.vmCpuQuota, candidate.asyncWorker?.enabled)) return;

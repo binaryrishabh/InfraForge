@@ -2,7 +2,7 @@ import { LB_RATE_LIMIT_PROFILE, lbRateLimitChanges, validateLbRateLimitBindings 
 import { checkClientRetry } from "./clientRetry";
 import { checkObjective } from "./objective";
 import { checkCpuDynamics } from "./workloadDynamics";
-import { RESOURCE_PORTS, vmMemoryError, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbHealthError, lbAdmissionError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, vmMemoryError, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -38,6 +38,7 @@ import { VM_CPU_QUOTA_PROFILE, vmCpuQuotaChanges, validateVmCpuQuotaBindings } f
 import { VM_EXECUTION_PROFILE, vmExecutionChanges, validateVmExecutionBindings } from "./vmExecution";
 import { validateDatabaseReplicationProfile, validateDatabaseReplicationBindings } from "./databaseReplication";
 import { DB_CONCURRENCY_PROFILE, dbConcurrencyChanges, validateDbConcurrencyBindings } from "./dbConcurrency";
+import { LB_SELECTION_PROFILE, lbSelectionChanges, validateLbSelectionBindings } from "./lbSelection";
 import { LB_HEALTH_PROFILE, lbHealthChanges, validateLbHealthBindings } from "./lbHealth";
 import { LB_ADMISSION_PROFILE, lbAdmissionChanges, validateLbAdmissionBindings } from "./lbAdmission";
 // Model 1 saves a pool policy on its LB; keep fixed siblings and expand one named VM.
@@ -76,12 +77,14 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (vmCpuQuotaChanges(design.resources) !== contract.version.includes(`/${VM_CPU_QUOTA_PROFILE}`)) error("VM_CPU_QUOTA_VERSION", "version", "Application CPU quota requires its explicit vm-cpu-quota/1 contract version and matching saved intent");
     if (vmExecutionChanges(design.resources) !== contract.version.includes(`/${VM_EXECUTION_PROFILE}`)) error("VM_EXECUTION_VERSION", "version", "VM execution requires its explicit vm-execution/1 contract version and matching saved intent");
     if (dbConcurrencyChanges(design.resources) !== contract.version.includes(`/${DB_CONCURRENCY_PROFILE}`)) error("DB_CONCURRENCY_VERSION", "version", "Database concurrency requires its explicit data-db-concurrency/1 contract version and matching saved intent");
+    if (lbSelectionChanges(design.resources) !== contract.version.includes(`/${LB_SELECTION_PROFILE}`)) error("LB_SELECTION_VERSION", "version", "Load balancer selection requires lb-selection/1 and matching saved intent");
     if (lbHealthChanges(design.resources) !== contract.version.includes(`/${LB_HEALTH_PROFILE}`)) error("LB_HEALTH_VERSION", "version", "Load balancer health requires its explicit lb-health/1 contract version and matching saved intent");
     if (lbRateLimitChanges(design.resources) !== contract.version.includes(`/${LB_RATE_LIMIT_PROFILE}`)) error("LB_RATE_LIMIT_VERSION", "version", "Load balancer rate limit requires lb-rate-limit/1 and matching saved intent");
     if (lbAdmissionChanges(design.resources) !== contract.version.includes(`/${LB_ADMISSION_PROFILE}`)) error("LB_ADMISSION_VERSION", "version", "Load balancer admission requires its explicit lb-admission/1 contract version and matching saved intent");
     if (contract.applicationFlowProfile !== undefined && !["application-flow/1", "application-flow/2", "application-flow/3"].includes(contract.applicationFlowProfile)) error("UNKNOWN_FLOW_PROFILE", "applicationFlowProfile", "Unsupported flow profile");
     if ((design.resources.some(r => r.applicationFlow?.schema === "application-flow/3") ? "application-flow/3" : design.resources.some(r => r.applicationFlow?.schema === "application-flow/2") ? "application-flow/2" : design.resources.some(r => r.applicationFlow) ? "application-flow/1" : undefined) !== contract.applicationFlowProfile) error("FLOW_PROFILE", "applicationFlowProfile", "Saved flow requires the application-flow/1 adapter");
     if (contract.applicationFlowProfile && !contract.version.endsWith(`/${contract.applicationFlowProfile}`)) error("FLOW_VERSION", "version", "Flow semantic version must identify application-flow/1");
+    if (contract.lbAccountingProfile !== undefined && contract.lbAccountingProfile !== "lb-accounting/1") error("UNKNOWN_LB_ACCOUNTING_PROFILE", "lbAccountingProfile", "Unsupported load balancer accounting profile");
     if (contract.trafficEvidenceProfile !== undefined && contract.trafficEvidenceProfile !== "traffic-evidence/2") error("UNKNOWN_TRAFFIC_PROFILE", "trafficEvidenceProfile", "Unsupported traffic evidence profile");
     if (contract.failureCauseProfile !== undefined && contract.failureCauseProfile !== "failure-cause/1") error("UNKNOWN_CAUSE_PROFILE", "failureCauseProfile", "Unsupported failure cause profile");
     if (design.schema !== "infraforge-saved-design/1" || contract.schema !== "infraforge-product-model2/1" || !contract.version || !contract.designVersion || !contract.catalogVersion || !["product-arrivals/1", "product-arrivals/2"].includes(contract.workloadVersion)) error("VERSION_REQUIRED", "versions", "Explicit design/compiler/application/catalog/workload versions required");
@@ -104,6 +107,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (monitoringError) error("INVALID_MONITORING_POLICY", `resources.${r.id}.monitoringPolicy`, monitoringError);
       const cdnError = cdnCachePolicyError(r.type, r.cdnCachePolicy);
       if (cdnError) error("INVALID_CDN_TTL", `resources.${r.id}.cdnCachePolicy`, cdnError);
+      const selectionError = lbSelectionError(r.type, r.lbSelection);
+      if (selectionError) error("INVALID_LB_SELECTION", `resources.${r.id}.lbSelection`, selectionError);
       const healthError = lbHealthError(r.type, r.lbHealth);
       if (healthError) error("INVALID_LB_HEALTH", `resources.${r.id}.lbHealth`, healthError);
       const rateLimitError = lbRateLimitError(r.type, r.lbRateLimit);
@@ -136,7 +141,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "databaseReplication", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "databaseReplication", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -382,9 +387,10 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateDbConcurrencyBindings(design.resources, runtime);
     validateLbRateLimitBindings(design.resources, runtime);
     validateLbAdmissionBindings(design.resources, runtime);
+    validateLbSelectionBindings(design.resources, runtime);
     validateLbHealthBindings(design.resources, runtime);
     phase = "runtime-contract"; validateMaterializedSemantics(runtime, semantic.edges, new Set(design.resources.filter(r => r.listenerSettings !== undefined).flatMap(r => [...roleIds.entries()].filter(([key]) => key.split("/")[0]!.split("#")[0] === r.id).map(([,id]) => id)))); validateSystems(runtime);
-    return { ok: true, value: canonical({ ...(contract.trafficEvidenceProfile ? { trafficEvidenceProfile: contract.trafficEvidenceProfile } : {}), schema: "infraforge-compiled-product/1", semantic, input: runtime, pools, crashes, ...(interventionReceipts.length ? {interventionReceipts} : {}) }), diagnostics };
+    return { ok: true, value: canonical({ ...(contract.lbAccountingProfile ? { lbAccountingProfile: contract.lbAccountingProfile } : {}), ...(contract.trafficEvidenceProfile ? { trafficEvidenceProfile: contract.trafficEvidenceProfile } : {}), schema: "infraforge-compiled-product/1", semantic, input: runtime, pools, crashes, ...(interventionReceipts.length ? {interventionReceipts} : {}) }), diagnostics };
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : String(cause);
     const code = message.startsWith("Missing listener") ? "MISSING_LISTENER" : message.startsWith("Unsupported resource setting") ? "UNSUPPORTED_RESOURCE_SETTING" : /provenance|Anonymous compiler number/.test(message) ? "MISSING_PROVENANCE" : /Missing.*operation|read\/write operation/.test(message) ? "MISSING_OPERATION_MAPPING" : phase.toUpperCase().replaceAll("-", "_") + "_INCOMPLETE";

@@ -9,4 +9,5 @@ export interface CausalObserver {
   (event: CausalEvent): void;
   // Enables observer-only timing boundaries for newly captured traffic evidence.
   trafficTiming?: true;
+  lbAccounting?: true;
 }

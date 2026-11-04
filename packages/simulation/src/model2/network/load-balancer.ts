@@ -11,6 +11,7 @@ import type { CausalObserver } from "../workload/causal";
 
 interface Request { work: Invocation; done(outcome: RemoteOutcome, cause?: Cause): void; cause?: Cause; receipt?: Receipt; timer?: () => boolean; retryTimer?: () => boolean; attempt: number; backend?: string; retrying: boolean; waiting?: boolean; terminal: boolean }
 export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Map<string, ReturnType<typeof pathTransport>>, operations: Map<string, OperationClass>, seed: string, horizon: number, trace: Trace, causal?: CausalObserver, failureCauseProfile?: "failure-cause/1") {
+  const account = (kind: string, work: Invocation, outcome?: string) => { if (causal?.lbAccounting) causal({ atUs: kernel.now, kind, resource: config.id, work, detail: outcome ? { outcome } : {} }); };
   const timing = (phase: string, work: Invocation, outcome?: string) => { if (causal?.trafficTiming) causal({ atUs: kernel.now, kind: `latency-lb-${phase}`, resource: config.id, work, detail: outcome ? { outcome } : {} }); };
   const members = [...config.backends].sort().map((id) => ({ id, health: config.health.initial === "eligible", draining: false, successes: 0, failures: 0, outstanding: 0, selected: 0, probes: 0, epoch: 0, cancelCheck: undefined as (() => boolean) | undefined }));
   let bucket = config.rateLimit ? tokenBucketState(requireKnown(config.rateLimit.burst, "count"), requireKnown(config.rateLimit.burst, "count"), 1, requireKnown(config.rateLimit.refillEvery, "us"), kernel.now) : undefined;
@@ -45,7 +46,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
     r.cause = undefined;
     if (r.waiting) { retriesWaiting--; r.waiting = false; }
     if (r.attempt && config.retry?.enforceCallerDeadline && kernel.now >= r.work.offeredAt + requireKnown(operations.get(r.work.operation)!.callerTimeout, "us")) { suppress(r, "deadline"); return; }
-    const member = choose(r.backend); if (!member) { trace("lb-failure", r.work.callId, "no-backend", r.work.rootId, r.work.attempt); finish(r, "rejected"); return; }
+    const member = choose(r.backend); if (!member) { account("lb-rejected", r.work); trace("lb-failure", r.work.callId, "no-backend", r.work.rootId, r.work.attempt); finish(r, "rejected"); return; }
     if (r.attempt && config.retry && (activeRetries + (config.retry.reserveBackoffBudget ? retriesWaiting : 0)) >= requireKnown(config.retry.maxConcurrentRetries, "count")) { retryLimited++; suppress(r, "budget"); return; }
     r.attempt++; attempts++; member.outstanding++; member.selected++; r.backend = member.id;
     if (r.attempt > 1) { retries++; activeRetries++; r.retrying = true; }
@@ -56,6 +57,7 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
     trace("lb-selected", work.callId, member.id, work.rootId, work.attempt);
     r.receipt = path(member.id).exchange(work, (result: TransportResult) => {
       member.outstanding--; if (r.retrying) { activeRetries--; r.retrying = false; }
+      account("lb-attempt-terminal", work, result.ok ? "completed" : result.reason);
       if (r.terminal) return;
       r.cause = failureCauseProfile && !result.ok ? result.cause : undefined;
       timing("attempt-terminal", work, result.ok ? "completed" : result.reason);
@@ -125,15 +127,16 @@ export function loadBalancer(config: LoadBalancer, kernel: EventClock, paths: Ma
         const decision = takeToken(bucket, kernel.now); bucket = decision.state;
         causal?.({ atUs: kernel.now, kind: decision.admitted ? "lb-rate-admitted" : "lb-rate-limited", resource: config.id, work, detail: { availableTokens: bucket.tokens } });
         if (!decision.admitted) {
-          rejected++; const cause = failureCauseProfile ? seedCause("rate-limited", config.id) : undefined;
+          rejected++; account("lb-rejected", work); const cause = failureCauseProfile ? seedCause("rate-limited", config.id) : undefined;
           trace("lb-failure", work.callId, "rate-limited", work.rootId, work.attempt, undefined, cause);
           done("rejected", cause); return { admitted: false, state: () => "finished", cancel: () => "already-finished" };
         }
       }
-      if (active.size >= requireKnown(config.maxOutstanding, "count") && pending.size >= requireKnown(config.maxPending, "count")) { rejected++; trace("lb-failure", work.callId, "pending-overflow", work.rootId, work.attempt); done("rejected"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" }; }
+      if (active.size >= requireKnown(config.maxOutstanding, "count") && pending.size >= requireKnown(config.maxPending, "count")) { rejected++; account("lb-rejected", work); trace("lb-failure", work.callId, "pending-overflow", work.rootId, work.attempt); done("rejected"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" }; }
+      if (active.size >= requireKnown(config.maxOutstanding, "count")) account("lb-queued", work);
       timing("admitted", work);
       const r: Request = { work, done, attempt: 0, retrying: false, terminal: false }; pending.set(work.callId, r);
-      r.timer = kernel.schedule(kernel.now + requireKnown(config.pendingTimeout, "us"), 1, JSON.stringify(["lb-pending-timeout", config.id, work.callId]), () => { trace("lb-failure", work.callId, "pending-timeout", work.rootId, work.attempt); finish(r, "rejected"); }); pump();
+      r.timer = kernel.schedule(kernel.now + requireKnown(config.pendingTimeout, "us"), 1, JSON.stringify(["lb-pending-timeout", config.id, work.callId]), () => { account("lb-rejected", work); trace("lb-failure", work.callId, "pending-timeout", work.rootId, work.attempt); finish(r, "rejected"); }); pump();
       return { admitted: true, state: () => r.terminal ? "finished" : pending.has(work.callId) ? "queued" : "waiting", cancel: () => {
         if (r.terminal) return "already-finished";
         finish(r, "cancelled"); r.receipt?.cancel(); return "cancelled";

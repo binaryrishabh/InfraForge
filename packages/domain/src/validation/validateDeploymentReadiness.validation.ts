@@ -16,6 +16,7 @@ import { vmExecutionError } from "../resource/VmExecution.interface";
 import { databaseReplicationError } from "../resource/DatabaseReplication.interface";
 import { dbConcurrencyError } from "../resource/DbConcurrency.interface";
 import { lbAdmissionError } from "../resource/LbAdmission.interface";
+import { lbSelectionError } from "../resource/LbSelection.interface";
 import { lbHealthError } from "../resource/LbHealth.interface";
 
 // Function to validete the above defined rules
@@ -73,6 +74,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
         if (rateLimitMessage) errors.push(`${resource.id}: ${rateLimitMessage}`);
         const admissionMessage = lbAdmissionError(resource.type, resource.lbAdmission);
         if (admissionMessage) errors.push(`${resource.id}: ${admissionMessage}`);
+        const selectionMessage = lbSelectionError(resource.type, resource.lbSelection);
+        if (selectionMessage) errors.push(`${resource.id}: ${selectionMessage}`);
         const healthMessage = lbHealthError(resource.type, resource.lbHealth);
         if (healthMessage) errors.push(`${resource.id}: ${healthMessage}`);
     }

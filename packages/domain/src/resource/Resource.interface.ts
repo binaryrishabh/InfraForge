@@ -9,6 +9,7 @@ import type { VmCpuQuota } from "./VmCpuQuota.interface";
 import type { VmExecution } from "./VmExecution.interface";
 import type { DbConcurrency } from "./DbConcurrency.interface";
 import type { LbAdmission } from "./LbAdmission.interface";
+import type { LbSelection } from "./LbSelection.interface";
 import type { LbHealth } from "./LbHealth.interface";
 import type { CircuitBreakerSettings } from "./CircuitBreakerSettings.interface";
 import type { ResourceType } from "./RESOURCE_TYPES.constants";
@@ -39,6 +40,7 @@ export interface Resource {
   lbRateLimit?: LbRateLimit;
   lbAdmission?: LbAdmission;
   lbHealth?: LbHealth;
+  lbSelection?: LbSelection;
   listenerSettings?: ListenerSettings;
   firewallSettings?: FirewallSettings;
   applicationFlow?: ApplicationFlow;

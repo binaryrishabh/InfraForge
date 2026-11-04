@@ -58,6 +58,7 @@ export function runRetryStudy(failure: StudyFailure, policy: StudyPolicy, readFr
   if (!compiled.ok) throw Error(JSON.stringify(compiled.diagnostics));
   if (slow) installSlowFault(compiled.value, contract, failure);
   const outcomes = new Map<string, string>();
+  let callerTerminals = 0, duplicateCallerTerminals = 0;
   const callers = new Map<string, { offeredAt: number; operation: string }>();
   const retriesByRoot = new Map<string, number>(), ambiguousWrites = new Set<string>();
   const dbAdmissionsByRoot = new Map<string, number>(), dbLiveByRoot = new Map<string, number>(), callerStopped = new Set<string>();
@@ -77,6 +78,7 @@ export function runRetryStudy(failure: StudyFailure, policy: StudyPolicy, readFr
     const root = rootOf(event);
     if (event.kind === "caller-offered" && root) callers.set(root, { offeredAt: event.atUs, operation: event.work!.operation });
     if (root && event.kind === "caller-terminal") {
+      callerTerminals++; if (outcomes.has(root)) duplicateCallerTerminals++;
       outcomes.set(root, String(event.detail.outcome));
       callerStopped.add(root);
       if (slow && isResponseStudy(failure) && event.detail.outcome === "rejected" && chainRoot === undefined) {
@@ -137,6 +139,7 @@ export function runRetryStudy(failure: StudyFailure, policy: StudyPolicy, readFr
   const dbPaths = evidence.network.paths.filter((p) => p.target === "db");
   const pathReason = (reason: string) => dbPaths.reduce((sum, p) => sum + (p.reasons[reason] ?? 0), 0);
   const summary = { failure, policy, readFraction, originalRequests: evidence.counts.offered, attempts: lb.attempts, retries: lb.retries,
+    callerTerminals, duplicateCallerTerminals,
     retriesWaiting: lb.retriesWaiting ?? null, peakRetriesWaiting: policy === "disabled" ? null : peakWaiting, peakExecuting, peakBudget,
     suppressed: lb.suppressedByReason ?? null, caller: evidence.counts,
     databaseCalls: dbPaths.reduce((sum, p) => sum + p.offered, 0), databaseAdmitted: db.transactions.admitted, databaseCommitted: db.transactions.committed,
