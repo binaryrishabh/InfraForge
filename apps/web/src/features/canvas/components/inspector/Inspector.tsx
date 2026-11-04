@@ -18,6 +18,7 @@ import { LbHealthSection } from "./LbHealthSection";
 import { CachePolicySection } from "./CachePolicySection";
 import { MonitoringCadenceSection } from "./MonitoringCadenceSection";
 import { MonitoringBufferSection } from "./MonitoringBufferSection";
+import { DnsCacheSection } from "./DnsCacheSection";
 import { CdnTtlSection } from "./CdnTtlSection";
 import { FlowSection } from "./FlowSection";
 import { AsyncSection } from "./AsyncSection";
@@ -84,6 +85,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
       {resource.type === "Event Bus" && <EventBusSection resource={resource} disabled={locked} />}
       {resource.type === "Monitoring Agent" && <MonitoringCadenceSection key={`monitoring-cadence-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Monitoring Agent" && <MonitoringBufferSection key={`monitoring-buffer-${resource.id}`} resource={resource} disabled={locked} />}
+      {resource.type === "DNS" && <DnsCacheSection key={`dns-cache-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "CDN" && <CdnTtlSection key={`cdn-ttl-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <AutoscalingSection key={`pool-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <LbRateLimitSection resource={resource} disabled={locked} />}

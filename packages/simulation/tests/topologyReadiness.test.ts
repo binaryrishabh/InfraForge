@@ -29,14 +29,14 @@ const supported = [
   asyncDesign(), eventBusDesign(), gatewayDesign(),
 ];
 
-for (const [i, d] of supported.entries()) test(`supported topology ${i}: drawable, ready and compiled`, () => {
+for (const [i, d] of supported.entries()) test(`regression: supported topology ${i}: drawable, ready and compiled`, () => {
   expect(contractFromDesign(d)).not.toHaveProperty("refused");
   for (const e of d.connections) expect(validateConnection(e.sourceType as Resource["type"], e.targetType as Resource["type"], "draw").valid).toBe(true);
   expect(validateModel2Readiness(d.resources, d.connections).valid).toBe(true);
 });
 
 for (const type of Object.values(RESOURCE_TYPES)) {
-  test(`policy attachments and monitoring eligibility: ${type}`, () => {
+  test(`regression: policy attachments and monitoring eligibility: ${type}`, () => {
     expect(validateConnection("Firewall", type, "draw").valid).toBe(type !== "Firewall");
     expect(validateConnection("Monitoring Agent", type, "draw").valid).toBe(type !== "Firewall");
     // Event Bus v1 accepts only one publisher and its subscription queues; an observer link is refused as not runnable.

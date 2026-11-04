@@ -36,6 +36,7 @@ export interface Resource {
   objectStoragePolicy?: ObjectStoragePolicy;
   dataKeyspace?: DataKeyspace;
   cachePolicy?: CachePolicy;
+  dnsCachePolicy?: import("./DnsCachePolicy.interface").DnsCachePolicy;
   cdnCachePolicy?: CdnCachePolicy;
   monitoringPolicy?: MonitoringPolicy;
   dbConcurrency?: DbConcurrency;
