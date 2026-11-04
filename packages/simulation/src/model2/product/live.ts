@@ -15,6 +15,8 @@ export type LiveHealth = "healthy" | "degraded" | "saturated" | "failed" | "unkn
 export interface LiveNodeMetrics {
   lbAccounting?: import("@infraforge/contracts/telemetry").LbAccountingMetrics;
   gateway?: import("@infraforge/contracts/telemetry").ResourceMetrics["gateway"];
+  serverless?: import("@infraforge/contracts/telemetry").ResourceMetrics["serverless"];
+  scheduler?: import("@infraforge/contracts/telemetry").ResourceMetrics["scheduler"];
   eventBus?: import("@infraforge/contracts/telemetry").ResourceMetrics["eventBus"];
   vmMemory?: import("@infraforge/contracts/telemetry").VmMemoryMetrics;
   rateLimit?: import("@infraforge/contracts/telemetry").LbRateLimitMetrics;
@@ -170,6 +172,21 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         const workers = compiled.input.resources.filter((r) => r.kind === "async-worker" && r.broker === resource.id).map((r) => runtime.inspectWorker(r.id));
         if (metrics[resource.id] && queue && queue.ready > 0 && metrics[resource.id]!.health === "healthy") metrics[resource.id]!.health = "degraded";
         if (metrics[resource.id]) metrics[resource.id]!.asyncQueue = { version: 2, failedAttempts: workers.length && workers.every(Boolean) ? workers.reduce((n, w) => n + w!.failed, 0) : null, wastedCpuSeconds: workers.length && workers.every(Boolean) ? workers.reduce((n, w) => n + w!.failedCpuUs, 0) / SECOND : null, deadLetterOverflowDiscards: queue?.dlqOverflow ?? null, published: queue?.accepted ?? null, completed: workers.length && workers.every(Boolean) ? workers.reduce((n, w) => n + w!.processed, 0) : null, readyDepth: queue?.ready ?? null, oldestReadyAgeSeconds: queue?.oldestReadyAgeUs == null ? null : queue.oldestReadyAgeUs / SECOND, inFlight: queue?.inFlight ?? null, redeliveries: queue?.redelivered ?? null, deadLettered: queue?.deadLettered ?? null };
+      }
+      for (const resource of compiled.input.resources) if (resource.kind === "serverless" && metrics[resource.id]) {
+        const fn = runtime.inspectFunction(resource.id);
+        if (fn) {
+          const { id: _id, events: _events, omitted: _omitted, scope: _scope, ...counts } = fn;
+          metrics[resource.id]!.serverless = { version: 1, ...counts };
+          metrics[resource.id]!.cpu = null; metrics[resource.id]!.memory = null;
+        }
+      }
+      for (const resource of compiled.input.resources) if (resource.kind === "scheduler" && metrics[resource.id]) {
+        const timer = runtime.inspectScheduler(resource.id);
+        if (timer) {
+          const { id: _id, events: _events, omitted: _omitted, guarantee: _guarantee, ...counts } = timer;
+          metrics[resource.id]!.scheduler = { version: 1, ...counts };
+        }
       }
       for (const resource of compiled.input.resources) if (resource.kind === "event-bus" && metrics[resource.id]) {
         const bus = runtime.inspectEventBus(resource.id);

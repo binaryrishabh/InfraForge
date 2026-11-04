@@ -7,12 +7,12 @@ describe("resource and workload vocabulary", () => {
   test("preserves resource labels and listening ports", () => {
     expect(Object.values(RESOURCE_TYPES)).toEqual([
       "DNS", "CDN", "Firewall", "Load Balancer", "Virtual Machine",
-      "Container Registry", "Cache", "Database", "Object Storage", "Message Queue", "Monitoring Agent", "API Gateway", "Event Bus",
+      "Container Registry", "Cache", "Database", "Object Storage", "Message Queue", "Monitoring Agent", "API Gateway", "Serverless Function", "Scheduler", "Event Bus",
     ]);
     expect(RESOURCE_PORTS).toEqual({
       DNS: 53, CDN: 443, Firewall: 443, "Load Balancer": 80, "Virtual Machine": 80,
       "Container Registry": 443, Cache: 6379, Database: 5432, "Object Storage": 443,
-      "Message Queue": 5672, "Monitoring Agent": 9090, "Event Bus": 443, "API Gateway": 443,
+      "Message Queue": 5672, "Monitoring Agent": 9090, "Event Bus": 443, "API Gateway": 443, Scheduler: 443, "Serverless Function": 443,
     });
   });
 

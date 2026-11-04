@@ -1,0 +1,2 @@
+import { z } from "zod";
+export const ServerlessSettingsSchema = z.object({ version: z.literal(1), concurrency: z.number().int().min(1).max(128).optional(), initializationMs: z.number().int().min(0).max(60000).optional(), durationMs: z.number().int().min(1).max(60000).optional(), timeoutMs: z.number().int().min(1).max(60000).optional(), idleExpiryMs: z.number().int().min(1).max(3600000).optional(), failurePercent: z.number().int().min(0).max(100).optional() }).strict();

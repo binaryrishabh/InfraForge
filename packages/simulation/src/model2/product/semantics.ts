@@ -2,6 +2,8 @@ import { requireKnown } from "../../reality/quantity";
 import type { SystemsInput } from "../systems/contracts";
 import type { SemanticSpec } from "./contracts";
 const fields: Record<string, string[]> = {
+  serverless: ["profile", "execution", "concurrency", "initialization", "duration", "timeout", "idleExpiry", "failurePercent", "database"],
+  scheduler: ["profile", "execution", "target", "operation", "start", "period", "maxTriggers", "overlap", "maxConcurrent", "queueCapacity", "maxAttempts", "retryDelay", "timeout", "maxLateness", "missed"],
   "api-gateway": ["requestEnvelopeBytes", "profile", "maxRequestBytes", "maxInFlight", "upstreamTimeout", "routes"],
   "event-bus": ["profile", "subscriptions", "capacityMessages", "maxAttempts", "retryDelay", "deliveryTimeout", "deadLetterCapacity"],
   compute: ["cores", "workers", "scheduler", "quota", "memory", "queueCapacity", "profiles", "context", "cancellation", "downstream", "downstreamByOperation", "applicationFlow"],

@@ -11,7 +11,9 @@ import { resolveModel } from "../src/model2/registry";
 function compiled(options: Parameters<typeof productFixture>[0] = {}) { const f = productFixture(options), c = compileProduct(f.design, f.contract); if (!c.ok) throw Error(JSON.stringify(c.diagnostics)); return { ...f, compiled: c.value }; }
 test("same saved Resource/ConnectionLine/Workload objects compile all eleven mechanisms and run actual evidence", () => {
   const f = compiled(), r = createProductModel2(f.compiled); r.advanceTo(r.horizon); const e = r.evidence();
-  expect(f.compiled.semantic.nodes).toHaveLength(11); expect(Object.keys(TRANSLATION_OWNERS)).toHaveLength(13);
+  expect(f.compiled.semantic.nodes).toHaveLength(11); expect(Object.keys(TRANSLATION_OWNERS)).toHaveLength(15);
+  expect(TRANSLATION_OWNERS.Scheduler.kinds).toEqual(["scheduler"]);
+  expect(TRANSLATION_OWNERS["Serverless Function"].kinds).toEqual(["serverless"]);
   expect(e.counts.offered).toBeGreaterThan(100); expect(e.counts.completed).toBeGreaterThan(0);
   expect(e.systems.resolvers[0]!.authoritativeLookups).toBeGreaterThan(0);
   expect(e.systems.cdns[0]!.originRequests).toBeGreaterThan(0);
@@ -81,7 +83,8 @@ test("manual desired capacity drains actual active work and terminates within au
   r.advanceTo(85000); expect(r.evidence().product.controllers[0]!.replicas[1]!.state).toBe("terminated");
 });
 test("unsupported memory/disk and managed-resource CPU chaos stay unavailable; CPU spike owns real core-time", () => {
-  expect(Object.keys(CHAOS_COMPATIBILITY)).toHaveLength(13);
+  expect(Object.keys(CHAOS_COMPATIBILITY)).toHaveLength(15);
+  for (const type of ["Scheduler", "Serverless Function"] as const) expect(CHAOS_COMPATIBILITY[type].Crash).toStartWith("unavailable:");
   for (const kind of ["MemoryLeak", "DiskFailure", "CpuSpike"] as const) { const f = productFixture(); f.contract.faults.push({ id: "bad", kind, target: "db", at: f.q.q("bad.at", 40000, "us"), duration: f.q.q("bad.duration", 1000, "us"), cpu: f.q.q("bad.cpu", 1000, "cpu-us"), parallelism: f.q.q("bad.parallel", 1, "cores") }); expect(compileProduct(f.design, f.contract).ok).toBe(false); }
   const f = productFixture(); f.contract.faults.push({ id: "spike", kind: "CpuSpike", target: "vm", at: f.q.q("spike.at", 20000, "us"), duration: f.q.q("spike.duration", 10000, "us"), cpu: f.q.q("spike.cpu", 10000, "cpu-us"), parallelism: f.q.q("spike.parallel", 1, "cores") }); const c = compileProduct(f.design, f.contract); if (!c.ok) throw Error(JSON.stringify(c)); const r = createProductModel2(c.value); r.advanceTo(30000); expect(r.evidence().resources.find((r) => r.id === "vm#0")!.compute!.cpu.competitorCoreUs).toBeGreaterThan(0);
 });

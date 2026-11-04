@@ -1,3 +1,5 @@
+import { ServerlessReadings } from "./ServerlessReadings";
+import { SchedulerReadings } from "./SchedulerReadings";
 import { VmMemoryReadings } from "./VmMemoryReadings";
 import { LbRateLimitReadings } from "./LbRateLimitReadings";
 import { RESOURCE_TYPES, type Resource } from "@infraforge/domain/resource";
@@ -47,6 +49,8 @@ export function NodeLive({ deploymentId, resource, resources, controls, ended = 
       {resource.type === "Database" && <DatabaseReplicationReadings metrics={metric} />}
       {(resource.lbRateLimit || metric?.rateLimit) && <LbRateLimitReadings metrics={metric?.rateLimit} />}
       <DataDeliveryReadings type={resource.type} metrics={metric} />
+      {resource.type === "Serverless Function" && <ServerlessReadings metrics={metric?.serverless} />}
+      {resource.type === "Scheduler" && <SchedulerReadings metrics={metric?.scheduler} />}
       {resource.type === "Event Bus" && <EventBusReadings metrics={metric?.eventBus} />}
       {resource.type === "API Gateway" && <GatewayReadings metrics={metric?.gateway} />}
       <ObservabilityReadings type={resource.type} metrics={metric} />
