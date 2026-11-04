@@ -16,7 +16,7 @@ function design(policy: "primary-only" | "replica-preferred") {
 
 test("read routing refuses absent, duplicate, mismatched and unowned captured profiles and materialized policies", () => {
   const saved = design("replica-preferred"), f = prepareDatabase(saved);
-  expect(contractFromDesign(saved, {})).toHaveProperty("refused");
+  expect(contractFromDesign(saved, { failureCause: false })).toHaveProperty("refused");
   for (const adapterProfiles of [[], ["db-read-routing/1", "db-read-routing/1"]] as const) expect(contractFromDesign(saved, { adapterProfiles: [...adapterProfiles] as AdapterProfile[] })).toHaveProperty("refused");
   expect(contractFromDesign(databaseDesign(), { adapterProfiles: ["db-read-routing/1"] })).toHaveProperty("refused");
   for (const version of ["", "/db-read-routing/2", "/db-read-routing/1/db-read-routing/1"]) {
