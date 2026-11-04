@@ -34,7 +34,8 @@ export async function advanceTickBatch(instance: SimulationInstance, complete: (
     // Catching up after an action uses the same budget; the run resumes once it is caught up.
     if ((i > 0 && remaining <= 0) || !instance.model2.catchUp(Math.max(0, remaining))) break;
     instance.pendingLogs.push(...instance.model2.advance());
-    instance.accumulatedCostUsd += instance.model2.burnRatePerHourUsd() / 3600;
+    const burn = instance.model2.burnRatePerHourUsd();
+    instance.accumulatedCostUsd = burn === undefined || instance.accumulatedCostUsd === undefined ? undefined : instance.accumulatedCostUsd + burn / 3600;
     instance.metricsComputedAt = new Date().toISOString();
     instance.metricsTopologyRevision = instance.topologyRevision;
     instance.tickCount += 1;

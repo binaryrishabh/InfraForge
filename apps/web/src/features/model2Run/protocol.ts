@@ -26,7 +26,7 @@ export type ToWorker =
   | { type: "action"; id: string; request: ActionRequest }
   | { type: "stop" };
 export type FromWorker =
-  | { type: "second"; applicationFlow?: ApplicationFlowEvidence; view: LiveView; interventions: {options: InterventionOption[]; remainingSeconds: number}; logs: SimulationLog[]; burnRatePerHourUsd: number }
+  | { type: "second"; applicationFlow?: ApplicationFlowEvidence; view: LiveView; interventions: {options: InterventionOption[]; remainingSeconds: number}; logs: SimulationLog[]; burnRatePerHourUsd: number | undefined }
   | { type: "action"; id: string; ok: true; outcome: ActionOutcome }
   | { type: "action"; id: string; ok: false; message: string }
   | { type: "done"; submission: RunSubmission }

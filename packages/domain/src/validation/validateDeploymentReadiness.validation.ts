@@ -1,3 +1,5 @@
+import { apiGatewayError } from "../resource/ApiGateway.interface";
+import { eventBusError } from "../resource/EventBus.interface";
 import { lbRateLimitError } from "../resource/LbRateLimit.interface";
 import { RESOURCE_TYPES, type ResourceType } from "../resource/RESOURCE_TYPES.constants";
 import type { ConnectionLine } from "../resource/ConnectionLine.interface";
@@ -48,6 +50,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
     const errors: string[] = [];
     const warnings: string[] = [];
     for (const resource of resources) {
+        const gatewayMessage = apiGatewayError(resource.type, resource.apiGateway); if (gatewayMessage) errors.push(`${resource.id}: ${gatewayMessage}`);
+        const busMessage = eventBusError(resource.type, resource.eventBus); if (busMessage) errors.push(`${resource.id}: ${busMessage}`);
         const firewallMessage = firewallCapacityError(resource.type, resource.firewallCapacity);
         if (firewallMessage) errors.push(`${resource.id}: ${firewallMessage}`);
         const objectMessage = objectStoragePolicyError(resource.type, resource.objectStoragePolicy);

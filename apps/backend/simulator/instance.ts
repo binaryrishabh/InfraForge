@@ -15,7 +15,7 @@ export interface SimulationInstance {
   evidence?: EvidenceBuffer | null;
   model2: Model2Engine;
   tickCount: number; pendingLogs: SimulationLog[]; speed: number;
-  lastCheckpointAt: number; accumulatedCostUsd: number; topology: RunTopology; topologyRevision: number;
+  lastCheckpointAt: number; accumulatedCostUsd: number | undefined; topology: RunTopology; topologyRevision: number;
   actions: Map<string, RunningAction>;
   metricsComputedAt: string | null;
   metricsTopologyRevision: number;

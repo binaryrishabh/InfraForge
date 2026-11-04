@@ -25,8 +25,8 @@ interface SimulationStoreState {
   spawnedVms: SpawnedVmInfo[];
   restarting: string[];
   speed: number;
-  burnRatePerHourUsd: number;
-  accumulatedCostUsd: number;
+  burnRatePerHourUsd: number | undefined;
+  accumulatedCostUsd: number | undefined;
   cpuHistory: Record<string, number[]>;
   activeChaos: ChaosEffect[];
   // A fault has been active at some point in this run. Cleared when a new run is prepared.
@@ -120,8 +120,8 @@ export const useSimulationStore = create<SimulationStoreState>()((set, get) => (
         spawnedVms: snapshot.spawnedVms ?? [],
         restarting: snapshot.restarting ?? [],
         speed: snapshot.speed ?? 1,
-        burnRatePerHourUsd: snapshot.burnRatePerHourUsd ?? 0,
-        accumulatedCostUsd: snapshot.accumulatedCostUsd ?? 0,
+        burnRatePerHourUsd: snapshot.burnRatePerHourUsd,
+        accumulatedCostUsd: snapshot.accumulatedCostUsd,
         cpuHistory: nextCpuHistory,
         activeChaos: chaosChanged ? incomingChaos : previousChaos,
         faultSeen: prev.faultSeen || incomingChaos.length > 0,

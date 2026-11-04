@@ -1,5 +1,7 @@
 import type { ResourceTemplate } from "./contracts";
 export const TRANSLATION_OWNERS = {
+  "API Gateway": { kinds: ["api-gateway"], owner: "gateway/run", requires: "exact routes, independent shared token-bucket budgets, request bounds and upstream paths" },
+  "Event Bus": { kinds: ["event-bus"], owner: "eventbus/run", requires: "independent bounded subscriptions, delivery paths, retries and logical dead letters" },
   DNS: { kinds: ["dns-authority", "dns-resolver"], owner: "systems/dns", requires: "A records/TTL/generation or explicit authority, cache capacity, command demand and bootstrap transport" },
   CDN: { kinds: ["cdn"], owner: "systems/cdn", requires: "origin, object key mapping, byte capacity/TTL/coalescing, command demand" },
   Firewall: { kinds: [], owner: "systems/security", requires: "ordered-stateful policy/rules/flow limit and explicit path attachments; no transit capacity" },

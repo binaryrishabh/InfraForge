@@ -50,13 +50,13 @@ export function createBrowserRuns(deps: BrowserRunDeps) {
     const { lifetimeRemainingSeconds, ...start }: Omit<RunStart, "speed"> & { lifetimeRemainingSeconds?: number } = (await deps.http.get(`${deps.apiUrl}/deployments/${deploymentId}/browser-run`)).data.browserRun;
     const status = useBrowserRunStatus.getState();
     status.set(deploymentId, { kind: "running" });
-    let costUsd = 0;
+    let costUsd: number | undefined = 0;
     const entry: NonNullable<ReturnType<typeof browserRunFor>> = { speed: 1, controls: null as unknown as Controls, interventions: null };
     const finish = () => { clearTimeout(entry.autoStop); active.delete(deploymentId); };
     entry.controls = deps.startRun({ ...start, speed: 1 }, {
       onSecond: ({ view, logs, burnRatePerHourUsd, applicationFlow, interventions }) => {
         entry.interventions = interventions;
-        costUsd += burnRatePerHourUsd / 3600;
+        costUsd = burnRatePerHourUsd === undefined || costUsd === undefined ? undefined : costUsd + burnRatePerHourUsd / 3600;
         const snapshot: SimulationSnapshot = { ...(applicationFlow ? { applicationFlow } : {}), deploymentId, timestamp: new Date().toISOString(), simulatedSeconds: view.simulatedSeconds,
           loadFraction: view.loadFraction, metrics: view.metrics, logs, health: view.overallHealth, pools: view.pools, spawnedVms: [], restarting: [],
           activeChaos: view.activeChaos, speed: entry.speed, burnRatePerHourUsd, accumulatedCostUsd: costUsd, traffic: view.traffic };

@@ -12,7 +12,7 @@ worker runs, and it never reveals what the run itself will measure, including th
 security scan, which several challenges ask the learner to predict. */
 export function preflight(definition: ChallengeDefinition, topology: Topology): ChallengePreflight {
   const readiness = validateModel2Readiness(topology.resources, topology.connectionLines, { workload: definition.workload });
-  const monthly = runCostEstimation(topology.resources).details as { monthlyEstimate: number };
+  const monthly = runCostEstimation(topology.resources).details as { monthlyEstimate?: number };
   const checks: PreflightCheck[] = definition.criteria.map((c) => {
     const base = { id: c.id, label: c.label };
     switch (c.kind) {
@@ -27,6 +27,7 @@ export function preflight(definition: ChallengeDefinition, topology: Topology): 
         return { ...base, status: generic.length ? "problem" : "ok", detail: generic.length ? `Choose a size for ${list(generic)}.` : "All sized from the catalog." };
       }
       case "monthly-budget":
+        if (monthly.monthlyEstimate === undefined) return { ...base, status: "problem", detail: "Model cost Unknown for this design." };
         return { ...base, status: monthly.monthlyEstimate <= c.maxUsd ? "ok" : "problem", detail: `Currently $${monthly.monthlyEstimate.toFixed(2)} a month.` };
       case "security-clean":
         return { ...base, status: "during-run", detail: "Checked by the security scan when the attempt runs." };

@@ -74,7 +74,7 @@ export const NodeCard = memo(function NodeCard({ resource, mode }: { resource: R
         {mode === "design" ? (
           <div className="mt-auto pt-2">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="if-num text-[15px] font-semibold text-ink">{capacity.value.toLocaleString()} <span className="text-[11px] text-ink-3">{capacity.unit}</span></span>
+              <span className="if-num text-[15px] font-semibold text-ink">{capacity.value?.toLocaleString() ?? "Unknown"} <span className="text-[11px] text-ink-3">{capacity.unit}</span></span>
               <span className="if-num truncate text-[11px] text-ink-2">{resource.skuId ?? "generic"}</span>
             </div>
             {pool && <p className="if-num mt-0.5 truncate text-[10.5px] text-ink-3">autoscaling · target {resource.autoscaling?.targetCpu ?? SIMULATION_CONSTANTS.AUTOSCALING.DEFAULT_TARGET_CPU}% CPU</p>}

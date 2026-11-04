@@ -22,7 +22,11 @@ export async function checkHonestReruns(harness: LocalHarness, sessions: Session
   // The source ran 120 simulated seconds with no actions, exactly as the server replays a run.
   const model2 = createModel2Engine(input, 120, buildModel2Contract);
   let cost = 0;
-  for (let i = 0; i < 120; i++) { model2.advance(); cost += model2.burnRatePerHourUsd() / 3600; }
+  for (let i = 0; i < 120; i++) {
+    model2.advance(); const burn = model2.burnRatePerHourUsd();
+    if (burn === undefined) throw Error("Rerun fixture requires a priced design");
+    cost += burn / 3600;
+  }
   const instance: SimulationInstance = { model2, tickCount: 120, pendingLogs: [], speed: 1, lastCheckpointAt: 0,
     accumulatedCostUsd: cost, topology: layout, topologyRevision: 0, actions: new Map(), acknowledge: null,
     metricsComputedAt: new Date().toISOString(), metricsTopologyRevision: 0 };
