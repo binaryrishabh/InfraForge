@@ -5,6 +5,8 @@ import { validateModel2Readiness } from "../src/model2/product/readiness";
 import { contractFromDesign } from "../src/model2/product/fromDesign";
 import type { SavedProductDesign } from "../src/model2/product/contracts";
 import { design as asyncDesign } from "./asyncCanvas.fixture";
+import { eventBusDesign } from "./eventBus.fixture";
+import { gatewayDesign } from "./apiGateway.fixture";
 
 function design(types: Record<string, Resource["type"]>, links: [string, string][] = []): SavedProductDesign {
   return { schema: "infraforge-saved-design/1", resources: Object.entries(types).map(([id, type]) => ({ id, type, x: 0, y: 0 })),
@@ -24,7 +26,7 @@ const supported = [
   design({ app: "Virtual Machine", store: "Object Storage" }, [["app", "store"]]),
   design({ app: "Virtual Machine", queue: "Message Queue" }, [["app", "queue"]]),
   design({ monitor: "Monitoring Agent", app: "Virtual Machine" }, [["monitor", "app"]]),
-  asyncDesign(),
+  asyncDesign(), eventBusDesign(), gatewayDesign(),
 ];
 
 for (const [i, d] of supported.entries()) test(`supported topology ${i}: drawable, ready and compiled`, () => {
@@ -37,7 +39,8 @@ for (const type of Object.values(RESOURCE_TYPES)) {
   test(`policy attachments and monitoring eligibility: ${type}`, () => {
     expect(validateConnection("Firewall", type, "draw").valid).toBe(type !== "Firewall");
     expect(validateConnection("Monitoring Agent", type, "draw").valid).toBe(type !== "Firewall");
-    if (type === "Firewall") return;
+    // Event Bus v1 accepts only one publisher and its subscription queues; an observer link is refused as not runnable.
+    if (type === "Firewall" || type === "Event Bus") return;
     const base = supported.find(d => d.resources.some(r => r.type === type))!;
     for (const source of ["Firewall", "Monitoring Agent"] as const) {
       const d = structuredClone(base), target = d.resources.find(r => r.type === type)!;
