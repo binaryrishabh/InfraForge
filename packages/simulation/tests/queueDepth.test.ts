@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { depthSetup } from "./queueDepth.fixture";
 import { contractFromDesign, currentAdapterProfiles } from "../src/model2/product/fromDesign";
 import { compileProduct } from "../src/model2/product/compiler";
+import { design, prepare } from "./asyncCanvas.fixture";
 
 test("saved acknowledgement delay drives real lease expiry, duplicate objects and dead letters", () => {
   const immediate = depthSetup(0), delayed = depthSetup(2000);
@@ -45,7 +46,7 @@ test("crash after the result retains broker ownership and waits for lease expiry
   expect(received[1]!.at - received[0]!.at).toBeGreaterThanOrEqual(5_000_000);
 });
 
-test("delay intent requires its captured profile and compiler binding, including zero and disabled workers", () => {
+test("delay intent requires its captured profile and compiler binding, including explicit zero", () => {
   for (const delay of [0, 2000]) {
     const f = depthSetup(delay), profiles = currentAdapterProfiles(f.saved.resources);
     expect(profiles).toContain("queue-ack-delay/1");
@@ -61,6 +62,15 @@ test("delay intent requires its captured profile and compiler binding, including
   const worker = old.contract.nodes.worker!.resources[0]!.config;
   if (worker.kind !== "async-worker" || worker.ackDelay.kind !== "known") throw Error("Missing delay");
   worker.ackDelay.value = 1000; expect(compileProduct(old.saved, old.contract).ok).toBe(false);
+});
+
+test("disabled worker delay is saved for re-enable without producing a consumer", () => {
+  const saved = design(false);
+  saved.resources.find(r => r.id === "app")!.asyncWorker = { enabled: false, acknowledgementDelayMs: 2000 };
+  const f = prepare(saved);
+  expect(currentAdapterProfiles(saved.resources)).toEqual(["queue-ack-delay/1"]);
+  expect(f.compiled.input.resources.some(r => r.kind === "async-worker")).toBe(false);
+  expect(saved.resources.find(r => r.id === "app")!.asyncWorker!.acknowledgementDelayMs).toBe(2000);
 });
 
 test("delay runs are deterministic across stepping and bounded local credit", () => {
