@@ -5,7 +5,7 @@ const fields: Record<string, string[]> = {
   "api-gateway": ["requestEnvelopeBytes", "profile", "maxRequestBytes", "maxInFlight", "upstreamTimeout", "routes"],
   "event-bus": ["profile", "subscriptions", "capacityMessages", "maxAttempts", "retryDelay", "deliveryTimeout", "deadLetterCapacity"],
   compute: ["cores", "workers", "scheduler", "quota", "memory", "queueCapacity", "profiles", "context", "cancellation", "downstream", "downstreamByOperation", "applicationFlow"],
-  relational: ["replication", "semantics", "execution", "maxSessions", "activeTransactions", "pendingQueries", "keys", "initial", "plans", "access"],
+  relational: ["readRouting", "replication", "semantics", "execution", "maxSessions", "activeTransactions", "pendingQueries", "keys", "initial", "plans", "access"],
   cache: ["semantics", "execution", "capacity", "entryOverhead", "policy", "ttl", "initial", "commandCpu"],
   "cache-aside": ["execution", "cache", "database", "keys", "access", "coalesce", "onCacheFailure", "invalidateWrites", "operations"],
   "load-balancer": ["rateLimit", "backends", "policy", "maxOutstanding", "maxPending", "pendingTimeout", "health", "retry"],

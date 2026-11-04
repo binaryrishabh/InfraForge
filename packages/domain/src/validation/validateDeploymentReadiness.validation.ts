@@ -15,6 +15,7 @@ import { cdnCachePolicyError } from "../resource/CdnCachePolicy.interface";
 import { vmMemoryError } from "../resource/VmMemory.interface";
 import { vmCpuQuotaError } from "../resource/VmCpuQuota.interface";
 import { vmExecutionError } from "../resource/VmExecution.interface";
+import { databaseReadRoutingError } from "../resource/DatabaseReadRouting.interface";
 import { databaseReplicationError } from "../resource/DatabaseReplication.interface";
 import { dbConcurrencyError } from "../resource/DbConcurrency.interface";
 import { lbAdmissionError } from "../resource/LbAdmission.interface";
@@ -70,6 +71,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
         if (quotaMessage) errors.push(`${resource.id}: ${quotaMessage}`);
         const executionMessage = vmExecutionError(resource.type, resource.vmExecution, resource.asyncWorker?.enabled);
         if (executionMessage) errors.push(`${resource.id}: ${executionMessage}`);
+        const routingMessage = databaseReadRoutingError(resource.type, resource.databaseReadRouting, resource.databaseReplication);
+        if (routingMessage) errors.push(`${resource.id}: ${routingMessage}`);
         const replicationMessage = databaseReplicationError(resource.type, resource.databaseReplication);
         if (replicationMessage) errors.push(`${resource.id}: ${replicationMessage}`);
         const concurrencyMessage = dbConcurrencyError(resource.type, resource.dbConcurrency);

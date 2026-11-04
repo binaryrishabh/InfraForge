@@ -77,7 +77,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
   const cores = new Map<string, number>();
   for (const r of resources) {
     const q = r.cores ?? r.execution?.cores;
-    if (q?.kind === "known" && typeof q.value === "number") cores.set(r.id, q.value);
+    if (q?.kind === "known" && typeof q.value === "number") cores.set(r.id, q.value * (compiled.input.resources.some(member => member.id === r.id && member.kind === "relational" && member.readRouting) ? 2 : 1));
   }
   const members = new Map(nodeIds.map((n) => [n, resources.map((r) => r.id).filter((id) => owner(id) === n)]));
   let now = 0, previousAt = 0;

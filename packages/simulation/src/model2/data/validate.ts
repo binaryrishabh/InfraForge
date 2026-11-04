@@ -1,4 +1,4 @@
-import { databaseReplicationError } from "@infraforge/domain/resource";
+import { databaseReadRoutingError, databaseReplicationError } from "@infraforge/domain/resource";
 import { validateDataFlowEffects } from "./flowEffects";
 import { requireKnown, type Quantity, type Unit } from "../../reality/quantity";
 import { micros } from "../time";
@@ -48,6 +48,8 @@ export function validateData(input: DataInput) {
         if (r.semantics !== "keyed-cache/1" || !["lru", "no-eviction"].includes(r.policy) || r.initial.reduce((n, x) => n + num(x.bytes, "bytes") + overhead, 0) > size) throw new Error("Invalid initial cache budget/policy");
         micros(horizon + num(r.ttl, "us", 1)); num(r.commandCpu, "cpu-us", Number.MIN_VALUE, false);
       } else {
+        const routingError = databaseReadRoutingError("Database", r.readRouting, r.replication);
+        if (routingError) throw Error(routingError);
         const replicationError = databaseReplicationError("Database", r.replication);
         if (replicationError) throw Error(replicationError);
         if (r.access !== undefined && r.access !== "keyed-uniform" && r.access !== "keyed-hot") throw Error("Unsupported database key access");

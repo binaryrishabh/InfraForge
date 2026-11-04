@@ -2,7 +2,7 @@ import { apiGatewayError } from "@infraforge/domain/resource";
 import { eventBusError } from "@infraforge/domain/resource";
 import { lbRateLimitError, LB_RATE_BURST_MAX, LB_RATE_MIN_RPS, LB_RATE_MAX_RPS } from "@infraforge/domain/resource";
 import * as z from "zod";
-import { firewallCapacityError, FIREWALL_FLOW_CAPACITY_MAX, objectStoragePolicyError, OBJECT_STORAGE_CAPACITY_MAX_MIB, monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT_MAX_ATTEMPTS, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmMemoryError, VM_MEMORY_MAX_MIB, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbSelectionError, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, databaseReplicationError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { firewallCapacityError, FIREWALL_FLOW_CAPACITY_MAX, objectStoragePolicyError, OBJECT_STORAGE_CAPACITY_MAX_MIB, monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT_MAX_ATTEMPTS, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmMemoryError, VM_MEMORY_MAX_MIB, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbSelectionError, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -51,6 +51,7 @@ const ResourceSchema = z.object({
   vmMemory: z.object({ version: z.literal(1), baselineMiB: z.number().int().min(0).max(VM_MEMORY_MAX_MIB), requestMiB: z.number().int().min(0).max(VM_MEMORY_MAX_MIB), activeMiB: z.number().int().min(0).max(VM_MEMORY_MAX_MIB) }).strict().optional(),
   vmCpuQuota: z.object({ version: z.literal(1), limitPercent: z.number().int().min(1).max(VM_CPU_LIMIT_MAX) }).strict().optional(),
   vmExecution: z.object({ version: z.literal(1), workers: z.number().int().min(1).max(VM_WORKERS_MAX).optional(), queuedRequests: z.number().int().min(0).max(VM_QUEUED_REQUESTS_MAX).optional() }).strict().optional(),
+  databaseReadRouting: z.object({ version: z.literal(1), policy: z.enum(["primary-only", "replica-preferred"]) }).strict().optional(),
   databaseReplication: z.object({ version: z.literal(1), enabled: z.literal(true), replicationDelayMs: z.number().int().min(1).max(60000), readPolicy: z.enum(["primary", "replica-preferred"]) }).strict().optional(),
   dbConcurrency: z.object({ version: z.literal(1), activeQueries: z.number().int().min(1).max(DB_ACTIVE_QUERIES_MAX).optional(), queuedQueries: z.number().int().min(0).max(DB_QUEUED_QUERIES_MAX).optional() }).strict().optional(),
   dataKeyspace: z.object({ version: z.literal(1), count: z.number().int().min(1).max(DATA_KEYSPACE_MAX), accessPattern: z.enum(["uniform", "hot-key"]).optional() }).strict().optional(),
@@ -110,6 +111,8 @@ const ResourceSchema = z.object({
   if (quotaMessage) ctx.addIssue({ code: "custom", path: ["vmCpuQuota"], message: quotaMessage });
   const executionMessage = vmExecutionError(resource.type, resource.vmExecution, resource.asyncWorker?.enabled);
   if (executionMessage) ctx.addIssue({ code: "custom", path: ["vmExecution"], message: executionMessage });
+  const routingMessage = databaseReadRoutingError(resource.type, resource.databaseReadRouting, resource.databaseReplication);
+  if (routingMessage) ctx.addIssue({ code: "custom", path: ["databaseReadRouting"], message: routingMessage });
   const replicationMessage = databaseReplicationError(resource.type, resource.databaseReplication);
   if (replicationMessage) ctx.addIssue({ code: "custom", path: ["databaseReplication"], message: replicationMessage });
   const dbMessage = dbConcurrencyError(resource.type, resource.dbConcurrency);

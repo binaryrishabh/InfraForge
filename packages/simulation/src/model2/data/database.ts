@@ -1,3 +1,4 @@
+import { readRoutingAccounting, type DatabaseMember } from "./readRouting";
 import { databaseReplica } from "./replication";
 import { requireKnown } from "../../reality/quantity";
 import { selectDataKey } from "./selectKey";
@@ -12,10 +13,14 @@ import type { DatabaseIo } from "./io";
 interface Tx { writerEpoch?: number; readSource?: "primary" | "replica"; orphaned?: boolean; work: Invocation; plan: TransactionPlan; step: number; phase: "queued" | "lock" | "cpu" | "io" | "wait" | "commit"; terminal: boolean; phaseAt: number; writes: Map<string, { version: number; bytes: number }>; rows: DataReply["rows"]; cancelTx?: () => boolean; cancelStatement?: () => boolean; cancelLock?: () => boolean; cancelWait?: () => boolean; cancelIo?: () => void; done(outcome: RemoteOutcome): void; session: string }
 export function relationalDatabase(config: RelationalConfig, kernel: EventClock, causal?: CausalObserver, ownedCpu?: ReturnType<typeof cpuScheduler>, io?: DatabaseIo, seed = "") {
   const pg2 = config.semantics === "postgresql-keyed/2", pg = pg2 || config.semantics === "postgresql-keyed/1";
+  if (config.readRouting && (!config.replication || ownedCpu || io)) throw Error("Read routing models independent member CPU and logical data only; host CPU bindings and finite IO are unsupported");
   if (io && !pg) throw Error("Finite IO requires PostgreSQL session semantics");
   const cpu = ownedCpu ?? cpuScheduler(config.id, requireKnown(config.execution.cores, "cores"), kernel), locks = lockManager();
   let rows = new Map(config.initial.map((r) => [r.key, { version: r.version, bytes: requireKnown(r.bytes, "bytes") }]));
-  const replication = config.replication ? databaseReplica(config.replication, config.id, kernel, rows) : undefined;
+  const routing = config.readRouting ? readRoutingAccounting(config.readRouting) : undefined;
+  const replicaCpu = routing ? cpuScheduler(`${config.id}:replica`, requireKnown(config.execution.cores, "cores"), kernel) : undefined;
+  const replication = config.replication ? databaseReplica(config.replication, config.id, kernel, rows, routing ? { config: config.readRouting!, stale: routing.stale } : undefined) : undefined;
+  const txCpu = (t: Tx) => routing && t.readSource === "replica" ? replicaCpu! : cpu;
   const keyspace = new Set(config.keys);
   const phaseUs = { queued: 0, lock: 0, cpu: 0, io: 0, wait: 0, commit: 0 }, phaseEntries = { ...phaseUs };
   const phase = (t: Tx, next: Tx["phase"]) => {
@@ -24,6 +29,14 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
   };
   const sessions = new Map<string, Tx | undefined>(), active = new Map<string, Tx>(), queue = new Map<string, Tx>();
   const sessionMembers = new Map<string, "primary" | "replica">();
+  const memberCount = (member: DatabaseMember, values: Iterable<Tx>) => [...values].filter(t => t.readSource === member).length;
+  const memberSessions = (member: DatabaseMember, except?: string) => [...sessionMembers].filter(([id, m]) => id !== except && m === member && sessions.has(id)).length;
+  const activeCount = (member?: DatabaseMember) => routing ? memberCount(member!, active.values()) : active.size;
+  const queuedCount = (member?: DatabaseMember) => routing ? memberCount(member!, queue.values()) : queue.size;
+  const recordPeaks = () => { if (routing) for (const member of ["primary", "replica"] as const) {
+    const m = routing.members[member]; m.peakSessions = Math.max(m.peakSessions, memberSessions(member));
+    m.peakActive = Math.max(m.peakActive, activeCount(member)); m.peakQueued = Math.max(m.peakQueued, queuedCount(member));
+  } };
   const sessionEpochs = new Map<string, number>();
   const invalidatedSessions = new Set<string>();
   let sessionInvalidations = 0, connectionInvalidations = 0, failedWritesWithoutWriter = 0;
@@ -38,8 +51,8 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
   const closeSlot = (id: string) => { sessionMembers.delete(id); sessionEpochs.delete(id); if (!sessions.delete(id)) return; sessionEvents.closed++; sessionTrace.get(id)?.("db-session-closed"); sessionTrace.delete(id); };
   const openSession = (id: string, trace?: (kind: string) => void) => {
     if (sessions.has(id)) return true;
-    if (paused || replication && !replication.sourceAvailable(sessionMember()) || sessions.size >= sessionLimit) { sessionEvents.refused++; trace?.("db-session-refused"); return false; }
-    if (replication) { sessionMembers.set(id, sessionMember()); sessionEpochs.set(id, replication.epoch()); }
+    if (paused || replication && (routing ? !replication.sourceAvailable("primary") && !replication.sourceAvailable("replica") : !replication.sourceAvailable(sessionMember())) || sessions.size >= sessionLimit * (routing ? 2 : 1)) { sessionEvents.refused++; trace?.("db-session-refused"); return false; }
+    if (replication) { if (!routing) sessionMembers.set(id, sessionMember()); sessionEpochs.set(id, replication.epoch()); }
     sessions.set(id, undefined); sessionEvents.established++; if (trace) { sessionTrace.set(id, trace); trace("db-session-open"); } return true;
   };
   const finish = (t: Tx, ok: boolean, reason = "", cancel = false) => {
@@ -47,13 +60,14 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     if (ok && t.writes.size && replication && !replication.acceptEpoch(t.writerEpoch!)) { finish(t, false, "fenced-writer-epoch"); return; }
     t.terminal = true; t.cancelTx?.(); t.cancelStatement?.(); t.cancelLock?.(); t.cancelWait?.(); t.cancelIo?.();
     if (io) phaseUs[t.phase] += kernel.now - t.phaseAt;
-    if (t.phase === "cpu") cpu.remove(t.work.callId);
+    if (t.phase === "cpu") txCpu(t).remove(t.work.callId);
     settleActive(); active.delete(t.work.callId); queue.delete(t.work.callId); if (sessions.get(t.session) === t) sessions.set(t.session, undefined);
     byClass.get(t.work.operation)![ok ? "committed" : cancel ? "cancelled" : "aborted"]++;
+    if (routing) routing.members[t.readSource!][ok ? "committed" : cancel ? "cancelled" : "aborted"]++;
     if (ok) { for (const [key, row] of t.writes) rows.set(key, row); replication?.commit(t.writes); committed++; logicalWrites += t.writes.size; if (t.plan.durability === "authored-log-ack") durableCommits++; }
     else { if (cancel) cancelled++; else aborted++; reasons[reason] = (reasons[reason] ?? 0) + 1; }
     causal?.({ atUs: kernel.now, kind: "db-terminal", resource: config.id, work: t.work, detail: { session: t.session, outcome: ok ? "committed" : cancel ? "cancelled" : "aborted", reason, writes: ok ? t.writes.size : 0 } });
-    if (pg && reason === "transaction-timeout") { sessions.delete(t.session); sessionTrace.get(t.session)?.("db-session-closed"); sessionTrace.delete(t.session); sessionEvents.transactionTerminated++; }
+    if (pg && reason === "transaction-timeout") { if (routing) { sessionMembers.delete(t.session); sessionEpochs.delete(t.session); } sessions.delete(t.session); sessionTrace.get(t.session)?.("db-session-closed"); sessionTrace.delete(t.session); sessionEvents.transactionTerminated++; }
     if (t.orphaned) closeSlot(t.session);
     if (t.work.message) t.work.message.response = { ok, rows: t.rows, ...(t.readSource ? { readSource: t.readSource } : {}), durable: ok && t.plan.durability === "authored-log-ack", ...(reason ? { reason } : {}) } satisfies DataReply;
     locks.release(t.work.callId); t.done(ok ? "completed" : cancel ? "cancelled" : "rejected"); pump();
@@ -88,8 +102,8 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     }
     const s = t.plan.statements[t.step]!, key = (t.work.message?.request as DataRequest | undefined)?.key;
     if (replication) {
-      t.readSource = replication.readSource(t.plan.statements.every(statement => statement.kind === "snapshot-read" || statement.kind === "lock-read"));
-      if (!replication.sourceAvailable(t.readSource)) { finish(t, false, "database-primary-unavailable"); return; }
+      if (!routing) t.readSource = replication.readSource(t.plan.statements.every(statement => statement.kind === "snapshot-read" || statement.kind === "lock-read"));
+      if (!replication.sourceAvailable(t.readSource!)) { finish(t, false, routing && t.readSource === "replica" ? "database-replica-unavailable" : "database-primary-unavailable"); return; }
     }
     const keys = s.keys.map((k) => k === "$key" ? key! : k);
     if (keys.some((k) => !keyspace.has(k))) { finish(t, false, "key-outside-dataset"); return; }
@@ -99,10 +113,10 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     if (!pg || t.step > 0) t.cancelStatement = deadline(t, "statement");
     const service = () => {
       if (t.terminal) return; t.cancelLock?.(); phase(t, "cpu");
-      if (replication && s.kind === "lock-read") t.readSource = replication.readSource(t.plan.statements.every(statement => statement.kind === "snapshot-read" || statement.kind === "lock-read"));
+      if (!routing && replication && s.kind === "lock-read") t.readSource = replication.readSource(t.plan.statements.every(statement => statement.kind === "snapshot-read" || statement.kind === "lock-read"));
       const observed = s.kind === "snapshot-read" ? snapshot : observe();
       if (replication && s.kind !== "write" && s.kind !== "insert") replication.observed(t.readSource!, keys, observed);
-      cpu.add({ id: t.work.callId, demand: requireKnown(s.cpu, "cpu-us"), cap: requireKnown(s.parallelism, "cores"), done() {
+      txCpu(t).add({ id: t.work.callId, demand: requireKnown(s.cpu, "cpu-us"), cap: requireKnown(s.parallelism, "cores"), done() {
         if (t.terminal) return;
         const block = () => { phase(t, "wait"); t.cancelWait = kernel.schedule(kernel.now + requireKnown(s.blockingWait, "us"), 2, JSON.stringify(["db-blocking", config.id, t.work.callId, t.step]), () => {
           if (s.kind === "insert" && observed.some((r) => r.version > 0)) { finish(t, false, "unique-conflict"); return; }
@@ -129,8 +143,9 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
   };
   const pump = () => {
     if (pumping || paused) return; pumping = true;
-    while (queue.size && active.size < requireKnown(config.activeTransactions, "count")) {
-      const t = queue.values().next().value!; queue.delete(t.work.callId); settleActive(); active.set(t.work.callId, t);
+    while (queue.size) {
+      const t = [...queue.values()].find(t => activeCount(t.readSource) < requireKnown(config.activeTransactions, "count"));
+      if (!t) break; queue.delete(t.work.callId); settleActive(); active.set(t.work.callId, t); recordPeaks();
       if (pg) {
         t.cancelTx = deadline(t, "transaction");
         const transaction = requireKnown(t.plan.transactionTimeout, "us"), statement = requireKnown(t.plan.statementTimeout, "us");
@@ -140,12 +155,13 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     }
     pumping = false;
   };
+  const memberEvidence = (member: DatabaseMember) => ({ ...routing!.members[member], sessions: memberSessions(member), active: activeCount(member), queued: queuedCount(member), sessionLimit, activeLimit: requireKnown(config.activeTransactions, "count"), queueLimit: requireKnown(config.pendingQueries, "count"), consumedCoreUs: (member === "replica" ? replicaCpu! : cpu).measure().appCoreUs });
   return {
     connectionClosed(id: string) { if (invalidatedSessions.delete(id)) connectionInvalidations++; },
     primaryAvailability(value: boolean) {
       if (!replication) throw Error("Database replication disabled");
       replication.primaryAvailability(value);
-      if (value && replication.currentWriter() !== "primary") { pump(); return []; }
+      if (value && (routing || replication.currentWriter() !== "primary")) { pump(); return []; }
       const wasPaused = paused; paused = true;
       // Sessions opened on the survivor cannot move back to the returning writer.
       const invalid = [...sessions.keys()].filter(id => sessionMembers.get(id) === (value ? "replica" : "primary"));
@@ -194,32 +210,36 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
       received++; const session = work.sessionId ?? work.callId;
       const plan = config.plans[work.operation]!;
       const writes = plan.statements.some(s => s.kind === "write" || s.kind === "insert");
-      const source = replication?.readSource(!writes);
-      const unavailable = !paused && replication && (writes && replication.currentWriter() === "none" ? "no-writer-available" : source && !replication.sourceAvailable(source) ? "database-primary-unavailable" : undefined);
+      const source = replication?.readSource(routing ? plan.statements.every(s => s.kind === "snapshot-read") : !writes);
+      const fullSession = routing ? source !== undefined && sessionMembers.get(session) !== source && memberSessions(source, session) >= sessionLimit : !sessions.has(session) && sessions.size >= sessionLimit;
+      const fullQueries = activeCount(source) >= requireKnown(config.activeTransactions, "count") && queuedCount(source) >= requireKnown(config.pendingQueries, "count");
+      const unavailable = !paused && replication && (writes && replication.currentWriter() === "none" ? "no-writer-available" : source && !replication.sourceAvailable(source) ? routing && source === "replica" ? "database-replica-unavailable" : "database-primary-unavailable" : undefined);
       if (unavailable === "no-writer-available") failedWritesWithoutWriter++;
       const requestedEpoch = (work.message?.request as DataRequest | undefined)?.writerEpoch ?? sessionEpochs.get(session);
       const fenced = !paused && replication && requestedEpoch !== undefined && config.plans[work.operation]!.statements.some(s => s.kind === "write" || s.kind === "insert") && !replication.acceptEpoch(requestedEpoch);
-      if (paused || unavailable || fenced || (pg && !sessions.has(session)) || (!sessions.has(session) && sessions.size >= sessionLimit) || sessions.get(session) || (active.size >= requireKnown(config.activeTransactions, "count") && queue.size >= requireKnown(config.pendingQueries, "count"))) {
-        rejected++; const reason = paused ? "database-unavailable" : unavailable || (fenced ? "fenced-writer-epoch" : pg && !sessions.has(session) ? "session-not-established" : sessions.get(session) ? "session-busy" : !sessions.has(session) && sessions.size >= sessionLimit ? "session-limit" : "query-queue-full"); reasons[reason] = (reasons[reason] ?? 0) + 1;
+      if (paused || unavailable || fenced || (pg && !sessions.has(session)) || fullSession || sessions.get(session) || fullQueries) {
+        rejected++; const reason = paused ? "database-unavailable" : unavailable || (fenced ? "fenced-writer-epoch" : pg && !sessions.has(session) ? "session-not-established" : sessions.get(session) ? "session-busy" : fullSession ? "session-limit" : "query-queue-full"); reasons[reason] = (reasons[reason] ?? 0) + 1;
+        if (routing && source && (reason === "session-limit" || reason === "query-queue-full")) routing.members[source][reason === "session-limit" ? "sessionRefused" : "queryRefused"]++;
         if (replication && work.message) work.message.response = { ok: false, reason } satisfies DataReply;
         causal?.({ atUs: kernel.now, kind: "db-rejected", resource: config.id, work, detail: { session, reason } }); done("rejected"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" };
       }
-      if (replication && !sessions.has(session)) { sessionMembers.set(session, sessionMember()); sessionEpochs.set(session, replication.epoch()); }
+      if (replication && (routing || !sessions.has(session))) { sessionMembers.set(session, routing ? source! : sessionMember()); if (!routing || !sessionEpochs.has(session)) sessionEpochs.set(session, replication.epoch()); }
       sessions.set(session, undefined); admitted++;
       causal?.({ atUs: kernel.now, kind: "db-admitted", resource: config.id, work, detail: { session } });
       const counts = byClass.get(work.operation) ?? { admitted: 0, committed: 0, aborted: 0, cancelled: 0 }; counts.admitted++; byClass.set(work.operation, counts);
       const t: Tx = { writerEpoch: sessionEpochs.get(session) ?? replication?.epoch(), work, done, plan: config.plans[work.operation]!, step: 0, phase: "queued", phaseAt: kernel.now, terminal: false, writes: new Map(), rows: [], session };
-      if (replication) t.readSource = replication.readSource(t.plan.statements.every(s => s.kind === "snapshot-read" || s.kind === "lock-read"));
+      if (replication) t.readSource = routing ? source : replication.readSource(t.plan.statements.every(s => s.kind === "snapshot-read" || s.kind === "lock-read"));
+      if (routing) routing.members[source!].admitted++;
       if (io) phaseEntries.queued++;
       sessions.set(session, t); queue.set(work.callId, t);
-      if (pg) t.cancelStatement = deadline(t, "statement"); else t.cancelTx = deadline(t, "transaction"); pump();
+      if (pg) t.cancelStatement = deadline(t, "statement"); else t.cancelTx = deadline(t, "transaction"); pump(); recordPeaks();
       return { admitted: true, state: () => t.terminal ? "finished" : t.phase === "queued" ? "queued" : t.phase === "lock" ? "waiting" : "serving", cancel() { if (t.terminal) return "already-finished"; if (t.orphaned) return "unsupported"; if (pg && t.phase === "commit") { sessionEvents.protectedCommitCancels++; return "unsupported"; } finish(t, false, "cancelled", true); return "cancelled"; } };
     },
     closeSession(id: string) { const tx = sessions.get(id); if (pg2 && tx && tx.phase !== "queued") { tx.orphaned = true; return; } closeSlot(id); if (tx && !(pg && tx.phase === "commit")) finish(tx, false, "connection-closed"); },
-    pause(value: boolean) { paused = value; replication?.wholeAvailability(!value); cpu.pause(value); if (value) { for (const t of [...active.values(), ...queue.values()]) if (!(pg && t.phase === "commit")) finish(t, false, "database-unavailable"); if (pg2) { for (const id of [...sessions.keys()]) closeSlot(id); } else { if (pg) sessionEvents.closed += sessions.size; for (const id of [...sessionTrace.keys()]) { sessionTrace.get(id)!("db-session-closed"); sessionTrace.delete(id); } sessions.clear(); } } else pump(); },
-    capacity(value: number) { cpu.capacity(value); }, sessionCapacity(value: number) { sessionLimit = value; },
-    measure: () => ({ id: config.id, ...(pg2 ? { sessions: sessions.size, sessionLimit, sessionRefused: sessionEvents.refused, orphaned: [...sessions.values()].filter(t => t?.orphaned).length } : {}), paused, received, admitted, rejected, completed: committed, failed: aborted, cancelled, queued: queue.size, serving: [...active.values()].filter((t) => t.phase !== "lock").length, waiting: [...active.values()].filter((t) => t.phase === "lock").length, consumedCoreUs: cpu.measure().appCoreUs, busySlotUs: activeArea + active.size * (kernel.now - activeAnchor) }),
-    evidence: () => ({ id: config.id, ...(replication ? { databaseReplication: { ...replication.evidence(), sessionInvalidations, connectionInvalidations, failedWritesWithoutWriter } } : {}), ...(io ? { ioProfile: "postgresql-keyed-io/1", ioPhases: {
+    pause(value: boolean) { paused = value; replication?.wholeAvailability(!value); cpu.pause(value); replicaCpu?.pause(value); if (value) { for (const t of [...active.values(), ...queue.values()]) if (!(pg && t.phase === "commit")) finish(t, false, "database-unavailable"); if (pg2) { for (const id of [...sessions.keys()]) closeSlot(id); } else { if (pg) sessionEvents.closed += sessions.size; for (const id of [...sessionTrace.keys()]) { sessionTrace.get(id)!("db-session-closed"); sessionTrace.delete(id); } sessions.clear(); } } else pump(); },
+    capacity(value: number) { cpu.capacity(value); replicaCpu?.capacity(value); }, sessionCapacity(value: number) { sessionLimit = value; },
+    measure: () => ({ id: config.id, ...(pg2 ? { sessions: sessions.size, sessionLimit, sessionRefused: sessionEvents.refused, orphaned: [...sessions.values()].filter(t => t?.orphaned).length } : {}), paused, received, admitted, rejected, completed: committed, failed: aborted, cancelled, queued: queue.size, serving: [...active.values()].filter((t) => t.phase !== "lock").length, waiting: [...active.values()].filter((t) => t.phase === "lock").length, consumedCoreUs: cpu.measure().appCoreUs + (replicaCpu?.measure().appCoreUs ?? 0), busySlotUs: activeArea + active.size * (kernel.now - activeAnchor) }),
+    evidence: () => ({ id: config.id, ...(routing ? { databaseReadRouting: { ...routing.evidence(), members: { primary: memberEvidence("primary"), replica: memberEvidence("replica") }, unboundSessions: sessions.size - sessionMembers.size } } : {}), ...(replication ? { databaseReplication: { ...replication.evidence(), sessionInvalidations, connectionInvalidations, failedWritesWithoutWriter } } : {}), ...(io ? { ioProfile: "postgresql-keyed-io/1", ioPhases: {
       elapsedUs: Object.fromEntries(Object.entries(phaseUs).map(([name, elapsed]) => [name, elapsed + [...active.values(), ...queue.values()].filter(t => t.phase === name).reduce((n, t) => n + kernel.now - t.phaseAt, 0)])),
       entries: { ...phaseEntries }, note: "Transaction phase durations/populations; CPU phase includes scheduler contention, IO phase includes coalesced waiting. Device queue/service receipts remain separate; pool wait belongs to transport." } } : {}), ...(pg ? { profile: config.semantics, sessionEvents: { ...sessionEvents }, timing: "assumption-only", queryAdmission: "authored gate; not a PostgreSQL server setting" } : {}), sessions: { ...(pg2 ? { orphaned: [...sessions.values()].filter(t => t?.orphaned).length } : {}), total: sessions.size, active: [...sessions.values()].filter(Boolean).length, idle: [...sessions.values()].filter((s) => !s).length, limit: sessionLimit }, transactions: { admitted, committed, aborted, cancelled, live: active.size + queue.size }, statements, logicalReads, logicalWrites, generatedLogBytes: logBytes, durableAcknowledgedCommits: durableCommits,
       rows: [...rows].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, value]) => ({ key, ...value })), locks: locks.measure(), waiters: locks.waiters(), cpu: cpu.measure(), reasons: { ...reasons }, queryClasses: Object.fromEntries([...byClass].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)), queries: { executingCpu: [...active.values()].filter((t) => t.phase === "cpu").length, lockWaiting: [...active.values()].filter((t) => t.phase === "lock").length, blockingWait: [...active.values()].filter((t) => t.phase === "wait").length, committing: [...active.values()].filter((t) => t.phase === "commit").length }, active: [...active.values()].map((t) => ({ id: t.work.callId, session: t.session, operation: t.work.operation, step: t.step, phase: t.phase, pendingWrites: t.writes.size })), queued: queue.size, physicalBufferHits: "Unknown", storageDeviceLatency: "Unknown" }),

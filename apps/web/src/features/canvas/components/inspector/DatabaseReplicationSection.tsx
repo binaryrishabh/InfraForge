@@ -8,7 +8,7 @@ export function DatabaseReplicationSection({ resource, disabled }: { resource: R
   return <InspectorSection title="Database HA" hint="Educational async replication. Recent writes can be lost when the replica is promoted.">
     <Field label="Replication" hint="Off uses one writer. One replica receives committed writes later.">
       {({ id, describedBy }) => <select id={id} aria-describedby={describedBy} disabled={disabled} value={policy ? "one" : "off"}
-        onChange={event => updateResource(resource.id, { databaseReplication: event.target.value === "off" ? undefined : { version: 1, enabled: true, replicationDelayMs: 1000, readPolicy: "primary" } })}>
+        onChange={event => updateResource(resource.id, { ...(event.target.value === "off" ? { databaseReadRouting: undefined } : {}), databaseReplication: event.target.value === "off" ? undefined : { version: 1, enabled: true, replicationDelayMs: 1000, readPolicy: "primary" } })}>
         <option value="off">Off</option><option value="one">One replica</option>
       </select>}
     </Field>
@@ -17,12 +17,18 @@ export function DatabaseReplicationSection({ resource, disabled }: { resource: R
         {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} type="number" min={1} max={DATABASE_REPLICATION_DELAY_MAX_MS} step={1} value={policy.replicationDelayMs} disabled={disabled}
           onChange={event => updateResource(resource.id, { databaseReplication: { ...policy, replicationDelayMs: Number(event.target.value) } })} />}
       </Field>
-      <Field label="Read policy" hint="Replica preferred can return older versions; unavailable replicas fall back to the writer.">
+      <Field label="Read routing" hint="Each member has its own session, query and CPU budget. Snapshot reads prefer the replica; only an unavailable replica falls back to the writer. Full capacity refuses work.">
+        {({ id, describedBy }) => <select id={id} aria-describedby={describedBy} disabled={disabled} value={resource.databaseReadRouting?.policy ?? "legacy"}
+          onChange={event => updateResource(resource.id, { databaseReadRouting: event.target.value === "legacy" ? undefined : { version: 1, policy: event.target.value as "primary-only" | "replica-preferred" } })}>
+          <option value="legacy">Saved HA routing</option><option value="primary-only">Primary only</option><option value="replica-preferred">Replica preferred</option>
+        </select>}
+      </Field>
+      {!resource.databaseReadRouting && <Field label="Read policy" hint="Replica preferred can return older versions; unavailable replicas fall back to the writer.">
         {({ id, describedBy }) => <select id={id} aria-describedby={describedBy} disabled={disabled} value={policy.readPolicy}
           onChange={event => updateResource(resource.id, { databaseReplication: { ...policy, readPolicy: event.target.value as "primary" | "replica-preferred" } })}>
           <option value="primary">Primary</option><option value="replica-preferred">Replica preferred</option>
         </select>}
-      </Field>
+      </Field>}
     </>}
   </InspectorSection>;
 }

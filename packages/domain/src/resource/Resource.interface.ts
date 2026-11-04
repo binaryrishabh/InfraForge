@@ -29,6 +29,7 @@ export interface Resource {
   apiGateway?: import("./ApiGateway.interface").ApiGatewaySettings;
   eventBus?: import("./EventBus.interface").EventBusSettings;
   databaseReplication?: DatabaseReplication;
+  databaseReadRouting?: import("./DatabaseReadRouting.interface").DatabaseReadRouting;
   firewallCapacity?: FirewallCapacity;
   objectStoragePolicy?: ObjectStoragePolicy;
   dataKeyspace?: DataKeyspace;

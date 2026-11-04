@@ -12,7 +12,7 @@ export function dataDeliveryLive(resource: CompiledProduct["input"]["resources"]
   if (resource.kind === "relational") {
     const db = source.inspectData.database(resource.id);
     const state = current as { serving?: number; waiting?: number; queued?: number; rejected?: number; sessionRefused?: number } | undefined;
-    return { ...(resource.replication ? { databaseReplication: databaseReplicationLive(db?.databaseReplication) } : {}), database: { version: 1, serving: state?.serving ?? null, waiting: state?.waiting ?? null, queued: state?.queued ?? null,
+    return { ...(resource.replication ? { databaseReplication: databaseReplicationLive(db?.databaseReplication) } : {}), database: { ...(db?.databaseReadRouting ? { readRouting: db.databaseReadRouting } : {}), version: 1, serving: state?.serving ?? null, waiting: state?.waiting ?? null, queued: state?.queued ?? null,
       rejected: state?.rejected ?? null, sessionRefused: state?.sessionRefused ?? null, "query-queue-full": db?.reasons["query-queue-full"] ?? null } };
   }
   if (resource.kind === "cache") {
