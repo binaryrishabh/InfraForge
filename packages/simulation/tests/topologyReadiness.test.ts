@@ -5,6 +5,8 @@ import { validateModel2Readiness } from "../src/model2/product/readiness";
 import { contractFromDesign } from "../src/model2/product/fromDesign";
 import type { SavedProductDesign } from "../src/model2/product/contracts";
 import { design as asyncDesign } from "./asyncCanvas.fixture";
+import { gatewayDesign } from "./apiGateway.fixture";
+import { eventBusDesign } from "./eventBus.fixture";
 
 function design(types: Record<string, Resource["type"]>, links: [string, string][] = []): SavedProductDesign {
   return { schema: "infraforge-saved-design/1", resources: Object.entries(types).map(([id, type]) => ({ id, type, x: 0, y: 0 })),
@@ -25,16 +27,18 @@ const supported = [
   design({ app: "Virtual Machine", queue: "Message Queue" }, [["app", "queue"]]),
   design({ monitor: "Monitoring Agent", app: "Virtual Machine" }, [["monitor", "app"]]),
   asyncDesign(),
+  gatewayDesign(),
+  eventBusDesign(),
 ];
 
-for (const [i, d] of supported.entries()) test(`supported topology ${i}: drawable, ready and compiled`, () => {
+for (const [i, d] of supported.entries()) test(`regression: supported topology ${i}: drawable, ready and compiled`, () => {
   expect(contractFromDesign(d)).not.toHaveProperty("refused");
   for (const e of d.connections) expect(validateConnection(e.sourceType as Resource["type"], e.targetType as Resource["type"], "draw").valid).toBe(true);
   expect(validateModel2Readiness(d.resources, d.connections).valid).toBe(true);
 });
 
 for (const type of Object.values(RESOURCE_TYPES)) {
-  test(`policy attachments and monitoring eligibility: ${type}`, () => {
+  test(`regression: policy attachments and monitoring eligibility: ${type}`, () => {
     expect(validateConnection("Firewall", type, "draw").valid).toBe(type !== "Firewall");
     expect(validateConnection("Monitoring Agent", type, "draw").valid).toBe(type !== "Firewall");
     if (type === "Firewall") return;

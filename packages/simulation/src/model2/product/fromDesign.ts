@@ -189,7 +189,8 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
       if (r.autoscaling?.enabled && (r.type !== "Virtual Machine" || incoming(r.id).filter((s) => s.type === "Load Balancer").length !== 1)) error(`resources.${r.id}.autoscaling`, "Autoscaling needs an app server behind exactly one load balancer.");
     }
     for (const bus of resources.filter(r => r.type === "Event Bus")) {
-      if (incoming(bus.id).length !== 1 || incoming(bus.id)[0]?.type !== "Virtual Machine" || incoming(bus.id)[0]?.asyncWorker?.enabled || !outgoing(bus.id).length || outgoing(bus.id).some(r => r.type !== "Message Queue" || !r.asyncQueue?.enabled)) error("resources." + bus.id, "Connect one app publisher to Event Bus and 1 to 16 enabled queues to workers.");
+      const publishers = incoming(bus.id).filter(r => r.type !== "Firewall" && r.type !== "Monitoring Agent");
+      if (publishers.length !== 1 || publishers[0]?.type !== "Virtual Machine" || publishers[0]?.asyncWorker?.enabled || !outgoing(bus.id).length || outgoing(bus.id).some(r => r.type !== "Message Queue" || !r.asyncQueue?.enabled)) error("resources." + bus.id, "Connect one app publisher to Event Bus and 1 to 16 enabled queues to workers.");
     }
     const asyncQueues = resources.filter((r) => r.asyncQueue?.enabled);
     const producerQueue = (id: string) => outgoing(id).find((r) => r.asyncQueue?.enabled || r.type === "Event Bus");

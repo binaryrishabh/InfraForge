@@ -1,10 +1,25 @@
 import { expect, test } from "bun:test";
+import { RESOURCE_PORTS } from "@infraforge/domain/resource";
 import { eventBusDesign } from "./eventBus.fixture";
 import { prepare } from "./asyncCanvas.fixture";
 import { currentAdapterProfiles, contractFromDesign } from "../src/model2/product/fromDesign";
 import { compileProduct } from "../src/model2/product/compiler";
 import { withRunLength } from "../src/model2/product/runContract";
 import { createProductModel2 } from "../src/model2/product/run";
+
+test("regression: policy and monitoring edges preserve the single app publisher requirement", () => {
+  const saved = eventBusDesign(), port = RESOURCE_PORTS["Event Bus"];
+  saved.resources.push({ id: "policy", type: "Firewall", x: 0, y: 0 }, { id: "monitor", type: "Monitoring Agent", x: 0, y: 0 });
+  saved.connections.push({ id: "policy-bus", sourceId: "policy", targetId: "bus", sourceType: "Firewall", targetType: "Event Bus", port },
+    { id: "monitor-bus", sourceId: "monitor", targetId: "bus", sourceType: "Monitoring Agent", targetType: "Event Bus", port });
+  expect(contractFromDesign(saved)).not.toHaveProperty("refused");
+  saved.resources.push({ id: "second-app", type: "Virtual Machine", x: 0, y: 0 });
+  saved.connections.push({ id: "second-publisher", sourceId: "second-app", targetId: "bus", sourceType: "Virtual Machine", targetType: "Event Bus", port });
+  const result = contractFromDesign(saved);
+  expect(result).toHaveProperty("refused");
+  if (!("refused" in result)) throw Error("Expected multiple publishers to refuse");
+  expect(result.refused).toContainEqual(expect.objectContaining({ path: "resources.bus", message: "Connect one app publisher to Event Bus and 1 to 16 enabled queues to workers." }));
+});
 
 test("ordinary saved event bus design fans out to two workers with measured downstream effects", () => {
   const saved = eventBusDesign(), f = prepare(saved), contract = withRunLength(f.contract, 2, "bus-proof");
