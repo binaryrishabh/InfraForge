@@ -62,3 +62,33 @@ test("skip misses do not replay, and an expired latest trigger cannot catch up",
     expect(service.evidence()).toMatchObject({ due: 10, missed: 10, retainedLatest: 0 }); expect(calls).toBe(0);
   }
 });
+
+test("regression: future triggers and event evidence stay bounded as the trigger limit grows", () => {
+  const run = (limit: number) => {
+    const clock = new EventKernel(30000, 4);
+    const send: Deliver = (_t, _w, done) => { done("completed"); return { admitted: true, state: () => "finished", cancel: () => "already-finished" }; };
+    const q = <U extends "us" | "count">(value: number, unit: U) => ({ kind: "known" as const, value, unit, provenance: ["test"] });
+    const service = scheduler(schedulerFixture({ period: q(1, "us"), maxTriggers: q(limit, "count") }), clock, send, 20000);
+    service.start(); expect(clock.pending).toBe(1); clock.advanceTo(20000);
+    return { evidence: service.evidence(), readings: service.readings(), peakPending: clock.peakPending, pending: clock.pending };
+  };
+  const small = run(100), large = run(10000);
+  expect(small.evidence.completed).toBe(100); expect(large.evidence.completed).toBe(10000);
+  expect(large.readings.attemptAccounting.started).toBe(10000);
+  expect(large.peakPending).toBe(small.peakPending); expect(large.peakPending).toBeLessThanOrEqual(2);
+  expect(large.pending).toBe(0); expect(large.evidence.events).toHaveLength(2048); expect(large.evidence.omitted).toBe(7952);
+});
+
+test("retry waiting and timeout attempts remain distinct until the required retry delay elapses", () => {
+  const clock = new EventKernel(10000);
+  const send: Deliver = () => ({ admitted: true, state: () => "serving", cancel: () => "unsupported" });
+  const service = scheduler(schedulerFixture({ period: { kind: "known", unit: "us", value: 0, provenance: ["test"] } }), clock, send, 300000);
+  service.start(); clock.advanceTo(50000);
+  expect(service.readings().attemptAccounting).toMatchObject({ started: 1, failedAttempts: 1, timedOutAttempts: 1, pendingAttempts: 0, retryWaiting: 1 });
+  service.pause(true); clock.advanceTo(50500); service.pause(false);
+  expect(service.readings().fired).toBe(1);
+  clock.advanceTo(51000);
+  expect(service.readings().attemptAccounting).toMatchObject({ started: 1, failedAttempts: 1, pendingAttempts: 1, retryWaiting: 0 });
+  clock.advanceTo(300000);
+  expect(service.readings().attemptAccounting).toMatchObject({ started: 1, failedAttempts: 3, timedOutAttempts: 3, pendingAttempts: 0, retryWaiting: 0 });
+});

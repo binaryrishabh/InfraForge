@@ -16,6 +16,16 @@ test("function terminal retains lifecycle evidence, refuses inconsistent account
   expect(snapshot).toMatchObject({ version: 2, costCoverage: "unknown" });
   const limitations: string[] = [], records = readRecords(row, limitations);
   expect(limitations).toEqual([]); expect(records.terminal?.resources.find(r => r.id === "fn")?.serverless?.completed).toBeGreaterThan(0);
+  const metrics = snapshot.metrics.fn!.serverless!;
+  expect(metrics.lifecycle!.settled).toBe(metrics.admitted - metrics.active);
+  expect(metrics.lifecycle!.busyUs).toBeGreaterThan(0);
+  expect(records.terminal?.resources.find(r => r.id === "fn")?.serverless).toEqual(metrics);
+  const legacy = structuredClone(snapshot); delete legacy.metrics.fn!.serverless!.lifecycle;
+  expect(readRecords({ ...row, terminalSnapshot: legacy }, []).terminal?.resources.find(r => r.id === "fn")?.serverless?.lifecycle).toBeUndefined();
+  for (const key of ["initializing", "executing", "downstream", "settled", "initializationUs", "executionUs", "downstreamUs", "busyUs"] as const) {
+    const bad = structuredClone(snapshot); bad.metrics.fn!.serverless!.lifecycle![key]++;
+    expect(readRecords({ ...row, terminalSnapshot: bad }, []).terminal).toBeNull();
+  }
   const corrupt = structuredClone(snapshot); corrupt.metrics.fn!.serverless!.completed++;
   expect(readRecords({ ...row, terminalSnapshot: corrupt }, []).terminal).toBeNull();
 });

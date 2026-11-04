@@ -56,3 +56,32 @@ test("long invocation streams bound warm instances, timers and retained event ro
   expect(service.evidence().events).toHaveLength(2048); expect(service.evidence().omitted).toBeGreaterThan(0); expect(clock.pending).toBe(1);
   clock.advanceTo(clock.now + 50000); expect(clock.pending).toBe(0);
 });
+
+test("lifecycle measures active partial phases and timeout consequences without fabricating completed samples", () => {
+  const run = (timeout: number) => {
+    const clock = new EventKernel(10000), service = serverless(functionConfig({ timeout: us(timeout) }), clock, unused, "function-proof");
+    service.accept(invocation("phase"), () => {}); clock.advanceTo(5000);
+    expect(service.readings().lifecycle).toMatchObject({ initializing: 1, executing: 0, downstream: 0, initializationUs: 5000, busyUs: 5000, settled: 0, totalDurationUs: 0 });
+    clock.advanceTo(15000); const partial = service.readings(); clock.advanceTo(100000);
+    return { partial, end: service.readings(), pending: clock.pending };
+  };
+  const complete = run(100000), timeout = run(10000);
+  expect(complete.partial.lifecycle).toMatchObject({ initializing: 0, executing: 1, initializationUs: 10000, executionUs: 5000, busyUs: 15000, totalDurationUs: 0 });
+  expect(complete.end.lifecycle).toMatchObject({ settled: 1, totalDurationUs: 20000, maxDurationUs: 20000, initializationUs: 10000, executionUs: 10000 });
+  expect(timeout.end).toMatchObject({ initialized: 0, completed: 0, timedOut: 1, instances: 0, lifecycle: { settled: 1, totalDurationUs: 10000, initializationUs: 10000, executionUs: 0 } });
+  expect(complete.pending).toBe(0); expect(timeout.pending).toBe(0);
+});
+
+test("regression: equal-time idle expiry runs before arrivals and timeout runs before body completion", () => {
+  const run = (arrival: number) => {
+    const clock = new EventKernel(10000), service = serverless(functionConfig(), clock, unused, "function-proof");
+    service.accept(invocation("first"), () => {});
+    clock.schedule(arrival, 3, "arrival", () => service.accept(invocation("second"), () => {}));
+    clock.advanceTo(200000); return service.readings();
+  };
+  expect(run(69999)).toMatchObject({ coldStarts: 1, warmStarts: 1 });
+  expect(run(70000)).toMatchObject({ coldStarts: 2, warmStarts: 0 });
+  const clock = new EventKernel(10000), service = serverless(functionConfig({ timeout: us(20000) }), clock, unused, "function-proof");
+  service.accept(invocation("tie"), () => {}); clock.advanceTo(20000);
+  expect(service.readings()).toMatchObject({ completed: 0, timedOut: 1, lifecycle: { totalDurationUs: 20000, initializationUs: 10000, executionUs: 10000 } });
+});

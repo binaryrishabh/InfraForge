@@ -26,6 +26,10 @@ test("browser bundle and server replay agree for healthy and failed scheduled in
       for (let second = 1; second <= 3; second++) { browser.advance(); server.advance(); expect(browser.evidence()).toEqual(server.evidence()); expect(browser.view()).toEqual(server.view()); }
       const e = browser.evidence().asynchronous.schedulers![0]!;
       expect(browser.view().metrics.timer!.scheduler!.completed).toBe(e.completed);
+      const a = browser.view().metrics.timer!.scheduler!.attemptAccounting!;
+      expect(a.started).toBe(e.fired - e.retried);
+      expect(e.fired).toBe(e.completed + a.failedAttempts + a.pendingAttempts);
+      expect(a.pendingAttempts + a.retryWaiting).toBe(e.active);
       expect(e.due).toBe(100);
       if (fail) { expect(e.failed).toBeGreaterThan(0); expect(e.missed).toBe(100); }
       else expect(e.completed).toBe(100);
