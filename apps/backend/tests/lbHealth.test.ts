@@ -38,14 +38,14 @@ test("only new explicit health intent captures a profile; historical, missing, d
   }
   for (const setting of controls) {
     const input = captureRunInputs(layout(setting), workload, "health-capture"), saved = readRunInputs(JSON.parse(JSON.stringify(input)));
-    expect(saved).toEqual(input); expect(saved.adapterProfiles).toEqual(["lb-health/1", "traffic-evidence/2"]);
+    expect(saved).toEqual(input); expect(saved.adapterProfiles).toEqual(["lb-health/1", "lb-accounting/1", "traffic-evidence/2"]);
     expect(buildContractFromRunInputs(saved, 3)).toHaveProperty("contract");
     for (const adapterProfiles of [undefined, []]) expect(buildContractFromRunInputs({ ...saved, adapterProfiles }, 3)).toHaveProperty("refused");
     expect(() => readRunInputs({ ...saved, adapterProfiles: ["lb-health/1", "lb-health/1"] })).toThrow();
   }
   const combined = layout(controls[0]); combined.resources[0]!.lbAdmission = { version: 1, maxActive: 8 };
   const input = captureRunInputs(combined, workload, "both");
-  expect(input.adapterProfiles).toEqual(["lb-admission/1", "lb-health/1", "traffic-evidence/2"]);
+  expect(input.adapterProfiles).toEqual(["lb-admission/1", "lb-health/1", "lb-accounting/1", "traffic-evidence/2"]);
   expect(buildContractFromRunInputs(readRunInputs(input), 3)).toHaveProperty("contract");
 });
 

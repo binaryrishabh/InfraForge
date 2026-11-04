@@ -4,6 +4,7 @@ import { HealthMark } from "@/ui/HealthMark";
 import { ReportSection } from "./ReportSection";
 import { TrafficEvidence } from "@/features/live/TrafficEvidence";
 import { measurementId } from "../resourceFocus";
+import { LbAccountingReadings } from "./LbAccountingReadings";
 
 /* Final state: the exact terminal capture when one exists, otherwise the
 latest diagnostic checkpoint, labelled as such. */
@@ -61,7 +62,7 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
                   </li>
                 ))}
               </ul>
-              {checkpoint.resources.filter(r => r.eventBus || r.gateway).map(r => <div key={r.id} className="mt-4"><h3 className="font-semibold">{r.id}</h3>{r.eventBus && <EventBusReadings metrics={r.eventBus} />}{r.gateway && <GatewayReadings metrics={r.gateway} />}</div>)}
+              {checkpoint.resources.filter(r => r.eventBus || r.gateway || r.lbAccounting).map(r => <div key={r.id} className="mt-4"><h3 className="font-semibold">{r.id}</h3>{r.eventBus && <EventBusReadings metrics={r.eventBus} />}{r.gateway && <GatewayReadings metrics={r.gateway} />}{r.lbAccounting && <LbAccountingReadings metrics={r.lbAccounting} />}</div>)}
               {report.guidedReview && <a href="#guided-review" className="mt-3 inline-block text-sm font-medium text-accent underline">Back to guided review</a>}
             </div>
           )}

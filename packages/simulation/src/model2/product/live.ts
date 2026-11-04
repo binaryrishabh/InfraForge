@@ -13,6 +13,7 @@ import { clientRetryEvidence } from "../workload/clientRetryEvidence";
 export type LiveValue = number | null;
 export type LiveHealth = "healthy" | "degraded" | "saturated" | "failed" | "unknown";
 export interface LiveNodeMetrics {
+  lbAccounting?: import("@infraforge/contracts/telemetry").LbAccountingMetrics;
   gateway?: import("@infraforge/contracts/telemetry").ResourceMetrics["gateway"];
   eventBus?: import("@infraforge/contracts/telemetry").ResourceMetrics["eventBus"];
   vmMemory?: import("@infraforge/contracts/telemetry").VmMemoryMetrics;
@@ -116,8 +117,10 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
           lbNow.set(node, { received: lb.received, completed: lb.completed, rejected: lb.rejected });
           const received = lb.received - before.received, completed = lb.completed - before.completed, rejected = lb.rejected - before.rejected;
           const healthyBackends = lb.backends.filter((b) => b.health && !b.draining).length;
+          const accounting = runtime.lbAccounting(node);
           metrics[node] = { ...(lb.rateLimit ? { rateLimit: lb.rateLimit } : {}), cpu: null, memory: null, connections: lb.active + lb.pending, rps: completed, errorRate: ratio(rejected, received),
             health: healthyBackends === 0 ? "failed" : rejected > 0 ? "saturated" : lb.pending > 0 ? "degraded" : "healthy" };
+          if (accounting) metrics[node]!.lbAccounting = accounting;
           continue;
         }
         const ids = (members.get(node) ?? []).filter((id) => runtime.inspect(id) !== undefined);
