@@ -39,7 +39,7 @@ test("read routing relieves primary query slots; replica saturation refuses inst
     expect(write.receipt.admitted).toBe(policy === "replica-preferred");
     f.clock.advanceTo(1000);
     expect(f.db.evidence().transactions).toMatchObject({ admitted: policy === "primary-only" ? 2 : 3, live: 0, aborted: 0 });
-    proof.push({ policy, ...f.routing() });
+    proof.push(f.routing());
   }
   console.info("dbroute-query-capacity", JSON.stringify(proof));
 });
