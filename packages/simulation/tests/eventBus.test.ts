@@ -56,6 +56,7 @@ test("deterministic stepped delivery equals one-shot delivery", () => {
   const a = setup(), b = setup(); a.publish(); b.publish();
   for (let at = 500; at <= 10000; at += 500) a.kernel.advanceTo(at);
   b.kernel.advanceTo(10000); expect(a.bus.evidence()).toEqual(b.bus.evidence());
+  expect(a.bus.readings()).toEqual(b.bus.readings());
 });
 test("lost confirmations time out with bounded retry and late duplicate callbacks cannot settle twice", () => {
   const f = setup(1, undefined, true); f.publish(); f.kernel.advanceTo(10000);
@@ -79,4 +80,50 @@ test("an ambiguous delivery retries the real queue and only queue deduplication 
     expect(queue.evidence().duplicatePublishes).toBe(deduplicatePublishes ? 1 : 0);
     expect(queue.evidence().messages).toHaveLength(deduplicatePublishes ? 1 : 2);
   }
+});
+
+test("regression: recovery at retry time precedes retry; one microsecond later exhausts only the failed subscription", () => {
+  for (const late of [false, true]) {
+    const config = setup().config, broker = prepare(design()).compiled.input.resources.find(r => r.kind === "delivery-queue")!;
+    if (broker.kind !== "delivery-queue") throw Error("queue missing");
+    const clock = new EventKernel(100000), slow = deliveryQueue({ ...broker, id: "q1" }, clock), fast = deliveryQueue({ ...broker, id: "q2" }, clock);
+    slow.pause(true);
+    const bus = eventBus({ ...config, maxAttempts: { kind: "known", value: 2, unit: "count", provenance: ["test"] } }, clock, (target, work, done) => (target === "q1" ? slow : fast).accept(work, done));
+    const work: Invocation = { rootId: "one", callId: "one", attempt: 1, offeredAt: 0, operation: "write", message: { request: { kind: "publish", logicalId: "one", body: { key: "one", namespace: "uploads", objectKey: "one", bytes: 128 } } } };
+    bus.accept(work, () => {}); clock.advanceTo(300);
+    const retryAt = bus.evidence().events.find(e => e.subscription === "a-slow")!.atUs + 1000;
+    // Use the same recovery priority as workload faults and async interventions.
+    clock.schedule(retryAt + Number(late), -1, "subscriber-recovery", () => slow.pause(false));
+    clock.advanceTo(retryAt - 1);
+    expect(bus.evidence().subscriptions[0]).toMatchObject({ accepted: 1, delivered: 0, pending: 1, retried: 0 });
+    expect(slow.evidence().accepted).toBe(0);
+    clock.advanceTo(5000);
+    expect(bus.readings().subscriptions[0]).toMatchObject({ accepted: 1, delivered: Number(!late), pending: 0, retried: 1, deadLettered: Number(late), deliveryAccounting: { attempts: 2, failedAttempts: late ? 2 : 1, exhausted: Number(late) } });
+    expect(slow.evidence().accepted).toBe(Number(!late));
+    expect(bus.evidence().subscriptions[1]).toMatchObject({ delivered: 1, retried: 0, pending: 0 });
+    expect(fast.evidence().accepted).toBe(1);
+  }
+});
+
+test("delivery counters remain complete after the bounded detail log is full", () => {
+  const f = setup();
+  for (let i = 0; i < 2100; i++) f.publish(`event-${i}`);
+  f.kernel.advanceTo(f.kernel.now + 10000);
+  const e = f.bus.readings();
+  expect(e.events).toHaveLength(2048); expect(e.omitted).toBeGreaterThan(0);
+  expect(e.subscriptions[1]).toMatchObject({ accepted: 2100, delivered: 2100, deliveryAccounting: { attempts: 2100, failedAttempts: 0, exhausted: 0 } });
+  for (const s of e.subscriptions) {
+    expect(s.deliveryAccounting.attempts).toBe(s.delivered + s.deliveryAccounting.failedAttempts);
+    expect(s.deliveryAccounting.exhausted).toBe(s.deadLettered + s.deadLetterOverflow);
+    expect(s.deadLetters.length).toBeLessThanOrEqual(1);
+  }
+});
+
+test("current delivery readings are detached and leave historical raw evidence unchanged", () => {
+  const f = setup(); f.publish(); f.kernel.advanceTo(10000);
+  const raw = f.bus.evidence(), readings = f.bus.readings();
+  expect(readings.subscriptions.map(({ deliveryAccounting: _accounting, ...s }) => s)).toEqual(raw.subscriptions);
+  readings.subscriptions[0]!.deliveryAccounting.attempts = 999;
+  expect(f.bus.evidence()).toEqual(raw);
+  expect(f.bus.readings().subscriptions[0]!.deliveryAccounting.attempts).toBe(3);
 });

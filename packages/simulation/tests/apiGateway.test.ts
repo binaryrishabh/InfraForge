@@ -48,10 +48,46 @@ test("bounded outstanding requests time out once and late completions cannot dou
   for (const c of f.calls) { c.done("completed"); c.done("completed"); }
   expect(a.completions()).toBe(1); expect(b.completions()).toBe(1);
   expect(f.gateway.evidence()).toMatchObject({ pending: 0, timedOut: 2, completed: 0 });
+  expect(f.gateway.readings().routes[1]).toMatchObject({ received: 2, admitted: 2, outcomes: { matched: 3, overloaded: 1, settled: 2, timedOut: 2, pending: 0, totalDurationUs: 2000, maxDurationUs: 1000 } });
+});
+
+test("regression with route evidence: method mismatch never spends tokens or reaches an upstream", () => {
+  const get = setup(), post = setup();
+  expect(get.send("/orders", "GET").reply().status).toBe(200);
+  expect(post.send("/orders", "POST").reply().status).toBe(404);
+  expect(get.calls.map(c => c.target)).toEqual(["orders"]); expect(post.calls).toHaveLength(0);
+  expect(post.gateway.readings().routes[0]).toMatchObject({ received: 0, admitted: 0, outcomes: { matched: 0, settled: 0, totalDurationUs: 0 } });
+});
+
+test("route cancellation is terminal once and never appears as an upstream failure or timeout", () => {
+  const f = setup(true), request = f.send("/payments", "POST");
+  expect(request.receipt.cancel()).toBe("cancelled");
+  const before = f.gateway.readings(); f.clock.advanceTo(2000); f.calls[0]!.done("completed");
+  expect(f.gateway.readings().routes).toEqual(before.routes);
+  expect(f.gateway.readings().routes[1]).toMatchObject({ outcomes: { cancelled: 1, settled: 1, pending: 0, upstreamFailed: 0, timedOut: 0, totalDurationUs: 200, maxDurationUs: 200 } });
+  expect(request.completions()).toBe(1);
+});
+
+test("route totals remain complete after the bounded response log is full", () => {
+  const f = setup();
+  for (let i = 0; i < 2100; i++) f.send("/payments", "POST");
+  const e = f.gateway.readings();
+  expect(e.events).toHaveLength(2048); expect(e.omitted).toBe(52);
+  expect(e.routes[1]).toMatchObject({ received: 2100, admitted: 10, rejected: 2090, outcomes: { matched: 2100, completed: 10, settled: 10, pending: 0 } });
 });
 test("same input and clock produce deterministic replay with independent gateway counters", () => {
   const a = setup(), b = setup();
   for (const f of [a, b]) { f.send("/orders"); f.send("/orders"); f.clock.advanceTo(1000000); f.send("/orders"); }
   expect(a.gateway.evidence()).toEqual(b.gateway.evidence());
+  expect(a.gateway.readings()).toEqual(b.gateway.readings());
   a.send("/payments", "POST"); expect(a.gateway.evidence().received).toBe(b.gateway.evidence().received + 1);
+});
+
+test("current route readings are detached and leave historical raw evidence unchanged", () => {
+  const f = setup(); f.send("/orders");
+  const raw = f.gateway.evidence(), readings = f.gateway.readings();
+  expect(readings.routes.map(({ outcomes: _outcomes, ...r }) => r)).toEqual(raw.routes);
+  readings.routes[0]!.outcomes.completed = 999;
+  expect(f.gateway.evidence()).toEqual(raw);
+  expect(f.gateway.readings().routes[0]!.outcomes.completed).toBe(1);
 });

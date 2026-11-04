@@ -196,7 +196,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         const gateway = runtime.inspectGateway(resource.id);
         if (gateway) {
           const { id: _id, events: _events, omitted: _omitted, service: _service, authentication: _auth, physicalTiming: _timing, ...readings } = gateway;
-          metrics[resource.id]!.gateway = { version: 1, ...readings, routes: readings.routes.map(({ id, target, path, method, received, admitted, rejected, tokens, capacity }) => ({ id, target, path, method, received, admitted, rejected, tokens, capacity })) };
+          metrics[resource.id]!.gateway = { version: 1, ...readings, routes: readings.routes.map(({ id, target, path, method, received, admitted, rejected, tokens, capacity, outcomes }) => ({ id, target, path, method, received, admitted, rejected, tokens, capacity, outcomes })) };
         }
       }
       const security = runtime.inspectSecurity();

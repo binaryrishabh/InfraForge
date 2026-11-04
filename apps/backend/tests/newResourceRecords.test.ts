@@ -21,6 +21,21 @@ for (const kind of ["gateway", "bus"] as const) test(`${kind} official terminal 
   const limits: string[] = [], records = readRecords(row, limits);
   expect(records.terminal).not.toBeNull(); expect(limits).toEqual([]);
   expect(records.terminal!.resources.find(r => r.id === kind)![kind === "bus" ? "eventBus" : "gateway"]).toBeDefined();
+  const legacy = structuredClone(snapshot), inconsistent = structuredClone(snapshot);
+  if (kind === "gateway") {
+    const recorded = records.terminal!.resources.find(r => r.id === kind)!.gateway!;
+    expect(recorded.routes[0]!.outcomes).toEqual(snapshot.metrics.gateway!.gateway!.routes[0]!.outcomes);
+    expect(recorded.routes[0]!.outcomes!.completed).toBe(2);
+    for (const route of legacy.metrics.gateway!.gateway!.routes) delete route.outcomes;
+    inconsistent.metrics.gateway!.gateway!.routes[0]!.outcomes!.settled++;
+  } else {
+    const recorded = records.terminal!.resources.find(r => r.id === kind)!.eventBus!;
+    expect(recorded.subscriptions[0]!.deliveryAccounting).toEqual({ attempts: 16, failedAttempts: 0, exhausted: 0 });
+    for (const subscription of legacy.metrics.bus!.eventBus!.subscriptions) delete subscription.deliveryAccounting;
+    inconsistent.metrics.bus!.eventBus!.subscriptions[0]!.deliveryAccounting!.failedAttempts++;
+  }
+  expect(readRecords({ ...row, terminalSnapshot: legacy }, []).terminal).not.toBeNull();
+  expect(readRecords({ ...row, terminalSnapshot: inconsistent }, []).terminal).toBeNull();
   expect(records.terminal!.accumulatedCostUsd).toBeUndefined();
   expect(readRecords({ ...row, terminalSnapshot: { ...snapshot, version: 1 } }, []).terminal).toBeNull();
   expect(readRecords({ ...row, terminalSnapshot: { ...snapshot, costCoverage: undefined } }, []).terminal).toBeNull();

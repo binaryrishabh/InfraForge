@@ -10,7 +10,7 @@ import type { GatewayConfig, GatewayReply, GatewayRequest } from "./contracts";
 
 export function apiGateway(config: GatewayConfig, clock: EventKernel, send: Deliver) {
   const maxInFlight = requireKnown(config.maxInFlight, "count"), maxBytes = requireKnown(config.maxRequestBytes, "bytes"), timeout = requireKnown(config.upstreamTimeout, "us");
-  const routes = config.routes.map(route => ({ ...route, state: tokenBucketState(requireKnown(route.burst, "count"), requireKnown(route.burst, "count"), 1, requireKnown(route.refillEvery, "us"), clock.now) }));
+  const routes = config.routes.map(route => ({ ...route, outcomes: { matched: 0, overloaded: 0, completed: 0, gatewayFailed: 0, upstreamFailed: 0, timedOut: 0, cancelled: 0, pending: 0, settled: 0, totalDurationUs: 0, maxDurationUs: 0 }, state: tokenBucketState(requireKnown(route.burst, "count"), requireKnown(route.burst, "count"), 1, requireKnown(route.refillEvery, "us"), clock.now) }));
   const live = new Map<string, () => void>();
   const service = commandService(config.id, config, clock, () => ({ ok: true }));
   let received = 0, admitted = 0, completed = 0, invalid = 0, missingRoute = 0, throttled = 0, overloaded = 0, gatewayFailed = 0, upstreamFailed = 0, timedOut = 0, cancelled = 0, paused = false;
@@ -21,6 +21,7 @@ export function apiGateway(config: GatewayConfig, clock: EventKernel, send: Deli
     respond(work, done, { ok: false, status, reason, ...(route ? { route } : {}) });
     return { admitted: false, state: () => "finished", cancel: () => "already-finished" };
   };
+  const evidence = () => ({ id: config.id, received, admitted, completed, invalid, missingRoute, throttled, overloaded, gatewayFailed, upstreamFailed, timedOut, cancelled, pending: live.size, routes: routes.map(r => ({ id: r.id, target: r.target, path: r.path, method: r.method, ...projectTokens(r.state, clock.now) })), events: events.map(e => ({ ...e })), omitted, service: service.evidence(), authentication: "Unknown; no authentication model", physicalTiming: "Unknown; authored logical command demand only" });
   return {
     accept(work: Invocation, done: RemoteCompletion): Receipt {
       received++;
@@ -29,13 +30,21 @@ export function apiGateway(config: GatewayConfig, clock: EventKernel, send: Deli
       if ((request !== undefined && (!request || typeof request !== "object" || Array.isArray(request) || request.kind !== "gateway-request" || typeof request.path !== "string" || !["GET", "POST"].includes(request.method) || Object.keys(request).some(k => !["kind", "path", "method"].includes(k)))) || typeof path !== "string" || path.length > 256 || !/^\/[a-zA-Z0-9/_-]*$/.test(path) || !["GET", "POST"].includes(method) || !Number.isSafeInteger(body) || body < 0 || !Number.isSafeInteger(bytes) || bytes < 0 || bytes > maxBytes) { invalid++; return refusal(work, done, 400, "invalid-request"); }
       const route = routes.find(r => r.path === path && (r.method === "ANY" || r.method === method));
       if (!route) { missingRoute++; return refusal(work, done, 404, "missing-route"); }
-      if (paused || live.size >= maxInFlight || live.has(work.callId)) { overloaded++; return refusal(work, done, 503, "gateway-capacity", route.id); }
+      route.outcomes.matched++;
+      if (paused || live.size >= maxInFlight || live.has(work.callId)) { overloaded++; route.outcomes.overloaded++; return refusal(work, done, 503, "gateway-capacity", route.id); }
       const token = takeToken(route.state, clock.now); route.state = token.state;
       if (!token.admitted) { throttled++; return refusal(work, done, 429, "route-throttled", route.id); }
-      admitted++; let terminal = false, receipt: Receipt | undefined, cancelDispatch: (() => boolean) | undefined;
+      admitted++; route.outcomes.pending++; const startedAt = clock.now;
+      let terminal = false, receipt: Receipt | undefined, cancelDispatch: (() => boolean) | undefined;
       const finish = (reply: GatewayReply, cause?: Cause, cancel = false) => {
         if (terminal) return; terminal = true; cancelTimeout(); cancelDispatch?.(); live.delete(work.callId);
         if (cancel) cancelled++; else if (reply.ok) completed++; else if (reply.status === 504) timedOut++; else if (reply.status === 503) gatewayFailed++; else upstreamFailed++;
+        route.outcomes[cancel ? "cancelled" : reply.ok ? "completed" : reply.status === 504 ? "timedOut" : reply.status === 503 ? "gatewayFailed" : "upstreamFailed"]++;
+        // Only admitted terminal requests contribute a duration, including gateway
+        // command wait and upstream wait. Refusals never become latency samples.
+        route.outcomes.pending--; route.outcomes.settled++;
+        const duration = clock.now - startedAt;
+        route.outcomes.totalDurationUs += duration; route.outcomes.maxDurationUs = Math.max(route.outcomes.maxDurationUs, duration);
         if (cancel) { work.message ??= { request: undefined }; work.message.response = reply; record(reply); done("cancelled"); }
         else respond(work, done, reply, cause);
       };
@@ -54,6 +63,8 @@ export function apiGateway(config: GatewayConfig, clock: EventKernel, send: Deli
     },
     pause(value: boolean) { paused = value; service.pause(value); },
     measure: () => ({ id: config.id, paused, received, admitted, rejected: received - admitted, completed, failed: upstreamFailed + timedOut + gatewayFailed, cancelled, queued: 0, serving: 0, waiting: live.size, consumedCoreUs: service.measure().consumedCoreUs, busySlotUs: service.measure().busySlotUs }),
-    evidence: () => ({ id: config.id, received, admitted, completed, invalid, missingRoute, throttled, overloaded, gatewayFailed, upstreamFailed, timedOut, cancelled, pending: live.size, routes: routes.map(r => ({ id: r.id, target: r.target, path: r.path, method: r.method, ...projectTokens(r.state, clock.now) })), events: events.map(e => ({ ...e })), omitted, service: service.evidence(), authentication: "Unknown; no authentication model", physicalTiming: "Unknown; authored logical command demand only" }),
+    evidence,
+    // Additional current readings stay outside the historical raw evidence format.
+    readings() { const e = evidence(); return { ...e, routes: e.routes.map((r, i) => ({ ...r, outcomes: { ...routes[i]!.outcomes } })) }; },
   };
 }

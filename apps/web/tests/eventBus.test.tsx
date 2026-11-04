@@ -28,4 +28,7 @@ test("event bus numeric controls expose defaults, lock state and independent evi
   expect(renderToStaticMarkup(<EventBusReadings />)).toContain("Unknown");
   const evidence = renderToStaticMarkup(<EventBusReadings metrics={{ version: 1, accepted: 1, invalid: 0, subscriptions: [{ id: "slow", target: "queue", accepted: 1, delivered: 0, retried: 2, discarded: 0, filtered: 0, pending: 0, deadLettered: 1, deadLetterOverflow: 0 }] }} />);
   expect(evidence).toContain("Subscription slow"); expect(evidence).toContain("<dd>2</dd>"); expect(evidence).toContain("<dd>0</dd>");
+  expect(evidence).toContain("Failed attempts</dt><dd>Unknown");
+  const measured = renderToStaticMarkup(<EventBusReadings metrics={{ version: 1, accepted: 1, invalid: 0, subscriptions: [{ id: "slow", target: "queue", accepted: 1, delivered: 0, retried: 2, discarded: 0, filtered: 0, pending: 0, deadLettered: 1, deadLetterOverflow: 0, deliveryAccounting: { attempts: 3, failedAttempts: 3, exhausted: 1 } }] }} />);
+  expect(measured).toContain("Delivery attempts</dt><dd>3"); expect(measured).toContain("Exhausted deliveries</dt><dd>1");
 });

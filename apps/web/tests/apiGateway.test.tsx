@@ -23,3 +23,12 @@ test("gateway controls expose bounded defaults and live outcomes preserve Unknow
   expect(html.match(/type="number"/g)).toHaveLength(3); expect(html).toContain('placeholder="1048576"'); expect(html).toContain("GET /read");
   const missing = renderToStaticMarkup(<GatewayReadings />); expect(missing).toContain("Unknown"); expect(missing).not.toContain("<dd>0</dd>");
 });
+
+test("route readings keep unrecorded outcomes Unknown and display measured durations", () => {
+  const metrics = { version: 1 as const, received: 1, admitted: 1, completed: 1, invalid: 0, missingRoute: 0, throttled: 0, overloaded: 0, gatewayFailed: 0, upstreamFailed: 0, timedOut: 0, cancelled: 0, pending: 0, routes: [{ id: "read", target: "app", path: "/read", method: "GET", received: 1, admitted: 1, rejected: 0, tokens: 0, capacity: 1 }] };
+  expect(renderToStaticMarkup(<GatewayReadings metrics={metrics} />)).toContain("Mean admitted duration (ms)</dt><dd>Unknown");
+  const measured = { ...metrics, routes: metrics.routes.map(r => ({ ...r, outcomes: { matched: 1, overloaded: 0, completed: 1, gatewayFailed: 0, upstreamFailed: 0, timedOut: 0, cancelled: 0, pending: 0, settled: 1, totalDurationUs: 4500, maxDurationUs: 4500 } })) };
+  const html = renderToStaticMarkup(<GatewayReadings metrics={measured} />);
+  expect(html).toContain("Mean admitted duration (ms)</dt><dd>4.50");
+  expect(html).toContain("Max admitted duration (ms)</dt><dd>4.50");
+});
