@@ -53,3 +53,12 @@ test("missed latest retains only one trigger, resumes once and respects lateness
   service.pause(false); expect(calls).toBe(1); expect(service.evidence()).toMatchObject({ missed: 9, completed: 1 });
   expect(clock.pending).toBe(0);
 });
+test("skip misses do not replay, and an expired latest trigger cannot catch up", () => {
+  for (const missed of ["skip", "latest"] as const) {
+    const clock = new EventKernel(10000); let calls = 0;
+    const send: Deliver = (_t, _w, done) => { calls++; done("completed"); return { admitted: true, state: () => "finished", cancel: () => "already-finished" }; };
+    const config = schedulerFixture({ missed, maxLateness: { kind: "known", unit: "us", value: 0, provenance: ["test"] } });
+    const service = scheduler(config, clock, send, 300000); service.pause(true); service.start(); clock.advanceTo(95000); service.pause(false);
+    expect(service.evidence()).toMatchObject({ due: 10, missed: 10, retainedLatest: 0 }); expect(calls).toBe(0);
+  }
+});

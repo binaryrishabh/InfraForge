@@ -26,6 +26,7 @@ test("functions refuse missing, duplicated and mismatched capture or materialize
   for (const adapterProfiles of [[], ["serverless/1", "serverless/1"]] as const) expect(contractFromDesign(d, { adapterProfiles })).toHaveProperty("refused");
   const f = prepare(d), config = f.contract.nodes.fn!.resources[0]!.config; if (config.kind !== "serverless") throw Error("function config");
   config.database = "$fn"; expect(compileProduct(d, f.contract).ok).toBe(false);
+  const captured = prepare(d).contract; d.resources[0]!.serverless!.concurrency = 2; expect(compileProduct(d, captured).ok).toBe(false);
   const wrong = functionDesign(); wrong.resources[1]!.serverless = { version: 1 }; expect(contractFromDesign(wrong)).toHaveProperty("refused");
 });
 test("scheduled function invocations reuse warm instances until idle expiry", () => {

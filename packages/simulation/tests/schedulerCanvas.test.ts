@@ -5,6 +5,7 @@ import { compileProduct } from "../src/model2/product/compiler";
 import { withRunLength } from "../src/model2/product/runContract";
 import { createProductModel2 } from "../src/model2/product/run";
 import { prepare } from "./asyncCanvas.fixture";
+import { withTimeline } from "../src/model2/product/timeline";
 export function schedulerDesign(): SavedProductDesign {
   return { schema: "infraforge-saved-design/1", resources: [{ id: "app", type: "Virtual Machine", x: 0, y: 0 }, { id: "timer", type: "Scheduler", x: 0, y: 0, scheduler: { version: 1, periodMs: 10, maxTriggers: 100 } }], connections: [{ id: "tick", sourceId: "timer", targetId: "app", sourceType: "Scheduler", targetType: "Virtual Machine", port: 80 }], workload: { targetThroughput: 60, throughputUnit: "per-minute", trafficShape: "steady", readWriteRatio: 1, payloadSize: "light" } };
 }
@@ -43,4 +44,18 @@ test("overlap and period change downstream application work in controlled canvas
   expect(slow.timer.completed).toBe(100);
   expect(allow.app).toHaveProperty("completed", allow.timer.completed + 2);
   expect(run("allow")).toEqual(allow);
+});
+test("an ambiguous response repeats real database effects; scheduler identity is not a deduplication boundary", () => {
+  const d = schedulerDesign();
+  d.resources[1]!.scheduler = { version: 1, startMs: 100, periodMs: 0, maxAttempts: 3, retryDelayMs: 100, timeoutMs: 20 };
+  d.resources.push({ id: "db", type: "Database", x: 300, y: 0 });
+  d.connections.push({ id: "query", sourceId: "app", targetId: "db", sourceType: "Virtual Machine", targetType: "Database", port: 5432 });
+  const f = prepare(d), contract = withRunLength(f.contract, 1, "scheduler-duplicate");
+  const initial = compileProduct(d, contract); if (!initial.ok) throw Error(JSON.stringify(initial));
+  const response = initial.value.input.paths.find(p => p.source === "timer" && p.target === "app")!.response;
+  const delayed = withTimeline(contract, [{ id: "delayed", atUs: 0, kind: "network-delay", links: response, durationUs: 1000000, delayUs: 50000 }]);
+  const c = compileProduct(d, delayed); if (!c.ok) throw Error(JSON.stringify(c));
+  const r = createProductModel2(c.value); r.advanceTo(1_000_000);
+  expect(r.evidence().asynchronous.schedulers![0]).toMatchObject({ due: 1, fired: 3, retried: 2, completed: 0, failed: 1, missed: 1 });
+  expect(r.inspectData.database("db")?.logicalWrites).toBe(3);
 });
