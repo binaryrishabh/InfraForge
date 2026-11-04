@@ -17,7 +17,7 @@ function run(overlap: SchedulerConfig["overlap"], period = 10000) {
     const cancel = clock.schedule(clock.now + 25000, 2, `app-${calls++}`, () => done("completed"));
     return { admitted: true, state: () => "serving", cancel: () => { cancel(); return "cancelled"; } };
   };
-  const config = schedulerFixture({ overlap }); config.period = { ...config.period, value: period };
+  const config = schedulerFixture({ overlap }); config.period = { kind: "known", unit: "us", provenance: ["test"], value: period };
   const service = scheduler(config, clock, send, 300000); service.start(); clock.advanceTo(300000);
   return { evidence: service.evidence(), calls, pending: clock.pending };
 }
@@ -39,7 +39,7 @@ test("outage retries are bounded and exhausted triggers count as missed", () => 
 test("ambiguous timeout preserves the logical id while late replies cannot double-complete", () => {
   const clock = new EventKernel(10000), ids: string[] = [];
   const send: Deliver = (_t, w, done) => { ids.push(w.rootId); clock.schedule(clock.now + 60000, 2, w.callId, () => done("completed")); return { admitted: true, state: () => "serving", cancel: () => "unsupported" }; };
-  const config = schedulerFixture(); config.period.value = 0;
+  const config = schedulerFixture(); config.period = { kind: "known", unit: "us", provenance: ["test"], value: 0 };
   const service = scheduler(config, clock, send, 300000); service.start(); service.start(); clock.advanceTo(300000);
   expect(ids).toHaveLength(3); expect(new Set(ids).size).toBe(1);
   expect(service.evidence()).toMatchObject({ due: 1, fired: 3, failed: 1, completed: 0, missed: 1 });

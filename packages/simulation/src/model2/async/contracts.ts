@@ -17,7 +17,7 @@ export interface WorkerConfig {
   concurrency: Quantity<"count">; prefetch: Quantity<"count">; pollInterval: Quantity<"us">; cpu: Quantity<"cpu-us">; blockingWait: Quantity<"us">; ackDelay: Quantity<"us">; resultBytes: Quantity<"bytes">;
   idempotency: "none" | "object-if-absent"; poisonKeys: string[];
 }
-export type AsyncResource = import("../gateway/contracts").GatewayConfig | BrokerConfig | ObjectConfig | PublisherConfig | WorkerConfig | import("../eventbus/contracts").EventBusConfig;
+export type AsyncResource = import("../scheduled/contracts").SchedulerConfig | import("../gateway/contracts").GatewayConfig | BrokerConfig | ObjectConfig | PublisherConfig | WorkerConfig | import("../eventbus/contracts").EventBusConfig;
 export type AsyncIntervention = { id: string; target: string; at: Quantity<"us">; duration: Quantity<"us"> } & ({ kind: "consumer-state"; available: boolean } | { kind: "object-access"; reads: boolean; writes: boolean } | { kind: "object-capacity"; bytes: Quantity<"bytes"> });
 export interface AsyncInput extends Omit<DataInput, "workloadVersion" | "resources"> { workloadVersion: "m2f/1"; resources: Array<DataInput["resources"][number] | AsyncResource>; asyncInterventions: AsyncIntervention[] }
 export interface QueueRequest { kind: "publish" | "receive" | "ack" | "nack"; logicalId?: string; body?: MessageBody; delayUs?: number; consumer?: string; receipt?: string; action?: "requeue" | "discard" | "dead-letter" }

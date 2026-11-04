@@ -4,6 +4,7 @@ import type { derivedLedger } from "./provenance";
 import { requireKnown } from "../../reality/quantity";
 import type { CompiledProduct } from "./contracts";
 export const CHAOS_COMPATIBILITY = {
+  Scheduler: { Crash: "unavailable: scheduler process persistence and restart are unmodeled", CpuSpike: "unavailable", MemoryLeak: "unavailable", NetworkDelay: "explicit links only", DiskFailure: "unavailable" },
   "Event Bus": { Crash: "unavailable: bus process restart and retention are unmodeled", CpuSpike: "unavailable", MemoryLeak: "unavailable", NetworkDelay: "explicit links only", DiskFailure: "unavailable" },
   "API Gateway": { Crash: "unavailable: gateway process restart and request retention are unmodeled", CpuSpike: "unavailable", MemoryLeak: "unavailable", NetworkDelay: "explicit links only", DiskFailure: "unavailable" },
   DNS: { Crash: "authority retains authored records; resolver invalidates volatile answers; commands abort", CpuSpike: "unavailable", MemoryLeak: "unavailable", NetworkDelay: "explicit links only", DiskFailure: "unavailable" },
@@ -27,7 +28,7 @@ export function compileFaults(faults: ProductFault[], input: SystemsInput, expan
       if (fault.profile !== "retain-logical-state/1" || !fault.restart || !Number.isSafeInteger(requireKnown(fault.restart, "us")) || requireKnown(fault.restart, "us") < 1 || !Number.isSafeInteger(requireKnown(fault.at, "us") + requireKnown(fault.duration, "us") + requireKnown(fault.restart, "us"))) throw Error("Crash needs explicit resource-specific retention and positive authored process restart/readiness delay");
       for (const target of expand(fault.target)) {
         const r = input.resources.find((r) => r.id === target);
-        if (!r || ["event-bus", "api-gateway", "load-balancer", "cache-aside", "artifact-client", "async-worker", "async-publisher"].includes(r.kind)) throw Error("Crash unsupported for this lifecycle/owner");
+        if (!r || ["scheduler", "event-bus", "api-gateway", "load-balancer", "cache-aside", "artifact-client", "async-worker", "async-publisher"].includes(r.kind)) throw Error("Crash unsupported for this lifecycle/owner");
         input.networkInterventions.push({ id: `${fault.id}:${target}`, kind: "service-state", target, at: fault.at, duration: fault.duration, alive: false, ready: false });
         crashes.push({ target, at: fault.at, restartAt: provenance.q(`m2h.${fault.id}.${target}.restartAt`, requireKnown(fault.at, "us") + requireKnown(fault.duration, "us") + requireKnown(fault.restart, "us"), "us", [...fault.at.provenance, ...fault.duration.provenance, ...fault.restart.provenance]) });
         if (r.kind === "cache") input.dataInterventions.push({ id: `${fault.id}:${target}:flush`, kind: "flush", target, at: fault.at });
