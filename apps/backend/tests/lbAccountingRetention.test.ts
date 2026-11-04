@@ -4,6 +4,10 @@ import { buildContractFromRunInputs } from "@infraforge/simulation/internal-prod
 import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
 import { readRecords } from "../reports/records";
 import { selectionLayout } from "./lbSelection.test";
+import { captureSnapshot } from "../simulator/snapshot";
+import type { SimulationInstance } from "../simulator/instance";
+import { storedJson } from "../utils/json";
+import { buildRunReport } from "../reports/report";
 
 const workload = { targetThroughput: 12000, throughputUnit: "per-minute" as const, trafficShape: "steady" as const, readWriteRatio: 1, payloadSize: "light" as const };
 test("new explicit LB controls capture accounting and retain actual engine counters in report records", () => {
@@ -20,13 +24,18 @@ test("new explicit LB controls capture accounting and retain actual engine count
   const metrics = run.view().metrics;
   expect(metrics.lb!.lbAccounting).toEqual(actual);
   const limits: string[] = [];
-  const records = readRecords({ stages: [], timeline: [], chaosEvents: [], runInputs: input, simulationState: { simulatedSeconds: 3, metrics } }, limits);
+  const instance = { model2: run, topology: layout, topologyRevision: 0, pendingLogs: [], speed: 1, accumulatedCostUsd: 0,
+    metricsComputedAt: "2026-11-04T00:00:00.000Z", metricsTopologyRevision: 0 } as unknown as SimulationInstance;
+  const simulationState = storedJson(captureSnapshot("retained-lb", instance, "checkpoint"));
+  const terminalSnapshot = storedJson(captureSnapshot("retained-lb", instance, "terminal"));
+  const row = { id: "retained-lb", infrastructureId: null, status: "completed", resourceCount: layout.resources.length,
+    createdAt: new Date("2026-11-04T00:00:00.000Z"), updatedAt: new Date("2026-11-04T00:00:00.000Z"), topologyRevision: 0,
+    stages: [], timeline: [], chaosEvents: [], workloadProfile: input.workloadProfile, seed: input.seed, runInputs: input,
+    liveTopology: layout, simulationState, terminalSnapshot };
+  const records = readRecords(row, limits);
   expect(records.checkpoint!.resources.find(r => r.id === "lb")!.lbAccounting).toEqual(actual);
-  const terminal = readRecords({ stages: [], timeline: [], chaosEvents: [], terminalSnapshot: {
-    version: 2, costCoverage: "unknown", kind: "terminal", capturedAt: "2026-11-04T00:00:00.000Z",
-    topologyRevision: 0, simulatedSeconds: 3, overallHealth: "critical", metrics,
-  } }, limits);
-  expect(terminal.terminal!.resources.find(r => r.id === "lb")!.lbAccounting).toEqual(actual);
+  expect(records.terminal!.resources.find(r => r.id === "lb")!.lbAccounting).toEqual(actual);
+  expect(buildRunReport(row).terminal!.resources.find(r => r.id === "lb")!.lbAccounting).toEqual(actual);
   expect(limits).toEqual([]);
   console.info("retained-lb-accounting", JSON.stringify(actual));
 });
