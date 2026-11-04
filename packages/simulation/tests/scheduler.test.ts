@@ -1,0 +1,55 @@
+import { expect, test } from "bun:test";
+import { EventKernel } from "../src/model2/time";
+import { scheduler } from "../src/model2/scheduled/run";
+import type { SchedulerConfig } from "../src/model2/scheduled/contracts";
+import type { Deliver } from "../src/model2/compute/run";
+import { prepare, design } from "./asyncCanvas.fixture";
+
+export function schedulerFixture(patch: Partial<SchedulerConfig> = {}) {
+  const execution = prepare(design(false)).compiled.input.resources.find(r => r.kind === "compute")!;
+  if (execution.kind !== "compute") throw Error("execution");
+  const q = (value: number, unit: "us" | "count") => ({ kind: "known" as const, value, unit, provenance: ["test"] });
+  return { id: "timer", kind: "scheduler", profile: "bounded-simulated-triggers/1", execution, target: "app", operation: "write", start: q(0, "us"), period: q(10000, "us"), maxTriggers: q(10, "count"), overlap: "skip", maxConcurrent: q(4, "count"), queueCapacity: q(2, "count"), maxAttempts: q(3, "count"), retryDelay: q(1000, "us"), timeout: q(50000, "us"), maxLateness: q(1000000, "us"), missed: "skip", ...patch } as SchedulerConfig;
+}
+function run(overlap: SchedulerConfig["overlap"], period = 10000) {
+  const clock = new EventKernel(10000); let calls = 0;
+  const send: Deliver = (_target, _work, done) => {
+    const cancel = clock.schedule(clock.now + 25000, 2, `app-${calls++}`, () => done("completed"));
+    return { admitted: true, state: () => "serving", cancel: () => { cancel(); return "cancelled"; } };
+  };
+  const config = schedulerFixture({ overlap }); config.period = { ...config.period, value: period };
+  const service = scheduler(config, clock, send, 300000); service.start(); clock.advanceTo(300000);
+  return { evidence: service.evidence(), calls, pending: clock.pending };
+}
+test("overlap and period causally change real downstream load; replay is deterministic", () => {
+  expect(run("skip").calls).toBe(4);
+  expect(run("allow").calls).toBe(10);
+  expect(run("queue").calls).toBe(6);
+  expect(run("skip", 30000).calls).toBe(10);
+  expect(run("queue")).toEqual(run("queue"));
+  expect(run("queue").pending).toBe(0);
+});
+test("outage retries are bounded and exhausted triggers count as missed", () => {
+  const clock = new EventKernel(10000); let calls = 0;
+  const send: Deliver = (_t, _w, done) => { calls++; done("rejected"); return { admitted: false, state: () => "finished", cancel: () => "already-finished" }; };
+  const service = scheduler(schedulerFixture(), clock, send, 300000); service.start(); clock.advanceTo(300000);
+  expect(service.evidence()).toMatchObject({ due: 10, fired: 30, retried: 20, failed: 10, missed: 10, completed: 0, active: 0, queued: 0 });
+  expect(calls).toBe(30); expect(clock.pending).toBe(0);
+});
+test("ambiguous timeout preserves the logical id while late replies cannot double-complete", () => {
+  const clock = new EventKernel(10000), ids: string[] = [];
+  const send: Deliver = (_t, w, done) => { ids.push(w.rootId); clock.schedule(clock.now + 60000, 2, w.callId, () => done("completed")); return { admitted: true, state: () => "serving", cancel: () => "unsupported" }; };
+  const config = schedulerFixture(); config.period.value = 0;
+  const service = scheduler(config, clock, send, 300000); service.start(); service.start(); clock.advanceTo(300000);
+  expect(ids).toHaveLength(3); expect(new Set(ids).size).toBe(1);
+  expect(service.evidence()).toMatchObject({ due: 1, fired: 3, failed: 1, completed: 0, missed: 1 });
+  expect(service.evidence().guarantee).toContain("duplicate");
+});
+test("missed latest retains only one trigger, resumes once and respects lateness", () => {
+  const clock = new EventKernel(10000); let calls = 0;
+  const send: Deliver = (_t, _w, done) => { calls++; done("completed"); return { admitted: true, state: () => "finished", cancel: () => "already-finished" }; };
+  const service = scheduler(schedulerFixture({ missed: "latest" }), clock, send, 300000);
+  service.pause(true); service.start(); clock.advanceTo(95000); expect(calls).toBe(0);
+  service.pause(false); expect(calls).toBe(1); expect(service.evidence()).toMatchObject({ missed: 9, completed: 1 });
+  expect(clock.pending).toBe(0);
+});
