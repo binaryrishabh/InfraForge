@@ -24,7 +24,7 @@ export interface TelemetryConfig extends CommandConfig { id: string; kind: "tele
 export type SystemResource = AuthorityConfig | ResolverConfig | CdnConfig | RegistryConfig | StartupConfig | MonitorConfig | TelemetryConfig;
 export interface Scope { kind: "any" | "identity" | "zone" | "cidr"; value?: string }
 export interface FirewallRule { authoredId?: string; id: string; direction: "ingress" | "egress" | "both"; protocol: "tcp"; source: Scope; destination: Scope; fromPort: Quantity<"count">; toPort: Quantity<"count">; priority: Quantity<"count">; action: "allow" | "deny" }
-export interface FirewallConfig { id: string; profile: "ordered-stateful/1"; default: "allow" | "deny"; maxFlows: Quantity<"count">; rules: FirewallRule[] }
+export interface FirewallConfig { statePolicy?: { version: 1; idleTimeout: Quantity<"us"> }; id: string; profile: "ordered-stateful/1"; default: "allow" | "deny"; maxFlows: Quantity<"count">; rules: FirewallRule[] }
 export interface Listener { resource: string; protocol: "tcp"; port: Quantity<"count">; tls: "plaintext" | "required" | "optional"; certificate?: { names: string[]; issuer: string; notBefore: Quantity<"us">; notAfter: Quantity<"us"> } }
 export interface DialConfig {
   path: string; port: Quantity<"count">; protocol: "tcp"; firewalls: string[];

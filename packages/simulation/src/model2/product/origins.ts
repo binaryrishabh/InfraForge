@@ -7,6 +7,7 @@ export function numericOrigins(input: SystemsInput, pools: CompiledPool[], contr
     return `contract.nodes.${node}.resources[role=${role ?? spec.primary}].config`;
   };
   const source = (path: string): { origin: SemanticSpec["numericOrigins"][number]["origin"]; sources: string[] } => {
+    if (/^input.systems.firewalls.\d+.statePolicy.version$/.test(path)) return { origin: "policy", sources: ["firewall-state/1: semantic connection idle tracking"] };
     if (/^input.workloadObjective\./.test(path)) return { origin: "user-authored", sources: ["design.workload.workloadObjective", "Cumulative educational objective; observation only, no service demand or arrival changes"] };
     if (/^input.operations\.\d+\.clientRetry\./.test(path)) return { origin: "user-authored", sources: ["design.workload.clientRetry", "client-retry/1: bounded read attempts, integer milliseconds converted to simulated microseconds; no jitter"] };
     const match = /^input.resources\.(\d+)(.*)$/.exec(path);

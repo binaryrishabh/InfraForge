@@ -1,6 +1,7 @@
 import { ApiGatewaySection } from "./ApiGatewaySection";
 import { EventBusSection } from "./EventBusSection";
 import { LbRateLimitSection } from "./LbRateLimitSection";
+import { FirewallStateSection } from "./FirewallStateSection";
 import { FirewallCapacitySection } from "./FirewallCapacitySection";
 import { ObjectCapacitySection } from "./ObjectCapacitySection";
 import { SecuritySection } from "./SecuritySection";
@@ -74,6 +75,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
       {resource.type === "Database" && <DataKeyspaceSection key={`keyspace-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Database" && <DatabaseReplicationSection resource={resource} disabled={locked} />}
       {resource.type === "Database" && <DbConcurrencySection key={`db-concurrency-${resource.id}`} resource={resource} disabled={locked} />}
+      {resource.type === "Firewall" && <FirewallStateSection key={`firewall-state-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Firewall" && <FirewallCapacitySection key={`firewall-capacity-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Object Storage" && <ObjectCapacitySection key={`object-capacity-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Cache" && <CachePolicySection key={`cache-policy-${resource.id}`} resource={resource} disabled={locked} />}

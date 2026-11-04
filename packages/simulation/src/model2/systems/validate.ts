@@ -52,7 +52,7 @@ export function validateSystems(i: SystemsInput) {
   }
   const startupTargets = i.resources.filter((r): r is Extract<SystemResource, { kind: "artifact-client" }> => r.kind === "artifact-client").flatMap((r) => r.replicas.map((x) => x.target)); if (!unique(startupTargets)) throw Error("Compute has multiple artifact readiness owners");
   for (const p of i.systems.instrumentation) { if (!resources.has(p.target)) throw Error("Unknown instrumentation target"); n(p.bytes, "bytes", 1); }
-  for (const f of i.systems.firewalls) { if (!key(f.id) || f.profile !== "ordered-stateful/1" || !["allow", "deny"].includes(f.default)) throw Error("Invalid firewall profile"); n(f.maxFlows, "count", 1, caps.flows); rules(f.rules); }
+  for (const f of i.systems.firewalls) { if (!key(f.id) || f.profile !== "ordered-stateful/1" || !["allow", "deny"].includes(f.default)) throw Error("Invalid firewall profile"); n(f.maxFlows, "count", 1, caps.flows); rules(f.rules); if (f.statePolicy !== undefined) { if (f.statePolicy.version !== 1 || Object.keys(f.statePolicy).some(k => !["version", "idleTimeout"].includes(k))) throw Error("Invalid firewall state policy"); micros(horizon + n(f.statePolicy.idleTimeout, "us", 1000000, 3600000000)); } }
   for (const listener of i.systems.listeners) {
     if (!resources.has(listener.resource) || listener.protocol !== "tcp" || !["plaintext", "required", "optional"].includes(listener.tls)) throw Error("Invalid listener"); n(listener.port, "count", 1, 65535);
     const cert = listener.certificate; if (cert && (!key(cert.issuer) || !cert.names.length || !unique(cert.names) || cert.names.some((s) => !name(s) || s !== dnsName(s)) || n(cert.notBefore, "us") >= n(cert.notAfter, "us"))) throw Error("Invalid certificate assertions");

@@ -23,8 +23,8 @@ export function SecurityReadings({ metrics, firewall = false }: { metrics?: Secu
   const text = (v: number | null | undefined) => v == null ? "Unknown" : String(v);
   metrics = metrics?.version === 1 ? metrics : undefined;
   const policy = metrics?.firewall;
-  const rows = [["Current flow occupancy", policy?.occupancy], ["Configured flow limit", policy?.limit], ["Admitted opens", policy?.admissions],
-    ["Policy denied opens", policy?.policyDenied], ["Flow capacity refusals", policy?.["flow-capacity"]], ["Policy generation", policy?.generation]] as const;
+  const rows: Array<readonly [string, number | null | undefined]> = [["Current flow occupancy", policy?.occupancy], ["Configured flow limit", policy?.limit], ["Admitted opens", policy?.admissions],
+    [policy?.expired === undefined ? "Policy denied opens" : "Policy denied new admissions", policy?.policyDenied], ["Flow capacity refusals", policy?.["flow-capacity"]], ["Policy generation", policy?.generation], ...(policy?.expired === undefined ? [] : [["Expired flow entries", policy.expired], ["Established requests", policy.establishedRequests], ["Requests after expiry", policy.newRequests], ["Responses refused after expiry", policy.expiredReturns]] as const)] ;
   return <div>
     {(firewall || policy) && <><dl>{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{text(value)}</dd></div>)}</dl>
       <p>Flow limit is an educational assumption. Policy denials, flow capacity refusals, TLS failures and listener failures are separate reasons.</p></>}

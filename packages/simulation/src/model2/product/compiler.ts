@@ -5,7 +5,7 @@ import { LB_RATE_LIMIT_PROFILE, lbRateLimitChanges, validateLbRateLimitBindings 
 import { checkClientRetry } from "./clientRetry";
 import { checkObjective } from "./objective";
 import { checkCpuDynamics } from "./workloadDynamics";
-import { RESOURCE_PORTS, vmMemoryError, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, dnsCachePolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, vmMemoryError, lbRateLimitError, firewallStateError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, dnsCachePolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -26,6 +26,7 @@ import { capabilityFacts } from "./capabilities";
 import { WORKLOAD_LIMITS } from "../workload/policy";
 import { numericOrigins } from "./origins";
 import { dataKeys, hotKey, HOT_KEY_PROFILE, multiKey, KEYSPACE_PROFILE, validateDatabaseKeyspace } from "./keyspace";
+import { validateFirewallStateProfile, validateFirewallStateBindings } from "./firewallState";
 import { validateFirewallCapacityProfile, validateFirewallCapacityBindings } from "./firewallCapacity";
 import { validateObjectCapacityProfile, validateObjectCapacityBindings } from "./objectCapacity";
 import { validateMonitoringBufferProfile, validateMonitoringBufferBindings } from "./monitoringBuffer";
@@ -67,6 +68,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     design = savedPoolPolicies(design);
     validateDatabaseReadRoutingProfile(design.resources, contract);
     validateDatabaseReplicationProfile(design.resources, contract);
+    validateFirewallStateProfile(design.resources, contract);
     validateFirewallCapacityProfile(design.resources, contract);
     validateObjectCapacityProfile(design.resources, contract);
     validateMonitoringCadenceProfile(design.resources, contract);
@@ -99,7 +101,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (design.schema !== "infraforge-saved-design/1" || contract.schema !== "infraforge-product-model2/1" || !contract.version || !contract.designVersion || !contract.catalogVersion || !["product-arrivals/1", "product-arrivals/2"].includes(contract.workloadVersion)) error("VERSION_REQUIRED", "versions", "Explicit design/compiler/application/catalog/workload versions required");
     if (!contract.application) error("MISSING_APPLICATION_PROFILE", "application", "Missing application execution profile; provider hardware cannot supply operation demand");
     if (design.resources.length > 256 || design.connections.length > 2048 || !design.resources.length) error("DESIGN_BUDGET", "design", "Bounded nonempty design required");
-    const hasSecurity = design.resources.some(r => r.listenerSettings !== undefined || r.firewallSettings !== undefined || r.firewallCapacity !== undefined);
+    const hasSecurity = design.resources.some(r => r.listenerSettings !== undefined || r.firewallSettings !== undefined || r.firewallCapacity !== undefined || r.firewallState !== undefined);
     if ((contract.securityProfile !== undefined && contract.securityProfile !== "canvas-security/1") || hasSecurity !== (contract.securityProfile === "canvas-security/1")) error("SECURITY_PROFILE", "securityProfile", "Saved security settings require canvas-security/1 and matching intent");
     const nodes = new Map(design.resources.map((r) => [r.id, r]));
     if (nodes.size !== design.resources.length || design.resources.some((r) => !/^[a-zA-Z0-9_-]{1,64}$/.test(r.id))) error("RESOURCE_ID", "resources", "Unique bounded semantic IDs required; labels/coordinates do not define identity");
@@ -108,6 +110,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     const dialled = new Set(design.connections.map(e => `${e.targetId}/${contract.edges?.[e.id]?.targetRole}`));
     for (const d of contract.caller?.dependencies ?? []) dialled.add(d.target.slice(1));
     for (const r of design.resources) {
+      const stateError = firewallStateError(r.type, r.firewallState);
+      if (stateError) error("INVALID_FIREWALL_STATE", `resources.${r.id}.firewallState`, stateError);
       const firewallError = firewallCapacityError(r.type, r.firewallCapacity);
       if (firewallError) error("INVALID_FIREWALL_CAPACITY", `resources.${r.id}.firewallCapacity`, firewallError);
       const objectError = objectStoragePolicyError(r.type, r.objectStoragePolicy);
@@ -154,7 +158,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallState", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -387,6 +391,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     phase = "numeric-provenance"; provenance.audit(runtime); for (const p of pools) provenance.audit(p); provenance.audit(crashes);
     semantic.numericOrigins = numericOrigins(runtime, pools, contract, crashes);
     runtime.ledger.sort((a, b) => a.id < b.id ? -1 : 1);
+    validateFirewallStateBindings(design.resources, runtime);
     validateFirewallCapacityBindings(design.resources, runtime);
     validateObjectCapacityBindings(design.resources, runtime);
     validateDnsCacheBindings(design.resources, runtime);
