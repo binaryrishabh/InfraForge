@@ -17,7 +17,7 @@ test("layout, live, saved capture and comparison preserve explicit delay without
     const saved = JSON.parse(JSON.stringify(schema.parse(layout(delay))));
     const input = readRunInputs(captureRunInputs(saved, workload, "queue-depth"));
     expect(input.resources.find(r => r.id === "worker")!.asyncWorker!.acknowledgementDelayMs).toBe(delay);
-    expect(input.adapterProfiles).toEqual([...(delay === undefined ? [] : ["queue-ack-delay/1"]), "traffic-evidence/2"]);
+    expect(input.adapterProfiles).toEqual([...(delay === undefined ? [] : ["queue-ack-delay/1" as const]), "traffic-evidence/2"]);
     const built = buildContractFromRunInputs(input, 15); if ("refused" in built) throw Error(JSON.stringify(built));
     expect(built.contract.nodes.worker!.resources[0]!.config).toHaveProperty("ackDelay.value", (delay ?? 0) * 1000);
     if (delay === undefined) expect(configuration(input.resources.find(r => r.id === "worker")!).asyncWorker).not.toHaveProperty("acknowledgementDelayMs");
