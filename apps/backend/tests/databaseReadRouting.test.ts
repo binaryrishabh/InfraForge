@@ -12,7 +12,7 @@ test("read routing travels through save/live/capture/replay/comparison; old capt
   expect(old.adapterProfiles).not.toContain("db-read-routing/1");
   expect(configuration(layout.resources.at(-1)!)).not.toHaveProperty("databaseReadRouting");
   layout.resources.at(-1)!.databaseReadRouting = policy;
-  for (const schema of [LayoutSchema, LiveTopologySchema]) expect(schema.parse(layout).resources).toEqual(layout.resources);
+  for (const schema of [LayoutSchema, LiveTopologySchema]) expect(layout.resources).toEqual(schema.parse(layout).resources);
   expect(validateDeploymentReadiness(layout.resources, layout.connectionLines).errors).toEqual([]);
   const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, databaseWorkload, "dbroute"))));
   expect(input.adapterProfiles).toEqual(["data-keyspace/1", "data-hot-key/1", "db-replication/1", "db-read-routing/1", "traffic-evidence/2"]);
