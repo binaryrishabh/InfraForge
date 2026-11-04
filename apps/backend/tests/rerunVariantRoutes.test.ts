@@ -33,7 +33,7 @@ const database = {
 mock.module("../lib/prisma", () => ({prisma: {...database, $transaction: async (fn: (tx: typeof database) => Promise<unknown>) => fn(database)}}));
 // Record the request but still return the real decision: the module mock outlives this file in a shared process.
 const realPolicy = {...(await import("../capabilities/policy"))};
-mock.module("../capabilities/policy", () => ({...realPolicy, requireCapability: (owner: string, request: CapabilityRequest) => {capabilities.push(request); return realPolicy.requireCapability(owner, request);}}));
+mock.module("../capabilities/policy", () => ({...realPolicy, requireCapability: (owner: string, request: CapabilityRequest, ...rest: unknown[]) => {capabilities.push(request); return (realPolicy.requireCapability as (...args: unknown[]) => unknown)(owner, request, ...rest);}}));
 const {rerunRouter} = await import("../reruns/routes");
 let server: Server, base: string;
 beforeAll(() => {
