@@ -49,3 +49,10 @@ test("cancellation and unavailable service settle each admitted invocation once"
   service.accept(invocation("pause"), () => terminals++); service.pause(true); service.accept(invocation("unavailable"), () => terminals++); clock.advanceTo(200000);
   expect(terminals).toBe(3); expect(service.evidence()).toMatchObject({ cancelled: 1, failed: 1, unavailable: 1, active: 0, instances: 0 });
 });
+test("long invocation streams bound warm instances, timers and retained event rows", () => {
+  const clock = new EventKernel(20000), service = serverless(functionConfig({ initialization: us(0), duration: us(1000) }), clock, unused, "function-proof");
+  for (let n = 0; n < 3000; n++) { service.accept(invocation(String(n)), () => {}); clock.advanceTo((n + 1) * 2000); }
+  expect(service.evidence()).toMatchObject({ instances: 1, active: 0, peakInstances: 1, completed: 3000 });
+  expect(service.evidence().events).toHaveLength(2048); expect(service.evidence().omitted).toBeGreaterThan(0); expect(clock.pending).toBe(1);
+  clock.advanceTo(clock.now + 50000); expect(clock.pending).toBe(0);
+});

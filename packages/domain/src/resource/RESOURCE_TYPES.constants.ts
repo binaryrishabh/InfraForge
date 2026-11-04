@@ -11,6 +11,7 @@ export const RESOURCE_TYPES = {
   MessageQueue: "Message Queue",
   MonitoringAgent: "Monitoring Agent",
   ApiGateway: "API Gateway",
+  ServerlessFunction: "Serverless Function",
   Scheduler: "Scheduler",
   EventBus: "Event Bus",
 } as const;

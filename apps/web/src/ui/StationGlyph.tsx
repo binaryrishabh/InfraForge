@@ -4,6 +4,7 @@ import { RESOURCE_TYPES, type ResourceType } from "@infraforge/domain/resource";
 resource does in the system (names to addresses, fan-out, a stopping wall, a cylinder of
 records) rather than a vendor product, so no glyph implies a particular cloud. */
 const PATHS: Record<ResourceType, string> = {
+  [RESOURCE_TYPES.ServerlessFunction]: "M3 13l4-10h3M5 8h4M9 13l4-7M10 6h3v3",
   [RESOURCE_TYPES.Scheduler]: "M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2M8 4v4l3 2",
   [RESOURCE_TYPES.ApiGateway]: "M1 8h4M5 3v10M5 4h4l4-2M5 8h8M5 12h4l4 2M10 6v4",
   [RESOURCE_TYPES.EventBus]: "M2 8h4M6 8l6-5M6 8h6M6 8l6 5M11 2h3v3h-3zM11 6.5h3v3h-3zM11 11h3v3h-3z",

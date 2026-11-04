@@ -4,7 +4,8 @@ import { RESOURCE_TYPES, type ResourceType } from "../resource/RESOURCE_TYPES.co
 one will be the target */
 export const CONNECTION_RULES: Record<ResourceType, Array<ResourceType | { target: ResourceType; requires: "application-flow" | "application-flow/2" }>> = {
   [RESOURCE_TYPES.ApiGateway]: [RESOURCE_TYPES.VirtualMachine, RESOURCE_TYPES.LoadBalancer],
-  [RESOURCE_TYPES.Scheduler]: [RESOURCE_TYPES.VirtualMachine],
+  [RESOURCE_TYPES.ServerlessFunction]: [RESOURCE_TYPES.Database],
+  [RESOURCE_TYPES.Scheduler]: [RESOURCE_TYPES.VirtualMachine, RESOURCE_TYPES.ServerlessFunction],
   [RESOURCE_TYPES.EventBus]: [RESOURCE_TYPES.MessageQueue],
   [RESOURCE_TYPES.DNS]: [RESOURCE_TYPES.ApiGateway, RESOURCE_TYPES.CDN, RESOURCE_TYPES.LoadBalancer, RESOURCE_TYPES.VirtualMachine],
   [RESOURCE_TYPES.CDN]: [RESOURCE_TYPES.ObjectStorage],

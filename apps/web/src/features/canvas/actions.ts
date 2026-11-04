@@ -27,7 +27,7 @@ function editable(store: Store, quiet = false) {
 const snap = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
 
 const PREFIX: Record<ResourceType, string> = {
-  Scheduler: "timer", "API Gateway": "gateway", "Event Bus": "bus", DNS: "dns", CDN: "cdn", Firewall: "fw", "Load Balancer": "lb", "Virtual Machine": "vm", "Container Registry": "registry",
+  "Serverless Function": "fn", Scheduler: "timer", "API Gateway": "gateway", "Event Bus": "bus", DNS: "dns", CDN: "cdn", Firewall: "fw", "Load Balancer": "lb", "Virtual Machine": "vm", "Container Registry": "registry",
   Cache: "cache", Database: "db", "Object Storage": "storage", "Message Queue": "queue", "Monitoring Agent": "monitor",
 };
 // Short readable ids (vm-1, db-2) that never reuse an id still reachable through undo or redo.
@@ -41,7 +41,7 @@ function nextId(store: Store, type: ResourceType) {
 
 export function addResource(type: ResourceType, at?: { x: number; y: number }) {
   const store = useCanvasStore.getState();
-  if (!editable(store)) return null;
+  if (!editable(store) || type === "Serverless Function") return null;
   let x: number, y: number;
   if (at) { x = snap(at.x); y = snap(at.y); }
   else {

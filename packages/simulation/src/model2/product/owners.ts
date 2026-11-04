@@ -1,5 +1,6 @@
 import type { ResourceTemplate } from "./contracts";
 export const TRANSLATION_OWNERS = {
+  "Serverless Function": { kinds: ["serverless"], owner: "serverless/run", requires: "per-invocation initialization, warm reuse/expiry, throttle, timeout and optional database path" },
   Scheduler: { kinds: ["scheduler"], owner: "scheduled/run", requires: "bounded simulated-time triggers, overlap, retry and downstream invocation path" },
   "API Gateway": { kinds: ["api-gateway"], owner: "gateway/run", requires: "exact routes, independent shared token-bucket budgets, request bounds and upstream paths" },
   "Event Bus": { kinds: ["event-bus"], owner: "eventbus/run", requires: "independent bounded subscriptions, delivery paths, retries and logical dead letters" },

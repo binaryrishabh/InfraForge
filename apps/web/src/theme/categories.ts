@@ -3,6 +3,7 @@ import { RESOURCE_TYPES, type ResourceType } from "@infraforge/domain/resource";
 export type ResourceCategory = "entry" | "traffic" | "compute" | "data" | "messaging" | "observe";
 
 export const CATEGORY_OF: Record<ResourceType, ResourceCategory> = {
+  [RESOURCE_TYPES.ServerlessFunction]: "compute",
   [RESOURCE_TYPES.Scheduler]: "messaging",
   [RESOURCE_TYPES.ApiGateway]: "entry",
   [RESOURCE_TYPES.EventBus]: "messaging",

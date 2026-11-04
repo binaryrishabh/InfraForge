@@ -4,6 +4,7 @@ import type { ResourceType } from "@infraforge/domain/resource";
 /* What each resource does in the model, in plain words. Deliberately no product names:
 the simulator models roles and declared capacity, not any particular cloud's service. */
 export const ROLE_SUBLABELS: Record<ResourceType, string> = {
+  "Serverless Function": "Runs invocations with cold starts and warm reuse",
   Scheduler: "Invokes an app on simulated-time triggers",
   "API Gateway": "Routes requests with independent rate budgets",
   "Event Bus": "Delivers events to independent subscriptions",

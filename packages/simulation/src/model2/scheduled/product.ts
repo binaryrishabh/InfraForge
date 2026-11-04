@@ -9,7 +9,7 @@ type Q = <U extends Unit>(id: string, value: number, unit: U, sentence?: string,
 const quantities = { startMs: ["start", "us", 1000], periodMs: ["period", "us", 1000], maxTriggers: ["maxTriggers", "count", 1], maxConcurrent: ["maxConcurrent", "count", 1], queueCapacity: ["queueCapacity", "count", 1], maxAttempts: ["maxAttempts", "count", 1], retryDelayMs: ["retryDelay", "us", 1000], timeoutMs: ["timeout", "us", 1000], maxLatenessMs: ["maxLateness", "us", 1000] } as const;
 export function schedulerTarget(r: Resource, resources: readonly Resource[], connections: readonly ConnectionLine[]) {
   const edges = connections.filter(e => e.sourceId === r.id), target = resources.find(t => t.id === edges[0]?.targetId);
-  if (edges.length !== 1 || !target || target.type !== "Virtual Machine" || target.asyncWorker?.enabled || target.autoscaling?.enabled || connections.some(e => e.targetId === r.id && resources.find(s => s.id === e.sourceId)?.type !== "Firewall")) throw Error("Scheduler requires exactly one fixed app target and no inbound application calls");
+  if (edges.length !== 1 || !target || !["Virtual Machine", "Serverless Function"].includes(target.type) || target.asyncWorker?.enabled || target.autoscaling?.enabled || connections.some(e => e.targetId === r.id && resources.find(s => s.id === e.sourceId)?.type !== "Firewall")) throw Error("Scheduler requires exactly one fixed app target and no inbound application calls");
   return target;
 }
 export function schedulerTemplate(r: Resource, resources: readonly Resource[], connections: readonly ConnectionLine[], execution: ComputeResource, q: Q): Omit<SchedulerConfig, "id"> {
