@@ -16,21 +16,24 @@ const fixture = (): StoredRun & {ownerId: string; runtimeActive: boolean} => ({i
   simulationState: null, runInputs: input, liveTopology: layout,
   terminalSnapshot: {version: 1, kind: "terminal", capturedAt: new Date(0).toISOString(), topologyRevision: 0,
     simulatedSeconds: 20, accumulatedCostUsd: 0, overallHealth: "healthy", metrics: {}}});
-let source: ReturnType<typeof fixture> | null = fixture(), capacity = 0, designReads = 0;
+let source: ReturnType<typeof fixture> | null = fixture(), capacity = 0, ownerRuns = 0, designReads = 0;
 let onShare = () => {};
 const locks: string[] = [], writes: Record<string, unknown>[] = [], outbox: unknown[] = [], capabilities: CapabilityRequest[] = [];
 const database = {
   $queryRaw: async (sql: TemplateStringsArray) => {const text = sql.join("?"); locks.push(text); if (text.includes('"Deployment"')) onShare(); return [];},
   deployment: {
     findFirst: async ({where}: {where: {id: string; ownerId: string}}) => source && where.id === source.id && where.ownerId === source.ownerId ? structuredClone(source) : null,
-    count: async () => capacity,
+    // Owner-scoped counts are separate from server-wide counts, as in admission.
+    count: async ({where}: {where?: {ownerId?: string}} = {}) => where?.ownerId ? ownerRuns : capacity,
     create: async ({data}: {data: Record<string, unknown>}) => {writes.push(data); return {id: "created", ...data};},
   },
   infrastructure: {findFirst: async () => {designReads++; return {layout};}},
   outbox: {create: async (data: unknown) => {outbox.push(data);}},
 };
 mock.module("../lib/prisma", () => ({prisma: {...database, $transaction: async (fn: (tx: typeof database) => Promise<unknown>) => fn(database)}}));
-mock.module("../capabilities/policy", () => ({requireCapability: (_owner: string, request: CapabilityRequest) => {capabilities.push(request);}}));
+// Keep the module's other exports so files sharing this process still import them.
+const realPolicy = await import("../capabilities/policy");
+mock.module("../capabilities/policy", () => ({...realPolicy, requireCapability: (_owner: string, request: CapabilityRequest) => {capabilities.push(request);}}));
 const {rerunRouter} = await import("../reruns/routes");
 let server: Server, base: string;
 beforeAll(() => {
@@ -39,7 +42,7 @@ beforeAll(() => {
   server = app.listen(0, "127.0.0.1"); base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 });
 afterAll(() => server.close());
-function reset() {source = fixture(); capacity = 0; designReads = 0; onShare = () => {}; locks.length = writes.length = outbox.length = capabilities.length = 0;}
+function reset() {source = fixture(); capacity = 0; ownerRuns = 0; designReads = 0; onShare = () => {}; locks.length = writes.length = outbox.length = capabilities.length = 0;}
 function request(matchedStop = true) {
   const choice = buildRerunOptions(source!, null).workloadVariant.choices.find(c => c.variant.value === "poisson")!;
   return {mode: "workload-variant", matchedStop, variant: choice.variant, expectedInputHash: choice.inputHash};
