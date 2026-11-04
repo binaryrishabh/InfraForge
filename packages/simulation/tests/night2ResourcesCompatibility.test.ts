@@ -3,7 +3,7 @@ import { eventBusDesign } from "./eventBus.fixture";
 import { prepare, hash } from "./asyncCanvas.fixture";
 import { createProductModel2 } from "../src/model2/product/run";
 
-// Captured on c240891 before Scheduler or Functions changes; LF-normalized JSON.
+// Captured on the untouched integration base before Scheduler or Functions; LF-normalized JSON.
 test("wave two preserves the existing bus contract, input, assumptions and evidence", () => {
   const f = prepare(eventBusDesign()), runtime = createProductModel2(f.compiled);
   runtime.advanceTo(30_000_000);
