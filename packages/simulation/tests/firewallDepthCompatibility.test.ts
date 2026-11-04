@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { firewallSetup } from "./firewallCapacity.fixture";
 import { hash } from "./asyncCanvas.fixture";
-// LF-normalized SHA-256 captured before edits on 016057212672e14463170e4b9900d168b535d6d3. Never regenerate.
+// LF-normalized SHA-256 captured on the untouched slice base before production edits. Never regenerate.
 const pins = [
   [
     "front",
