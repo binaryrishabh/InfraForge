@@ -25,6 +25,8 @@ test("idle timeout alone changes real downstream delivery, established survival 
   const a = short.runtime.evidence(), b = long.runtime.evidence();
   expect(a.counts).toMatchObject({ offered: 3, completed: 1, rejected: 2 });
   expect(b.counts).toMatchObject({ offered: 3, completed: 3, rejected: 0 });
+  expect(a.systems.security.edges!.find(e => e.path === "external-entry")).toMatchObject({ denied: 2, requestDenied: 2 });
+  expect(a.systems.security.admission!.rows.filter(r => r.phase === "request")).toHaveLength(2);
   expect(a.network.paths.find(p => p.id === "external-entry")!.reasons).toEqual({ "policy-denied": 2 });
   expect(a.systems.security.policies[0]).toMatchObject({ expired: 1, denied: 2, returnExchanges: 1 });
   expect(b.systems.security.policies[0]).toMatchObject({ expired: 0, denied: 0, returnExchanges: 3 });

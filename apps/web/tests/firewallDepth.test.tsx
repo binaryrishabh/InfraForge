@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { ReactElement } from "react";
 import { FIREWALL_STATE_HELP, type Resource } from "@infraforge/domain/resource";
 import { FirewallStateSection } from "../src/features/canvas/components/inspector/FirewallStateSection";
+import { SecurityReadings } from "../src/features/canvas/components/inspector/SecuritySection";
 import { Inspector } from "../src/features/canvas/components/inspector/Inspector";
 import { useCanvasStore } from "../src/features/canvas/store/canvasStore";
 import { useAuthStore } from "../src/features/auth/store/auth.store";
@@ -45,4 +46,13 @@ test("idle timeout survives save and reload", async () => {
     useCanvasStore.getState().clearCanvas(); useCanvasStore.getState().loadLayout(payload.layout.resources, [], "layout", "Firewall");
     expect(resource().firewallState).toEqual({ version: 1, idleTimeoutSeconds: 2 });
   } finally { saved.mockRestore(); }
+});
+
+
+test("idle-state readings distinguish pooled request refusals from connection opens", () => {
+  const html = renderToStaticMarkup(<SecurityReadings metrics={{ version: 1, evidence: "complete", edges: [{ path: "edge", source: "app", target: "db", admitted: 1, denied: 2, requestDenied: 2, noListener: 0, policyDenied: {}, backendDeliveries: 3 }], firewall: { occupancy: 1, limit: 1, admissions: 2, generation: 3, expired: 1, establishedRequests: 3, newRequests: 2, expiredReturns: 0, "flow-capacity": 0 } }} />);
+  expect(html).toContain("denied admissions 2");
+  expect(html).toContain("Requests refused on pooled connections: 2");
+  expect(html).toContain("Tracked state admissions");
+  expect(html).toContain("Expired flow entries");
 });

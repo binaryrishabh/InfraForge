@@ -23,15 +23,18 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
   }));
   const sessions = new Map<string, { path: string; target: string; tls: boolean; policies: string[] }>();
   const opted = input.securityProfile === "canvas-security/1";
-  type Admission = { at: number; connectionId: string; path: string; source: string; target: string; port: number; reason: string; allowed: boolean; firewall?: string; rule?: string; direction?: string; generation?: number; defaultAction?: string };
+  type Admission = { phase?: "request"; at: number; connectionId: string; path: string; source: string; target: string; port: number; reason: string; allowed: boolean; firewall?: string; rule?: string; direction?: string; generation?: number; defaultAction?: string };
   const admissions: Admission[] = []; let omitted = 0, admissionBytes = 0;
   // A call between two roles of one resource instance (ids look like "app#0/main") is in-process: canvas-built ones carry no firewall (fromDesign) and skip the listener check.
   const inProcess = (p: { source: string; target: string }) => p.source !== p.target && p.source.split("/")[0] === p.target.split("/")[0];
   const internalPaths = new Set(input.paths.filter(inProcess).map(p => p.id));
-  const edgeCounts = new Map(input.paths.filter(p => !internalPaths.has(p.id)).map(p => [p.id, { path: p.id, source: p.source, target: p.target, admitted: 0, denied: 0, noListener: 0, backendDeliveries: 0, lastDenial: undefined as Admission | undefined, policyDenied: {} as Record<string, number> }]));
+  const edgeCounts = new Map(input.paths.filter(p => !internalPaths.has(p.id)).map(p => [p.id, { ...(input.systems.connections.some(c => c.path === p.id && c.firewalls.some(id => policies.get(id)!.state)) ? { requestDenied: 0 } : {}), path: p.id, source: p.source, target: p.target, admitted: 0, denied: 0, noListener: 0, backendDeliveries: 0, lastDenial: undefined as Admission | undefined, policyDenied: {} as Record<string, number> }]));
   const record = (row: Admission) => {
-    const c = edgeCounts.get(row.path) ?? { admitted: 0, denied: 0, noListener: 0, lastDenial: undefined as Admission | undefined, policyDenied: {} as Record<string, number> }; // internal hops are not counted
-    if (row.allowed) c.admitted++; else { c.denied++; c.lastDenial = row; if (row.reason === "no-listener") c.noListener++; if (row.firewall && row.reason.startsWith("policy-denied")) { const key = `${row.firewall}:${row.direction}:${row.rule ?? "default"}`; c.policyDenied[key] = (c.policyDenied[key] ?? 0) + 1; } }
+    const c = edgeCounts.get(row.path); // Internal hops have no edge counter.
+    if (c) {
+      if (row.phase === "request" && !row.allowed) c.requestDenied = (c.requestDenied ?? 0) + 1;
+      if (row.allowed) c.admitted++; else { c.denied++; c.lastDenial = row; if (row.reason === "no-listener") c.noListener++; if (row.firewall && row.reason.startsWith("policy-denied")) { const key = `${row.firewall}:${row.direction}:${row.rule ?? "default"}`; c.policyDenied[key] = (c.policyDenied[key] ?? 0) + 1; } }
+    }
     const bytes = utf8Bytes(JSON.stringify(row));
     if (admissions.length >= Math.min(SYSTEM_LIMITS.events, input.limits.maxTraceRows) || admissionBytes + bytes > (input.limits.maxTraceBytes ?? Infinity)) { omitted++; return; }
     admissions.push(row); admissionBytes += bytes;
@@ -98,7 +101,7 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
           for (const policy of session.policies) { const p = policies.get(policy)!; if (p.state) { if (p.flows.has(id)) p.state.counts.establishedRequests++; else p.state.counts.newRequests++; } }
           const result = inspect(dial, selected, true, id, true);
           if (!result.ok) {
-            record({ at: kernel.now, connectionId: id, path: path.id, source: selected.source, target: selected.target, port: requireKnown(dial.port, "count"), allowed: false, reason: result.reason, ...("firewall" in result ? { firewall: result.firewall, direction: result.direction, rule: result.rule, generation: result.generation } : {}) });
+            record({ phase: "request", at: kernel.now, connectionId: id, path: path.id, source: selected.source, target: selected.target, port: requireKnown(dial.port, "count"), allowed: false, reason: result.reason, ...("firewall" in result ? { firewall: result.firewall, direction: result.direction, rule: result.rule, generation: result.generation } : {}) });
             events.add(kernel.now, "request-denied", id, result.reason);
             return { reason: failure(result.reason), cause: seedCause(failure(result.reason), result.firewall ?? path.target) };
           }

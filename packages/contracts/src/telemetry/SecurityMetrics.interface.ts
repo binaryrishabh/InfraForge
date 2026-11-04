@@ -1,6 +1,8 @@
 export interface SecurityEdgeMetrics {
   path: string; source: string; target: string;
   lastDenial?: { connectionId: string; source: string; target: string; port: number; reason: string; generation?: number };
+  /** Present with firewall-state/1: denied exchanges on pooled connections, separate from failed opens. */
+  requestDenied?: number;
   admitted: number | null; denied: number | null; noListener: number | null;
   policyDenied: Record<string, number> | null;
   /** Actual deliveries through this path, including traffic on reused sessions. */
