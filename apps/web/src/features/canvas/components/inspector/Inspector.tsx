@@ -1,3 +1,4 @@
+import { ServerlessSection } from "./ServerlessSection";
 import { SchedulerSection } from "./SchedulerSection";
 import { ApiGatewaySection } from "./ApiGatewaySection";
 import { EventBusSection } from "./EventBusSection";
@@ -78,6 +79,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
       {resource.type === "Object Storage" && <ObjectCapacitySection key={`object-capacity-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Cache" && <CachePolicySection key={`cache-policy-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "API Gateway" && <ApiGatewaySection resource={resource} disabled={locked} />}
+      {resource.type === "Serverless Function" && <ServerlessSection resource={resource} disabled={locked} />}
       {resource.type === "Scheduler" && <SchedulerSection resource={resource} disabled={locked} />}
       {resource.type === "Event Bus" && <EventBusSection resource={resource} disabled={locked} />}
       {resource.type === "Monitoring Agent" && <MonitoringCadenceSection key={`monitoring-cadence-${resource.id}`} resource={resource} disabled={locked} />}

@@ -1,3 +1,4 @@
+import { serverlessError } from "@infraforge/domain/resource";
 import { schedulerError } from "@infraforge/domain/resource";
 import { apiGatewayError } from "@infraforge/domain/resource";
 import { eventBusError } from "@infraforge/domain/resource";
@@ -41,7 +42,7 @@ function nextId(store: Store, type: ResourceType) {
 
 export function addResource(type: ResourceType, at?: { x: number; y: number }) {
   const store = useCanvasStore.getState();
-  if (!editable(store) || type === "Serverless Function") return null;
+  if (!editable(store)) return null;
   let x: number, y: number;
   if (at) { x = snap(at.x); y = snap(at.y); }
   else {
@@ -117,7 +118,7 @@ export function deleteConnection(connectionId: string) {
   toast("Connection removed", { action: { label: "Undo", onClick: undo }, duration: 5000 });
 }
 
-const TRACKED = ["scheduler", "apiGateway", "eventBus", "databaseReplication", "name", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts"] as const;
+const TRACKED = ["serverless", "scheduler", "apiGateway", "eventBus", "databaseReplication", "name", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts"] as const;
 export function updateResource(resourceId: string, patch: Partial<Resource>) {
   const store = useCanvasStore.getState();
   if (!editable(store)) return;
@@ -134,6 +135,7 @@ export function updateResource(resourceId: string, patch: Partial<Resource>) {
   if (databaseReplicationError(candidate.type, candidate.databaseReplication)) return;
   if (dbConcurrencyError(candidate.type, candidate.dbConcurrency)) return;
   if (apiGatewayError(candidate.type, candidate.apiGateway)) return;
+  if (serverlessError(candidate.type, candidate.serverless)) return;
   if (schedulerError(candidate.type, candidate.scheduler)) return;
   if (eventBusError(candidate.type, candidate.eventBus)) return;
   if (firewallCapacityError(candidate.type, candidate.firewallCapacity)) return;

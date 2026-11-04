@@ -6,7 +6,7 @@ import { CATEGORY_LABEL, CATEGORY_OF, type ResourceCategory } from "@/theme/cate
 import { PaletteItem } from "./PaletteItem";
 
 const ORDER: ResourceCategory[] = ["entry", "traffic", "compute", "data", "messaging", "observe"];
-const TYPES = Object.values(RESOURCE_TYPES).filter(t => t !== "Serverless Function") as ResourceType[];
+const TYPES = Object.values(RESOURCE_TYPES) as ResourceType[];
 
 /* Docked resource palette. Drag a row onto the canvas, or activate it (click,
 Enter or Space) to place it in the middle of the current view. */
