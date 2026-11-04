@@ -7,12 +7,17 @@ import type { SavedProductDesign } from "../src/model2/product/contracts";
 import { design as asyncDesign } from "./asyncCanvas.fixture";
 import { eventBusDesign } from "./eventBus.fixture";
 import { gatewayDesign } from "./apiGateway.fixture";
+import { functionDesign } from "./serverlessCanvas.fixture";
 
 function design(types: Record<string, Resource["type"]>, links: [string, string][] = []): SavedProductDesign {
   return { schema: "infraforge-saved-design/1", resources: Object.entries(types).map(([id, type]) => ({ id, type, x: 0, y: 0 })),
     connections: links.map(([s, t], i) => ({ id: `e${i}`, sourceId: s, targetId: t, sourceType: types[s]!, targetType: types[t]!, port: RESOURCE_PORTS[types[t]!] })),
     workload: { targetThroughput: 60, throughputUnit: "per-minute", trafficShape: "steady", readWriteRatio: 0.8, payloadSize: "light" } };
 }
+
+// A timer that invokes one app; the saved scheduler intent is what makes the design runnable.
+const schedulerDesign = (): SavedProductDesign => ({ ...design({ timer: "Scheduler", app: "Virtual Machine" }, [["timer", "app"]]),
+  resources: [{ id: "timer", type: "Scheduler", x: 0, y: 0, scheduler: { version: 1, periodMs: 10, maxTriggers: 100 } }, { id: "app", type: "Virtual Machine", x: 0, y: 0 }] });
 
 const supported = [
   design({ app: "Virtual Machine" }),
@@ -26,7 +31,7 @@ const supported = [
   design({ app: "Virtual Machine", store: "Object Storage" }, [["app", "store"]]),
   design({ app: "Virtual Machine", queue: "Message Queue" }, [["app", "queue"]]),
   design({ monitor: "Monitoring Agent", app: "Virtual Machine" }, [["monitor", "app"]]),
-  asyncDesign(), eventBusDesign(), gatewayDesign(),
+  asyncDesign(), eventBusDesign(), gatewayDesign(), functionDesign(), schedulerDesign(),
 ];
 
 for (const [i, d] of supported.entries()) test(`regression: supported topology ${i}: drawable, ready and compiled`, () => {
@@ -40,7 +45,8 @@ for (const type of Object.values(RESOURCE_TYPES)) {
     expect(validateConnection("Firewall", type, "draw").valid).toBe(type !== "Firewall");
     expect(validateConnection("Monitoring Agent", type, "draw").valid).toBe(type !== "Firewall");
     // Event Bus v1 accepts only one publisher and its subscription queues; an observer link is refused as not runnable.
-    if (type === "Firewall" || type === "Event Bus") return;
+    // A Scheduler is a trigger source that receives no requests, so no policy attachment has an admitted path to it.
+    if (type === "Firewall" || type === "Event Bus" || type === "Scheduler") return;
     const base = supported.find(d => d.resources.some(r => r.type === type))!;
     for (const source of ["Firewall", "Monitoring Agent"] as const) {
       const d = structuredClone(base), target = d.resources.find(r => r.type === type)!;
