@@ -55,7 +55,7 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
     }
     return { allowed: true, rule: "both-directions-permitted" };
   };
-  const inspect = (dial: DialConfig, path: PathConfig, count: boolean, connection?: string, forward = false) => {
+  const inspect = (dial: DialConfig, path: PathConfig, count: boolean, connection?: string, forward = false): { ok: boolean; reason: string; firewall?: string; direction?: string; rule?: string; generation?: number; defaultAction?: string } => {
     const port = requireKnown(dial.port, "count");
     for (const id of dial.firewalls) {
       const p = policies.get(id)!;
