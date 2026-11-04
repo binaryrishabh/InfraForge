@@ -3,7 +3,7 @@ import type { AsyncInput, CommandConfig } from "../async/contracts";
 
 export interface AddressRecord { name: string; type: "A"; addresses: string[]; ttl: Quantity<"us">; generation: number }
 export interface AuthorityConfig extends CommandConfig { id: string; kind: "dns-authority"; records: AddressRecord[]; negativeTtl: Quantity<"us"> }
-export interface ResolverConfig extends CommandConfig { id: string; kind: "dns-resolver"; authority: string; cacheEntries: Quantity<"count"> }
+export interface ResolverConfig extends CommandConfig { id: string; kind: "dns-resolver"; authority: string; cacheEntries: Quantity<"count">; cachePolicy?: { version: 1; maxTtl: Quantity<"us"> } }
 export interface CdnConfig extends CommandConfig { id: string; kind: "cdn"; origin: string; namespace: string; keys: Record<string, string>; capacity: Quantity<"bytes">; ttl: Quantity<"us">; coalesce: boolean; maxWaiters: Quantity<"count"> }
 export interface BlobDescriptor { digest: string; bytes: number }
 export interface Manifest { digest: string; bytes: number; layers: BlobDescriptor[] }

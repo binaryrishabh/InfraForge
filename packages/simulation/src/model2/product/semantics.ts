@@ -9,7 +9,7 @@ const fields: Record<string, string[]> = {
   cache: ["semantics", "execution", "capacity", "entryOverhead", "policy", "ttl", "initial", "commandCpu"],
   "cache-aside": ["execution", "cache", "database", "keys", "access", "coalesce", "onCacheFailure", "invalidateWrites", "operations"],
   "load-balancer": ["rateLimit", "backends", "policy", "maxOutstanding", "maxPending", "pendingTimeout", "health", "retry"],
-  "dns-authority": ["records", "negativeTtl"], "dns-resolver": ["authority", "cacheEntries"],
+  "dns-authority": ["records", "negativeTtl"], "dns-resolver": ["authority", "cacheEntries", "cachePolicy"],
   cdn: ["origin", "namespace", "keys", "capacity", "ttl", "coalesce", "maxWaiters"],
   registry: ["store", "namespace"], "artifact-client": ["registry", "cacheBytes", "attempts", "backoff", "replicas", "initialLayers"],
   monitor: ["targets", "backend", "operation", "interval", "exportInterval", "freshFor", "sampleBytes", "bufferBytes", "bufferSamples", "batchSamples", "attempts"],

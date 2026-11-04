@@ -5,7 +5,7 @@ import { LB_RATE_LIMIT_PROFILE, lbRateLimitChanges, validateLbRateLimitBindings 
 import { checkClientRetry } from "./clientRetry";
 import { checkObjective } from "./objective";
 import { checkCpuDynamics } from "./workloadDynamics";
-import { RESOURCE_PORTS, vmMemoryError, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, vmMemoryError, lbRateLimitError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, dnsCachePolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -31,6 +31,7 @@ import { validateObjectCapacityProfile, validateObjectCapacityBindings } from ".
 import { validateMonitoringBufferProfile, validateMonitoringBufferBindings } from "./monitoringBuffer";
 import { validateMonitoringCadenceProfile, validateMonitoringCadenceBindings } from "./monitoringCadence";
 import { validateCdnCoalescingProfile, validateCdnCoalescingBindings } from "./cdnCoalescing";
+import { DNS_CACHE_PROFILE, dnsCacheChanges, validateDnsCacheBindings } from "./dnsCache";
 import { CDN_TTL_PROFILE, cdnTtlChanges, validateCdnTtlBindings } from "./cdnTtl";
 import { CACHE_POLICY_PROFILE, cachePolicyChanges, validateCachePolicyBindings } from "./cachePolicy";
 import { CACHE_CAPACITY_PROFILE, cacheCapacityChanges, validateCacheCapacityBindings } from "./cacheCapacity";
@@ -71,6 +72,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateMonitoringCadenceProfile(design.resources, contract);
     validateMonitoringBufferProfile(design.resources, contract);
     validateCdnCoalescingProfile(design.resources, contract);
+    if (dnsCacheChanges(design.resources) !== contract.version.includes(`/${DNS_CACHE_PROFILE}`)) error("DNS_CACHE_VERSION", "version", "Resolver cache requires its dns-cache/1 contract version and matching saved intent");
     if (cdnTtlChanges(design.resources) !== contract.version.includes(`/${CDN_TTL_PROFILE}`)) error("CDN_TTL_VERSION", "version", "CDN TTL requires its explicit cdn-ttl/1 contract version and matching saved intent");
     if (multiKey(design.resources) && !contract.version.includes(`/${KEYSPACE_PROFILE}`)) error("KEYSPACE_VERSION", "version", "Multi-key intent requires its explicit data-keyspace/1 contract version");
     if (hotKey(design.resources) !== contract.version.includes(`/${HOT_KEY_PROFILE}`)) error("HOT_KEY_VERSION", "version", "Hot-key intent requires its explicit data-hot-key/1 contract version and matching saved intent");
@@ -112,6 +114,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (objectError) error("INVALID_OBJECT_CAPACITY", `resources.${r.id}.objectStoragePolicy`, objectError);
       const monitoringError = monitoringPolicyError(r.type, r.monitoringPolicy);
       if (monitoringError) error("INVALID_MONITORING_POLICY", `resources.${r.id}.monitoringPolicy`, monitoringError);
+      const dnsError = dnsCachePolicyError(r.type, r.dnsCachePolicy);
+      if (dnsError) error("INVALID_DNS_CACHE", `resources.${r.id}.dnsCachePolicy`, dnsError);
       const cdnError = cdnCachePolicyError(r.type, r.cdnCachePolicy);
       if (cdnError) error("INVALID_CDN_TTL", `resources.${r.id}.cdnCachePolicy`, cdnError);
       const selectionError = lbSelectionError(r.type, r.lbSelection);
@@ -150,7 +154,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -385,6 +389,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     runtime.ledger.sort((a, b) => a.id < b.id ? -1 : 1);
     validateFirewallCapacityBindings(design.resources, runtime);
     validateObjectCapacityBindings(design.resources, runtime);
+    validateDnsCacheBindings(design.resources, runtime);
     validateCdnTtlBindings(design.resources, runtime);
     validateMonitoringCadenceBindings(design.resources, runtime);
     validateMonitoringBufferBindings(design.resources, runtime);

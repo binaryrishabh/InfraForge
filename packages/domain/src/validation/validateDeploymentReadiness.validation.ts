@@ -11,6 +11,7 @@ import { cachePolicyError } from "../resource/CachePolicy.interface";
 import { firewallCapacityError } from "../resource/FirewallCapacity.interface";
 import { objectStoragePolicyError } from "../resource/ObjectStoragePolicy.interface";
 import { monitoringPolicyError } from "../resource/MonitoringPolicy.interface";
+import { dnsCachePolicyError } from "../resource/DnsCachePolicy.interface";
 import { cdnCachePolicyError } from "../resource/CdnCachePolicy.interface";
 import { vmMemoryError } from "../resource/VmMemory.interface";
 import { vmCpuQuotaError } from "../resource/VmCpuQuota.interface";
@@ -59,6 +60,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
         if (objectMessage) errors.push(`${resource.id}: ${objectMessage}`);
         const monitoringMessage = monitoringPolicyError(resource.type, resource.monitoringPolicy);
         if (monitoringMessage) errors.push(`${resource.id}: ${monitoringMessage}`);
+        const dnsMessage = dnsCachePolicyError(resource.type, resource.dnsCachePolicy);
+        if (dnsMessage) errors.push(`${resource.id}: ${dnsMessage}`);
         const cdnMessage = cdnCachePolicyError(resource.type, resource.cdnCachePolicy);
         if (cdnMessage) errors.push(`${resource.id}: ${cdnMessage}`);
         const message = dataKeyspaceError(resource.type, resource.dataKeyspace);

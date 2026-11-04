@@ -33,13 +33,16 @@ export function dnsResolver(config: ResolverConfig, kernel: EventKernel, send: D
     const receipt = ask<DnsReply>(config.authority, { kind: "resolve", name }, (reply, outcome) => {
       if (!reply || (outcome !== "completed" && reply.reason !== "nxdomain")) { failures++; done({ ok: false, reason: "authority-unavailable" }); return; }
       if (!reply.ok) failures++;
-      if (reply.expiresAt !== undefined && reply.expiresAt > kernel.now && (reply.ok || reply.reason === "nxdomain")) {
+      // A resolver ceiling can shorten an answer's remaining life, never extend it.
+      const answer = config.cachePolicy !== undefined && reply.expiresAt !== undefined
+        ? { ...reply, expiresAt: Math.min(reply.expiresAt, kernel.now + requireKnown(config.cachePolicy.maxTtl, "us")) } : reply;
+      if (answer.expiresAt !== undefined && answer.expiresAt > kernel.now && (answer.ok || answer.reason === "nxdomain")) {
         if (cache.has(name)) { remove(name); replaced++; }
         while (cache.size >= requireKnown(config.cacheEntries, "count")) { remove(cache.keys().next().value!); evictions++; }
-        const entry = { reply: copy(reply), expires: reply.expiresAt, cancel: () => false };
+        const entry = { reply: copy(answer), expires: answer.expiresAt, cancel: () => false };
         entry.cancel = kernel.schedule(entry.expires, 0, JSON.stringify(["dns-expire", config.id, name, fills]), () => { if (cache.get(name) === entry) { cache.delete(name); expirations++; } }); cache.set(name, entry); fills++;
       }
-      done(reply);
+      done(answer);
     }); return () => { receipt.cancel(); };
   });
   return { ...service, clear() { for (const name of [...cache.keys()]) { remove(name); evictions++; } }, peek(name: string) { const entry = cache.get(dnsName(name)); return entry && entry.expires > kernel.now ? copy(entry.reply) : undefined; }, evidence: () => ({ id: config.id, queries, hits, misses, authoritativeLookups: upstream, failures, fills, expirations, evictions, replaced, cache: [...cache.entries()].map(([name, e]) => ({ name, expiresAt: e.expires, answer: copy(e.reply) })), service: service.serviceEvidence() }) };
