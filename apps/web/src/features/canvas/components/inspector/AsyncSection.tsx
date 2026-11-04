@@ -14,7 +14,7 @@ export function AsyncSection({ resource, disabled }: { resource: Resource; disab
     ? { asyncQueue: { ...resource.asyncQueue, enabled: policy?.enabled ?? false, ...patch } }
     : { asyncWorker: { ...resource.asyncWorker, enabled: policy?.enabled ?? false, ...patch } });
   const fields = queue ? [["capacityMessages", "Queue capacity (messages)", 1, 100000], ["visibilityTimeoutSeconds", "Visibility timeout (seconds)", 1, 3600], ["maxReceives", "Maximum deliveries before dead-lettering", 1, 10], ["retentionSeconds", "Message retention (seconds)", 1, 86400], ["deadLetterCapacity", "Dead-letter list size", 0, 1000]] as const
-    : [["concurrency", "Jobs in parallel", 1, 64], ["prefetch", "Prefetch credit (leased jobs)", 1, 64], ["cpuMsPerJob", "CPU milliseconds per job (authored assumption)", 1, 120000], ["badJobPercent", "Share of arriving uploads that can never be processed", 0, 100]] as const;
+    : [["concurrency", "Jobs in parallel", 1, 64], ["prefetch", "Prefetch credit (leased jobs)", 1, 64], ["cpuMsPerJob", "CPU milliseconds per job (authored assumption)", 1, 120000], ["badJobPercent", "Share of arriving uploads that can never be processed", 0, 100], ["acknowledgementDelayMs", "Delay before acknowledgement (milliseconds)", 0, 60000]] as const;
   const executionError = queue ? undefined : vmMemoryError(resource.type, resource.vmMemory, true) ?? vmExecutionError(resource.type, resource.vmExecution, true) ?? vmCpuQuotaError(resource.type, resource.vmCpuQuota, true);
   const error = asyncSettingsError(resource.type, resource.asyncQueue, resource.asyncWorker);
   return <InspectorSection title={queue ? "Upload queue" : "Background worker"}>
@@ -23,8 +23,9 @@ export function AsyncSection({ resource, disabled }: { resource: Resource; disab
       description={executionError ?? (queue ? "Connect app → queue → worker. Connect both VMs to the same Object Storage." : "Enable the connected queue; this VM polls for jobs, reads uploads, spends CPU, writes results and acknowledges.")} />
     {policy?.enabled && <div className="mt-4 flex flex-col gap-4">
       {fields.map(([key, label, min, max]) => <Field key={key} label={label}>{({ id }) => <Input id={id} type="number" min={min} max={max} step={1} disabled={disabled}
-        value={(policy as unknown as Record<string, number>)[key] ?? ""} placeholder={key === "capacityMessages" ? "Default (1000 × modeled queue cores)" : "Unknown"}
+        value={(policy as unknown as Record<string, number>)[key] ?? ""} placeholder={key === "acknowledgementDelayMs" ? "Default (0 ms)" : key === "capacityMessages" ? "Default (1000 × modeled queue cores)" : "Unknown"}
         onChange={(e) => commit({ [key]: e.target.value === "" ? undefined : Number(e.target.value) })} />}</Field>)}
+      {!queue && <p className="text-xs text-ink-3">The delay starts after the result write; the lease keeps running and prefetch credit stays occupied until acknowledgement. Lease expiry wins over acknowledgement at the same simulated instant.</p>}
       {!queue && <Switch label="Idempotent result writes" checked={resource.asyncWorker?.idempotentResults === true} disabled={disabled}
         onChange={(idempotentResults) => commit({ idempotentResults })}
         description="When enabled, if the same message is processed again, the worker avoids writing the same result object twice." />}
