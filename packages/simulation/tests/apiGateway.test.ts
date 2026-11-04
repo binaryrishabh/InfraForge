@@ -48,6 +48,32 @@ test("bounded outstanding requests time out once and late completions cannot dou
   for (const c of f.calls) { c.done("completed"); c.done("completed"); }
   expect(a.completions()).toBe(1); expect(b.completions()).toBe(1);
   expect(f.gateway.evidence()).toMatchObject({ pending: 0, timedOut: 2, completed: 0 });
+  expect(f.gateway.evidence().routes[1]).toMatchObject({ received: 2, admitted: 2, outcomes: { matched: 3, overloaded: 1, settled: 2, timedOut: 2, pending: 0, totalDurationUs: 2000, maxDurationUs: 1000 } });
+});
+
+test("regression with route evidence: method mismatch never spends tokens or reaches an upstream", () => {
+  const get = setup(), post = setup();
+  expect(get.send("/orders", "GET").reply().status).toBe(200);
+  expect(post.send("/orders", "POST").reply().status).toBe(404);
+  expect(get.calls.map(c => c.target)).toEqual(["orders"]); expect(post.calls).toHaveLength(0);
+  expect(post.gateway.evidence().routes[0]).toMatchObject({ received: 0, admitted: 0, outcomes: { matched: 0, settled: 0, totalDurationUs: 0 } });
+});
+
+test("route cancellation is terminal once and never appears as an upstream failure or timeout", () => {
+  const f = setup(true), request = f.send("/payments", "POST");
+  expect(request.receipt.cancel()).toBe("cancelled");
+  const before = f.gateway.evidence(); f.clock.advanceTo(2000); f.calls[0]!.done("completed");
+  expect(f.gateway.evidence().routes).toEqual(before.routes);
+  expect(f.gateway.evidence().routes[1]).toMatchObject({ outcomes: { cancelled: 1, settled: 1, pending: 0, upstreamFailed: 0, timedOut: 0, totalDurationUs: 200, maxDurationUs: 200 } });
+  expect(request.completions()).toBe(1);
+});
+
+test("route totals remain complete after the bounded response log is full", () => {
+  const f = setup();
+  for (let i = 0; i < 2100; i++) f.send("/payments", "POST");
+  const e = f.gateway.evidence();
+  expect(e.events).toHaveLength(2048); expect(e.omitted).toBe(52);
+  expect(e.routes[1]).toMatchObject({ received: 2100, admitted: 10, rejected: 2090, outcomes: { matched: 2100, completed: 10, settled: 10, pending: 0 } });
 });
 test("same input and clock produce deterministic replay with independent gateway counters", () => {
   const a = setup(), b = setup();
