@@ -75,7 +75,7 @@ test("expiry precedes equal-time restoration and new arrival; capacity recovers 
   expect(f.open("full")).toBe("flow-capacity");
 });
 
-test("ordered rules are first-match in each direction; equal priority uses stable lexical ID", () => {
+test("regression: ordered rules are first-match in each direction; equal priority uses stable lexical ID", () => {
   const q = quantities(), deny = { ...denyNew(q), direction: "both" as const, id: "a-deny" }, allow = { ...deny, id: "b-allow", action: "allow" as const };
   const f = plane(1, 3);
   f.security.update("firewall", [allow, deny]); expect(f.open("one")).toBe("policy-denied");

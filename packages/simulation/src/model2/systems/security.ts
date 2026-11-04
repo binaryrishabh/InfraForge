@@ -83,7 +83,7 @@ export function securityPlane(input: SystemsInput, kernel: EventKernel, context:
   const remember = (dial: DialConfig, selected: PathConfig, id: string, forward = false) => {
     for (const policy of dial.firewalls) {
       const p = policies.get(policy)!; if (forward && !p.state) continue;
-      if (!p.flows.has(id)) { p.flows.set(id, { source: selected.source, target: selected.target, port: requireKnown(dial.port, "count"), at: kernel.now }); p.opened++; }
+      if (!p.flows.has(id)) { p.flows.set(id, { source: selected.source, target: selected.target, port: requireKnown(dial.port, "count"), at: kernel.now }); p.opened++; if (forward) events.add(kernel.now, "flow-readmitted", id, `${policy}:generation-${p.generation}`); }
       p.state?.touch(id);
     }
   };
