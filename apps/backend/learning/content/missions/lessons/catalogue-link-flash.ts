@@ -1,6 +1,6 @@
-import type { LessonDefinition } from "@infraforge/contracts/learning";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
-export const catalogueLinkFlash: LessonDefinition = {
+export const catalogueLinkFlash: LearningLesson = {
   id: "catalogue-link-flash", contentVersion: 1, trackId: "missions", moduleId: "first-applications",
   title: "Serve a flash of popular links", kind: "executable-lab", level: "advanced", availability: "available",
   summary: "Combine app headroom with cache working-set capacity in a read-only catalogue with a fixed burst.",

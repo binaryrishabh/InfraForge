@@ -1,13 +1,12 @@
-import type { LessonDefinition } from "@infraforge/contracts/learning";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
-export const flashSaleOrderBacklog: LessonDefinition = {
+export const flashSaleOrderBacklog: LearningLesson = {
   id: "flash-sale-order-backlog", contentVersion: 1, trackId: "missions", moduleId: "first-applications",
   title: "Absorb a shop's order-event burst", kind: "executable-lab", level: "advanced", availability: "available",
   summary: "Combine worker capacity and acknowledgement leases while producer traffic continues after a flash sale.",
   prerequisites: ["keep-up-with-the-queue", "leave-time-to-acknowledge"],
   problem: ["An order event is modeled as an object upload and queue publish. Traffic is four requests/second, sixteen during 120-140, then four again. A worker writes result objects. This supported journey has a direct producer app entry point.",
-    "By second 170: acknowledge at least 900 messages, leave at most ten outstanding, record no redeliveries, Healthy overall modeled health and producer completed-request p95 at most 10 ms in that second.",
-    "Educational capacity assumptions: one worker core, 32 concurrent jobs and prefetch credits, 250 CPU ms/job, a 1500 ms acknowledgement delay, one-second visibility and 300-second retention. Keep all except worker CPU work and queue visibility fixed."],
+    "By second 170: acknowledge at least 900 messages, leave at most ten outstanding, record no redeliveries, Healthy overall modeled health and producer completed-request p95 at most 10 ms in that second. Educational capacity assumptions: one worker core, 32 concurrent jobs and prefetch credits, 250 CPU ms/job, a 1500 ms acknowledgement delay, one-second visibility and 300-second retention. Keep all except worker CPU work and queue visibility fixed."],
   explanation: ["Predict the outcome and run the starter. Watch the producer and queue separately. Producer completion confirms modeled upload and logical queue acceptance; it does not confirm background processing or a successful order.",
     "Apply the consumer-capacity lesson: change only worker CPU work to 100 ms/job. Run again, inspecting redeliveries and acknowledgements. Restore the starter; change only queue visibility to five seconds using the acknowledgement lesson. Run and inspect the remaining outstanding work.",
     "Combine both changes. Observe ready and in-flight work near second 140, then inspect the final report at 170. Arrivals continue, so a small in-flight population can remain after excess burst work has drained. Compare all four reports and explain why neither partial fix passes.",
