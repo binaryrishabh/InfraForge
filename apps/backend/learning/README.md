@@ -52,10 +52,10 @@ registry. No request-time randomness, clock, environment, database or progress i
 
 ## Foundations
 
-Track 1 contains ten original beginner lessons across requests/routing, compute/data and
-load/limits. All are reading or conceptual exercises. DNS lookup is distinct from the
+Foundations contains ten original reading/conceptual beginner lessons across requests/routing, compute/data and
+load/limits, plus three executable lessons in `first-runs`. DNS lookup is distinct from the
 application request path. There are no claimed runs, capacity measurements or completion
-scores. The `first-runs` module is intentionally reserved for Lane B's runnable lessons.
+scores for the reading/conceptual lessons. Executable progress comes from recorded challenge attempts.
 
 ## Checks
 
@@ -158,10 +158,13 @@ the product browser controller/runner/worker host, and submits over real HTTP. T
 production submission route queues the independent production server runtime replay;
 its terminal writer supplies the report and learning progress. Only the stop second
 and actions are submitted. The test rejects client-authored measurements, incomplete
-predictions and duplicate submissions, and checks that an active run has no terminal
-result. It then records a one-change improvement, compares through the existing route,
+predictions and duplicate submissions, and checks that an active run or refused submission has no terminal
+result or claimed requirements-met progress. It then records a one-change improvement, compares through the existing route,
 and renders the lesson/list from server-derived progress. Browser and server terminal
 traffic must agree; this does not generalize a single pair to other inputs or seeds.
+Accepted submissions contain only actions and the stop second. A second test owner sees
+no activity and cannot read the first owner's report or comparison. The network adapter
+refuses any request outside the fixture's loopback origin.
 
 The session provider, Prisma-shaped in-memory storage, queue delivery and gate
 completion are isolated fixture seams. Validation, security and cost functions run;
