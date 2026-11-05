@@ -1,6 +1,6 @@
-import type { LessonDefinition } from "@infraforge/contracts/learning";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
-export const retryingAFullPool: LessonDefinition = {
+export const retryingAFullPool: LearningLesson = {
   id: "retrying-a-full-pool", contentVersion: 1, trackId: "scaling", moduleId: "serving-under-load",
   title: "Count useful work before adding retries", kind: "executable-lab", level: "advanced", availability: "available",
   summary: "Compare backend admission attempts with offered caller requests while a VM pool remains saturated.",
@@ -17,5 +17,6 @@ export const retryingAFullPool: LessonDefinition = {
   limitations: ["The requirement scores repeated backend admissions, not successful capacity restoration or a latency SLO.",
     "Five attempts is aggressive but bounded. Counters count attempts reaching the VM gate, not all selected network attempts or unique callers.",
     "The counts do not establish billed cost or real-cloud performance. Missing cumulative caller or backend counters leaves the budget Unknown."],
+  check: null,
   followUp: "Use the two reports to explain why less repeated work need not increase completions. Propose a separate one-change capacity experiment.",
 };

@@ -1,6 +1,6 @@
-import type { LessonDefinition } from "@infraforge/contracts/learning";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
-export const moveReadsOffTheWriter: LessonDefinition = {
+export const moveReadsOffTheWriter: LearningLesson = {
   id: "move-reads-off-the-writer", contentVersion: 1, trackId: "data", moduleId: "database-pressure",
   title: "Give reads a separate execution budget", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Route reads to an already provisioned replica and inspect where reads and writes actually run.",

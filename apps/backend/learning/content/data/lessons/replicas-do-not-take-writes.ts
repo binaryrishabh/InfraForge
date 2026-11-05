@@ -1,6 +1,6 @@
-import type { LessonDefinition } from "@infraforge/contracts/learning";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
-export const replicasDoNotTakeWrites: LessonDefinition = {
+export const replicasDoNotTakeWrites: LearningLesson = {
   id: "replicas-do-not-take-writes", contentVersion: 1, trackId: "data", moduleId: "database-pressure",
   title: "Test a replica against a write bottleneck", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Run a plausible replica-only fix, observe why it fails, then change writer capacity.",

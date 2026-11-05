@@ -27,7 +27,7 @@ test("real foundations content validates and follows the whole beginner path; ru
   expect(track.title).toBe("Track 1: Foundations");
   expect(track.modules.map((m) => m.id)).toEqual(["requests-and-routing", "compute-and-data", "load-and-limits", "first-runs"]);
   const ids = track.modules.filter((m) => m.id !== "first-runs").flatMap((m) => m.lessonIds);
-  expect([...ids, ...track.modules.find((m) => m.id === "first-runs")!.lessonIds]).toEqual(learningContent.lessons.map((l) => l.id));
+  expect([...ids, ...track.modules.find((m) => m.id === "first-runs")!.lessonIds]).toEqual(learningContent.lessons.filter((l) => l.trackId === "foundations").map((l) => l.id));
   expect(ids).toHaveLength(10);
   for (const id of ids) {
     const l = LEARNING_REGISTRY.findLesson(id)!;
@@ -174,7 +174,7 @@ test("published old versions stay resolvable without duplicating the current les
   const registry = buildLearningRegistry(c);
   expect(registry.findLesson(first(c).id)?.contentVersion).toBe(2);
   expect(registry.findLesson(first(c).id, 1)?.title).toBe("What is a request?");
-  expect(registry.listLessons()).toHaveLength(13);
+  expect(registry.listLessons()).toHaveLength(learningContent.lessons.length);
 });
 
 for (const [name, change] of [

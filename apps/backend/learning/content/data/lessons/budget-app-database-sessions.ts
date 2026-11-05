@@ -1,6 +1,6 @@
-import type { LessonDefinition } from "@infraforge/contracts/learning";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
-export const budgetAppDatabaseSessions: LessonDefinition = {
+export const budgetAppDatabaseSessions: LearningLesson = {
   id: "budget-app-database-sessions", contentVersion: 1, trackId: "data", moduleId: "database-pressure",
   title: "Count pools before adding app instances", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Compare actual session occupancy after a slowdown with the number of independently owned app pools.",
@@ -16,5 +16,6 @@ export const budgetAppDatabaseSessions: LessonDefinition = {
     "Minimum replicas controls initial instances in this Model 2 profile. This six-second run ends before the ten-second controller evaluation; it proves no long-run cap.",
     "The reference can still fail callers during the slowdown and have a worse whole-run latency tail. Spare sessions at the final second do not establish whole-run health, recovery time or production availability.",
     "CPU slowdown and the 85-session tier limit are educational assumptions. No database outage, promotion or cache failure is applied."],
+  check: null,
   followUp: "Explain why buying app CPU does not close idle database connections. Cite sessions, refusals and whole-run latency from both runs, including the tradeoff.",
 };

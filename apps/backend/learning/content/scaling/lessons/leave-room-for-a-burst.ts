@@ -1,6 +1,6 @@
-import type { LessonDefinition } from "@infraforge/contracts/learning";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
-export const leaveRoomForABurst: LessonDefinition = {
+export const leaveRoomForABurst: LearningLesson = {
   id: "leave-room-for-a-burst", contentVersion: 1, trackId: "scaling", moduleId: "serving-under-load",
   title: "Buy headroom for a burst", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Run a fourfold burst and compare two valid capacity choices using recorded CPU and educational cost estimates.",
@@ -16,5 +16,6 @@ export const leaveRoomForABurst: LessonDefinition = {
   limitations: ["Scoring uses completions in second 125, not the whole burst. Whole-run percentile ranges summarize another window.",
     "The CPU profile and burst timing are educational assumptions. No automatic scaling or availability guarantee is tested.",
     "Catalog monthly values are educational estimates, not current provider prices. Generic sizes share a flat estimate; use catalog sizes for this comparison."],
+  check: null,
   followUp: "Compare c5.large with c5.xlarge. Which leaves less CPU headroom, what does each estimate cost, and what demand is still untested?",
 };

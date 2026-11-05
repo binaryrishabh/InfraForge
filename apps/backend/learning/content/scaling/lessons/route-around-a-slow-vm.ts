@@ -1,6 +1,6 @@
-import type { LessonDefinition } from "@infraforge/contracts/learning";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
-export const routeAroundASlowVm: LessonDefinition = {
+export const routeAroundASlowVm: LearningLesson = {
   id: "route-around-a-slow-vm", contentVersion: 1, trackId: "scaling", moduleId: "serving-under-load",
   title: "Route work with unfinished requests in mind", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Compare backend selection policies while keeping two VMs and their capacity unchanged.",
