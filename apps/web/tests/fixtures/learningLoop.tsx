@@ -26,7 +26,7 @@ http.defaults.adapter = async (config) => {
   if (failed) throw Error("Unavailable");
   let data: unknown;
   if (config.url === `${API_URL}/learning`) data = catalog;
-  else if (config.url === `${API_URL}/learning/lessons/${detail.lesson.id}`) data = detail;
+  else if (config.url === `${API_URL}/learn/lessons/${detail.lesson.id}`) data = detail;
   else if (config.url?.endsWith("/report")) data = { report: wrongReport ? { ...currentReport, challenge: { ...currentReport.challenge, challengeId: "other" } } : currentReport };
   else if (config.url?.endsWith("/compare-options")) data = { runs: options };
   else if (config.url?.endsWith("/compare")) data = { comparison: pair };
@@ -76,9 +76,9 @@ const { LearningPage } = await import("../../src/features/learning/LearningPage"
 const { LessonActivityContent, LessonComparisonContent } = await import("../../src/features/learning/LessonActivity");
 const route = (path: string) => renderToStaticMarkup(<router.MemoryRouter initialEntries={[path]}><router.Routes>
   <router.Route path="/runs/:deploymentId" element={<RunReportPage />} />
-  <router.Route path="/learning/lessons/:lessonId" element={<LessonPage />} />
+  <router.Route path="/learn/lessons/:lessonId" element={<LessonPage />} />
   <router.Route path="/runs/compare" element={<ComparePage />} />
-  <router.Route path="/learning" element={<LearningPage />} />
+  <router.Route path="/learn" element={<LearningPage />} />
 </router.Routes></router.MemoryRouter>);
 const render = (node: React.ReactNode) => renderToStaticMarkup(<router.MemoryRouter>{node}</router.MemoryRouter>);
 
@@ -87,7 +87,7 @@ currentReport = await getRunReport(currentReport.run.id);
 const reportHtml = route(`/runs/${currentReport.run.id}`);
 assert.ok(reportHtml.includes(`Part of lesson ${detail.lesson.title}`));
 assert.ok(reportHtml.includes(detail.lesson.followUp!));
-const lessonPath = `/learning/lessons/${detail.lesson.id}`;
+const lessonPath = `/learn/lessons/${detail.lesson.id}`;
 assert.ok(reportHtml.includes(`href="${lessonPath}"`));
 const recorded = currentReport;
 currentReport = { ...recorded, challenge: null, run: { ...recorded.run, challenge: null } };
@@ -108,8 +108,8 @@ for (const cue of currentReport.guidedReview!.cues) {
   assert.ok(lessonHtml.includes(escaped)); assert.ok(lessonHtml.includes(limit));
 }
 assert.ok(lessonHtml.includes("Read the full evidence record in the linked report"));
-assert.ok(route("/learning").includes("Worth revisiting"));
-for (const suggestion of catalog.suggestions.reviewCandidates) assert.ok(route("/learning").includes(suggestion.reason));
+assert.ok(route("/learn").includes("Worth revisiting"));
+for (const suggestion of catalog.suggestions.reviewCandidates) assert.ok(route("/learn").includes(suggestion.reason));
 const missing = render(<LessonActivityContent {...ready({ ...currentReport, guidedReview: null })} />);
 assert.ok(missing.includes("No guided review cues were retained"));
 assert.ok(missing.includes("disabled"));

@@ -9,7 +9,7 @@ import { createRequire } from "node:module";
 const WEB = process.env.JOURNEY_WEB ?? "http://localhost:5173";
 if (!/^http:\/\/localhost:\d+$/.test(WEB)) { console.error("journey only runs against a localhost dev stack"); process.exit(2); }
 const { chromium } = createRequire(process.env.PW_DIR ? `${process.env.PW_DIR}/package.json` : `${process.cwd()}/package.json`)("playwright-core");
-const SHOTS = process.env.JOURNEY_SHOTS ?? `${process.cwd()}/learning-shots`; mkdirSync(SHOTS, { recursive: true });
+const SHOTS = process.env.JOURNEY_SHOTS ?? `${process.cwd()}/learn-shots`; mkdirSync(SHOTS, { recursive: true });
 
 const browser = await chromium.launch({ headless: true, args: ["--no-sandbox", "--disable-gpu"] });
 const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
@@ -44,10 +44,10 @@ await step("sign up a disposable account", async () => {
 await step("home loads and offers a way into learning", async () => {
   await page.waitForLoadState("networkidle").catch(() => {});
   const body = await text();
-  return { continueLearning: /continue learning|start learning|learning/i.test(body), learningLink: await page.locator('a[href="/learning"]').count() };
+  return { continueLearning: /continue learning|start learning|learning/i.test(body), learningLink: await page.locator('a[href="/learn"]').count() };
 });
 await step("learning page lists tracks and lessons from the server", async () => {
-  await page.goto(`${WEB}/learning`, { waitUntil: "load" });
+  await page.goto(`${WEB}/learn`, { waitUntil: "load" });
   await page.getByRole("heading", { level: 1 }).first().waitFor({ timeout: 30_000 });
   await page.waitForFunction(() => /\d+ lessons? found/.test(document.body.innerText), null, { timeout: 30_000 });
   const body = await text();
@@ -55,7 +55,7 @@ await step("learning page lists tracks and lessons from the server", async () =>
   return { found: /(\d+) lessons? found/.exec(body)?.[1], mentionsRunnableLab: /runnable lab/i.test(body), tracksSeen: ["Foundations", "Scaling", "Databases", "Asynchronous", "Failures", "Missions"].filter((t) => body.includes(t)) };
 });
 await step("a reading lesson renders its sections and never claims a simulated result", async () => {
-  await page.goto(`${WEB}/learning/lessons/what-is-a-request`, { waitUntil: "load" });
+  await page.goto(`${WEB}/learn/lessons/what-is-a-request`, { waitUntil: "load" });
   await page.getByRole("heading", { level: 1 }).first().waitFor({ timeout: 30_000 });
   const body = await text();
   await page.screenshot({ path: `${SHOTS}/2-reading.png`, fullPage: true });
@@ -63,7 +63,7 @@ await step("a reading lesson renders its sections and never claims a simulated r
   return { headings: await page.getByRole("heading").allInnerTexts(), hasLimits: /limit/i.test(body) };
 });
 await step("a concept check answers immediately and the answer is remembered on this device", async () => {
-  await page.goto(`${WEB}/learning/lessons/client-and-server`, { waitUntil: "load" });
+  await page.goto(`${WEB}/learn/lessons/client-and-server`, { waitUntil: "load" });
   const radios = page.getByRole("radio");
   await radios.first().waitFor({ timeout: 30_000 });
   await radios.first().check();
@@ -73,7 +73,7 @@ await step("a concept check answers immediately and the answer is remembered on 
   return { restoredAfterReload: await page.getByRole("radio").first().isChecked() };
 });
 await step("a runnable lab lesson links to its pinned challenge", async () => {
-  await page.goto(`${WEB}/learning/lessons/where-does-the-time-go`, { waitUntil: "load" });
+  await page.goto(`${WEB}/learn/lessons/where-does-the-time-go`, { waitUntil: "load" });
   await page.getByRole("heading", { level: 1 }).first().waitFor({ timeout: 30_000 });
   const body = await text();
   await page.screenshot({ path: `${SHOTS}/3-lab.png`, fullPage: true });
@@ -88,7 +88,7 @@ await step("the challenge opens, a prediction can be made and an attempt starts"
   return { url: page.url().replace(WEB, ""), buttons: await page.getByRole("button").allInnerTexts(), links: (await page.getByRole("link").allInnerTexts()).slice(0, 12) };
 });
 await step("keyboard: lesson page can be operated with Tab only", async () => {
-  await page.goto(`${WEB}/learning/lessons/client-and-server`, { waitUntil: "load" });
+  await page.goto(`${WEB}/learn/lessons/client-and-server`, { waitUntil: "load" });
   await page.getByRole("radio").first().waitFor({ timeout: 30_000 });
   const focusable = [];
   for (let i = 0; i < 25; i++) { await page.keyboard.press("Tab"); focusable.push(await page.evaluate(() => document.activeElement?.tagName + ":" + (document.activeElement?.getAttribute("aria-label") || document.activeElement?.textContent || "").trim().slice(0, 30))); }

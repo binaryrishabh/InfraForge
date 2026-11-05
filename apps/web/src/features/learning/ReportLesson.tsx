@@ -11,7 +11,7 @@ export function ReportLessonContent({ data, loading, error, retry }: LearningReq
   if (error) return <LearningFailure error={error} retry={retry} />;
   if (!data || data.lesson.kind !== "executable-lab") return null;
   return <aside aria-label="Lesson follow-up" className="mt-5 text-sm">
-    <Link className="text-accent hover:underline" to={`/learning/lessons/${encodeURIComponent(data.lesson.id)}`}>Part of lesson {data.lesson.title}</Link>
+    <Link className="text-accent hover:underline" to={`/learn/lessons/${encodeURIComponent(data.lesson.id)}`}>Part of lesson {data.lesson.title}</Link>
     {data.lesson.followUp && <p className="mt-2">{data.lesson.followUp}</p>}
   </aside>;
 }

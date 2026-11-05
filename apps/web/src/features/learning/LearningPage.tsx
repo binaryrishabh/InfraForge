@@ -19,7 +19,7 @@ function LessonRow({ lesson, catalog }: { lesson: LearningLessonSummary; catalog
   const activity = activityLabel(lesson, catalog.progress.find((p) => p.lessonId === lesson.id));
   return <li className="border-t border-line py-4">
     <p className="text-sm text-ink-3"><Tag>{KIND_LABEL[lesson.kind]}</Tag> · {lesson.level} · Available · {lessonMode(lesson)}</p>
-    <h4 className="mt-1 text-lg font-semibold"><Link className="text-accent hover:underline" to={`/learning/lessons/${encodeURIComponent(lesson.id)}`}>{lesson.title}</Link></h4>
+    <h4 className="mt-1 text-lg font-semibold"><Link className="text-accent hover:underline" to={`/learn/lessons/${encodeURIComponent(lesson.id)}`}>{lesson.title}</Link></h4>
     <p className="mt-1 text-ink-2">{lesson.summary}</p>
     {activity && <p className="mt-2 text-sm"><Tag>Server activity: {activity}</Tag></p>}
   </li>;
@@ -42,12 +42,12 @@ export function LearningList({ data, loading, error, retry, filters, onFilters }
   return <>
     {reviews.length > 0 && <Section title="Worth revisiting" className="mt-6">
       <ul>{reviews.map(({ lesson, reason, concepts }) => <li key={lesson.id} className="mt-3">
-        <Link className="text-accent hover:underline" to={`/learning/lessons/${encodeURIComponent(lesson.id)}`}>{lesson.title}</Link>
+        <Link className="text-accent hover:underline" to={`/learn/lessons/${encodeURIComponent(lesson.id)}`}>{lesson.title}</Link>
         <p className="mt-1 text-sm text-ink-2">{reason}</p>
         {concepts.length > 0 && <div className="mt-2 text-sm">
           <p>Concepts to revisit for this lab (advice):</p>
           <ul>{concepts.map((concept) => <li key={concept.id}>
-            <Link className="text-accent hover:underline" to={`/learning/lessons/${encodeURIComponent(concept.id)}`}>{concept.title}</Link>
+            <Link className="text-accent hover:underline" to={`/learn/lessons/${encodeURIComponent(concept.id)}`}>{concept.title}</Link>
           </li>)}</ul>
         </div>}
       </li>)}</ul>

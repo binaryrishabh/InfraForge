@@ -10,7 +10,7 @@ export function ContinueLearning({ data, loading, error, retry }: LearningReques
   const next = learningNextStep(data);
   return <Section title="Continue learning" className="mt-8">
     {next ? <><p className="font-semibold">{next.lesson.title}</p><p className="mt-2 text-sm text-ink-2">{next.reason}</p>
-      <ButtonLink className="mt-3" to={`/learning/lessons/${encodeURIComponent(next.lesson.id)}`}>Continue learning</ButtonLink>
-    </> : <><p>No learning suggestion is available.</p><ButtonLink className="mt-3" to="/learning">Browse Learning</ButtonLink></>}
+      <ButtonLink className="mt-3" to={`/learn/lessons/${encodeURIComponent(next.lesson.id)}`}>Continue learning</ButtonLink>
+    </> : <><p>No learning suggestion is available.</p><ButtonLink className="mt-3" to="/learn">Browse Learning</ButtonLink></>}
   </Section>;
 }

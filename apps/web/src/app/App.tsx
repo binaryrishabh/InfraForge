@@ -88,8 +88,8 @@ function App() {
             <Route path="/home" element={<HomePage />} />
             <Route path="/challenges" element={<ChallengesPage />} />
             <Route path="/challenges/:challengeId" element={<ChallengeDetailPage />} />
-            <Route path="/learning" element={<LearningPage />} />
-            <Route path="/learning/lessons/:lessonId" element={<LessonPage />} />
+            <Route path="/learn" element={<LearningPage />} />
+            <Route path="/learn/lessons/:lessonId" element={<LessonPage />} />
             <Route path="/designs" element={<DesignsPage />} />
             <Route path="/runs" element={<RunHistoryPage />} />
             <Route path="/runs/compare" element={<ComparePage />} />

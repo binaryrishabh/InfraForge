@@ -105,7 +105,7 @@ test("loading, retry, empty list and lesson failure states are explicit", () => 
   const empty = { ...catalog, tracks: [], lessons: [] };
   expect(render(<LearningList {...ready(empty)} filters={EMPTY_FILTERS} onFilters={() => {}} />)).toContain("No lessons are available yet");
   const failedLesson = render(<LessonView {...ready(detail())} data={null} error="Lesson not found" catalog={ready(catalog)} />);
-  expect(failedLesson).toContain('role="alert"'); expect(failedLesson).toContain("Try again"); expect(failedLesson).toContain('href="/learning"');
+  expect(failedLesson).toContain('role="alert"'); expect(failedLesson).toContain("Try again"); expect(failedLesson).toContain('href="/learn"');
   expect(render(<LessonView {...ready(detail())} loading catalog={ready(catalog)} />)).toContain("Loading lesson");
   expect(render(<ContinueLearning {...ready(catalog)} error="Offline" />)).toContain("learning suggestion could not be loaded");
   expect(render(<ContinueLearning {...ready(empty)} />)).toContain("No learning suggestion is available");

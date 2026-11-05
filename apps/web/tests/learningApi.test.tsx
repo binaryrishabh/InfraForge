@@ -31,10 +31,10 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
     expect(config.withCredentials).toBe(true);
     requests.push(config.url!);
     const data = config.url === `${API_URL}/learning` ? catalog
-      : config.url === `${API_URL}/learning/lessons/what-is-a-request` ? proof.reading
-        : config.url === `${API_URL}/learning/lessons/client-and-server` ? proof.concept
-          : config.url === `${API_URL}/learning/lessons/api-lab` ? proof.lab
-            : proof.curriculumDetails.find(detail => config.url === `${API_URL}/learning/lessons/${detail.lesson.id}`) ?? null;
+      : config.url === `${API_URL}/learn/lessons/what-is-a-request` ? proof.reading
+        : config.url === `${API_URL}/learn/lessons/client-and-server` ? proof.concept
+          : config.url === `${API_URL}/learn/lessons/api-lab` ? proof.lab
+            : proof.curriculumDetails.find(detail => config.url === `${API_URL}/learn/lessons/${detail.lesson.id}`) ?? null;
     if (!data) throw Error("Not found");
     return { data, status: 200, statusText: "OK", headers: {}, config };
   };
@@ -56,7 +56,7 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
           const expected = availableLessons(foundations).filter(l => l.trackId === track.id && l.level === level && l.kind === kind);
           expect(discoverLessons(foundations, filters)).toEqual(expected);
           const filtered = render(<LearningList {...ready(foundations)} filters={filters} onFilters={() => {}} />);
-          for (const candidate of expected) expect(filtered).toContain(`href="/learning/lessons/${candidate.id}"`);
+          for (const candidate of expected) expect(filtered).toContain(`href="/learn/lessons/${candidate.id}"`);
           if (!expected.length) expect(filtered).toContain("No lessons match");
         }
       }
@@ -65,7 +65,7 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
       const loaded = await getLearningLesson(detail.lesson.id);
       const markup = lesson(loaded);
       expect(markup).toContain("Prerequisites are advice");
-      for (const id of loaded.lesson.prerequisites) expect(markup).toContain(`href="/learning/lessons/${id}"`);
+      for (const id of loaded.lesson.prerequisites) expect(markup).toContain(`href="/learn/lessons/${id}"`);
       if (loaded.lesson.trackId === "foundations" || loaded.lesson.kind === "executable-lab") continue;
       expect(loaded.challenge).toBeNull(); expect(loaded.progress).toBeNull();
       const check = loaded.lesson.check!;
@@ -82,7 +82,7 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
     expect(recallMarkup).toContain("Worth revisiting");
     expect(recallMarkup).toContain(recall.suggestions.reviewCandidates[0]!.reason);
     expect(recallMarkup).toContain("Concepts to revisit for this lab (advice):");
-    for (const id of ["load-balancer-policies", "percentiles-and-populations"]) expect(recallMarkup).toContain(`href="/learning/lessons/${id}"`);
+    for (const id of ["load-balancer-policies", "percentiles-and-populations"]) expect(recallMarkup).toContain(`href="/learn/lessons/${id}"`);
     const reading = await getLearningLesson("what-is-a-request");
     expect(lesson(reading)).toContain(reading.lesson.explanation[0]!);
     expect(lesson(reading)).not.toContain("Server activity:"); expect(lesson(reading)).not.toContain("Evidence to inspect");
@@ -93,7 +93,7 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
     const active = await getLearningCatalog();
     expect(active.progress.find((p) => p.lessonId === "api-lab")?.activity).toBe("attempted");
     const home = render(<ContinueLearning {...ready(active)} />);
-    expect(home).toContain("Continue learning"); expect(home).toContain('href="/learning/lessons/api-lab"');
+    expect(home).toContain("Continue learning"); expect(home).toContain('href="/learn/lessons/api-lab"');
     expect(home).toContain(active.suggestions.continue!.reason);
     expect(active.suggestions.continue!.reason).toContain("run run-1");
     const lab = await getLearningLesson("api-lab");
@@ -101,6 +101,6 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
     expect(lab.challenge?.id).toBe(lab.lesson.experiment!.challengeId);
     expect(lesson(lab)).toContain("Open challenge lab"); expect(lesson(lab)).toContain('href="/runs/run-1"');
     await expect(getLearningLesson("missing / lesson")).rejects.toThrow("Not found");
-    expect(requests.at(-1)).toBe(`${API_URL}/learning/lessons/missing%20%2F%20lesson`);
+    expect(requests.at(-1)).toBe(`${API_URL}/learn/lessons/missing%20%2F%20lesson`);
   } finally { http.defaults.adapter = adapter; }
 }, 180000);

@@ -34,7 +34,7 @@ export function LessonBody({ detail, catalog, local, storageAvailable, onLocal, 
     <aside className="mt-4 text-sm" aria-label="Suggested prerequisites">
       <p>Prerequisites are advice, not locks.</p>
       {catalog ? <ul>{prerequisiteLessons(lesson, catalog).map(({ id, lesson: prerequisite }) => <li key={id}>{prerequisite
-        ? <Link className="text-accent hover:underline" to={`/learning/lessons/${encodeURIComponent(id)}`}>{prerequisite.title}</Link>
+        ? <Link className="text-accent hover:underline" to={`/learn/lessons/${encodeURIComponent(id)}`}>{prerequisite.title}</Link>
         : `Prerequisite unavailable: ${id}`}</li>)}</ul> : <p>Prerequisite links are unavailable until the learning list loads.</p>}
     </aside>
     <Section title="Problem" className="mt-6">{lesson.problem.map((p) => <p key={p} className="mb-3 text-ink-2">{p}</p>)}</Section>
@@ -57,8 +57,8 @@ export function LessonBody({ detail, catalog, local, storageAvailable, onLocal, 
     </>}
     <Section title="Limitations" className="mt-6">{lesson.limitations.map((p) => <p key={p} className="mb-3 text-ink-2">{p}</p>)}</Section>
     <Section title="Follow-up" className="mt-6"><p>{followUp}</p>
-      {next ? <Link className="mt-3 inline-block text-accent hover:underline" to={`/learning/lessons/${encodeURIComponent(next.id)}`}>Next in track order: {next.title}</Link>
-        : <Link className="mt-3 inline-block text-accent hover:underline" to="/learning">Find another lesson</Link>}
+      {next ? <Link className="mt-3 inline-block text-accent hover:underline" to={`/learn/lessons/${encodeURIComponent(next.id)}`}>Next in track order: {next.title}</Link>
+        : <Link className="mt-3 inline-block text-accent hover:underline" to="/learn">Find another lesson</Link>}
     </Section>
     <Section title="Check question" className="mt-6">
       {lesson.check ? <fieldset aria-describedby="check-help">
@@ -87,8 +87,8 @@ function DeviceLesson({ detail, catalog }: { detail: LearningLessonDetail; catal
 
 export function LessonView({ data, loading, error, retry, catalog }: LearningRequest<LearningLessonDetail> & { catalog: LearningRequest<LearningCatalog> }) {
   if (loading) return <LearningFocus destination="loading"><Page><h1 className="mt-8 text-2xl">Lesson</h1><Loading label="Loading lesson…" /></Page></LearningFocus>;
-  if (error || !data) return <LearningFocus destination="unavailable"><Page><h1 className="mt-8 text-2xl">Lesson unavailable</h1><LearningFailure error={error ?? "This lesson could not be loaded."} retry={retry} /><Link to="/learning">Back to Learning</Link></Page></LearningFocus>;
-  return <LearningFocus destination={`${data.lesson.id}:${data.lesson.contentVersion}`}><Page width="narrow"><Link className="mt-6 inline-block text-accent hover:underline" to="/learning">Back to Learning</Link>
+  if (error || !data) return <LearningFocus destination="unavailable"><Page><h1 className="mt-8 text-2xl">Lesson unavailable</h1><LearningFailure error={error ?? "This lesson could not be loaded."} retry={retry} /><Link to="/learn">Back to Learning</Link></Page></LearningFocus>;
+  return <LearningFocus destination={`${data.lesson.id}:${data.lesson.contentVersion}`}><Page width="narrow"><Link className="mt-6 inline-block text-accent hover:underline" to="/learn">Back to Learning</Link>
     <PageHeader title={data.lesson.title} lede={data.lesson.summary} />
     {catalog.loading && <Loading label="Loading prerequisite and follow-up links…" />}
     {catalog.error && <LearningFailure error="Prerequisite and follow-up links could not be loaded." retry={catalog.retry} />}
