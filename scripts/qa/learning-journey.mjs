@@ -126,10 +126,56 @@ await step("the lesson now shows the learner's own recorded attempt from the ser
   await page.screenshot({ path: `${SHOTS}/9-lesson-after.png`, fullPage: true });
   return { activity: /Server activity: ([^·]*)/.exec(body)?.[1]?.trim(), whatRunShowed: body.slice(Math.max(0, body.search(/latest (recorded )?attempt|What (did )?your run/i))).slice(0, 700) };
 });
-await step("the result offers one change and a rerun; the improvement flow opens the earlier design", async () => {
-  await page.goBack().catch(() => {}); await page.goBack().catch(() => {});
-  await page.goto(page.url().includes("/runs/") ? page.url() : `${WEB}/runs`, { waitUntil: "load" });
-  return { url: page.url().replace(WEB, "").replace(/runs\/.*/, "runs/<id>"), buttons: await page.getByRole("button").allInnerTexts(), links: (await page.getByRole("link").allInnerTexts()).slice(0, 20) };
+await step("one change is planned with a written hypothesis and the earlier design reopens", async () => {
+  await page.goto(`${WEB}/learn/lessons/where-does-the-time-go`, { waitUntil: "load" });
+  await page.getByRole("link", { name: /inspect the latest recorded attempt/i }).first().click();
+  await page.waitForURL(/\/runs\//, { timeout: 30_000 });
+  await page.getByRole("button", { name: /plan one change/i }).click();
+  const dialog = page.getByRole("dialog").first();
+  await dialog.getByRole("textbox").first().fill("A larger app instance gives the app more CPU, so its queue should shrink and p95 should fall.");
+  await page.screenshot({ path: `${SHOTS}/10-plan-change.png` });
+  await dialog.locator('button[type="submit"]').click();
+  await page.waitForURL(/\/design/, { timeout: 60_000 });
+  await page.waitForLoadState("networkidle").catch(() => {});
+  await page.screenshot({ path: `${SHOTS}/11-improvement-design.png` });
+  return { url: page.url().replace(WEB, "").replace(/design=.*/, "design=<id>"), hasHypothesisNotice: /hypothesis|one change|improvement/i.test(await text()) };
+});
+await step("the app's instance size is changed to c5.large in the designer", async () => {
+  await page.locator('[data-testid="resource-app"], button:has-text("app")').filter({ hasText: /Virtual Machine/ }).first().click();
+  const size = page.getByLabel(/instance size/i).first();
+  await size.waitFor({ timeout: 20_000 });
+  const options = await size.locator("option").allInnerTexts().catch(() => []);
+  await size.selectOption({ label: options.find((o) => /c5\.large/.test(o)) ?? "c5.large" });
+  await page.screenshot({ path: `${SHOTS}/12-size-changed.png` });
+  return { options: options.slice(0, 8), chosen: await size.inputValue() };
+});
+await step("the improved design runs through the same prediction gate and its recorded result is shown", async () => {
+  await page.getByRole("button", { name: /predict and run/i }).click();
+  const dialog = page.getByRole("dialog").first();
+  await dialog.waitFor({ timeout: 30_000 });
+  await dialog.getByRole("radio").first().check();
+  await dialog.getByRole("button", { name: /lock prediction and run/i }).click();
+  await page.getByRole("link", { name: /see the result/i }).waitFor({ timeout: 240_000 });
+  await page.getByRole("link", { name: /see the result/i }).click();
+  await page.waitForURL(/\/runs\//, { timeout: 120_000 });
+  await page.waitForFunction(() => /Your design/.test(document.body.innerText) && /requirements? met/.test(document.body.innerText), null, { timeout: 120_000 });
+  const body = await text();
+  await page.screenshot({ path: `${SHOTS}/13-improved-result.png`, fullPage: true });
+  return { verdict: /(\d+ of \d+ requirements? met at \d+s)/.exec(body)?.[1], whatChanged: body.slice(Math.max(0, body.search(/change|hypothesis|compared|same conditions/i))).slice(0, 700) };
+});
+await step("the two runs can be compared and the comparison states its conditions", async () => {
+  await page.getByRole("link", { name: /compare with/i }).first().click().catch(async () => { await page.getByRole("button", { name: /compare with/i }).first().click(); });
+  await page.waitForLoadState("networkidle").catch(() => {});
+  const body = await text();
+  await page.screenshot({ path: `${SHOTS}/14-compare.png`, fullPage: true });
+  return { url: page.url().replace(WEB, "").replace(/\?.*/, "?<ids>"), conditions: /same conditions|different conditions|Unknown/i.exec(body)?.[0] ?? null, snippet: body.slice(0, 900) };
+});
+await step("the lesson shows the factual progress after the improvement", async () => {
+  await page.goto(`${WEB}/learn/lessons/where-does-the-time-go`, { waitUntil: "load" });
+  await page.waitForFunction(() => /Server activity:/.test(document.body.innerText), null, { timeout: 30_000 });
+  const body = await text();
+  await page.screenshot({ path: `${SHOTS}/15-lesson-final.png`, fullPage: true });
+  return { activity: /Server activity: ([^·]*?)(?= Prerequisites| Problem)/.exec(body)?.[1]?.trim(), attempts: /(\d+) (recorded )?attempts?/i.exec(body)?.[0] ?? null };
 });
 await step("keyboard: lesson page can be operated with Tab only", async () => {
   await page.goto(`${WEB}/learn/lessons/client-and-server`, { waitUntil: "load" });
