@@ -1,6 +1,6 @@
-import type { LessonDefinition } from "@infraforge/contracts/learning";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
-export const chooseARetryMitigation: LessonDefinition = {
+export const chooseARetryMitigation: LearningLesson = {
   id: "choose-a-retry-mitigation", contentVersion: 1, trackId: "failures", moduleId: "incident-evidence",
   title: "Choose a mitigation and name its cost", kind: "executable-lab", level: "advanced", availability: "available",
   summary: "Compare retry pressure after a dependency partition, including callers that fewer retries fail to finish.", prerequisites: [],

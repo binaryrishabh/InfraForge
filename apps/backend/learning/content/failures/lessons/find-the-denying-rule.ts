@@ -1,6 +1,6 @@
-import type { LessonDefinition } from "@infraforge/contracts/learning";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
-export const findTheDenyingRule: LessonDefinition = {
+export const findTheDenyingRule: LearningLesson = {
   id: "find-the-denying-rule", contentVersion: 1, trackId: "failures", moduleId: "incident-evidence",
   title: "Diagnose a blocked dependency", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Use a failing report to choose an admission cause before editing the design.", prerequisites: [],

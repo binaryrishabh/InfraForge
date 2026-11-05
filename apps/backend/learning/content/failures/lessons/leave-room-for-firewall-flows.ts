@@ -1,6 +1,6 @@
-import type { LessonDefinition } from "@infraforge/contracts/learning";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
-export const leaveRoomForFirewallFlows: LessonDefinition = {
+export const leaveRoomForFirewallFlows: LearningLesson = {
   id: "leave-room-for-firewall-flows", contentVersion: 1, trackId: "failures", moduleId: "incident-evidence",
   title: "Separate policy from connection capacity", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Compare firewall refusals, tracked state and caller success without combining their populations.", prerequisites: ["find-the-denying-rule"],
