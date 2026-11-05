@@ -26,7 +26,7 @@ const list = (filters = EMPTY_FILTERS) => render(<LearningList {...ready(catalog
 const detail = (lesson = reading): LearningLessonDetail => ({ lesson, progress: null, challenge: lesson.kind === "executable-lab"
   ? { id: lesson.experiment.challengeId, version: 2, specHash: "a".repeat(64), title: "First production API", summary: "Try the design.", evaluationSeconds: 120, requirementCount: 4, executable: true } : null });
 const bodyProps = (data = detail()) => ({ detail: data, catalog, local: { read: false, answer: null } as DeviceLessonState, storageAvailable: true,
-  onLocal(_value: DeviceLessonState) {}, onOpen(_id: string) {}, busy: false });
+  onLocal() {}, onOpen() {}, busy: false });
 
 test("learning list renders track, module and lessons in order with honest kind labels", () => {
   const html = list();

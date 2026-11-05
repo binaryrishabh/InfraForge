@@ -4,6 +4,7 @@ import type { LearningCatalog, LearningLessonSummary } from "@infraforge/contrac
 import { Button } from "@/ui/Button";
 import { Field, Input, Select } from "@/ui/Field";
 import { Loading, Notice, Page, PageHeader, Section } from "@/ui/Page";
+import { Tag } from "@/ui/Tag";
 import { activityLabel, availableLessons, discoverLessons, discoveryTerms, EMPTY_FILTERS, KIND_LABEL, lessonMode, type LearningFilters } from "./discovery";
 import { useLearningCatalog } from "./hooks";
 
@@ -15,10 +16,10 @@ export function LearningFailure({ error, retry }: { error: string; retry(): void
 function LessonRow({ lesson, catalog }: { lesson: LearningLessonSummary; catalog: LearningCatalog }) {
   const activity = activityLabel(lesson, catalog.progress.find((p) => p.lessonId === lesson.id));
   return <li className="border-t border-line py-4">
-    <p className="text-sm text-ink-3">{KIND_LABEL[lesson.kind]} · {lesson.level} · Available · {lessonMode(lesson)}</p>
+    <p className="text-sm text-ink-3"><Tag>{KIND_LABEL[lesson.kind]}</Tag> · {lesson.level} · Available · {lessonMode(lesson)}</p>
     <h4 className="mt-1 text-lg font-semibold"><Link className="text-accent hover:underline" to={`/learning/lessons/${encodeURIComponent(lesson.id)}`}>{lesson.title}</Link></h4>
     <p className="mt-1 text-ink-2">{lesson.summary}</p>
-    {activity && <p className="mt-2 text-sm">Server activity: {activity}</p>}
+    {activity && <p className="mt-2 text-sm"><Tag>Server activity: {activity}</Tag></p>}
   </li>;
 }
 

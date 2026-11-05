@@ -3,6 +3,7 @@ import type { LearningCatalog, LearningLessonDetail } from "@infraforge/contract
 import { useOpenChallenge } from "@/features/challenges/useOpenChallenge";
 import { Button } from "@/ui/Button";
 import { Loading, Notice, Page, PageHeader, Section } from "@/ui/Page";
+import { Tag } from "@/ui/Tag";
 import { activityLabel, availableLessons, KIND_LABEL, lessonMode, prerequisiteLessons } from "./discovery";
 import { useDeviceLesson, useLearningCatalog, useLearningLesson } from "./hooks";
 import { LearningFailure, type LearningRequest } from "./LearningPage";
@@ -14,14 +15,14 @@ export function LessonBody({ detail, catalog, local, storageAvailable, onLocal, 
 }) {
   const { lesson, challenge, progress } = detail;
   const activity = activityLabel(lesson, progress);
-  const ordered = catalog ? availableLessons(catalog) : [];
+  const ordered = catalog ? availableLessons(catalog).filter((l) => l.trackId === lesson.trackId) : [];
   const index = ordered.findIndex((l) => l.id === lesson.id);
   const next = index >= 0 ? ordered[index + 1] : null;
   const answer = lesson.check?.choices.find((c) => c.id === local.answer)?.id ?? null;
   const canOpen = lesson.kind === "executable-lab" && lesson.availability === "available" && challenge?.id === lesson.experiment.challengeId && challenge.executable;
   return <>
-    <p className="mt-4 text-sm text-ink-3">{KIND_LABEL[lesson.kind]} · {lesson.level} · {lessonMode(lesson)}</p>
-    {activity && <p className="mt-2 text-sm">Server activity: {activity}</p>}
+    <p className="mt-4 text-sm text-ink-3"><Tag>{KIND_LABEL[lesson.kind]}</Tag> · {lesson.level} · {lessonMode(lesson)}</p>
+    {activity && <p className="mt-2 text-sm"><Tag>Server activity: {activity}</Tag></p>}
     <aside className="mt-4 text-sm" aria-label="Suggested prerequisites">
       <p>Prerequisites are advice, not locks.</p>
       {catalog ? <ul>{prerequisiteLessons(lesson, catalog).map(({ id, lesson: prerequisite }) => <li key={id}>{prerequisite
@@ -58,7 +59,7 @@ export function LessonBody({ detail, catalog, local, storageAvailable, onLocal, 
           <input type="radio" name={`check-${lesson.id}`} value={choice.id} checked={answer === choice.id} onChange={() => onLocal({ ...local, answer: choice.id })} />{choice.text}
         </label>)}
         {answer && <p role="status" aria-live="polite" className="mt-4">{answer === lesson.check.correctChoiceId ? "That matches the explanation. " : "Revisit the explanation. "}{lesson.check.explanation}</p>}
-      </fieldset> : <p>This reading has no check question. Try explaining the problem in your own words.</p>}
+      </fieldset> : <p>This lesson has no check question. Try explaining the problem in your own words.</p>}
     </Section>
     <div className="mt-6 border-t border-line pt-5">
       <Button aria-pressed={local.read} onClick={() => onLocal({ ...local, read: !local.read })}>{local.read ? "Remove read mark" : "Mark as read"}</Button>
