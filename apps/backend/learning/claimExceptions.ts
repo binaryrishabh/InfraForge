@@ -23,7 +23,7 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     "values": [
       "c5.large"
     ],
-    "reason": "c5.large is the one-change reference input, not a starter size or a promised outcome. Sources: apps/backend/tests/challengeHarness.ts and firstRunsCalibration.test.ts."
+    "reason": "c5.large is the one-change reference input, not a starter size or a promised outcome. Sources: apps/backend/tests/firstRunsCalibration.test.ts."
   },
   {
     "lesson": "waiting-with-spare-cpu@1",
@@ -33,7 +33,7 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
       "4",
       "generic"
     ],
-    "reason": "Four active workers is the controlled reference input, not the one-worker starter. Sources: apps/backend/tests/challengeHarness.ts and firstRunsCalibration.test.ts. Generic is the existing canvas Instance size label when no catalog SKU is selected, not a provider instance name. Source: apps/web/src/features/canvas/components/inspector/InstanceSection.tsx."
+    "reason": "Four active workers is the controlled reference input, not the one-worker starter. Sources: apps/backend/tests/firstRunsCalibration.test.ts. Generic is the existing canvas Instance size label when no catalog SKU is selected, not a provider instance name. Source: apps/web/src/features/canvas/components/inspector/InstanceSection.tsx."
   },
   {
     "lesson": "waiting-with-spare-cpu@1",
@@ -51,7 +51,7 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     "values": [
       "c5.xlarge"
     ],
-    "reason": "c5.xlarge is the vertical reference, compared with the horizontal c5.large reference under unchanged traffic. Sources: apps/backend/tests/challengeHarness.ts and firstRunsCalibration.test.ts."
+    "reason": "c5.xlarge is the vertical reference, compared with the horizontal c5.large reference under unchanged traffic. Sources: apps/backend/tests/firstRunsCalibration.test.ts."
   },
   {
     "lesson": "leave-room-for-a-burst@1",
@@ -71,7 +71,7 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
       "c5.large",
       "generic"
     ],
-    "reason": "c5.large is a controlled reference input, absent from the Generic starter. Sources: apps/backend/tests/challengeHarness.ts and scalingCalibration.test.ts. Generic is the existing canvas Instance size label when no catalog SKU is selected, not a provider instance name. Source: apps/web/src/features/canvas/components/inspector/InstanceSection.tsx."
+    "reason": "c5.large is a controlled reference input, absent from the Generic starter. Sources: apps/backend/tests/scalingCalibration.test.ts. Generic is the existing canvas Instance size label when no catalog SKU is selected, not a provider instance name. Source: apps/web/src/features/canvas/components/inspector/InstanceSection.tsx."
   },
   {
     "lesson": "leave-room-for-a-burst@1",
@@ -80,7 +80,7 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     "values": [
       "c5.xlarge"
     ],
-    "reason": "c5.xlarge is the separate larger reference input; estimates stay educational. Sources: apps/backend/tests/challengeHarness.ts and scalingCalibration.test.ts."
+    "reason": "c5.xlarge is the separate larger reference input; estimates stay educational. Sources: apps/backend/tests/scalingCalibration.test.ts."
   },
   {
     "lesson": "leave-room-for-a-burst@1",
@@ -90,7 +90,7 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
       "c5.large",
       "c5.xlarge"
     ],
-    "reason": "The follow-up names the same two controlled reference inputs, not a measured headroom or price. Sources: apps/backend/tests/challengeHarness.ts and scalingCalibration.test.ts."
+    "reason": "The follow-up names the same two controlled reference inputs, not a measured headroom or price. Sources: apps/backend/tests/scalingCalibration.test.ts."
   },
   {
     "lesson": "budget-app-database-sessions@1",
@@ -108,7 +108,7 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     "values": [
       "4"
     ],
-    "reason": "Four initial replicas is the one-change reference input. Sources: apps/backend/tests/challengeHarness.ts and dataLabsCalibration.test.ts."
+    "reason": "Four initial replicas is the one-change reference input. Sources: apps/backend/tests/dataLabsCalibration.test.ts."
   },
   {
     "lesson": "budget-app-database-sessions@1",
@@ -155,7 +155,7 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     "values": [
       "db.t3.micro"
     ],
-    "reason": "db.t3.micro is the tested writer-tier reference input. Sources: apps/backend/tests/challengeHarness.ts and dataLabsCalibration.test.ts."
+    "reason": "db.t3.micro is the tested writer-tier reference input. Sources: apps/backend/tests/dataLabsCalibration.test.ts."
   },
   {
     "lesson": "replicas-do-not-take-writes@1",
@@ -193,7 +193,7 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     "values": [
       "5"
     ],
-    "reason": "Five seconds is the tested visibility reference input; all other settings are fixed. Sources: apps/backend/tests/challengeHarness.ts and asyncLabsCalibration.test.ts."
+    "reason": "Five seconds is the tested visibility reference input; all other settings are fixed. Sources: apps/backend/tests/asyncLabsCalibration.test.ts."
   },
   {
     "lesson": "open-one-subscriber@1",
@@ -202,7 +202,7 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     "values": [
       "5672"
     ],
-    "reason": "Port 5672 is the tested queue-listener reference input matching the saved bus connection. Sources: apps/backend/tests/challengeHarness.ts and asyncLabsCalibration.test.ts."
+    "reason": "Port 5672 is the tested queue-listener reference input matching the saved bus connection. Sources: apps/backend/tests/asyncLabsCalibration.test.ts."
   },
   {
     "lesson": "find-the-denying-rule@1",
@@ -211,7 +211,7 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     "values": [
       "20"
     ],
-    "reason": "Priority 20 is the tested quarantine-rule reference input, not an admission measurement. Sources: apps/backend/tests/challengeHarness.ts and failureLabsCalibration.test.ts."
+    "reason": "Priority 20 is the tested quarantine-rule reference input, not an admission measurement. Sources: apps/backend/tests/failureLabsCalibration.test.ts."
   },
   {
     "lesson": "choose-a-retry-mitigation@1",
@@ -221,7 +221,7 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
       "2",
       "5"
     ],
-    "reason": "Two and five attempts are the controlled alternative retry inputs, not the four-attempt starter. Sources: apps/backend/tests/challengeHarness.ts and failureLabsCalibration.test.ts."
+    "reason": "Two and five attempts are the controlled alternative retry inputs, not the four-attempt starter. Sources: apps/backend/tests/failureLabsCalibration.test.ts."
   },
   {
     "lesson": "catalogue-link-flash@1",
@@ -249,7 +249,7 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     "values": [
       "c5.xlarge"
     ],
-    "reason": "c5.xlarge is the controlled app-only and combined reference input. Sources: apps/backend/tests/challengeHarness.ts and missionsCalibration.test.ts."
+    "reason": "c5.xlarge is the controlled app-only and combined reference input. Sources: apps/backend/tests/missionsCalibration.test.ts."
   },
   {
     "lesson": "flash-sale-order-backlog@1",
@@ -269,7 +269,7 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
       "100",
       "5"
     ],
-    "reason": "100 CPU ms/job and five-second visibility are separately controlled reference inputs and then combined. Sources: apps/backend/tests/challengeHarness.ts and missionsCalibration.test.ts."
+    "reason": "100 CPU ms/job and five-second visibility are separately controlled reference inputs and then combined. Sources: apps/backend/tests/missionsCalibration.test.ts."
   },
   {
     "lesson": "flash-sale-order-backlog@1",
