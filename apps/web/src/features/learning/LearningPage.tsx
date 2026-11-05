@@ -5,7 +5,7 @@ import { Button } from "@/ui/Button";
 import { Field, Input, Select } from "@/ui/Field";
 import { Loading, Notice, Page, PageHeader, Section } from "@/ui/Page";
 import { Tag } from "@/ui/Tag";
-import { activityLabel, availableLessons, discoverLessons, discoveryTerms, EMPTY_FILTERS, KIND_LABEL, lessonMode, type LearningFilters } from "./discovery";
+import { activityLabel, availableLessons, discoverLessons, discoveryTerms, EMPTY_FILTERS, KIND_LABEL, lessonMode, prerequisiteLessons, type LearningFilters } from "./discovery";
 import { useLearningCatalog } from "./hooks";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { LearningFocus } from "./LearningFocus";
@@ -33,14 +33,23 @@ export function LearningList({ data, loading, error, retry, filters, onFilters }
   const visible = new Map(availableLessons(data).map((l) => [l.id, l]));
   const reviews = data.suggestions.reviewCandidates.flatMap((suggestion) => {
     const lesson = visible.get(suggestion.lessonId);
-    return lesson ? [{ lesson, reason: suggestion.reason }] : [];
+    return lesson ? [{ lesson, reason: suggestion.reason,
+      concepts: prerequisiteLessons(lesson, data).flatMap(({ lesson: prerequisite }) =>
+        prerequisite && prerequisite.kind !== "executable-lab" ? [prerequisite] : []),
+    }] : [];
   });
   const change = (key: keyof LearningFilters, value: string) => onFilters({ ...filters, [key]: value });
   return <>
     {reviews.length > 0 && <Section title="Worth revisiting" className="mt-6">
-      <ul>{reviews.map(({ lesson, reason }) => <li key={lesson.id} className="mt-3">
+      <ul>{reviews.map(({ lesson, reason, concepts }) => <li key={lesson.id} className="mt-3">
         <Link className="text-accent hover:underline" to={`/learning/lessons/${encodeURIComponent(lesson.id)}`}>{lesson.title}</Link>
         <p className="mt-1 text-sm text-ink-2">{reason}</p>
+        {concepts.length > 0 && <div className="mt-2 text-sm">
+          <p>Concepts to revisit for this lab (advice):</p>
+          <ul>{concepts.map((concept) => <li key={concept.id}>
+            <Link className="text-accent hover:underline" to={`/learning/lessons/${encodeURIComponent(concept.id)}`}>{concept.title}</Link>
+          </li>)}</ul>
+        </div>}
       </li>)}</ul>
     </Section>}
     <fieldset aria-describedby="learning-filter-help" className="mt-6">

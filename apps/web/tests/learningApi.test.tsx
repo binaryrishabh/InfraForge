@@ -8,11 +8,12 @@ import { getLearningCatalog, getLearningLesson } from "../src/features/learning/
 import { ContinueLearning } from "../src/features/learning/ContinueLearning";
 import { LearningList } from "../src/features/learning/LearningPage";
 import { LessonBody } from "../src/features/learning/LessonPage";
-import { EMPTY_FILTERS } from "../src/features/learning/discovery";
+import { availableLessons, discoverLessons, EMPTY_FILTERS } from "../src/features/learning/discovery";
 
 interface WebProof {
   foundations: LearningCatalog; reading: LearningLessonDetail; concept: LearningLessonDetail;
   attemptedCatalog: LearningCatalog; lab: LearningLessonDetail;
+  curriculumDetails: LearningLessonDetail[]; curriculumRecall: LearningCatalog;
 }
 
 // The child uses the production router, session middleware, registry, progress
@@ -32,7 +33,8 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
     const data = config.url === `${API_URL}/learning` ? catalog
       : config.url === `${API_URL}/learning/lessons/what-is-a-request` ? proof.reading
         : config.url === `${API_URL}/learning/lessons/client-and-server` ? proof.concept
-          : config.url === `${API_URL}/learning/lessons/api-lab` ? proof.lab : null;
+          : config.url === `${API_URL}/learning/lessons/api-lab` ? proof.lab
+            : proof.curriculumDetails.find(detail => config.url === `${API_URL}/learning/lessons/${detail.lesson.id}`) ?? null;
     if (!data) throw Error("Not found");
     return { data, status: 200, statusText: "OK", headers: {}, config };
   };
@@ -44,6 +46,43 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
     const foundations = await getLearningCatalog();
     const html = render(<LearningList {...ready(foundations)} filters={EMPTY_FILTERS} onFilters={() => {}} />);
     expect(html).toContain("Track 1: Foundations"); expect(html).toContain("What is a request?"); expect(html).toContain("Client and server");
+    expect(foundations.tracks.map(track => track.id)).toEqual(["foundations", "scaling", "data", "async", "failures", "missions"]);
+    expect(availableLessons(foundations)).toHaveLength(foundations.lessons.length);
+    for (const track of foundations.tracks) {
+      expect(html).toContain(track.title);
+      for (const level of ["beginner", "intermediate", "advanced"] as const) {
+        for (const kind of ["reading", "conceptual-exercise", "executable-lab"] as const) {
+          const filters = { ...EMPTY_FILTERS, track: track.id, level, kind };
+          const expected = availableLessons(foundations).filter(l => l.trackId === track.id && l.level === level && l.kind === kind);
+          expect(discoverLessons(foundations, filters)).toEqual(expected);
+          const filtered = render(<LearningList {...ready(foundations)} filters={filters} onFilters={() => {}} />);
+          for (const candidate of expected) expect(filtered).toContain(`href="/learning/lessons/${candidate.id}"`);
+          if (!expected.length) expect(filtered).toContain("No lessons match");
+        }
+      }
+    }
+    for (const detail of proof.curriculumDetails) {
+      const loaded = await getLearningLesson(detail.lesson.id);
+      const markup = lesson(loaded);
+      expect(markup).toContain("Prerequisites are advice");
+      for (const id of loaded.lesson.prerequisites) expect(markup).toContain(`href="/learning/lessons/${id}"`);
+      if (loaded.lesson.trackId === "foundations" || loaded.lesson.kind === "executable-lab") continue;
+      expect(loaded.challenge).toBeNull(); expect(loaded.progress).toBeNull();
+      const check = loaded.lesson.check!;
+      expect(check.choices).toHaveLength(3);
+      const wrong = check.choices.find(choice => choice.id !== check.correctChoiceId)!;
+      expect(lesson(loaded, wrong.id)).toContain("Revisit the explanation.");
+      const checkedConcept = lesson(loaded, check.correctChoiceId);
+      expect(checkedConcept).toContain("That matches the explanation.");
+      expect(checkedConcept).toContain(check.explanation.replaceAll("&", "&amp;"));
+      for (const forbidden of ["Evidence to inspect", "Open challenge lab", "Server activity:"]) expect(checkedConcept).not.toContain(forbidden);
+    }
+    const recall = proof.curriculumRecall;
+    const recallMarkup = render(<LearningList {...ready(recall)} filters={EMPTY_FILTERS} onFilters={() => {}} />);
+    expect(recallMarkup).toContain("Worth revisiting");
+    expect(recallMarkup).toContain(recall.suggestions.reviewCandidates[0]!.reason);
+    expect(recallMarkup).toContain("Concepts to revisit for this lab (advice):");
+    for (const id of ["load-balancer-policies", "percentiles-and-populations"]) expect(recallMarkup).toContain(`href="/learning/lessons/${id}"`);
     const reading = await getLearningLesson("what-is-a-request");
     expect(lesson(reading)).toContain(reading.lesson.explanation[0]!);
     expect(lesson(reading)).not.toContain("Server activity:"); expect(lesson(reading)).not.toContain("Evidence to inspect");

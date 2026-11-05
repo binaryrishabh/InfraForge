@@ -8,6 +8,7 @@ import { progressAttempt, progressContent } from "../learningFixtures";
 import { readLearningAttempts, type LearningAttemptDatabase, type LearningAttemptQuery } from "../../learning/attempts";
 import type { LearningCatalog, LearningLessonDetail } from "@infraforge/contracts/learning";
 import type { LearningRun } from "../../learning/progress";
+import { definition, attemptRow, answers } from "../challengeHarness";
 
 let sessionReads = 0;
 mock.module("../../auth/auth", () => ({ authSettings: { origins: ["http://localhost"] }, auth: { api: {
@@ -40,8 +41,9 @@ const database: LearningAttemptDatabase = { deployment: {
 const app = express();
 app.use("/api/learning", requireSession);
 app.use("/api/learning", createLearningRouter({ registry, readAttempts: (ownerId, ids) => readLearningAttempts(ownerId, ids, database) }));
-// Real published foundations content for the web's API-to-page proof; no DB rows are needed for readings.
-app.use("/api/foundations", requireSession, createLearningRouter({ readAttempts: async () => [] }));
+// Actual curriculum content for the web proof; stored attempt/session lookups remain fixture seams.
+let publishedRows: LearningRun[] = [];
+app.use("/api/foundations", requireSession, createLearningRouter({ readAttempts: async () => publishedRows }));
 app.use((error: Error & { statusCode?: number }, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   res.status(error.statusCode ?? 500).json({ message: error.message });
 });
@@ -133,9 +135,16 @@ try {
     assert.equal(response.status, 200);
     return response.json();
   };
+  const curriculum = await foundationGet() as LearningCatalog;
+  const curriculumDetails = await Promise.all(curriculum.lessons.map(lesson => foundationGet(`/lessons/${lesson.id}`)));
+  const routing = definition("route-around-a-slow-vm");
+  publishedRows = [{ ...attemptRow(routing, routing.starter!, answers(routing, { "overall-health": "healthy" })), ownerId: "alice" }];
+  const curriculumRecall = await foundationGet() as LearningCatalog;
+  assert.equal(curriculumRecall.progress.find(p => p.lessonId === routing.id)!.activity, "attempted");
+  assert.deepEqual(curriculumRecall.suggestions.reviewCandidates.map(s => s.lessonId), [routing.id]);
   console.log(JSON.stringify({ realEngineSequence: ["not-started", "attempted", "requirements-met"], sessionReads,
     ownerScopedQueries: queries.length, authAnd404: true, earlierVersions: true, ownerIsolation: true,
-    webProof: { foundations: await foundationGet(), reading: await foundationGet("/lessons/what-is-a-request"),
+    webProof: { foundations: curriculum, curriculumDetails, curriculumRecall, reading: await foundationGet("/lessons/what-is-a-request"),
       concept: await foundationGet("/lessons/client-and-server"), attemptedCatalog, lab: detail } }));
 } finally {
   server.closeAllConnections();

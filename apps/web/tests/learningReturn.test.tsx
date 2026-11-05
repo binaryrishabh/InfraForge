@@ -7,7 +7,7 @@ import { ReportLessonContent } from "../src/features/learning/ReportLesson";
 import { findReportLesson } from "../src/features/learning/reportLessonData";
 import { LearningList } from "../src/features/learning/LearningPage";
 import { EMPTY_FILTERS } from "../src/features/learning/discovery";
-import { catalog, lab } from "./learningFixtures";
+import { catalog, concept, lab } from "./learningFixtures";
 
 const render = (node: ReactNode) => renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>);
 const ready = <T,>(data: T | null) => ({ data, loading: false, error: null, retry() {} });
@@ -43,9 +43,16 @@ test("Learning shows the server's factual review reasons and hides suggestions f
   ] } };
   const html = render(<LearningList {...ready(data)} filters={EMPTY_FILTERS} onFilters={() => {}} />);
   expect(html).toContain("Worth revisiting"); expect(html).toContain(reason);
+  expect(html).toContain("Concepts to revisit for this lab (advice):");
+  expect(html).toContain(`href="/learning/lessons/${concept.id}"`);
   expect(html).not.toContain("Must never appear");
   const changedVersion = "An earlier challenge version met its requirements; current version 2 has no requirements-met attempt.";
   const updated = { ...catalog, suggestions: { ...catalog.suggestions, reviewCandidates: [{ lessonId: lab.id, reason: changedVersion }] } };
   expect(render(<LearningList {...ready(updated)} filters={EMPTY_FILTERS} onFilters={() => {}} />)).toContain(changedVersion);
   expect(render(<LearningList {...ready(catalog)} filters={EMPTY_FILTERS} onFilters={() => {}} />)).not.toContain("Worth revisiting");
+  const hidden = { ...data, lessons: data.lessons.map(lesson => lesson.id === concept.id ? { ...lesson, availability: "draft" as const } : lesson) };
+  const hiddenHtml = render(<LearningList {...ready(hidden)} filters={EMPTY_FILTERS} onFilters={() => {}} />);
+  expect(hiddenHtml).toContain(reason);
+  expect(hiddenHtml).not.toContain(`href="/learning/lessons/${concept.id}"`);
+  expect(hiddenHtml).not.toContain("Concepts to revisit for this lab (advice):");
 });
