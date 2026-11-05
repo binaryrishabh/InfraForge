@@ -46,4 +46,3 @@ export const dnsCacheLifetime: LearningLesson = {
   ],
   "followUp": "Name one DNS observation and one application observation you would need before describing a recovery."
 };
-

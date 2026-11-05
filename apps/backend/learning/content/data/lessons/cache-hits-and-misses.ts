@@ -46,4 +46,3 @@ export const cacheHitsAndMisses: LearningLesson = {
   ],
   "followUp": "Draw the hit and miss paths. Circle the work that remains when every key is new."
 };
-

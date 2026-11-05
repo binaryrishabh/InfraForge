@@ -46,4 +46,3 @@ export const missingFailureObservations: LearningLesson = {
   ],
   "followUp": "Write a hypothesis, the observation that could refute it and one missing fact that prevents a recovery-time claim."
 };
-

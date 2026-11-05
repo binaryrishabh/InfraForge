@@ -46,4 +46,3 @@ export const fanOutSubscribers: LearningLesson = {
   ],
   "followUp": "Name the two independent paths and explain which stage you would inspect if just one queue receives no events."
 };
-

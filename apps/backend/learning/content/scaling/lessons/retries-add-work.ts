@@ -46,4 +46,3 @@ export const retriesAddWork: LearningLesson = {
   ],
   "followUp": "Explain why fewer retries might reduce pressure while leaving some callers unsuccessful."
 };
-

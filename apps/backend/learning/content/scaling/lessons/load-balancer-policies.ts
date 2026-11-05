@@ -46,4 +46,3 @@ export const loadBalancerPolicies: LearningLesson = {
   ],
   "followUp": "Sketch two backends with different unfinished-request counts. Explain which each policy would choose and what it cannot know."
 };
-

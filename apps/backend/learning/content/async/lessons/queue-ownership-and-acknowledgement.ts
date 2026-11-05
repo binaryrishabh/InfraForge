@@ -46,4 +46,3 @@ export const queueOwnershipAndAcknowledgement: LearningLesson = {
   ],
   "followUp": "Draw acceptance, delivery, effect and acknowledgement. Mark where another delivery could repeat an effect."
 };
-

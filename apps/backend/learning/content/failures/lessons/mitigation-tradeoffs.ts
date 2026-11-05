@@ -47,4 +47,3 @@ export const mitigationTradeoffs: LearningLesson = {
   ],
   "followUp": "Propose one retry change, its reversal, a benefit to inspect and a caller outcome that could make you reject it."
 };
-

@@ -46,4 +46,3 @@ export const percentilesAndPopulations: LearningLesson = {
   ],
   "followUp": "Write one sentence a terminal-second p95 supports, and one whole-run claim it leaves unanswered."
 };
-

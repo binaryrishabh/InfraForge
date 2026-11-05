@@ -46,4 +46,3 @@ export const firewallRuleMatching: LearningLesson = {
   ],
   "followUp": "List the path, port and rule you would inspect, then distinguish policy denial from a full connection table."
 };
-

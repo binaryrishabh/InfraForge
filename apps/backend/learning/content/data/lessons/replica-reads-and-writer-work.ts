@@ -46,4 +46,3 @@ export const replicaReadsAndWriterWork: LearningLesson = {
   ],
   "followUp": "Explain why a write-only bottleneck and a stale-read problem need different investigations."
 };
-

@@ -46,4 +46,3 @@ export const connectionPoolBudgets: LearningLesson = {
   ],
   "followUp": "Explain why idle database CPU does not prove spare session slots."
 };
-
