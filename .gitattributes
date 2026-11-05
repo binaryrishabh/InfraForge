@@ -5,3 +5,4 @@ ops/bootstrap/*.sh text eol=lf
 ops/home/*.sh text eol=lf
 scripts/deploy/*.sh text eol=lf
 scripts/release/permission-proof.sh text eol=lf
+scripts/lanes/tests/*.sh text eol=lf
