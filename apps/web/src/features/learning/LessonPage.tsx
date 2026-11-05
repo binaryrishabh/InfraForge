@@ -11,6 +11,7 @@ import type { DeviceLessonState } from "./deviceLocal";
 import { LessonActivity } from "./LessonActivity";
 import { latestLessonRun } from "./lessonActivityData";
 import { useAuthStore } from "@/features/auth/store/auth.store";
+import { LearningFocus } from "./LearningFocus";
 
 export function LessonBody({ detail, catalog, local, storageAvailable, onLocal, onOpen, busy }: {
   detail: LearningLessonDetail; catalog: LearningCatalog | null; local: DeviceLessonState; storageAvailable: boolean;
@@ -85,14 +86,14 @@ function DeviceLesson({ detail, catalog }: { detail: LearningLessonDetail; catal
 }
 
 export function LessonView({ data, loading, error, retry, catalog }: LearningRequest<LearningLessonDetail> & { catalog: LearningRequest<LearningCatalog> }) {
-  if (loading) return <Page><h1 className="mt-8 text-2xl">Lesson</h1><Loading label="Loading lesson…" /></Page>;
-  if (error || !data) return <Page><h1 className="mt-8 text-2xl">Lesson unavailable</h1><LearningFailure error={error ?? "This lesson could not be loaded."} retry={retry} /><Link to="/learning">Back to Learning</Link></Page>;
-  return <Page width="narrow"><Link className="mt-6 inline-block text-accent hover:underline" to="/learning">Back to Learning</Link>
+  if (loading) return <LearningFocus destination="loading"><Page><h1 className="mt-8 text-2xl">Lesson</h1><Loading label="Loading lesson…" /></Page></LearningFocus>;
+  if (error || !data) return <LearningFocus destination="unavailable"><Page><h1 className="mt-8 text-2xl">Lesson unavailable</h1><LearningFailure error={error ?? "This lesson could not be loaded."} retry={retry} /><Link to="/learning">Back to Learning</Link></Page></LearningFocus>;
+  return <LearningFocus destination={`${data.lesson.id}:${data.lesson.contentVersion}`}><Page width="narrow"><Link className="mt-6 inline-block text-accent hover:underline" to="/learning">Back to Learning</Link>
     <PageHeader title={data.lesson.title} lede={data.lesson.summary} />
     {catalog.loading && <Loading label="Loading prerequisite and follow-up links…" />}
     {catalog.error && <LearningFailure error="Prerequisite and follow-up links could not be loaded." retry={catalog.retry} />}
     <DeviceLesson key={`${data.lesson.id}:${data.lesson.contentVersion}`} detail={data} catalog={catalog.data} />
-  </Page>;
+  </Page></LearningFocus>;
 }
 
 function LessonSession() {

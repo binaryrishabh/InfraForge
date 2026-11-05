@@ -7,6 +7,8 @@ import { Button } from "../src/ui/Button";
 import { Field } from "../src/ui/Field";
 import { LearningList, type LearningRequest } from "../src/features/learning/LearningPage";
 import { LessonBody, LessonView } from "../src/features/learning/LessonPage";
+import { LearningFocus } from "../src/features/learning/LearningFocus";
+import { focusLearningHeading } from "../src/features/learning/navigationFocus";
 import { ContinueLearning } from "../src/features/learning/ContinueLearning";
 import { learningNextStep, nextStep, type HomeData } from "../src/features/dashboard/nextStep";
 import { EMPTY_FILTERS, type LearningFilters } from "../src/features/learning/discovery";
@@ -27,6 +29,42 @@ const detail = (lesson = reading): LearningLessonDetail => ({ lesson, progress: 
   ? { id: lesson.experiment.challengeId, version: 2, specHash: "a".repeat(64), title: "First production API", summary: "Try the design.", evaluationSeconds: 120, requirementCount: 4, executable: true } : null });
 const bodyProps = (data = detail()) => ({ detail: data, catalog, local: { read: false, answer: null } as DeviceLessonState, storageAvailable: true,
   onLocal() {}, onOpen() {}, busy: false });
+
+test("navigation focuses the page heading outside the Tab order and tolerates an unmounted page", () => {
+  let focused = false;
+  const heading = { tabIndex: 0, focus: () => { focused = true; } };
+  const container = { querySelector: (selector: string) => { expect(selector).toBe("h1"); return heading; } };
+  focusLearningHeading(container as unknown as HTMLElement);
+  expect(focused).toBe(true); expect(heading.tabIndex).toBe(-1);
+  expect(() => focusLearningHeading(null)).not.toThrow();
+  expect(() => focusLearningHeading({ querySelector: () => null })).not.toThrow();
+});
+
+test("lesson focus follows loading, failure and lesson identity, without changing for progress updates", () => {
+  const view = (data: LearningLessonDetail | null, loading = false, error: string | null = null) =>
+    LessonView({ data, loading, error, retry() {}, catalog: ready(catalog) });
+  const destinations = [view(null, true), view(null, false, "Missing"), view(detail(reading)), view(detail(concept))];
+  expect(destinations.every((node) => node.type === LearningFocus)).toBe(true);
+  expect(new Set(destinations.map((node) => node.props.destination)).size).toBe(4);
+  expect(view({ ...detail(lab), progress: attempted }).props.destination).toBe(view(detail(lab)).props.destination);
+});
+
+test("learning controls have native keyboard semantics, associated labels and announced feedback", () => {
+  const html = list();
+  const labels = [...html.matchAll(/<label for="([^"]+)"[^>]*>([^<]+)/g)];
+  expect(labels).toHaveLength(5);
+  for (const [, id] of labels) expect(html).toMatch(new RegExp(`<(input|select)[^>]*id="${id}"`));
+  const question = render(<LessonBody {...bodyProps(detail(concept))} />);
+  expect(question).toContain(`<legend class="font-semibold">${concept.check!.question}</legend>`);
+  for (const choice of concept.check!.choices) expect(question).toContain(`/>${choice.text}</label>`);
+  for (const markup of [html, question]) {
+    expect(markup).toContain('role="status"');
+    expect(markup).not.toMatch(/tabindex="[1-9]/);
+    expect(markup).not.toContain('role="application"');
+  }
+  const tree = elements(LessonBody(bodyProps(detail(concept))));
+  expect(tree.some((e) => e.props.onKeyDown || e.props.onKeyUp)).toBe(false);
+});
 
 test("learning list renders track, module and lessons in order with honest kind labels", () => {
   const html = list();

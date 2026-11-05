@@ -8,6 +8,7 @@ import { Tag } from "@/ui/Tag";
 import { activityLabel, availableLessons, discoverLessons, discoveryTerms, EMPTY_FILTERS, KIND_LABEL, lessonMode, type LearningFilters } from "./discovery";
 import { useLearningCatalog } from "./hooks";
 import { useAuthStore } from "@/features/auth/store/auth.store";
+import { LearningFocus } from "./LearningFocus";
 
 export interface LearningRequest<T> { data: T | null; loading: boolean; error: string | null; retry(): void }
 export function LearningFailure({ error, retry }: { error: string; retry(): void }) {
@@ -72,9 +73,9 @@ export function LearningList({ data, loading, error, retry, filters, onFilters }
 function LearningSession() {
   const request = useLearningCatalog();
   const [filters, setFilters] = useState<LearningFilters>({ ...EMPTY_FILTERS });
-  return <Page><PageHeader title="Learning" lede="Follow a request, reason about a design, then try a linked challenge lab when one is available. Reading marks and check answers stay on this device; server activity comes from recorded attempts." />
+  return <LearningFocus destination="learning"><Page><PageHeader title="Learning" lede="Follow a request, reason about a design, then try a linked challenge lab when one is available. Reading marks and check answers stay on this device; server activity comes from recorded attempts." />
     <LearningList {...request} filters={filters} onFilters={setFilters} />
-  </Page>;
+  </Page></LearningFocus>;
 }
 
 export function LearningPage() {
