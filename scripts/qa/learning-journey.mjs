@@ -72,20 +72,41 @@ await step("a concept check answers immediately and the answer is remembered on 
   await page.getByRole("radio").first().waitFor({ timeout: 30_000 });
   return { restoredAfterReload: await page.getByRole("radio").first().isChecked() };
 });
-await step("a runnable lab lesson links to its pinned challenge", async () => {
+await step("a runnable lab lesson offers its pinned challenge and says no result is known yet", async () => {
   await page.goto(`${WEB}/learn/lessons/where-does-the-time-go`, { waitUntil: "load" });
   await page.getByRole("heading", { level: 1 }).first().waitFor({ timeout: 30_000 });
   const body = await text();
   await page.screenshot({ path: `${SHOTS}/3-lab.png`, fullPage: true });
-  const link = page.locator('a[href*="/challenges/where-does-the-time-go"]').first();
-  if (!(await link.count())) throw new Error("no link to the challenge on the lab lesson");
-  return { href: await link.getAttribute("href"), buttons: await page.getByRole("button").allInnerTexts(), mentionsPrediction: /predict/i.test(body) };
+  if (!(await page.getByRole("button", { name: /open challenge lab/i }).count())) throw new Error("no Open challenge lab control");
+  return { noClaimBeforeRun: /No recorded attempt is linked here\. No outcome is claimed/.test(body), mentionsPrediction: /predict/i.test(body) };
 });
-await step("the challenge opens, a prediction can be made and an attempt starts", async () => {
-  await page.locator('a[href*="/challenges/where-does-the-time-go"]').first().click();
-  await page.getByRole("heading", { level: 1 }).first().waitFor({ timeout: 30_000 });
-  await page.screenshot({ path: `${SHOTS}/4-challenge.png`, fullPage: true });
-  return { url: page.url().replace(WEB, ""), buttons: await page.getByRole("button").allInnerTexts(), links: (await page.getByRole("link").allInnerTexts()).slice(0, 12) };
+await step("the lesson opens the real challenge workspace with its starter, requirements and a prediction gate", async () => {
+  await page.getByRole("button", { name: /open challenge lab/i }).click();
+  await page.waitForURL(/\/design\?design=/, { timeout: 60_000 });
+  await page.getByRole("button", { name: /predict and run/i }).waitFor({ timeout: 60_000 });
+  const body = await text();
+  await page.screenshot({ path: `${SHOTS}/4-workspace.png` });
+  return { url: page.url().replace(WEB, "").replace(/design=.*/, "design=<id>"), title: /Where does the time go\?/.test(body), brief: /Fixed conditions/.test(body), requirements: /Checked during the run/.test(body), predictionGate: /commit to one prediction first/i.test(body) };
+});
+await step("Predict and run asks for the prediction before any run starts", async () => {
+  await page.getByRole("button", { name: /predict and run/i }).click();
+  const dialog = page.getByRole("dialog").first();
+  await dialog.waitFor({ timeout: 30_000 });
+  await page.screenshot({ path: `${SHOTS}/5-prediction.png` });
+  return { dialogText: (await dialog.innerText()).replace(/\s+/g, " ").slice(0, 700), buttons: await dialog.getByRole("button").allInnerTexts(), radios: await dialog.getByRole("radio").count(), selects: await dialog.locator("select").count() };
+});
+await step("a prediction is locked and the real browser run starts and stops at its evaluation second", async () => {
+  const dialog = page.getByRole("dialog").first();
+  await dialog.getByRole("radio").first().check();
+  await dialog.getByRole("textbox").first().fill("The app does three times the CPU work per read.").catch(() => {});
+  await dialog.getByRole("button", { name: /lock prediction and run/i }).click();
+  await page.screenshot({ path: `${SHOTS}/6-running.png` });
+  // The run is limited to simulated second 12; wait for the app to show a finished attempt rather than guessing a duration.
+  await page.waitForFunction(() => /Challenge result/.test(document.body.innerText) && /Prediction against the record/.test(document.body.innerText), null, { timeout: 240_000 });
+  await page.waitForTimeout(2000);
+  await page.screenshot({ path: `${SHOTS}/7-after-run.png` });
+  const body = await text();
+  return { url: page.url().replace(WEB, "").replace(/(design|run)[=/][^&]*/g, "$1=<id>"), debrief: body.slice(body.indexOf("Challenge result")).slice(0, 1500), buttons: await page.getByRole("button").allInnerTexts(), links: (await page.getByRole("link").allInnerTexts()).slice(0, 14) };
 });
 await step("keyboard: lesson page can be operated with Tab only", async () => {
   await page.goto(`${WEB}/learn/lessons/client-and-server`, { waitUntil: "load" });
