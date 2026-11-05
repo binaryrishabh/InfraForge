@@ -6,7 +6,7 @@ import { buildRegistry, REGISTRY } from "../challenges/registry";
 import { LEARNING_REPORT_MEASUREMENTS } from "@infraforge/contracts/learning";
 import { readFileSync } from "node:fs";
 import { CLAIM_EXCEPTIONS } from "../learning/claimExceptions";
-import { lessonText, numericClaims } from "../learning/claims";
+import { checkLessonClaims, lessonText, numericClaims, sizeClaims } from "../learning/claims";
 
 test("check:learning validates all authored content and lists counts", () => {
   const counts = checkLearningAuthoring(learningContent);
@@ -105,6 +105,31 @@ test("numbers in another pinned field cannot authorize a wrong request rate or e
   expect(() => checkLearningAuthoring(content)).toThrow("unsupported p95 threshold 12 ms");
 });
 
+test("claim rates use the domain's per-hour conversion as well as per-minute", () => {
+  const lesson = structuredClone(learningContent.lessons.find(l => l.id === "where-does-the-time-go")!);
+  const pinned = structuredClone(REGISTRY.latest(lesson.experiment!.challengeId)!.definition);
+  pinned.workload = { ...pinned.workload, targetThroughput: 350 * 3600, throughputUnit: "per-hour" };
+  expect(checkLessonClaims(lesson, pinned)).toEqual([]);
+  lesson.problem[0] = "The workload offers 12 reads/second.";
+  expect(checkLessonClaims(lesson, pinned)).toContain(`${lesson.id}@1 problem.0: unsupported request rate 12`);
+  lesson.problem[0] = "The workload offers twelve reads/second.";
+  expect(checkLessonClaims(lesson, pinned)).toContain(`${lesson.id}@1 problem.0: unsupported request rate 12`);
+});
+
+test("queue counters are allowed only when this challenge renders their requirement detail", () => {
+  const content = structuredClone(learningContent);
+  content.lessons.find(l => l.id === "where-does-the-time-go")!.experiment!.evidenceToInspect = ["Queue: acknowledged"];
+  expect(() => checkLearningAuthoring(content)).toThrow("without a queue-work requirement");
+});
+
+test("spelled quantities and instance names cannot bypass the numeric gate", () => {
+  expect(numericClaims("two hundred reads/second; twenty-five ms; one thousand connections")).toEqual(["200", "25", "1000"]);
+  expect(numericClaims("a ten-second controller interval; a two-second delay")).toEqual(["10", "2"]);
+  const content = structuredClone(learningContent);
+  content.lessons.find(l => l.id === "where-does-the-time-go")!.problem[0] = "The workload offers thirteen reads/second.";
+  expect(() => checkLearningAuthoring(content)).toThrow("unsupported numeric/size claim 13");
+});
+
 test("numeric labs need educational model output limitations, including drafts and archives", () => {
   const content = structuredClone(learningContent);
   const lab = content.lessons.find(l => l.id === "where-does-the-time-go")!;
@@ -126,6 +151,9 @@ test("reading and conceptual result numbers cannot hide in follow-ups or checks"
     else lesson.check = { question: "Did the run finish in 12 seconds?", choices: [{id: "a", text: "Yes"}, {id: "b", text: "No"}], correctChoiceId: "b", explanation: "No run is known." };
     expect(() => checkLearningAuthoring(content)).toThrow("digits-with-units result claim");
   }
+  const content = structuredClone(learningContent);
+  content.lessons.find(l => l.kind === "reading")!.followUp = "Recorded app CPU reached 99%.";
+  expect(() => checkLearningAuthoring(content)).toThrow("digits-with-units result claim");
 });
 
 test("measurement allow-list stays anchored in existing saved-report renderers", () => {
@@ -157,7 +185,7 @@ test("numeric exception reviews are exact, scoped, justified and used", () => {
     expect(lesson).toBeDefined();
     expect(lessonText(lesson)).toContainEqual([entry.field, entry.text]);
     expect(entry.values.length).toBeGreaterThan(0);
-    for (const value of entry.values) expect(numericClaims(entry.text)).toContain(value);
+    for (const value of entry.values) expect([...numericClaims(entry.text), ...sizeClaims(entry.text)]).toContain(value);
   }
   const content = structuredClone(learningContent);
   const lab = content.lessons.find(l => l.id === "where-does-the-time-go")!;
@@ -165,4 +193,6 @@ test("numeric exception reviews are exact, scoped, justified and used", () => {
   expect(() => checkLearningAuthoring(content)).toThrow("unsupported numeric/size claim c99.unknown");
   lab.explanation[2] = "The starter size is c5.large.";
   expect(() => checkLearningAuthoring(content)).toThrow("unsupported numeric/size claim c5.large");
+  lab.explanation[2] = "The starter Instance size is Medium.";
+  expect(() => checkLearningAuthoring(content)).toThrow("unsupported numeric/size claim medium");
 });

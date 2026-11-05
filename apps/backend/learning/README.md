@@ -101,7 +101,9 @@ and introduce a new challenge version to prove these failures.
 The consistency gate also checks every lab's visible prose (including checks,
 follow-up, drafts and archives) against the reviewed challenge's workload,
 evaluation second, criteria and starter settings. Rates are normalized to requests
-per second and quota fractions to percentages. Percentile names and Model 2 are
+per second using the domain's minute/hour conversion, and quota fractions to
+percentages. Spelled quantities with units and named sizes are checked too.
+Percentile names and Model 2 are
 identifiers, not outcome numbers. Request rates, evaluation seconds and p95 bounds
 also receive context checks so a threshold cannot authorize a different rate.
 `claimExceptions.ts` retains exact lesson-version/field/text/value reviews with
@@ -113,7 +115,9 @@ review of qualitative causal claims or establish an outcome before a saved run.
 `evidenceToInspect` now uses saved-report measurement labels from the shared
 learning measurement catalog. Semicolons combine several labels in an item.
 Catalog entries cite existing renderer markers; gate tests verify those markers
-and report wiring. Cache hit/miss counters, CostEstimate line items and active
+and report wiring. Queue counters require this challenge's queue-work requirement
+detail, the existing saved-report surface for those counters.
+Cache hit/miss counters, CostEstimate line items and active
 pool replica counts are not saved-report measurement labels. Numerical labs must
 explicitly say results are educational model outputs. Non-executable prose cannot
 state digits-with-units run results, including in checks and follow-ups.

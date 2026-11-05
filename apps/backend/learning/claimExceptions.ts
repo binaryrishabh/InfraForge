@@ -30,9 +30,10 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     "field": "explanation.1",
     "text": "Select the app. Under VM execution, change Active workers from 1 to 4 while leaving Instance size Generic and Queued requests at 256. Run again under the same workload.",
     "values": [
-      "4"
+      "4",
+      "generic"
     ],
-    "reason": "Four active workers is the controlled reference input, not the one-worker starter. Sources: apps/backend/tests/challengeHarness.ts and firstRunsCalibration.test.ts."
+    "reason": "Four active workers is the controlled reference input, not the one-worker starter. Sources: apps/backend/tests/challengeHarness.ts and firstRunsCalibration.test.ts. Generic is the existing canvas Instance size label when no catalog SKU is selected, not a provider instance name. Source: apps/web/src/features/canvas/components/inspector/InstanceSection.tsx."
   },
   {
     "lesson": "waiting-with-spare-cpu@1",
@@ -67,9 +68,10 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     "field": "explanation.1",
     "text": "Select app and change Instance size from Generic to c5.large. Run again. Keep topology, workload and queue settings fixed.",
     "values": [
-      "c5.large"
+      "c5.large",
+      "generic"
     ],
-    "reason": "c5.large is a controlled reference input, absent from the Generic starter. Sources: apps/backend/tests/challengeHarness.ts and scalingCalibration.test.ts."
+    "reason": "c5.large is a controlled reference input, absent from the Generic starter. Sources: apps/backend/tests/challengeHarness.ts and scalingCalibration.test.ts. Generic is the existing canvas Instance size label when no catalog SKU is selected, not a provider instance name. Source: apps/web/src/features/canvas/components/inspector/InstanceSection.tsx."
   },
   {
     "lesson": "leave-room-for-a-burst@1",
@@ -161,9 +163,10 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     "text": "Results are educational model outputs. Generic Small assumes one core; db.t3.micro supplies two modeled cores and also changes query slots and session limits. This is a tier comparison, not a measured provider benchmark or credit simulation.",
     "values": [
       "db.t3.micro",
-      "2"
+      "2",
+      "generic"
     ],
-    "reason": "db.t3.micro has two modeled vCPUs; the text explicitly qualifies this as an educational tier comparison. Source: packages/catalog/src/aws.catalog.ts; regression: apps/backend/tests/dataLabsCalibration.test.ts."
+    "reason": "db.t3.micro has two modeled vCPUs; the text explicitly qualifies this as an educational tier comparison. Source: packages/catalog/src/aws.catalog.ts; regression: apps/backend/tests/dataLabsCalibration.test.ts. Generic is the existing canvas Instance size label when no catalog SKU is selected, not a provider instance name. Source: apps/web/src/features/canvas/components/inspector/InstanceSection.tsx."
   },
   {
     "lesson": "keep-up-with-the-queue@1",
@@ -276,5 +279,23 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
       "140"
     ],
     "reason": "Second 140 is the end-of-burst live observation used in the controlled capture, not an asserted drain time. Source: apps/backend/tests/missionsCalibration.test.ts."
+  },
+  {
+    "lesson": "leave-room-for-a-burst@1",
+    "field": "explanation.3",
+    "text": "As a near miss, restore Generic and increase only Queued requests under VM execution. A queue holds work; CPU must still execute it.",
+    "values": [
+      "generic"
+    ],
+    "reason": "Generic is the existing canvas Instance size label when no catalog SKU is selected, not a provider instance name. Source: apps/web/src/features/canvas/components/inspector/InstanceSection.tsx."
+  },
+  {
+    "lesson": "leave-room-for-a-burst@1",
+    "field": "limitations.2",
+    "text": "Catalog monthly values are educational estimates, not current provider prices. Generic sizes share a flat estimate; use catalog sizes for this comparison.",
+    "values": [
+      "generic"
+    ],
+    "reason": "Generic is the existing canvas Instance size label when no catalog SKU is selected, not a provider instance name. Source: apps/web/src/features/canvas/components/inspector/InstanceSection.tsx. The flat fallback is by resource type, not generic size: apps/backend/stages/costEstimation.stages.ts and packages/simulation/src/cost.ts."
   }
 ];
