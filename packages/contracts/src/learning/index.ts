@@ -1,3 +1,4 @@
+export { LEARNING_REPORT_MEASUREMENTS, learningMeasurement, evidenceLabels } from "./measurements";
 /** Source-authored learning content. Prerequisites advise; they never lock a lesson. */
 export type LessonKind = "reading" | "conceptual-exercise" | "executable-lab";
 export type LearningLevel = "beginner" | "intermediate" | "advanced";

@@ -98,6 +98,37 @@ their original published challenge identity, which must remain resolvable.
 The gate's own tests deliberately break content, references and review identities,
 and introduce a new challenge version to prove these failures.
 
+The consistency gate also checks every lab's visible prose (including checks,
+follow-up, drafts and archives) against the reviewed challenge's workload,
+evaluation second, criteria and starter settings. Rates are normalized to requests
+per second and quota fractions to percentages. Percentile names and Model 2 are
+identifiers, not outcome numbers. Request rates, evaluation seconds and p95 bounds
+also receive context checks so a threshold cannot authorize a different rate.
+`claimExceptions.ts` retains exact lesson-version/field/text/value reviews with
+reasons for model defaults, unit conversions and controlled alternative inputs
+that are outside those pinned fields. Rewording requires another review; exceptions
+never authorize a global number or size. This mechanical check does not replace
+review of qualitative causal claims or establish an outcome before a saved run.
+
+`evidenceToInspect` now uses saved-report measurement labels from the shared
+learning measurement catalog. Semicolons combine several labels in an item.
+Catalog entries cite existing renderer markers; gate tests verify those markers
+and report wiring. Cache hit/miss counters, CostEstimate line items and active
+pool replica counts are not saved-report measurement labels. Numerical labs must
+explicitly say results are educational model outputs. Non-executable prose cannot
+state digits-with-units run results, including in checks and follow-ups.
+
+For the la7 pre-publication lab correction only, evidence guidance and limitations
+were edited in place at v1. Published reading pins, challenge definitions, reviews,
+hashes and goldens were retained. The bigger-or-smaller lab no longer mentions a
+separate lower-rate calibration as part of its runnable fixed-workload instructions.
+
+The lesson's “What did my run show?” section uses the existing authenticated report
+request for its latest attempt. It projects server requirement statuses and only
+the named measurement values, plus authored limitations. Missing terminal fields
+stay Unknown even when a diagnostic checkpoint exists. Whole-run labels remain
+distinct from last-second traffic; no cause, whole-run SLO or recovery time is inferred.
+
 ```text
 bun --no-env-file test apps/backend/tests/learningContent.test.ts scripts/tests/dockerfile-folders.test.ts
 bun --no-env-file scripts/check-boundaries.ts
