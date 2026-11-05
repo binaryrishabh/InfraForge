@@ -142,10 +142,13 @@ try {
   const curriculumRecall = await foundationGet() as LearningCatalog;
   assert.equal(curriculumRecall.progress.find(p => p.lessonId === routing.id)!.activity, "attempted");
   assert.deepEqual(curriculumRecall.suggestions.reviewCandidates.map(s => s.lessonId), [routing.id]);
-  console.log(JSON.stringify({ realEngineSequence: ["not-started", "attempted", "requirements-met"], sessionReads,
+  // The report is larger than a pipe buffer; wait for the write to flush so the parent never reads a truncated string.
+  const report = JSON.stringify({ realEngineSequence: ["not-started", "attempted", "requirements-met"], sessionReads,
     ownerScopedQueries: queries.length, authAnd404: true, earlierVersions: true, ownerIsolation: true,
     webProof: { foundations: curriculum, curriculumDetails, curriculumRecall, reading: await foundationGet("/lessons/what-is-a-request"),
-      concept: await foundationGet("/lessons/client-and-server"), attemptedCatalog, lab: detail } }));
+      concept: await foundationGet("/lessons/client-and-server"), attemptedCatalog, lab: detail } });
+  await new Promise<void>((resolve) => process.stdout.write(`${report}
+`, () => resolve()));
 } finally {
   server.closeAllConnections();
   await new Promise<void>((resolve) => server.close(() => resolve()));

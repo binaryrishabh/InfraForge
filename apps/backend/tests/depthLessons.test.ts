@@ -24,7 +24,9 @@ test("depth lessons use canonical shapes, resolve prerequisites and register thr
   expect(validateLearningContent(broken).join("\n")).toContain("limitations");
 });
 
-test("new depth content cannot silently claim a human challenge review", () => {
-  // Lane A owns review receipts. Do not fabricate a human review to clear its gate.
-  expect(() => checkLearningAuthoring({tracks: [track], lessons: lessons.map(l => ({...l, prerequisites: []})), archivedLessons: []})).toThrow("missing challenge review; needs a human look");
+test("depth labs pass the authoring gate only through a recorded review, and not without one", () => {
+  const content = {tracks: [track], lessons: lessons.map(l => ({...l, prerequisites: []})), archivedLessons: []};
+  // Without any review record the gate must refuse; the coordinator records reviews in reviewedChallenges.ts.
+  expect(() => checkLearningAuthoring(content, {})).toThrow("missing challenge review; needs a human look");
+  expect(() => checkLearningAuthoring(content)).not.toThrow();
 });
