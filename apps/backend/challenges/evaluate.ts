@@ -16,6 +16,7 @@ import type { RunInputs } from "@infraforge/contracts/run-inputs";
 import { orderedScenarioSteps } from "@infraforge/simulation/model2-run";
 import { QueueWorkSchema } from "../reports/queueWorkSchema";
 import { SecurityMetricsSchema } from "../reports/securitySchema";
+import { isDepthCriterion, evaluateDepthCriterion } from "./depthCriteria";
 
 export interface ChallengeAttemptRecord {
   challengeId: string; challengeVersion: number | null; challengeSpecHash: string | null;
@@ -91,6 +92,7 @@ class Judge {
   // Every scenario criterion must have all applicable, valid evidence before it
   // can decide either success or failure. Historical criteria retain their rules.
   scenarioCriterionProblem(c: ChallengeCriterion): string | null {
+    if (isDepthCriterion(c)) return this.atEvaluation?.measurementFreshness === "current-revision" ? null : "A current evaluation measurement was not recorded.";
     const input = this.evidence.input, terminal = this.atEvaluation;
     if (["overall-health", "no-saturation", "database-healthy", "database-connections", "terminal-p95", "survivors-unsaturated", "backend-admission-budget", "queue-work", "firewall-admission-budget"].includes(c.kind) &&
       terminal?.measurementFreshness !== "current-revision") return "A current evaluation measurement was not recorded.";
@@ -163,9 +165,13 @@ class Judge {
     const pending = (detail: string, sources: string[]) => ({ ...base, status: this.active ? "pending" as const : "not-evaluated" as const, detail, sources });
     const decided = (met: boolean, detail: string, sources: string[]) => ({ ...base, status: met ? "met" as const : "not-met" as const, detail, sources });
     // A fixed-load latency lab uses the same captured terminal evidence as a scenario.
-    const missing = this.definition.scenario || c.kind === "terminal-p95" || c.kind === "backend-admission-budget" || c.kind === "queue-work" || c.kind === "firewall-admission-budget" ? this.scenarioCriterionProblem(c) : null;
+    const missing = this.definition.scenario || isDepthCriterion(c) || c.kind === "terminal-p95" || c.kind === "backend-admission-budget" || c.kind === "queue-work" || c.kind === "firewall-admission-budget" ? this.scenarioCriterionProblem(c) : null;
     if (missing) return pending(missing, ["runInputs", "stages", "terminalSnapshot"]);
     const input = this.evidence.input;
+    if (isDepthCriterion(c)) {
+      const result = evaluateDepthCriterion(c, input, this.atEvaluation);
+      return result.met === undefined ? pending(result.detail, result.sources) : decided(result.met, result.detail, result.sources);
+    }
     switch (c.kind) {
       case "firewall-admission-budget": {
         const t = this.atEvaluation, sources = ["terminalSnapshot.metrics.security.firewall", "runInputs.resources"];
