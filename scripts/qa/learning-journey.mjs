@@ -130,7 +130,10 @@ await step("one change is planned with a written hypothesis and the earlier desi
   await page.goto(`${WEB}/learn/lessons/where-does-the-time-go`, { waitUntil: "load" });
   await page.getByRole("link", { name: /inspect the latest recorded attempt/i }).first().click();
   await page.waitForURL(/\/runs\//, { timeout: 30_000 });
-  await page.getByRole("button", { name: /plan one change/i }).click();
+  // The button stays disabled until the server's guided review of this run has loaded; wait for it, retry if the dialog closes on a re-render.
+  const plan = page.getByRole("button", { name: /plan one change/i });
+  await page.waitForFunction(() => [...document.querySelectorAll("button")].some((b) => /plan one change/i.test(b.textContent ?? "") && !b.disabled), null, { timeout: 120_000 });
+  for (let attempt = 0; attempt < 4 && !(await page.locator("textarea").count()); attempt++) { await plan.click(); await page.waitForTimeout(1500); }
   await page.locator("textarea").first().waitFor({ timeout: 30_000 });
   await page.locator("textarea").first().fill("A larger app instance gives the app more CPU, so its queue should shrink and p95 should fall.");
   await page.screenshot({ path: `${SHOTS}/10-plan-change.png` });
