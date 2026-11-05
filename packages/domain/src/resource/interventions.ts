@@ -5,12 +5,14 @@ export interface InterventionParameter {
 }
 export interface InterventionDescriptor {
   id: string; revision: number; label: string; targetKind: "Database" | "Cache" | "CDN" | "Firewall" | "Virtual Machine" | "edge";
-  mechanism: "relational" | "cache" | "cdn" | "firewall" | "transport" | "async-worker"; parameters: InterventionParameter[];
+  mechanism: "relational" | "cache" | "cdn" | "firewall" | "transport" | "async-worker" | "compute"; parameters: InterventionParameter[];
   directions?: Array<"request" | "response" | "both">;
   reversible: boolean; endPolicy: "timed" | "one-shot"; requires: string[];
 }
 const duration: InterventionParameter = { name: "duration", kind: "integer", unit: "s", min: 1, max: "remaining-seconds" };
 export const INTERVENTIONS: readonly InterventionDescriptor[] = [
+  { id: "vm-crash", revision: 1, label: "Crash fixed VM", targetKind: "Virtual Machine", mechanism: "compute",
+    parameters: [{...duration, min: 2}], reversible: true, endPolicy: "timed", requires: ["fixed primary compute role", "duration includes one-second restart"] },
   { id: "db-fail-primary", revision: 1, label: "Fail original database primary", targetKind: "Database", mechanism: "relational",
     parameters: [duration], reversible: true, endPolicy: "timed", requires: ["fixed relational role", "enabled replica"] },
   { id: "db-fail-replica", revision: 1, label: "Fail database replica", targetKind: "Database", mechanism: "relational",
