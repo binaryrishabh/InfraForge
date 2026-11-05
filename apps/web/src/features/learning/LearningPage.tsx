@@ -28,8 +28,19 @@ export function LearningList({ data, loading, error, retry, filters, onFilters }
   if (error || !data) return <LearningFailure error={error ?? "Learning could not be loaded."} retry={retry} />;
   const lessons = discoverLessons(data, filters), ids = new Set(lessons.map((l) => l.id));
   const resources = [...new Set(availableLessons(data).flatMap((l) => discoveryTerms(l, data).resources))].sort();
+  const visible = new Map(availableLessons(data).map((l) => [l.id, l]));
+  const reviews = data.suggestions.reviewCandidates.flatMap((suggestion) => {
+    const lesson = visible.get(suggestion.lessonId);
+    return lesson ? [{ lesson, reason: suggestion.reason }] : [];
+  });
   const change = (key: keyof LearningFilters, value: string) => onFilters({ ...filters, [key]: value });
   return <>
+    {reviews.length > 0 && <Section title="Worth revisiting" className="mt-6">
+      <ul>{reviews.map(({ lesson, reason }) => <li key={lesson.id} className="mt-3">
+        <Link className="text-accent hover:underline" to={`/learning/lessons/${encodeURIComponent(lesson.id)}`}>{lesson.title}</Link>
+        <p className="mt-1 text-sm text-ink-2">{reason}</p>
+      </li>)}</ul>
+    </Section>}
     <fieldset aria-describedby="learning-filter-help" className="mt-6">
       <legend className="font-semibold">Find a lesson</legend>
       <p id="learning-filter-help" className="mt-2 text-sm text-ink-3">Filter by level, kind, resource topic or track. Prerequisites are suggestions; every available lesson can be opened.</p>
