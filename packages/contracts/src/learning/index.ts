@@ -133,7 +133,7 @@ export function selectLearningSuggestions(tracks: readonly LearningTrack[], less
       ? "First lab in track and module order with prerequisites attempted or marked read; its current requirements have not been met."
       : "First lab in track and module order with no prerequisites and no requirements-met result for the current challenge version." } : null;
   const recent = ordered.map((l) => byId.get(l.id)).filter((p): p is LessonProgress => !!p?.lastAttemptAt)
-    .toSorted((a, b) => b.lastAttemptAt!.localeCompare(a.lastAttemptAt!) || b.lastRunId!.localeCompare(a.lastRunId!))[0];
+    .sort((a, b) => b.lastAttemptAt!.localeCompare(a.lastAttemptAt!) || b.lastRunId!.localeCompare(a.lastRunId!))[0];
   return {
     nextLesson,
     continue: recent && recent.activity !== "requirements-met"
