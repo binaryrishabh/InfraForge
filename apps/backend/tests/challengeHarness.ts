@@ -43,6 +43,10 @@ import { flashSaleOrderBacklogV1 } from "../challenges/definitions/flash-sale-or
 import { protectOneApiRouteV1 } from "../challenges/definitions/protect-one-api-route/v1";
 import { queueOverlappingJobsV1 } from "../challenges/definitions/queue-overlapping-jobs/v1";
 import { boundFunctionPoolPressureV1 } from "../challenges/definitions/bound-function-pool-pressure/v1";
+import { diagnoseLostAppCapacityV1 } from "../challenges/definitions/diagnose-lost-app-capacity/v1";
+import { investigateAPoolResetV1 } from "../challenges/definitions/investigate-a-pool-reset/v1";
+import { budgetForAPartitionV1 } from "../challenges/definitions/budget-for-a-partition/v1";
+import { traceASaturationCascadeV1 } from "../challenges/definitions/trace-a-saturation-cascade/v1";
 
 // Historical report fixtures deliberately keep their published Model 1 conditions.
 export const legacyDefinition = (id: string) => findChallenge(id, 1)!.definition;
@@ -61,6 +65,11 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "diagnose-lost-app-capacity": {...diagnoseLostAppCapacityV1.starter!, resources: diagnoseLostAppCapacityV1.starter!.resources.map(r => r.id === "fw" ? {...r, firewallCapacity: {...r.firewallCapacity!, maxFlows: 8}} : r)},
+  "investigate-a-pool-reset": {...investigateAPoolResetV1.starter!, resources: investigateAPoolResetV1.starter!.resources.map(r => r.id === "lb" ? {...r, retry: {...r.retry!, maxAttempts: 2}} : r)},
+  "budget-for-a-partition": {...budgetForAPartitionV1.starter!, resources: budgetForAPartitionV1.starter!.resources.map(r => r.id === "peer" ? {...r, skuId: "c5.large"} : r)},
+  "budget-for-a-partition-headroom": {...budgetForAPartitionV1.starter!, resources: budgetForAPartitionV1.starter!.resources.map(r => r.id === "peer" ? {...r, skuId: "c5.xlarge"} : r)},
+  "trace-a-saturation-cascade": {...traceASaturationCascadeV1.starter!, resources: traceASaturationCascadeV1.starter!.resources.map(r => r.id === "db" ? {...r, skuId: "db.m5.large"} : r)},
   "protect-one-api-route": {...protectOneApiRouteV1.starter!, resources: protectOneApiRouteV1.starter!.resources.map(r => r.id === "gateway" ? {...r, apiGateway: {...r.apiGateway!, routes: r.apiGateway!.routes!.map(route => route.id === "read" ? {...route, burstRequests: 1} : route)}} : r)},
   "queue-overlapping-jobs": {...queueOverlappingJobsV1.starter!, resources: queueOverlappingJobsV1.starter!.resources.map(r => r.id === "timer" ? {...r, scheduler: {...r.scheduler!, overlap: "queue"}} : r)},
   "bound-function-pool-pressure": {...boundFunctionPoolPressureV1.starter!, resources: boundFunctionPoolPressureV1.starter!.resources.map(r => r.id === "fn" ? {...r, serverless: {...r.serverless!, concurrency: 32}} : r)},
