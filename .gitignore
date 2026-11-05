@@ -41,7 +41,7 @@ coverage
 *.tsbuildinfo
 
 # Project docs (not committed)
-Learning
+/Learning/
 Commands
 LaterCompletion.md
 Performance_Metrics.md
