@@ -22,4 +22,8 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "protect-one-api-route@1": { challengeId: "protect-one-api-route", version: 1, hash: "695b5f64876c96ff10cc0f6f37a9f74190b41a9378d92c0cc75a163ca7a509ea" },
   "queue-overlapping-jobs@1": { challengeId: "queue-overlapping-jobs", version: 1, hash: "ff340d09b24bff1c2f824e408ae3025f8bd39b7b6cec7cc9917fbcafaf6405cc" },
   "bound-function-pool-pressure@1": { challengeId: "bound-function-pool-pressure", version: 1, hash: "b58e0c704222b88d8e5d83d99dc998624c8b70f322e82d115ebd33767cd71d50" },
+  "diagnose-lost-app-capacity@1": { challengeId: "diagnose-lost-app-capacity", version: 1, hash: "c96034e934dbd75035b519f13035467cdae6eb9d8f08b921c06ad18cdb2466f2" },
+  "investigate-a-pool-reset@1": { challengeId: "investigate-a-pool-reset", version: 1, hash: "ed61ae0627f3d15dcab41899f5cc80c5c54edf207c3068bdc9abe765e590500e" },
+  "budget-for-a-partition@1": { challengeId: "budget-for-a-partition", version: 1, hash: "7b35c54cc84b3f4bc7af1e315fe55ed29b400b4395dca7fcce17a071b5e0d960" },
+  "trace-a-saturation-cascade@1": { challengeId: "trace-a-saturation-cascade", version: 1, hash: "b8b8a24164dfdc70aadc52aac2b4eb75c1bb8f3e6730d7206c400de777b29f64" },
 };
