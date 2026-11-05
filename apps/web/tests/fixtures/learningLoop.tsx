@@ -26,7 +26,7 @@ http.defaults.adapter = async (config) => {
   if (failed) throw Error("Unavailable");
   let data: unknown;
   if (config.url === `${API_URL}/learning`) data = catalog;
-  else if (config.url === `${API_URL}/learn/lessons/${detail.lesson.id}`) data = detail;
+  else if (config.url === `${API_URL}/learning/lessons/${detail.lesson.id}`) data = detail;
   else if (config.url?.endsWith("/report")) data = { report: wrongReport ? { ...currentReport, challenge: { ...currentReport.challenge, challengeId: "other" } } : currentReport };
   else if (config.url?.endsWith("/compare-options")) data = { runs: options };
   else if (config.url?.endsWith("/compare")) data = { comparison: pair };

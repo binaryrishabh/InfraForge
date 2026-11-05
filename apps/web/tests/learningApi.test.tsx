@@ -31,10 +31,10 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
     expect(config.withCredentials).toBe(true);
     requests.push(config.url!);
     const data = config.url === `${API_URL}/learning` ? catalog
-      : config.url === `${API_URL}/learn/lessons/what-is-a-request` ? proof.reading
-        : config.url === `${API_URL}/learn/lessons/client-and-server` ? proof.concept
-          : config.url === `${API_URL}/learn/lessons/api-lab` ? proof.lab
-            : proof.curriculumDetails.find(detail => config.url === `${API_URL}/learn/lessons/${detail.lesson.id}`) ?? null;
+      : config.url === `${API_URL}/learning/lessons/what-is-a-request` ? proof.reading
+        : config.url === `${API_URL}/learning/lessons/client-and-server` ? proof.concept
+          : config.url === `${API_URL}/learning/lessons/api-lab` ? proof.lab
+            : proof.curriculumDetails.find(detail => config.url === `${API_URL}/learning/lessons/${detail.lesson.id}`) ?? null;
     if (!data) throw Error("Not found");
     return { data, status: 200, statusText: "OK", headers: {}, config };
   };
@@ -101,6 +101,6 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
     expect(lab.challenge?.id).toBe(lab.lesson.experiment!.challengeId);
     expect(lesson(lab)).toContain("Open challenge lab"); expect(lesson(lab)).toContain('href="/runs/run-1"');
     await expect(getLearningLesson("missing / lesson")).rejects.toThrow("Not found");
-    expect(requests.at(-1)).toBe(`${API_URL}/learn/lessons/missing%20%2F%20lesson`);
+    expect(requests.at(-1)).toBe(`${API_URL}/learning/lessons/missing%20%2F%20lesson`);
   } finally { http.defaults.adapter = adapter; }
 }, 180000);
