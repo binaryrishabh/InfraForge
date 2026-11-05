@@ -3,7 +3,7 @@ import type { LearningLesson } from "@infraforge/contracts/learning";
 export const chooseARetryMitigation: LearningLesson = {
   id: "choose-a-retry-mitigation", contentVersion: 1, trackId: "failures", moduleId: "incident-evidence",
   title: "Choose a mitigation and name its cost", kind: "executable-lab", level: "advanced", availability: "available",
-  summary: "Compare retry pressure after a dependency partition, including callers that fewer retries fail to finish.", prerequisites: [],
+  summary: "Compare retry pressure after a dependency partition, including callers that fewer retries fail to finish.", prerequisites: ["mitigation-tradeoffs", "percentiles-and-populations"],
   problem: ["A database-link outage ends, but queued app work and retries can leave later callers waiting. A mitigation can reduce that tail while giving up some whole-run completions."],
   explanation: ["Run the starter with four maximum attempts. Inspect the recorded partition application and end receipt, then second-6 latency and app/database CPU.",
     "Change only lb Maximum attempts to 2 and run again. Restore the starter, change only Maximum attempts to 5 and run a third comparison. All three use the same authored partition and workload.",

@@ -4,7 +4,7 @@ export const leaveTimeToAcknowledge: LearningLesson = {
   id: "leave-time-to-acknowledge", contentVersion: 1, trackId: "async", moduleId: "queued-work",
   title: "Finish the effect, then acknowledge", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Compare originals, delivery attempts and repeated object effects when an acknowledgement outlives its lease.",
-  prerequisites: ["keep-up-with-the-queue"],
+  prerequisites: ["keep-up-with-the-queue", "queue-ownership-and-acknowledgement"],
   problem: ["The result can be written before the message is acknowledged. A one-second lease expires during the worker's two-second acknowledgement delay."],
   explanation: ["Run the starter. Read the saved requirement detail through second 15. Count originals, deliveries, completed object effects, acknowledgements, redeliveries and dead letters separately.",
     "Select queue. Change only Visibility timeout from one to five seconds. Keep the 250 CPU milliseconds per job, 2000 millisecond acknowledgement delay, delivery limit and prefetch credit unchanged. Run again.",

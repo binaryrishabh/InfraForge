@@ -3,7 +3,7 @@ import type { LearningLesson } from "@infraforge/contracts/learning";
 export const leaveRoomForFirewallFlows: LearningLesson = {
   id: "leave-room-for-firewall-flows", contentVersion: 1, trackId: "failures", moduleId: "incident-evidence",
   title: "Separate policy from connection capacity", kind: "executable-lab", level: "intermediate", availability: "available",
-  summary: "Compare firewall refusals, tracked state and caller success without combining their populations.", prerequisites: ["find-the-denying-rule"],
+  summary: "Compare firewall refusals, tracked state and caller success without combining their populations.", prerequisites: ["find-the-denying-rule", "firewall-rule-matching"],
   problem: ["An allow-all firewall can still refuse new connections when tracked state is full. Some refused startup probes can coexist with successful callers through other paths."],
   explanation: ["Run unchanged. Read fw occupancy, tracked admissions, policy denials, capacity refusals and expired entries in the saved report. Compare them with whole-run caller outcomes.",
     "On fw change only Tracked connection limit from 1 to 8. Keep the one-second idle timeout and app count unchanged. Compare both reports at second 6.",

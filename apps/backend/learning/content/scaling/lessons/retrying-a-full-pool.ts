@@ -4,7 +4,7 @@ export const retryingAFullPool: LearningLesson = {
   id: "retrying-a-full-pool", contentVersion: 1, trackId: "scaling", moduleId: "serving-under-load",
   title: "Count useful work before adding retries", kind: "executable-lab", level: "advanced", availability: "available",
   summary: "Compare backend admission attempts with offered caller requests while a VM pool remains saturated.",
-  prerequisites: [],
+  prerequisites: ["retries-add-work", "load-balancer-policies"],
   problem: ["A quota-limited VM has four worker slots and two queue places. The load balancer can try each caller request five times while fresh traffic keeps arriving."],
   explanation: ["Run the starter. In lb accounting, add Accepted by backend and Rejected by VM. These count backend admission attempts. Queued at VM overlaps accepted admissions, so do not add it again.",
     "The requirement divides those cumulative attempts by whole-run offered callers: completed + failed + deadline-exceeded + abandoned + in-flight. Last-second offered requests/second is a different population.",

@@ -3,7 +3,7 @@ import type { LearningLesson } from "@infraforge/contracts/learning";
 export const findTheDenyingRule: LearningLesson = {
   id: "find-the-denying-rule", contentVersion: 1, trackId: "failures", moduleId: "incident-evidence",
   title: "Diagnose a blocked dependency", kind: "executable-lab", level: "intermediate", availability: "available",
-  summary: "Use a failing report to choose an admission cause before editing the design.", prerequisites: [],
+  summary: "Use a failing report to choose an admission cause before editing the design.", prerequisites: ["firewall-rule-matching", "missing-failure-observations"],
   problem: ["Callers fail, yet the database is idle and the exposure scan is clean. These symptoms alone do not tell you which rule to change."],
   explanation: ["Run the starter unchanged. Read caller failures, database CPU and health, then the database's saved security measurements. Look for backend deliveries, missing-listener denials and named rule counters.",
     "Before changing any settings, use that report to choose the database-admission prediction in another unchanged attempt. The server verifies the answer against retained counters. Cite the recorded rule and explain why low CPU and a clean exposure scan are insufficient.",

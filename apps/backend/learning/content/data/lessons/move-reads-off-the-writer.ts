@@ -4,7 +4,7 @@ export const moveReadsOffTheWriter: LearningLesson = {
   id: "move-reads-off-the-writer", contentVersion: 1, trackId: "data", moduleId: "database-pressure",
   title: "Give reads a separate execution budget", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Route reads to an already provisioned replica and inspect where reads and writes actually run.",
-  prerequisites: [],
+  prerequisites: ["replica-reads-and-writer-work"],
   problem: ["The primary runs reads and writes while its replica is idle. Combined database CPU can hide a fully occupied primary."],
   explanation: ["Run the starter. Compare completed-request p95 with primary and replica consumed CPU microseconds. Inspect primary reads, replica reads and primary committed writes in the saved report.",
     "Select db. Under Database HA, change Read routing from Primary only to Replica preferred. Keep capacity, workload and app count unchanged, then run again.",

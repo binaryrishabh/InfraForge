@@ -4,7 +4,7 @@ export const whereDoesTheTimeGo: LearningLesson = {
   id: "where-does-the-time-go", contentVersion: 1, trackId: "foundations", moduleId: "first-runs",
   title: "Find the first busy resource", kind: "executable-lab", level: "beginner", availability: "available",
   summary: "Run one app and one database, predict the busiest resource, and test one size change.",
-  prerequisites: [],
+  prerequisites: ["first-bottleneck"],
   problem: ["A request needs work from both an app and a database. Buying capacity for the wrong resource can leave requests waiting."],
   explanation: ["The starter offers 350 reads each second. Each read asks for 3 ms of app CPU work and 1 ms of database CPU work in this educational profile.",
     "Predict the resource type with the highest CPU, then run. Compare app CPU with database CPU in the final-state table.",

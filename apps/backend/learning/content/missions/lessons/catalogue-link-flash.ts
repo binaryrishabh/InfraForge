@@ -4,7 +4,7 @@ export const catalogueLinkFlash: LearningLesson = {
   id: "catalogue-link-flash", contentVersion: 1, trackId: "missions", moduleId: "first-applications",
   title: "Serve a flash of popular links", kind: "executable-lab", level: "advanced", availability: "available",
   summary: "Combine app headroom with cache working-set capacity in a read-only catalogue with a fixed burst.",
-  prerequisites: ["where-does-the-time-go", "leave-room-for-a-burst", "move-reads-off-the-writer"],
+  prerequisites: ["where-does-the-time-go", "leave-room-for-a-burst", "move-reads-off-the-writer", "cache-hits-and-misses", "dns-cache-lifetime"],
   problem: ["A sixteen-key catalogue routes through DNS, a load balancer, an app and a database-backed cache. Its read-only traffic rises from 200 to 800 requests/second at 120 until 140. The mission evaluates at 125.",
     "Fixed requirements: Healthy modeled overall health and completed-request p95 at most 4.5 ms in second 125. Educational assumptions: 3 ms app CPU/read, 1 ms database CPU/miss, one initial app core, a one-entry logical cache and a 60-second TTL."],
   explanation: ["Predict health and run the starter. Trace the request path. Inspect app CPU, database CPU, completions and failed or unfinished callers; an idle database can also mean requests never reached it.",

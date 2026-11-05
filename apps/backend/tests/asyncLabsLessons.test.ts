@@ -9,10 +9,12 @@ test("async track registers three executable lessons with calibrated challenges 
   expect(tracks.filter(t => t.id === "async")).toEqual([track]);
   expect(track.modules).toEqual([queuedWork]);
   expect(registeredLessons.filter(l => l.trackId === "async")).toEqual(lessons);
-  expect(queuedWork.lessonIds).toEqual(lessons.map(l => l.id)); expect(lessons).toHaveLength(3);
+  expect(queuedWork.lessonIds).toEqual(lessons.map(l => l.id));
+  const labs = lessons.filter(lesson => lesson.kind === "executable-lab");
+  expect(labs).toHaveLength(3);
   expect(new Set(registeredLessons.map(l => l.id)).size).toBe(registeredLessons.length);
   expect(new Set(tracks.map(t => t.id)).size).toBe(tracks.length);
-  for (const lesson of lessons) {
+  for (const lesson of labs) {
     expect(lesson).toMatchObject({trackId: "async", moduleId: "queued-work", kind: "executable-lab", contentVersion: 1, availability: "available"});
     expect(lesson.prerequisites.every(id => registeredLessons.some(l => l.id === id))).toBe(true);
     expect(lesson.limitations.length).toBeGreaterThan(0); expect(lesson.limitations.every(text => text.trim().length > 0)).toBe(true);

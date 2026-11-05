@@ -4,7 +4,7 @@ export const keepUpWithTheQueue: LearningLesson = {
   id: "keep-up-with-the-queue", contentVersion: 1, trackId: "async", moduleId: "queued-work",
   title: "Follow the work after publishing", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Separate producer success from consumer progress, then reduce the worker's assumed CPU work per job.",
-  prerequisites: [],
+  prerequisites: ["queue-ownership-and-acknowledgement"],
   problem: ["The producer can accept uploads while its worker falls behind. Fast producer responses do not prove that background work has finished."],
   explanation: ["Run the starter. In the saved requirements, inspect originals, acknowledged messages, ready messages and in-flight work through second 12. Compare these with producer completions.",
     "Select worker. Under Background worker, change only CPU milliseconds per job from 250 to 50. This models reducing the work each job requires. Run again with the same workload.",

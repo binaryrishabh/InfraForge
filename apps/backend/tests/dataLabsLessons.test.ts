@@ -10,10 +10,11 @@ test("data track registers three executable lessons with calibrated challenges a
   expect(track.modules).toEqual([databasePressure]);
   expect(registeredLessons.filter(l => l.trackId === "data")).toEqual(lessons);
   expect(databasePressure.lessonIds).toEqual(lessons.map(l => l.id));
-  expect(lessons).toHaveLength(3);
+  const labs = lessons.filter(lesson => lesson.kind === "executable-lab");
+  expect(labs).toHaveLength(3);
   expect(new Set(registeredLessons.map(l => l.id)).size).toBe(registeredLessons.length);
   expect(new Set(tracks.map(t => t.id)).size).toBe(tracks.length);
-  for (const lesson of lessons) {
+  for (const lesson of labs) {
     expect(lesson).toMatchObject({trackId: "data", moduleId: "database-pressure", kind: "executable-lab", contentVersion: 1, availability: "available"});
     expect(lesson.prerequisites.every(id => registeredLessons.some(l => l.id === id))).toBe(true);
     expect(lesson.limitations.length).toBeGreaterThan(0);

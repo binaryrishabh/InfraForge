@@ -4,7 +4,7 @@ export const leaveRoomForABurst: LearningLesson = {
   id: "leave-room-for-a-burst", contentVersion: 1, trackId: "scaling", moduleId: "serving-under-load",
   title: "Buy headroom for a burst", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Run a fourfold burst and compare two valid capacity choices using recorded CPU and educational cost estimates.",
-  prerequisites: [],
+  prerequisites: ["more-users-more-pressure", "percentiles-and-populations"],
   problem: ["A small app handles the baseline 100 reads/second. Traffic rises to 400/second from second 120 until 140; the challenge stops at 125."],
   explanation: ["Predict overall health during the burst, run the starter, and compare completed throughput with failed and unfinished requests.",
     "Select app and change Instance size from Generic to c5.large. Run again. Keep topology, workload and queue settings fixed.",

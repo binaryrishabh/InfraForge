@@ -50,7 +50,31 @@ resolve an archived available version. Listing is current-only and supports trac
 module and challenge filters. Results are detached copies so callers cannot mutate the
 registry. No request-time randomness, clock, environment, database or progress is used.
 
-## Foundations
+## Connected curriculum
+
+Scaling, data, async and failures introduce twelve short concept lessons before
+their labs. Every new lesson includes a three-choice check and an explanation;
+all labs, including foundations and missions, suggest at least one non-executable
+concept prerequisite. Prerequisites remain advice and never prevent opening a lab.
+Mission prerequisites connect earlier tracks rather than repeating their content.
+
+For this pre-publication curriculum pass only, lab prerequisites were edited in
+place at contentVersion 1: these lab lessons have not yet been published to users.
+This exception does not cover the ten published foundations readings/exercises,
+whose hashes remain pinned, or any published challenge definition. After lab
+publication, prerequisite changes require a new contentVersion and an archive.
+
+The added labs initially had no entries in `reviewedChallenges.ts`. Their v1
+definitions, predictions, criteria, debriefs, lesson limitations and existing
+real-engine calibration tests were reviewed before adding the missing records.
+No prior review identity or challenge hash was replaced.
+
+The Learning page derives track, level and kind filters and prerequisite links
+from the catalog. Worth revisiting uses server review reasons for attempted labs;
+its concept links come from those labs' visible non-executable prerequisites.
+They are recall suggestions, not evidence of a failed check or a mastery score.
+
+## Foundations path
 
 Foundations contains ten original reading/conceptual beginner lessons across requests/routing, compute/data and
 load/limits, plus three executable lessons in `first-runs`. DNS lookup is distinct from the

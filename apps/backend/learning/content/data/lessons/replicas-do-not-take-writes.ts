@@ -4,7 +4,7 @@ export const replicasDoNotTakeWrites: LearningLesson = {
   id: "replicas-do-not-take-writes", contentVersion: 1, trackId: "data", moduleId: "database-pressure",
   title: "Test a replica against a write bottleneck", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Run a plausible replica-only fix, observe why it fails, then change writer capacity.",
-  prerequisites: [],
+  prerequisites: ["replica-reads-and-writer-work"],
   problem: ["A small primary executes 650 writes/second. Adding a replica looks like more database capacity, but application writes still execute on the writer."],
   explanation: ["Run the starter and retain its report. For the near miss, select db and enable One replica with Replica preferred Read routing. Run without changing writer size.",
     "Compare primary committed writes, replica reads, member CPU work and caller p95. The few replica reads come from startup health probes; the authored application workload only writes.",

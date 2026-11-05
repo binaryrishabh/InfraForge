@@ -4,7 +4,7 @@ export const openOneSubscriber: LearningLesson = {
   id: "open-one-subscriber", contentVersion: 1, trackId: "async", moduleId: "queued-work",
   title: "Inspect each fan-out branch", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Repair one queue's listener admission and check that the other subscriber keeps its own delivery progress.",
-  prerequisites: ["keep-up-with-the-queue"],
+  prerequisites: ["keep-up-with-the-queue", "fan-out-subscribers"],
   problem: ["An Event Bus dispatches the same uploads to two queues. The first queue allows no listener ports; its subscriber retries while the second continues."],
   explanation: ["Run the starter. Open bus measurements in the saved report and inspect each subscription's delivered, retry, failed-attempt and exhausted-dispatch counts. Compare each queue's acknowledgements in the requirements.",
     "Select queue. Under TCP listeners, enter 5672 in TCP listener ports and apply the ports. Change only this listener admission; run again.",

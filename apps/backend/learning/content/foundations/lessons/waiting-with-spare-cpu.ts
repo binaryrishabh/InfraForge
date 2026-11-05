@@ -4,7 +4,7 @@ export const waitingWithSpareCpu: LearningLesson = {
   id: "waiting-with-spare-cpu", contentVersion: 1, trackId: "foundations", moduleId: "first-runs",
   title: "Read latency alongside CPU", kind: "executable-lab", level: "beginner", availability: "available",
   summary: "Use a worker-slot limit to see why spare CPU and Healthy labels can coexist with slow responses.",
-  prerequisites: [],
+  prerequisites: ["response-time-and-throughput", "first-bottleneck"],
   problem: ["The app has CPU to spare, yet callers wait. Its single worker slot stays occupied while a database request finishes."],
   explanation: ["At 250 reads each second, inspect the starter's completed throughput and p95 alongside its resource health. Healthy is a model label, not a response-time promise.",
     "Select the app. Under VM execution, change Active workers from 1 to 4 while leaving Instance size Generic and Queued requests at 256. Run again under the same workload.",

@@ -4,7 +4,7 @@ export const oneBiggerOrTwoSmaller: LearningLesson = {
   id: "one-bigger-or-two-smaller", contentVersion: 1, trackId: "foundations", moduleId: "first-runs",
   title: "Compare two ways to add capacity", kind: "executable-lab", level: "beginner", availability: "available",
   summary: "Compare one larger app with two smaller apps at the same steady request rate.",
-  prerequisites: [],
+  prerequisites: ["virtual-machines", "more-users-more-pressure"],
   problem: ["One app fits a lower request rate but queues work at 800 reads each second. The same request path now needs more capacity."],
   explanation: ["A controlled calibration uses the same starter at 300 and 800 requests/second. The runnable lab fixes traffic at 800, so design attempts remain comparable.",
     "First change app from c5.large to c5.xlarge. Then restore c5.large and add a second c5.large, connecting lb to the new app and the new app to db.",

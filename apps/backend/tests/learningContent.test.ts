@@ -204,6 +204,59 @@ test("content and registry results are deterministic and detached from callers",
   expect(buildLearningRegistry(copy()).listTracks()).toEqual(registry.listTracks());
 });
 
+test("every lab has a visible concept prerequisite; concepts precede labs and the whole graph is acyclic", () => {
+  const lessons = LEARNING_REGISTRY.listLessons(), byId = new Map(lessons.map(l => [l.id, l]));
+  for (const lesson of lessons.filter(l => l.kind === "executable-lab")) {
+    const concepts = lesson.prerequisites.map(id => byId.get(id)).filter(l => l && l.kind !== "executable-lab");
+    expect(concepts.length).toBeGreaterThanOrEqual(1);
+  }
+  for (const track of LEARNING_REGISTRY.listTracks()) {
+    const order = track.modules.flatMap(module => module.lessonIds);
+    for (const module of track.modules) {
+      let reachedLab = false;
+      for (const id of module.lessonIds) {
+        const lesson = byId.get(id)!;
+        if (lesson.kind === "executable-lab") reachedLab = true;
+        else expect(reachedLab).toBe(false);
+        for (const prerequisite of lesson.prerequisites) {
+          if (byId.get(prerequisite)?.trackId === track.id) expect(order.indexOf(prerequisite)).toBeLessThan(order.indexOf(id));
+        }
+      }
+    }
+  }
+  const done = new Set<string>();
+  const visit = (id: string, path: Set<string>) => {
+    expect(path.has(id)).toBe(false);
+    if (done.has(id)) return;
+    const lesson = byId.get(id);
+    expect(lesson).toBeDefined();
+    for (const prerequisite of lesson!.prerequisites) visit(prerequisite, new Set([...path, id]));
+    done.add(id);
+  };
+  for (const lesson of lessons) visit(lesson.id, new Set());
+  expect(done.size).toBe(lessons.length);
+});
+
+const CONCEPT_ANSWERS = {
+  "load-balancer-policies": "selection", "percentiles-and-populations": "population",
+  "retries-add-work": "attempts", "cache-hits-and-misses": "source",
+  "connection-pool-budgets": "forty", "replica-reads-and-writer-work": "reads",
+  "queue-ownership-and-acknowledgement": "accepted", "fan-out-subscribers": "each",
+  "firewall-rule-matching": "policy", "dns-cache-lifetime": "answer",
+  "missing-failure-observations": "unknown", "mitigation-tradeoffs": "tradeoff",
+};
+for (const [id, answer] of Object.entries(CONCEPT_ANSWERS)) test(`${id}: a bounded concept with three choices and a valid explained answer`, () => {
+  const lesson = LEARNING_REGISTRY.findLesson(id)!;
+  expect(lesson.kind).not.toBe("executable-lab");
+  expect(lesson.experiment).toBeNull();
+  expect(lesson.check!.choices).toHaveLength(3);
+  expect(new Set(lesson.check!.choices.map(choice => choice.id)).size).toBe(3);
+  expect(lesson.check!.correctChoiceId).toBe(answer);
+  expect(lesson.check!.choices.filter(choice => choice.id === answer)).toHaveLength(1);
+  expect(lesson.check!.explanation.trim().length).toBeGreaterThan(0);
+  expect(lesson.limitations.length).toBeGreaterThan(0);
+});
+
 // Published identities are immutable. Keep these pins when adding a new contentVersion.
 const PUBLISHED: Record<string, string> = {
   "what-is-a-request@1": "9aadbe6497b2167edfb327dfcb20b04767d4a07ddcfaa8ba1de382602fdd13b3",

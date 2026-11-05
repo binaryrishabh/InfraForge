@@ -4,7 +4,7 @@ export const budgetAppDatabaseSessions: LearningLesson = {
   id: "budget-app-database-sessions", contentVersion: 1, trackId: "data", moduleId: "database-pressure",
   title: "Count pools before adding app instances", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Compare actual session occupancy after a slowdown with the number of independently owned app pools.",
-  prerequisites: [],
+  prerequisites: ["connection-pool-budgets"],
   problem: ["Twelve app pools can collectively ask for more than the database's 85 sessions. A short CPU slowdown gives lazy pools time to open connections, which can remain idle afterward."],
   explanation: ["Run the starter through the scripted slowdown. At second 6, inspect database Connections, Refused session opens and health alongside whole-run caller failures.",
     "Select lb. Under Autoscaling pool, change Minimum from 12 to 4, leaving Maximum at 12. Keep the database and workload unchanged and run again.",

@@ -4,7 +4,7 @@ export const routeAroundASlowVm: LearningLesson = {
   id: "route-around-a-slow-vm", contentVersion: 1, trackId: "scaling", moduleId: "serving-under-load",
   title: "Route work with unfinished requests in mind", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Compare backend selection policies while keeping two VMs and their capacity unchanged.",
-  prerequisites: [],
+  prerequisites: ["load-balancer-policies", "percentiles-and-populations"],
   problem: ["Round robin takes turns between a fast VM and a VM with a 25% CPU quota. A Healthy label can coexist with waiting requests."],
   explanation: ["Run the starter and inspect p50 alongside p95. The median describes the middle completed response; the 95th percentile describes a slower part of the completed-response distribution.",
     "Select lb. Under Backend selection, change Round robin to Least outstanding. Keep the VMs, quotas, workload and health checks unchanged, then run again.",
