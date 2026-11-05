@@ -14,6 +14,7 @@ import { sameScenarioValue, verifiedScenario } from "./scenario";
 import type { RecordedScenario } from "@infraforge/contracts/challenges";
 import type { RunInputs } from "@infraforge/contracts/run-inputs";
 import { orderedScenarioSteps } from "@infraforge/simulation/model2-run";
+import { QueueWorkSchema } from "../reports/queueWorkSchema";
 
 export interface ChallengeAttemptRecord {
   challengeId: string; challengeVersion: number | null; challengeSpecHash: string | null;
@@ -90,7 +91,7 @@ class Judge {
   // can decide either success or failure. Historical criteria retain their rules.
   scenarioCriterionProblem(c: ChallengeCriterion): string | null {
     const input = this.evidence.input, terminal = this.atEvaluation;
-    if (["overall-health", "no-saturation", "database-healthy", "database-connections", "terminal-p95", "survivors-unsaturated", "backend-admission-budget"].includes(c.kind) &&
+    if (["overall-health", "no-saturation", "database-healthy", "database-connections", "terminal-p95", "survivors-unsaturated", "backend-admission-budget", "queue-work"].includes(c.kind) &&
       terminal?.measurementFreshness !== "current-revision") return "A current evaluation measurement was not recorded.";
     const finite = (n: unknown): n is number => typeof n === "number" && Number.isFinite(n) && n >= 0;
     const health = (ids: string[]) => !!terminal && ids.every(id => {
@@ -140,6 +141,7 @@ class Judge {
         return this.plan && input && health(input.resources.filter(r => r.id !== this.plan!.targetResourceId).map(r => r.id))
           ? null : "Complete experiment survivor measurements were not recorded.";
       case "backend-admission-budget":
+      case "queue-work":
         // Counter completeness and the cumulative window are checked below.
         return null;
     }
@@ -159,7 +161,7 @@ class Judge {
     const pending = (detail: string, sources: string[]) => ({ ...base, status: this.active ? "pending" as const : "not-evaluated" as const, detail, sources });
     const decided = (met: boolean, detail: string, sources: string[]) => ({ ...base, status: met ? "met" as const : "not-met" as const, detail, sources });
     // A fixed-load latency lab uses the same captured terminal evidence as a scenario.
-    const missing = this.definition.scenario || c.kind === "terminal-p95" || c.kind === "backend-admission-budget" ? this.scenarioCriterionProblem(c) : null;
+    const missing = this.definition.scenario || c.kind === "terminal-p95" || c.kind === "backend-admission-budget" || c.kind === "queue-work" ? this.scenarioCriterionProblem(c) : null;
     if (missing) return pending(missing, ["runInputs", "stages", "terminalSnapshot"]);
     const input = this.evidence.input;
     switch (c.kind) {
@@ -206,6 +208,19 @@ class Judge {
         const t = this.atEvaluation, traffic = t?.traffic;
         if (!t || !traffic || traffic.latencyMs.p95 === null || traffic.completedRps <= 0) return pending("No completed-request latency measurement exists at the evaluation second.", ["terminalSnapshot.traffic"]);
         return decided(traffic.latencyMs.p95 <= c.maxMs, `At second ${t.simulatedSeconds}, p95 was ${traffic.latencyMs.p95.toFixed(3)} ms from ${traffic.completedRps} completed requests; the limit is ${c.maxMs} ms.`, ["terminalSnapshot.traffic"]);
+      }
+      case "queue-work": {
+        const t = this.atEvaluation;
+        const sources = ["terminalSnapshot.metrics.queueWork", "runInputs.resources"];
+        if (!t || !input) return pending(this.missingMeasurement(), sources);
+        const targets = input.resources.filter(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.MessageQueue && r.asyncQueue?.enabled);
+        if (targets.length !== 1) return pending("The captured design must retain the named enabled queue; no replacement is inferred.", sources);
+        const rows = t.resources.filter(r => r.id === c.resourceId), parsed = QueueWorkSchema.safeParse(rows[0]?.queueWork);
+        if (rows.length !== 1 || !parsed.success || parsed.data.throughSecond !== t.simulatedSeconds) return pending("Complete queue work counters through the evaluation second were not recorded.", sources);
+        const q = parsed.data;
+        const outstanding = q.ready + q.inFlight + q.scheduled;
+        return decided(q.acknowledged >= c.minAcknowledged && outstanding <= c.maxOutstanding && q.redeliveries <= c.maxRedeliveries,
+          `Through second ${q.throughSecond}, ${c.resourceId}: ${q.originals} originals, ${q.deliveries} deliveries, ${q.effects} completed object effects, ${q.acknowledged} acknowledged (minimum ${c.minAcknowledged}); ${outstanding} outstanding (${q.ready} ready + ${q.inFlight} in flight + ${q.scheduled} scheduled; maximum ${c.maxOutstanding}); ${q.redeliveries} redeliveries (maximum ${c.maxRedeliveries}), ${q.deadLettered} dead-lettered, ${q.discarded} discarded, ${q.expired} expired. Effects are separate from acknowledgements.`, sources);
       }
       case "backend-admission-budget": {
         const t = this.atEvaluation, whole = t?.traffic?.wholeRun;

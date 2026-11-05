@@ -182,6 +182,31 @@ requirements concern completions in second 6, not a whole-run SLO.
 
 ## Check
 
+## Asynchronous work labs
+
+`keep-up-with-the-queue@1` compares one worker's authored CPU milliseconds per job
+under steady publishing. `leave-time-to-acknowledge@1` changes only queue visibility
+while retaining the real saved acknowledgement delay. `open-one-subscriber@1`
+opens one queue listener; independent Event Bus dispatch and the other consumer
+remain measurable. These are fixed-horizon labs, not burst-drain or availability tests.
+
+The `queue-work` criterion reads optional `queueWork/1` terminal measurements from
+the named enabled queue, at the exact evaluation second and current topology revision.
+Each capture carries its own `throughSecond`. Originals, deliveries, acknowledgements
+and successful object effects come from separate broker and worker counters; processed
+effects do not acknowledge a delivery. Outstanding work is ready + in flight + scheduled.
+Original ownership reconciles with outstanding + acknowledged + dead-lettered +
+discarded + expired. Unsafe, inconsistent or missing counters stay unscored. Historical
+captures without these counters remain readable and cannot satisfy the new criterion.
+Recorded zero work fails the positive acknowledgement minimum; it is never inferred
+from missing evidence. Generic requirement details display every population and limit.
+
+The cheap current counter accessors expose existing engine state; no queue behavior,
+published definition or historical pin changes. Bus dispatch failures and queue consumer
+redeliveries are different stages and must not be combined into one failure population.
+
+## Check
+
 ```
 bun run check:challenges
 ```

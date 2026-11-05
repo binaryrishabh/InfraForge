@@ -21,6 +21,8 @@ export type ChallengeCriterion =
   | { id: string; kind: "overall-health"; label: string; allowed: OverallHealth[] }
   | { id: string; kind: "no-saturation"; label: string }
   | { id: string; kind: "terminal-p95"; label: string; maxMs: number }
+  // Queue-owned work at the exact evaluation second; effects and deliveries are distinct.
+  | { id: string; kind: "queue-work"; label: string; resourceId: string; minAcknowledged: number; maxOutstanding: number; maxRedeliveries: number }
   // Cumulative accepted backend admissions + VM refusals across every captured LB,
   // divided by cumulative offered caller requests (all outcomes plus in-flight).
   | { id: string; kind: "backend-admission-budget"; label: string; maxPerOfferedRequest: number }

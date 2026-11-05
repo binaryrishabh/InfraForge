@@ -19,4 +19,4 @@ export type * from "./SpawnedVmInfo.interface";
 
 
 export type * from "./ApplicationFlowEvidence.interface";
-export type { AsyncQueueMetrics, AsyncQueueMetricsV1 } from "./AsyncQueueMetrics.interface";
+export type { AsyncQueueMetrics, AsyncQueueMetricsV1, QueueWorkMetrics } from "./AsyncQueueMetrics.interface";

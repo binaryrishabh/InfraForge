@@ -32,6 +32,9 @@ import { retryingAFullPoolV1 } from "../challenges/definitions/retrying-a-full-p
 import { moveReadsOffTheWriterV1 } from "../challenges/definitions/move-reads-off-the-writer/v1";
 import { budgetAppDatabaseSessionsV1 } from "../challenges/definitions/budget-app-database-sessions/v1";
 import { replicasDoNotTakeWritesV1 } from "../challenges/definitions/replicas-do-not-take-writes/v1";
+import { keepUpWithTheQueueV1 } from "../challenges/definitions/keep-up-with-the-queue/v1";
+import { leaveTimeToAcknowledgeV1 } from "../challenges/definitions/leave-time-to-acknowledge/v1";
+import { openOneSubscriberV1 } from "../challenges/definitions/open-one-subscriber/v1";
 
 // Historical report fixtures deliberately keep their published Model 1 conditions.
 export const legacyDefinition = (id: string) => findChallenge(id, 1)!.definition;
@@ -50,6 +53,9 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "keep-up-with-the-queue": {...keepUpWithTheQueueV1.starter!, resources: keepUpWithTheQueueV1.starter!.resources.map(r => r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, cpuMsPerJob: 50}} : r)},
+  "leave-time-to-acknowledge": {...leaveTimeToAcknowledgeV1.starter!, resources: leaveTimeToAcknowledgeV1.starter!.resources.map(r => r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, visibilityTimeoutSeconds: 5}} : r)},
+  "open-one-subscriber": {...openOneSubscriberV1.starter!, resources: openOneSubscriberV1.starter!.resources.map(r => r.id === "queue" ? {...r, listenerSettings: {version: 1, ports: [5672]}} : r)},
   "move-reads-off-the-writer": {...moveReadsOffTheWriterV1.starter!, resources: moveReadsOffTheWriterV1.starter!.resources.map(r => r.id === "db" ? {...r, databaseReadRouting: {version: 1, policy: "replica-preferred"}} : r)},
   "budget-app-database-sessions": {...budgetAppDatabaseSessionsV1.starter!, resources: budgetAppDatabaseSessionsV1.starter!.resources.map(r => r.id === "lb" ? {...r, autoscaling: {...r.autoscaling!, minReplicas: 4}} : r)},
   "replicas-do-not-take-writes": {...replicasDoNotTakeWritesV1.starter!, resources: replicasDoNotTakeWritesV1.starter!.resources.map(r => r.id === "db" ? {...r, skuId: "db.t3.micro"} : r)},

@@ -29,6 +29,9 @@ import { retryingAFullPoolV1 } from "./retrying-a-full-pool/v1";
 import { moveReadsOffTheWriterV1 } from "./move-reads-off-the-writer/v1";
 import { budgetAppDatabaseSessionsV1 } from "./budget-app-database-sessions/v1";
 import { replicasDoNotTakeWritesV1 } from "./replicas-do-not-take-writes/v1";
+import { keepUpWithTheQueueV1 } from "./keep-up-with-the-queue/v1";
+import { leaveTimeToAcknowledgeV1 } from "./leave-time-to-acknowledge/v1";
+import { openOneSubscriberV1 } from "./open-one-subscriber/v1";
 
 /* Every published version of every challenge, calibrated against simulation model
 "1" and catalog "2026-08". Versions are immutable and never removed: historical
@@ -65,4 +68,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   moveReadsOffTheWriterV1,
   budgetAppDatabaseSessionsV1,
   replicasDoNotTakeWritesV1,
+  keepUpWithTheQueueV1,
+  leaveTimeToAcknowledgeV1,
+  openOneSubscriberV1,
 ];
