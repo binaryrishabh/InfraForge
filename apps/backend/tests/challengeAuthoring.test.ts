@@ -69,6 +69,16 @@ const cache = CHALLENGE_VERSIONS.find((d) => d.id === "cache-failure")!;
 const withEdit = (edit: (d: ChallengeDefinition) => ChallengeDefinition) => CHALLENGE_VERSIONS.map((d) => d === cache ? edit(structuredClone(d)) : d);
 
 describe("challenge authoring", () => {
+  // Validate each complete family independently before checking the registry as
+  // a whole. Every version is exercised, within the existing per-test budget.
+  for (const challengeId of new Set(CHALLENGE_VERSIONS.map(d => d.id))) {
+    test(`${challengeId}: every published definition is valid`, () => {
+      const family = CHALLENGE_VERSIONS.filter(d => d.id === challengeId);
+      const pins = Object.fromEntries(family.map(d => [`${d.id}@${d.version}`, PUBLISHED[`${d.id}@${d.version}`]!]));
+      expect(validateChallengeVersions(family, pins)).toEqual([]);
+    });
+  }
+
   test("every registered version is valid, contiguous and pinned to its published hash", () => {
     expect(validateChallengeVersions(CHALLENGE_VERSIONS, PUBLISHED)).toEqual([]);
     expect(Object.keys(PUBLISHED)).toHaveLength(CHALLENGE_VERSIONS.length);
