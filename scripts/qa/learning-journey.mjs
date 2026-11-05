@@ -141,13 +141,12 @@ await step("one change is planned with a written hypothesis and the earlier desi
   return { url: page.url().replace(WEB, "").replace(/design=.*/, "design=<id>"), hasHypothesisNotice: /hypothesis|one change|improvement/i.test(await text()) };
 });
 await step("the app's instance size is changed to c5.large in the designer", async () => {
-  await page.locator('[data-testid="resource-app"], button:has-text("app")').filter({ hasText: /Virtual Machine/ }).first().click();
-  const size = page.getByLabel(/instance size/i).first();
+  await page.locator(".react-flow__node, [data-id]").filter({ hasText: /Virtual Machine/ }).first().click({ timeout: 20_000 }).catch(async () => { await page.getByText("app", { exact: true }).first().click(); });
+  const size = page.getByRole("radio", { name: /c5\.large/i }).first();
   await size.waitFor({ timeout: 20_000 });
-  const options = await size.locator("option").allInnerTexts().catch(() => []);
-  await size.selectOption({ label: options.find((o) => /c5\.large/.test(o)) ?? "c5.large" });
+  await size.check();
   await page.screenshot({ path: `${SHOTS}/12-size-changed.png` });
-  return { options: options.slice(0, 8), chosen: await size.inputValue() };
+  return { chosen: await size.isChecked(), resources: /(\d+) resources/.exec(await text())?.[1] };
 });
 await step("the improved design runs through the same prediction gate and its recorded result is shown", async () => {
   await page.getByRole("button", { name: /predict and run/i }).click();
