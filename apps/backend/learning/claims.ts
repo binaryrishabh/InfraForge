@@ -1,4 +1,5 @@
 import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
+import { requestsPerSecond } from "@infraforge/domain/workload";
 import { evidenceLabels, learningMeasurement, type LearningLesson } from "@infraforge/contracts/learning";
 import { CLAIM_EXCEPTIONS } from "./claimExceptions";
 
@@ -17,18 +18,39 @@ export function lessonText(lesson: LearningLesson): Array<[string, string]> {
   ];
 }
 
+function normalizeQuantities(text: string): string {
+  const words: Record<string, number> = { zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5,
+    six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13,
+    fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
+    twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
+  const quantityWords = new RegExp(`\\b((?:(?:${Object.keys(words).join("|")}|hundred|thousand)[ -]+)+)(?=(?:(?:modeled|logical|initial|app|database|worker|CPU|concurrent|maximum)\\s+)*(?:seconds?|ms|milliseconds?|cores?|keys?|entry|entries|requests?|reads?|writes?|sessions?|connections?|pools?|jobs?)\\b)`, "gi");
+  return text.replace(quantityWords, phrase => {
+      let total = 0, part = 0;
+      for (const word of phrase.trim().toLowerCase().split(/[ -]+/).filter(Boolean)) {
+        if (word === "hundred") part = (part || 1) * 100;
+        else if (word === "thousand") { total += (part || 1) * 1000; part = 0; }
+        else part += words[word]!;
+      }
+      return `${total + part} `;
+    })
+    .replace(/\bfourfold\b/gi, "4");
+}
+
 // SKU names are indivisible: c5.xlarge does not accidentally authorize "5".
 // Percentile identifiers and Model 2 identify concepts, not measured values.
 export function numericClaims(text: string): string[] {
-  const words: Record<string, number> = { zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5,
-    six: 6, seven: 7, eight: 8, nine: 9, ten: 10, twelve: 12, sixteen: 16 };
-  const normalized = text.replace(/\b(?:p(?:50|95|99)|Model\s+2)\b/gi, "")
-    .replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|twelve|sixteen)(?=[ -](?:(?:modeled|logical|initial|app)\s+)*(?:seconds?|ms|milliseconds?|cores?|keys?|entries|requests?|reads?|writes?|sessions?|connections?)\b)/gi,
-      word => String(words[word.toLowerCase()]))
-    .replace(/\bfourfold\b/gi, "4");
+  const normalized = normalizeQuantities(text).replace(/\b(?:p(?:50|95|99)|Model\s+2)\b/gi, "");
   return [...normalized.matchAll(
     /\b(?:[a-z]+\.)?(?:[a-z]+\d+[a-z]*\.)+[a-z\d]+\b|(?<![\w.])\d+(?:,\d{3})*(?:\.\d+)?(?![\w.])/gi,
   )].map(match => match[0].replaceAll(",", "").toLowerCase());
+}
+
+export function sizeClaims(text: string): string[] {
+  return [
+    ...[...text.matchAll(/\b(?:[a-z][\w-]*\.)+[\w-]+\b|\b[a-z]+-\d[\w-]+\b/gi)].map(match => match[0]),
+    ...[...text.matchAll(/\b(?:Generic|Small|Medium|Large)\b/g)].map(match => match[0]),
+    ...[...text.matchAll(/\b(?:select|choose|size\s+(?:from|to))\s+(small|medium|large)\b/gi)].map(match => match[1]!),
+  ].filter(value => !/^second-\d+$/i.test(value)).map(value => value.toLowerCase());
 }
 
 function pinnedValues(definition: ChallengeDefinition): Set<string> {
@@ -51,7 +73,7 @@ function pinnedValues(definition: ChallengeDefinition): Set<string> {
   for (const resource of definition.starter?.resources ?? []) {
     for (const [key, value] of Object.entries(resource)) if (!["id", "name", "type", "position", "x", "y"].includes(key)) visit(value);
   }
-  const perSecond = w.targetThroughput / (w.throughputUnit === "per-minute" ? 60 : 1);
+  const perSecond = requestsPerSecond(w);
   values.add(String(perSecond));
   values.add(String(perSecond * w.peakMultiplier));
   // Quotas/ratios are authored as fractions, while lessons use percentages.
@@ -65,8 +87,10 @@ export function checkLessonClaims(lesson: LearningLesson, definition?: Challenge
   if (lesson.kind !== "executable-lab") {
     // Numerical definitions such as the meaning of p95 are conceptual. Refuse
     // numeric units used to assert a run result, including in follow-up/checks.
-    for (const [field, prose] of text) if (/\d[\d,.]*\s*(?:ms\b|milliseconds?\b|seconds?\b|s\b|req(?:uests?)?\s*\/\s*s|(?:requests?|reads?|writes?)\s*(?:\/|per|each)\s*(?:second|s)\b|cores?\b|GB\b|MB\b)/i.test(prose)) {
-      errors.push(`${identity} ${field}: non-executable lesson contains a digits-with-units result claim`);
+    for (const [field, prose] of text) {
+      const units = /\d[\d,.]*\s*(?:ms\b|milliseconds?\b|seconds?\b|s\b|req(?:uests?)?\s*\/\s*s|(?:requests?|reads?|writes?)\s*(?:\/|per|each)\s*(?:second|s)\b|cores?\b|GB\b|MB\b)/i.test(prose);
+      const outcome = /\b(?:run|simulation|simulator|recorded|simulated)\b/i.test(prose) && /\d[\d,.]*\s*(?:%|callers?\b|requests?\b|completions?\b|attempts?\b)/i.test(prose);
+      if (units || outcome) errors.push(`${identity} ${field}: non-executable lesson contains a digits-with-units result claim`);
     }
     return errors;
   }
@@ -74,22 +98,23 @@ export function checkLessonClaims(lesson: LearningLesson, definition?: Challenge
   const allowed = pinnedValues(definition);
   for (const [field, prose] of text) {
     const exceptions = CLAIM_EXCEPTIONS.filter(e => e.lesson === identity && e.field === field && e.text === prose && e.reason.trim());
-    for (const token of numericClaims(prose)) if (!allowed.has(token) && !exceptions.some(e => e.values.includes(token))) {
+    const quantities = normalizeQuantities(prose);
+    for (const token of new Set([...numericClaims(prose), ...sizeClaims(prose)])) if (!allowed.has(token) && !exceptions.some(e => e.values.includes(token))) {
       errors.push(`${identity} ${field}: unsupported numeric/size claim ${token}: ${prose}`);
     }
-    for (const match of prose.matchAll(/\bsecond[ -]+(\d+(?:\.\d+)?)/gi)) {
+    for (const match of quantities.matchAll(/\bsecond[ -]+(\d+(?:\.\d+)?)/gi)) {
       if (Number(match[1]) !== definition.evaluationSeconds && !exceptions.some(e => e.values.includes(match[1]!))) {
         errors.push(`${identity} ${field}: unsupported evaluation second ${match[1]}`);
       }
     }
-    for (const match of prose.matchAll(/\bp95(?:\s+is)?\s+(?:at most|<=|≤)\s*(\d+(?:\.\d+)?)\s*ms\b/gi)) {
+    for (const match of quantities.matchAll(/\bp95(?:\s+is)?\s+(?:at most|<=|≤)\s*(\d+(?:\.\d+)?)\s*ms\b/gi)) {
       if (!definition.criteria.some(criterion => criterion.kind === "terminal-p95" && criterion.maxMs === Number(match[1])) &&
         !exceptions.some(e => e.values.includes(match[1]!))) errors.push(`${identity} ${field}: unsupported p95 threshold ${match[1]} ms`);
     }
     // A number that exists as a threshold must not masquerade as a request rate.
-    for (const match of prose.matchAll(/(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:requests?|reads?|writes?)(?:\s*\/\s*|\s+(?:per|each)\s+)(?:second|s)\b/gi)) {
+    for (const match of quantities.matchAll(/(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:requests?|reads?|writes?)(?:\s*\/\s*|\s+(?:per|each)\s+)(?:second|s)\b/gi)) {
       const rate = Number(match[1]!.replaceAll(",", ""));
-      const w = definition.workload, base = w.targetThroughput / (w.throughputUnit === "per-minute" ? 60 : 1);
+      const w = definition.workload, base = requestsPerSecond(w);
       if (rate !== base && rate !== base * w.peakMultiplier && !exceptions.some(e => e.values.includes(String(rate)))) errors.push(`${identity} ${field}: unsupported request rate ${rate}`);
     }
   }
@@ -100,6 +125,9 @@ export function checkLessonClaims(lesson: LearningLesson, definition?: Challenge
   if (!lesson.experiment.evidenceToInspect?.length) errors.push(`${identity}: needs named report measurements in evidenceToInspect`);
   for (const item of lesson.experiment.evidenceToInspect ?? []) for (const label of evidenceLabels(item)) {
     if (!learningMeasurement(label)) errors.push(`${identity}: report does not render measurement ${label}`);
+    else if (label.startsWith("Queue:") && !definition.criteria.some(criterion => criterion.kind === "queue-work")) {
+      errors.push(`${identity}: report does not render measurement ${label} without a queue-work requirement`);
+    }
   }
   return errors;
 }
