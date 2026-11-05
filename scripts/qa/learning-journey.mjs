@@ -131,10 +131,10 @@ await step("one change is planned with a written hypothesis and the earlier desi
   await page.getByRole("link", { name: /inspect the latest recorded attempt/i }).first().click();
   await page.waitForURL(/\/runs\//, { timeout: 30_000 });
   await page.getByRole("button", { name: /plan one change/i }).click();
-  const dialog = page.getByRole("dialog").first();
-  await dialog.getByRole("textbox").first().fill("A larger app instance gives the app more CPU, so its queue should shrink and p95 should fall.");
+  await page.locator("textarea").first().waitFor({ timeout: 30_000 });
+  await page.locator("textarea").first().fill("A larger app instance gives the app more CPU, so its queue should shrink and p95 should fall.");
   await page.screenshot({ path: `${SHOTS}/10-plan-change.png` });
-  await dialog.locator('button[type="submit"]').click();
+  await page.locator('button[form="learning-plan"]').click();
   await page.waitForURL(/\/design/, { timeout: 60_000 });
   await page.waitForLoadState("networkidle").catch(() => {});
   await page.screenshot({ path: `${SHOTS}/11-improvement-design.png` });
