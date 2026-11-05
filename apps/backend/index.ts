@@ -14,6 +14,7 @@ import { checkOrigin, requireSession } from "./auth/httpSecurity";
 import { infrastructureRouter } from "./routes/infrastructure.routes";
 import { deploymentRouter } from "./routes/deployment.routes";
 import { challengeRouter } from "./challenges/routes";
+import { learningRouter } from "./learning/routes";
 import { assertRuntimeSchema } from "./release/runtime";
 import { createReadiness } from "./health/readiness";
 import { prisma } from "./lib/prisma";
@@ -76,12 +77,14 @@ app.use("/api/account", express.json({ limit: "8kb" }), accountRouter(prisma, au
 app.use("/api/infrastructure", requireSession);
 app.use("/api/deployments", requireSession);
 app.use("/api/challenges", requireSession);
+app.use("/api/learning", requireSession);
 app.use(express.json());
 
 // Domain routers
 app.use("/api/infrastructure", infrastructureRouter);
 app.use("/api/deployments", deploymentRouter);
 app.use("/api/challenges", challengeRouter);
+app.use("/api/learning", learningRouter);
 app.use((_req, res) => res.status(404).json({ success: false, message: "Resource not found" }));
 
 app.use(errorHandler);
