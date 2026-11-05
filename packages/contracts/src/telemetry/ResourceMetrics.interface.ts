@@ -7,6 +7,7 @@ export interface LbRateLimitMetrics {
 }
 
 export interface ResourceMetrics {
+  queueWork?: import("./AsyncQueueMetrics.interface").QueueWorkMetrics;
   lbAccounting?: import("./LbAccountingMetrics.interface").LbAccountingMetrics;
   gateway?: import("./GatewayMetrics.interface").GatewayMetrics;
   serverless?: import("./ServerlessMetrics.interface").ServerlessMetrics;

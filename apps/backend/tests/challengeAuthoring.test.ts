@@ -14,6 +14,20 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
+  "catalogue-link-flash@1": "43c39cdf15b738830ed6b85a5385b198a017a6e39b4240d033e7d39cb41dd65c",
+  "flash-sale-order-backlog@1": "c84cc970bee937a37136dd716a85724ee589fd8706b82fbd709e64de825b4093",
+  "find-the-denying-rule@1": "e002c76a7884c02b542cad296516b26d3c5eaceaa1f9991adaf490c8b690d7b3",
+  "leave-room-for-firewall-flows@1": "492dca0578609884ed0729140e110de02cfd689831faecaa172f43eca803c705",
+  "choose-a-retry-mitigation@1": "6ca83f5bd42df0ea1f6ad09bb15d139a7b3b15abb3083a93b0e4d7e8b65ef46e",
+  "keep-up-with-the-queue@1": "80c57013d6a2e71fa6f89b77ba17a61ac682995aa376fada131d88cdcca96627",
+  "leave-time-to-acknowledge@1": "545ede03623d81e9654e578a9ce2406689f162bce5543af7ddc84cd0701888e7",
+  "open-one-subscriber@1": "bc2e0e6372b2bde7615fc4daa6b1f7a3c780bbf2b53a57c70d359945a69ba247",
+  "move-reads-off-the-writer@1": "c2e20370cf5c8314c1906e2d80396a6b4cbb7f819be2368f8eb5472525412d1a",
+  "budget-app-database-sessions@1": "8597b0eee650f2bd13dfe1da9ce88c3c1289b6048762925e167cd8ff5f9ac17a",
+  "replicas-do-not-take-writes@1": "0727ed317ec1c9a39550330440641dc35cf9f8b9273a32d5cdf56f2cd8e1b213",
+  "route-around-a-slow-vm@1": "96465260711b0f1ac74f1d62c606146c356721bde0b3843e0423d11b022a3f52",
+  "leave-room-for-a-burst@1": "f7cbf5006543fbbe1739e32bc9f25d2a1761d7ef9227dbdf11afbe5a9e42f9e2",
+  "retrying-a-full-pool@1": "5d8317a0a3d135a19466ec5e1da5b86e7d46bd6a4ffaebbaadaec4bf443ca49c",
   "where-does-the-time-go@1": "58174698cfd975ad0117a8cf029a13293c720115455140058090c0de9814b5e9",
   "waiting-with-spare-cpu@1": "e4fec65bcf80c96d30f239f2c7d6d4d8e3bc9427220c0bf5b40d6c47e8777f37",
   "one-bigger-or-two-smaller@1": "48b7361f4daf5649bf8ea465c307df7b5567bf32254743206e8a6cd80da13a56",
@@ -39,7 +53,7 @@ export const PUBLISHED: Record<string, string> = {
   "headroom-under-cpu-pressure@2": "f72994553399762ecd00739b55aedf34651618f23946f601e25f8ddfcfce9677",
 };
 
-const ANSWERS = { "overall-health": "healthy", "database-health": "healthy", "busiest-type": "Database", "security-clean": "yes",
+const ANSWERS = { "database-admission": "no-denials", "overall-health": "healthy", "database-health": "healthy", "busiest-type": "Database", "security-clean": "yes",
   "scale-out": "no", "baseline-health": "healthy", "survivor-health": "degraded", "target-health": "healthy" };
 const cache = CHALLENGE_VERSIONS.find((d) => d.id === "cache-failure")!;
 const withEdit = (edit: (d: ChallengeDefinition) => ChallengeDefinition) => CHALLENGE_VERSIONS.map((d) => d === cache ? edit(structuredClone(d)) : d);

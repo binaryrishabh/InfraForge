@@ -138,6 +138,138 @@ Research applied to model 1 (not imported as real-cloud guarantees):
   exploration and explanation support inquiry. InfraForge keeps a short prediction, an evidence
   review and a learner-owned one-change hypothesis, without asking for an exact recovery second.
 
+## Scaling labs
+
+`route-around-a-slow-vm@1` compares saved `lbSelection` policies under an unchanged
+CPU quota. `leave-room-for-a-burst@1` scores second 125 during the modeled 120-140s
+burst, and compares catalog CPU headroom with educational monthly estimates.
+Neither terminal-second latency requirement is a whole-run SLO.
+
+`retrying-a-full-pool@1` uses `backend-admission-budget`: sum `acceptedByBackend +
+rejectedByVm` from `lb-accounting/1` for every captured load balancer, divided by
+whole-run `completed + failed + deadlineExceeded + abandoned + inFlight` callers.
+Both counts must cover the evaluation second with current topology measurements.
+Missing counters, a missing LB sample, a mismatched cumulative window, zero offered
+callers or unsafe counter precision leave the requirement unscored. Queue counters
+overlap admissions and are never added. A passing load budget can coexist with a
+saturated service and does not establish sufficient throughput or availability.
+The criterion renders through the existing generic requirement list.
+
+## Database labs
+
+`move-reads-off-the-writer@1` compares explicit primary-only and replica-preferred
+routing with unchanged capacity. Member CPU work and read-source counts show reads
+moving while primary commits continue. Aggregate CPU averages both member budgets,
+so a Healthy database can hide a busy primary. The captured fixed-delay replication
+also records stale reads; lower latency does not establish application consistency.
+
+`budget-app-database-sessions@1` fills lazy per-instance pools during a two-second
+CPU slowdown, then scores spare sessions and completed-request p95 in second 6.
+Changing only the load balancer pool minimum changes initial Model 2 instances;
+this run ends before the first ten-second controller evaluation. The reference
+avoids session refusals but still has whole-run failures and a longer latency tail.
+
+`replicas-do-not-take-writes@1` makes adding a replica an instructive near miss:
+application writes stay on the primary and caller latency is unchanged. The
+db.t3.micro tier reference increases writer capacity; its other tier settings
+change too. A few replica reads are startup probes, not application read traffic.
+
+Reports retain validated optional database populations, replication counters and
+member routing measurements from the terminal capture. The existing live database
+readouts also render them in saved reports. Missing historical counters stay absent;
+malformed counters cannot produce a scored terminal measurement. All three latency
+requirements concern completions in second 6, not a whole-run SLO.
+
+## Asynchronous work labs
+
+`keep-up-with-the-queue@1` compares one worker's authored CPU milliseconds per job
+under steady publishing. `leave-time-to-acknowledge@1` changes only queue visibility
+while retaining the real saved acknowledgement delay. `open-one-subscriber@1`
+opens one queue listener; independent Event Bus dispatch and the other consumer
+remain measurable. These are fixed-horizon labs, not burst-drain or availability tests.
+
+The `queue-work` criterion reads optional `queueWork/1` terminal measurements from
+the named enabled queue, at the exact evaluation second and current topology revision.
+Each capture carries its own `throughSecond`. Originals, deliveries, acknowledgements
+and successful object effects come from separate broker and worker counters; processed
+effects do not acknowledge a delivery. Outstanding work is ready + in flight + scheduled.
+Original ownership reconciles with outstanding + acknowledged + dead-lettered +
+discarded + expired. Unsafe, inconsistent or missing counters stay unscored. Historical
+captures without these counters remain readable and cannot satisfy the new criterion.
+Recorded zero work fails the positive acknowledgement minimum; it is never inferred
+from missing evidence. Generic requirement details display every population and limit.
+
+The cheap current counter accessors expose existing engine state; no queue behavior,
+published definition or historical pin changes. Bus dispatch failures and queue consumer
+redeliveries are different stages and must not be combined into one failure population.
+
+## Security and incident evidence labs
+
+`find-the-denying-rule@1` begins with a failed dependency and a clean exposure scan.
+The learner runs unchanged, reads the saved rule counters, then submits a diagnosis
+prediction in another unchanged attempt before editing. `database-admission` classifies
+incoming database denials from complete fixed direct paths: policy, missing listener,
+other/mixed, or positive delivery without denials. Safe counters and current terminal
+evidence are required. Missing paths, missing counters, helper or replica coverage,
+and no positive admission/delivery population leave the answer Unknown. Rule counters
+identify the policy decision; CPU or health alone do not. The prediction does not
+establish application correctness or explain every caller error.
+
+`leave-room-for-firewall-flows@1` separates tracked admission, current occupancy,
+expiry, policy denials and flow-capacity refusals. Its startup probe refusals coexist
+with successful callers; removing those refusals is not an availability improvement.
+`firewall-admission-budget` requires a named captured firewall, positive admission
+minimum and safe cumulative denial/refusal limits at the exact evaluation second.
+Missing optional security counters remain unscored, never inferred as zero. Omitted
+connection detail rows do not erase exact aggregate counters. These new admission
+exercises require valid scan-stage evidence; historical definitions keep their rules.
+
+Reports now preserve validated optional security measurements and reuse the existing
+security readings. Omitted connection details stay Unknown. These counters were
+already produced by the engine; neither its behavior nor historical definition hashes
+change. No packet-level evidence, provider security certification or availability is
+claimed.
+
+`choose-a-retry-mitigation@1` partitions the app-to-database link at second 2 for two
+seconds. Four, two and five maximum attempts are compared under the identical script.
+Two attempts reduce second-6 completed-request p95 and cumulative admission pressure,
+but also reduce whole-run completions. Five attempts worsen the measured tail and
+queue admissions slightly while finishing an extra caller. Requirements score the
+stated tail only; a Healthy terminal sample is not continuous recovery or MTTR.
+
+There is no DNS-cache lesson here: resolver state is not retained in saved reports.
+Scenario serving-path validation currently refuses a background-worker outage, and
+the intervention catalog has no VM or load-balancer process-outage action. Those
+limits are not bypassed or relabeled as implemented outages.
+
+## Application missions
+
+`catalogue-link-flash@1` combines app burst headroom and logical cache capacity
+on DNS -> LB -> app -> cache -> database. The captured workload uses sixteen
+keys with the existing fixed hot-key pattern and a fourfold arrival burst at
+120-140; popularity itself does not change. Each partial design fails a fixed
+second-125 requirement. Four controlled runs isolate the two necessary settings,
+one at a time. Saved reports prove caller latency, outcomes and database CPU;
+cache hit/miss/eviction counters remain live-only in this report format.
+ID uniqueness, key-value and HTTP redirect semantics, mutable-data correctness,
+arbitrary popularity traces, DNS failover and availability are not verified.
+
+`flash-sale-order-backlog@1` combines worker CPU work and acknowledgement leases.
+The existing upload/publish journey requires the app as its direct entry point;
+it refuses load-balancer polling, so this mission does not claim frontend routing.
+Four events/second become sixteen at 120-140, then four again. Its criteria use
+cumulative queue counters and second-170 health/latency. Controlled engine
+captures at 140 and 170 show excess outstanding work decreasing despite new
+arrivals. The terminal report alone does not prove exact drain time or continuous
+health. Each partial fix still fails; faster processing with an inadequate lease
+can actually increase redeliveries. Payments, stock guarantees, distributed
+transactions, order correctness, exactly-once effects, physical durability and
+dynamic worker scaling are not verified. All capacity inputs are educational.
+
+These missions reuse existing criteria and replay/report paths. No simulator,
+scoring system or attempt history is added. The `missions` lessons list existing
+earlier lessons as advisory prerequisites, with one small lesson file per mission.
+
 ## Check
 
 ```

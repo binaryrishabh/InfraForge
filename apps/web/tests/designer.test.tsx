@@ -62,8 +62,8 @@ test("the inspector exposes what the security scan checks and describes autoscal
   const html = renderToStaticMarkup(<Inspector resource={lb} />);
   expect(html).toContain("Publicly reachable"); expect(html).toContain("Encryption"); expect(html).toContain("Open ports");
   expect(html).toContain('role="switch"');
-  expect(html).toContain("it does not start extra servers at launch");
-  expect(html).toContain("After 5 seconds above the target CPU, one replica is added. It takes 60 seconds to come online.");
+  expect(html).toContain("Model 2 starts the minimum number of instances");
+  expect(html).toContain("Model 2 checks CPU every 10 simulated seconds.");
   // Server rendering reads the store's initial state, so the connection list is empty here.
   expect(html).toContain("Not connected yet.");
 });

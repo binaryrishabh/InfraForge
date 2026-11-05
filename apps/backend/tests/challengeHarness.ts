@@ -25,6 +25,21 @@ import { boundRetriesDuringSlowdownV1 } from "../challenges/definitions/bound-re
 import { whereDoesTheTimeGoV1 } from "../challenges/definitions/where-does-the-time-go/v1";
 import { waitingWithSpareCpuV1 } from "../challenges/definitions/waiting-with-spare-cpu/v1";
 import { oneBiggerOrTwoSmallerV1 } from "../challenges/definitions/one-bigger-or-two-smaller/v1";
+import { routeAroundASlowVmV1 } from "../challenges/definitions/route-around-a-slow-vm/v1";
+import { leaveRoomForABurstV1 } from "../challenges/definitions/leave-room-for-a-burst/v1";
+import { retryingAFullPoolV1 } from "../challenges/definitions/retrying-a-full-pool/v1";
+
+import { moveReadsOffTheWriterV1 } from "../challenges/definitions/move-reads-off-the-writer/v1";
+import { budgetAppDatabaseSessionsV1 } from "../challenges/definitions/budget-app-database-sessions/v1";
+import { replicasDoNotTakeWritesV1 } from "../challenges/definitions/replicas-do-not-take-writes/v1";
+import { keepUpWithTheQueueV1 } from "../challenges/definitions/keep-up-with-the-queue/v1";
+import { leaveTimeToAcknowledgeV1 } from "../challenges/definitions/leave-time-to-acknowledge/v1";
+import { openOneSubscriberV1 } from "../challenges/definitions/open-one-subscriber/v1";
+import { findTheDenyingRuleV1 } from "../challenges/definitions/find-the-denying-rule/v1";
+import { leaveRoomForFirewallFlowsV1 } from "../challenges/definitions/leave-room-for-firewall-flows/v1";
+import { chooseARetryMitigationV1 } from "../challenges/definitions/choose-a-retry-mitigation/v1";
+import { catalogueLinkFlashV1 } from "../challenges/definitions/catalogue-link-flash/v1";
+import { flashSaleOrderBacklogV1 } from "../challenges/definitions/flash-sale-order-backlog/v1";
 
 // Historical report fixtures deliberately keep their published Model 1 conditions.
 export const legacyDefinition = (id: string) => findChallenge(id, 1)!.definition;
@@ -43,6 +58,21 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "catalogue-link-flash": {...catalogueLinkFlashV1.starter!, resources: catalogueLinkFlashV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r.id === "cache" ? {...r, cachePolicy: {version: 2, capacityEntries: 16}} : r)},
+  "flash-sale-order-backlog": {...flashSaleOrderBacklogV1.starter!, resources: flashSaleOrderBacklogV1.starter!.resources.map(r => r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, cpuMsPerJob: 100}} : r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, visibilityTimeoutSeconds: 5}} : r)},
+  "find-the-denying-rule": {...findTheDenyingRuleV1.starter!, resources: findTheDenyingRuleV1.starter!.resources.map(r => r.id === "fw" ? {...r, firewallSettings: {...r.firewallSettings!, rules: r.firewallSettings!.rules.map(rule => rule.id === "quarantine-db" ? {...rule, priority: 20} : rule)}} : r)},
+  "leave-room-for-firewall-flows": {...leaveRoomForFirewallFlowsV1.starter!, resources: leaveRoomForFirewallFlowsV1.starter!.resources.map(r => r.id === "fw" ? {...r, firewallCapacity: {version: 1, maxFlows: 8}} : r)},
+  "choose-a-retry-mitigation": {...chooseARetryMitigationV1.starter!, resources: chooseARetryMitigationV1.starter!.resources.map(r => r.id === "lb" ? {...r, retry: {...r.retry!, maxAttempts: 2}} : r)},
+  "keep-up-with-the-queue": {...keepUpWithTheQueueV1.starter!, resources: keepUpWithTheQueueV1.starter!.resources.map(r => r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, cpuMsPerJob: 50}} : r)},
+  "leave-time-to-acknowledge": {...leaveTimeToAcknowledgeV1.starter!, resources: leaveTimeToAcknowledgeV1.starter!.resources.map(r => r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, visibilityTimeoutSeconds: 5}} : r)},
+  "open-one-subscriber": {...openOneSubscriberV1.starter!, resources: openOneSubscriberV1.starter!.resources.map(r => r.id === "queue" ? {...r, listenerSettings: {version: 1, ports: [5672]}} : r)},
+  "move-reads-off-the-writer": {...moveReadsOffTheWriterV1.starter!, resources: moveReadsOffTheWriterV1.starter!.resources.map(r => r.id === "db" ? {...r, databaseReadRouting: {version: 1, policy: "replica-preferred"}} : r)},
+  "budget-app-database-sessions": {...budgetAppDatabaseSessionsV1.starter!, resources: budgetAppDatabaseSessionsV1.starter!.resources.map(r => r.id === "lb" ? {...r, autoscaling: {...r.autoscaling!, minReplicas: 4}} : r)},
+  "replicas-do-not-take-writes": {...replicasDoNotTakeWritesV1.starter!, resources: replicasDoNotTakeWritesV1.starter!.resources.map(r => r.id === "db" ? {...r, skuId: "db.t3.micro"} : r)},
+  "route-around-a-slow-vm": {...routeAroundASlowVmV1.starter!, resources: routeAroundASlowVmV1.starter!.resources.map(r => r.id === "lb" ? {...r, lbSelection: {version: 1, policy: "least-outstanding"}} : r)},
+  "leave-room-for-a-burst": {...leaveRoomForABurstV1.starter!, resources: leaveRoomForABurstV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.large"} : r)},
+  "leave-room-for-a-burst-large": {...leaveRoomForABurstV1.starter!, resources: leaveRoomForABurstV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r)},
+  "retrying-a-full-pool": {...retryingAFullPoolV1.starter!, resources: retryingAFullPoolV1.starter!.resources.map(r => r.id === "lb" ? {...r, retry: {...r.retry!, maxAttempts: 2}} : r)},
   "where-does-the-time-go": {...whereDoesTheTimeGoV1.starter!, resources: whereDoesTheTimeGoV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.large"} : r)},
   "waiting-with-spare-cpu": {...waitingWithSpareCpuV1.starter!, resources: waitingWithSpareCpuV1.starter!.resources.map(r => r.id === "app" ? {...r, vmExecution: {...r.vmExecution!, workers: 4}} : r)},
   "one-bigger-or-two-smaller": {...oneBiggerOrTwoSmallerV1.starter!, resources: oneBiggerOrTwoSmallerV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r)},

@@ -28,7 +28,7 @@ const fields = [
   ["primaryGeneration", "Primary data generation"],
   ["replicaGeneration", "Replica data generation"],
 ] as const;
-export function DatabaseReplicationReadings({ metrics }: { metrics?: ResourceMetrics }) {
+export function DatabaseReplicationReadings({ metrics }: { metrics?: ResourceMetrics | Pick<ResourceMetrics, "database" | "databaseReplication"> }) {
   const values = metrics?.databaseReplication;
   if (!values) return null;
   const display = (key: typeof fields[number][0]) => {

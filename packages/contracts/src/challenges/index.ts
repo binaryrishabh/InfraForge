@@ -17,10 +17,16 @@ export type ChallengeCriterion =
   | { id: string; kind: "min-app-servers"; label: string; count: number }
   | { id: string; kind: "catalog-sizes"; label: string }
   | { id: string; kind: "security-clean"; label: string }
+  | { id: string; kind: "firewall-admission-budget"; label: string; resourceId: string; minAdmissions: number; maxPolicyDenied: number; maxCapacityRefused: number }
   | { id: string; kind: "monthly-budget"; label: string; maxUsd: number }
   | { id: string; kind: "overall-health"; label: string; allowed: OverallHealth[] }
   | { id: string; kind: "no-saturation"; label: string }
   | { id: string; kind: "terminal-p95"; label: string; maxMs: number }
+  // Queue-owned work at the exact evaluation second; effects and deliveries are distinct.
+  | { id: string; kind: "queue-work"; label: string; resourceId: string; minAcknowledged: number; maxOutstanding: number; maxRedeliveries: number }
+  // Cumulative accepted backend admissions + VM refusals across every captured LB,
+  // divided by cumulative offered caller requests (all outcomes plus in-flight).
+  | { id: string; kind: "backend-admission-budget"; label: string; maxPerOfferedRequest: number }
   | { id: string; kind: "database-healthy"; label: string }
   | { id: string; kind: "database-connections"; label: string; requireSpare?: boolean }
   // Every resource except the experiment's target stays out of saturation and failure.
@@ -31,6 +37,8 @@ export type PredictionQuestion =
   | { id: string; kind: "database-health"; prompt: string }
   | { id: string; kind: "busiest-type"; prompt: string }
   | { id: string; kind: "security-clean"; prompt: string }
+  // Classifies retained incoming database connection counters, not CPU or health.
+  | { id: string; kind: "database-admission"; prompt: string }
   | { id: string; kind: "scale-out"; prompt: string }
   // Overall health at the moment the experiment's fault was applied.
   | { id: string; kind: "baseline-health"; prompt: string }
@@ -48,6 +56,8 @@ export interface PredictionChoice { value: string; label: string }
 /* Fixed answer sets. A busiest-type prediction instead chooses among the
 resource types present in the design being attempted. */
 export const PREDICTION_CHOICES: Record<Exclude<PredictionQuestion["kind"], "busiest-type">, PredictionChoice[]> = {
+  "database-admission": [{value: "policy-denied", label: "Firewall rule denials"}, {value: "no-listener", label: "Missing TCP listener"},
+    {value: "other-or-mixed", label: "Other or mixed admission denials"}, {value: "no-denials", label: "Delivered database traffic without admission denials"}],
   "target-health": [{ value: "healthy", label: "Healthy" }, { value: "degraded", label: "Degraded" },
     { value: "saturated", label: "Saturated" }, { value: "failed", label: "Failed" }],
   "overall-health": [
