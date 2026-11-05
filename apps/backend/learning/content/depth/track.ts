@@ -1,0 +1,8 @@
+import type { LearningTrack } from "@infraforge/contracts/learning";
+import { resourcePressure } from "./resource-pressure";
+
+export const track: LearningTrack = {
+  id: "depth", title: "Resource depth", availability: "available",
+  summary: "Practice intermediate resource policies and explain their measured effects on connected systems.",
+  modules: [resourcePressure],
+};
