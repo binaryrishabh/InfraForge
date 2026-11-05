@@ -102,14 +102,28 @@ await step("a prediction is locked and the real browser run starts and stops at 
   await dialog.getByRole("button", { name: /lock prediction and run/i }).click();
   await page.screenshot({ path: `${SHOTS}/6-running.png` });
   // The run is limited to simulated second 12; wait for the app to show a finished attempt rather than guessing a duration.
-  await page.getByRole("button", { name: /see the result/i }).waitFor({ timeout: 240_000 });
+  await page.getByRole("link", { name: /see the result/i }).waitFor({ timeout: 240_000 });
   await page.screenshot({ path: `${SHOTS}/7a-finished.png` });
-  await page.getByRole("button", { name: /see the result/i }).click();
+  await page.getByRole("link", { name: /see the result/i }).click();
   await page.waitForFunction(() => /Challenge result/.test(document.body.innerText) && /Prediction against the record/.test(document.body.innerText), null, { timeout: 120_000 });
   await page.waitForTimeout(2000);
   await page.screenshot({ path: `${SHOTS}/7-after-run.png` });
   const body = await text();
   return { url: page.url().replace(WEB, "").replace(/(design|run)[=/][^&]*/g, "$1=<id>"), debrief: body.slice(body.indexOf("Challenge result")).slice(0, 1500), buttons: await page.getByRole("button").allInnerTexts(), links: (await page.getByRole("link").allInnerTexts()).slice(0, 14) };
+});
+await step("the recorded result page shows the challenge verdict, the prediction against the record and a way back to the lesson", async () => {
+  await page.waitForURL(/\/runs\//, { timeout: 60_000 }).catch(() => {});
+  const body = await text();
+  await page.screenshot({ path: `${SHOTS}/8-result.png`, fullPage: true });
+  return { url: page.url().replace(WEB, "").replace(/runs\/.*/, "runs/<id>"), verdict: /Every requirement was met|Not every requirement was met/.exec(body)?.[0] ?? null, predictionComparison: /Prediction against the record/.test(body), partOfLesson: /Part of lesson/.test(body), debrief: body.slice(Math.max(0, body.indexOf("Challenge result"))).slice(0, 1200) };
+});
+await step("the lesson now shows the learner's own recorded attempt from the server", async () => {
+  await page.goto(`${WEB}/learn/lessons/where-does-the-time-go`, { waitUntil: "load" });
+  await page.getByRole("heading", { level: 1 }).first().waitFor({ timeout: 30_000 });
+  await page.waitForFunction(() => /Server activity:/.test(document.body.innerText) && !/No recorded attempts/.test(document.body.innerText), null, { timeout: 30_000 });
+  const body = await text();
+  await page.screenshot({ path: `${SHOTS}/9-lesson-after.png`, fullPage: true });
+  return { activity: /Server activity: ([^·]*)/.exec(body)?.[1]?.trim(), whatRunShowed: body.slice(Math.max(0, body.search(/latest (recorded )?attempt|What (did )?your run/i))).slice(0, 700) };
 });
 await step("keyboard: lesson page can be operated with Tab only", async () => {
   await page.goto(`${WEB}/learn/lessons/client-and-server`, { waitUntil: "load" });
