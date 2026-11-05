@@ -30,6 +30,7 @@ COPY apps/backend/browserRuns ./apps/backend/browserRuns/
 COPY apps/backend/replay ./apps/backend/replay/
 COPY apps/backend/capabilities ./apps/backend/capabilities/
 COPY apps/backend/challenges ./apps/backend/challenges/
+COPY apps/backend/learning ./apps/backend/learning/
 COPY apps/backend/scripts ./apps/backend/scripts/
 COPY apps/backend/lib/prisma.ts ./apps/backend/lib/
 COPY apps/backend/routes ./apps/backend/routes/
