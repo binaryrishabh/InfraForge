@@ -102,7 +102,10 @@ await step("a prediction is locked and the real browser run starts and stops at 
   await dialog.getByRole("button", { name: /lock prediction and run/i }).click();
   await page.screenshot({ path: `${SHOTS}/6-running.png` });
   // The run is limited to simulated second 12; wait for the app to show a finished attempt rather than guessing a duration.
-  await page.waitForFunction(() => /Challenge result/.test(document.body.innerText) && /Prediction against the record/.test(document.body.innerText), null, { timeout: 240_000 });
+  await page.getByRole("button", { name: /see the result/i }).waitFor({ timeout: 240_000 });
+  await page.screenshot({ path: `${SHOTS}/7a-finished.png` });
+  await page.getByRole("button", { name: /see the result/i }).click();
+  await page.waitForFunction(() => /Challenge result/.test(document.body.innerText) && /Prediction against the record/.test(document.body.innerText), null, { timeout: 120_000 });
   await page.waitForTimeout(2000);
   await page.screenshot({ path: `${SHOTS}/7-after-run.png` });
   const body = await text();
