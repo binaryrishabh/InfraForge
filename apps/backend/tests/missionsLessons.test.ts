@@ -16,8 +16,8 @@ test("missions register two calibrated labs with existing cross-resource prerequ
     expect(lesson.prerequisites.length).toBeGreaterThanOrEqual(2);
     expect(lesson.prerequisites.every(id => registered.some(l => l.id === id && l.trackId !== "missions"))).toBe(true);
     expect(lesson.limitations.length).toBeGreaterThan(2); expect(lesson.limitations.every(t => t.trim().length > 0)).toBe(true);
-    expect(lesson.experiment!.prediction.trim().length).toBeGreaterThan(0); expect(lesson.experiment!.evidenceToInspect.length).toBeGreaterThan(1);
-    expect(lesson.followUp.trim().length).toBeGreaterThan(0);
+    expect((lesson.experiment?.prediction?.trim().length ?? 0)).toBeGreaterThan(0); expect((lesson.experiment?.evidenceToInspect?.length ?? 0)).toBeGreaterThan(1);
+    expect((lesson.followUp?.trim().length ?? 0)).toBeGreaterThan(0);
     const d = latestChallenge(lesson.experiment!.challengeId)!.definition;
     expect(d.engine).toBe("2"); expect(d.version).toBe(1); expect(d.hints).toHaveLength(3); expect(REFERENCE[d.id]).toBeDefined();
     expect(lesson.check!.choices.some(c => c.id === lesson.check!.correctChoiceId)).toBe(true);
