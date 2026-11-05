@@ -12,10 +12,10 @@ No new progress store, attempt history, evaluator or simulator is needed.
 (`viewModels.ts`). Adding a state without a case fails the inventory gate and
 test typecheck. The gate has a negative test that adds an untested state.
 
-| Route/surface | States to preserve |
-| --- | --- |
 The app pages live at `/learn` and `/learn/lessons/:lessonId`. `/learning` is the public marketing page and must keep its address; the API stays at `/api/learning`.
 
+| Route/surface | States to preserve |
+| --- | --- |
 | `/learn` | Loading; failure with retry; results; no filter matches; empty catalog; draft lesson/module/track hidden; all server activity labels. |
 | `/learn/lessons/:lessonId` | Loading; missing/draft/unavailable lesson with retry and Back to Learning; three lesson kinds; available/busy/unavailable lab; absent/unanswered/correct/incorrect check; unused/saved/denied device storage; advisory prerequisite links or explicit missing references. |
 | Lesson's secondary data | Catalog links loading or error with their own retry while the lesson remains usable; absent/loading/error/retained latest report; absent guided review; eligible comparison or no eligible pair; matching lab summary or no summary; missing measurements remain Unknown. |
