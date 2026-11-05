@@ -59,6 +59,21 @@ scores. The `first-runs` module is intentionally reserved for Lane B's runnable 
 
 ## Checks
 
+Run `bun run check:learning` from the root before publishing content. Like
+`check:challenges`, it runs authoring tests included in the existing backend CI
+`test` lane. It prints track, current lesson, executable lab and archive counts,
+validates all content (including drafts and archives), and refuses missing challenges.
+
+`reviewedChallenges.ts` records the challenge id, version and spec hash reviewed for
+each executable `lessonId@contentVersion`. Current labs must match the latest rules.
+A challenge version or hash moving since that contentVersion is a hard failure:
+**needs a human look**. Read the new definition, predictions, evidence and limitations;
+publish a new reviewed contentVersion and retain the old content and review record.
+Do not refresh an old review record to silence the failure. Archived lessons keep
+their original published challenge identity, which must remain resolvable.
+The gate's own tests deliberately break content, references and review identities,
+and introduce a new challenge version to prove these failures.
+
 ```text
 bun --no-env-file test apps/backend/tests/learningContent.test.ts scripts/tests/dockerfile-folders.test.ts
 bun --no-env-file scripts/check-boundaries.ts
