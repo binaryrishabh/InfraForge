@@ -242,6 +242,34 @@ Scenario serving-path validation currently refuses a background-worker outage, a
 the intervention catalog has no VM or load-balancer process-outage action. Those
 limits are not bypassed or relabeled as implemented outages.
 
+## Application missions
+
+`catalogue-link-flash@1` combines app burst headroom and logical cache capacity
+on DNS -> LB -> app -> cache -> database. The captured workload uses sixteen
+keys with the existing fixed hot-key pattern and a fourfold arrival burst at
+120-140; popularity itself does not change. Each partial design fails a fixed
+second-125 requirement. Four controlled runs isolate the two necessary settings,
+one at a time. Saved reports prove caller latency, outcomes and database CPU;
+cache hit/miss/eviction counters remain live-only in this report format.
+ID uniqueness, key-value and HTTP redirect semantics, mutable-data correctness,
+arbitrary popularity traces, DNS failover and availability are not verified.
+
+`flash-sale-order-backlog@1` combines worker CPU work and acknowledgement leases.
+The existing upload/publish journey requires the app as its direct entry point;
+it refuses load-balancer polling, so this mission does not claim frontend routing.
+Four events/second become sixteen at 120-140, then four again. Its criteria use
+cumulative queue counters and second-170 health/latency. Controlled engine
+captures at 140 and 170 show excess outstanding work decreasing despite new
+arrivals. The terminal report alone does not prove exact drain time or continuous
+health. Each partial fix still fails; faster processing with an inadequate lease
+can actually increase redeliveries. Payments, stock guarantees, distributed
+transactions, order correctness, exactly-once effects, physical durability and
+dynamic worker scaling are not verified. All capacity inputs are educational.
+
+These missions reuse existing criteria and replay/report paths. No simulator,
+scoring system or attempt history is added. The `missions` lessons list existing
+earlier lessons as advisory prerequisites, with one small lesson file per mission.
+
 ## Check
 
 ```

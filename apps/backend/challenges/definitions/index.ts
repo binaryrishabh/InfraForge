@@ -35,6 +35,8 @@ import { openOneSubscriberV1 } from "./open-one-subscriber/v1";
 import { findTheDenyingRuleV1 } from "./find-the-denying-rule/v1";
 import { leaveRoomForFirewallFlowsV1 } from "./leave-room-for-firewall-flows/v1";
 import { chooseARetryMitigationV1 } from "./choose-a-retry-mitigation/v1";
+import { catalogueLinkFlashV1 } from "./catalogue-link-flash/v1";
+import { flashSaleOrderBacklogV1 } from "./flash-sale-order-backlog/v1";
 
 /* Every published version of every challenge, calibrated against simulation model
 "1" and catalog "2026-08". Versions are immutable and never removed: historical
@@ -77,4 +79,6 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   findTheDenyingRuleV1,
   leaveRoomForFirewallFlowsV1,
   chooseARetryMitigationV1,
+  catalogueLinkFlashV1,
+  flashSaleOrderBacklogV1,
 ];
