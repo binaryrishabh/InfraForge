@@ -66,3 +66,65 @@ bun --no-env-file scripts/check-boundaries.ts
 
 When adding files, keep `apps/backend/Dockerfile` and `.dockerignore` in sync. The packaging
 test checks every learning TypeScript file, including nested content and future version files.
+
+## Learner progress and API
+
+`GET /api/learning` returns visible tracks/modules, current lesson metadata, lab-only
+`progress`, and `suggestions` (`nextLesson`, `continue`, `reviewCandidates`).
+`GET /api/learning/lessons/:id` returns the latest full lesson, its lab progress (otherwise
+`null`), and its linked challenge summary (otherwise `null`). Unknown ids and drafts,
+including content under draft parents, return 404. Both routes use the same session guard
+as challenges. Client-supplied owner/version query parameters do not select another owner
+or an archived lesson. Prerequisites remain advice, never access controls.
+
+`attempts.ts` queries existing Deployments by authenticated owner and visible challenge ids,
+using challenge history's `reportSelection` with comparison's full action projection and
+durable action count. It reads all matching attempts: a recent-history limit must not erase
+a previous requirements-met result. There is no new table, migration, saved score or attempt
+store. `progress.ts` filters ownership again before evaluating any row. Published challenges,
+hashes, goldens and lesson text are unchanged.
+
+Progress is a pure derivation through `learningAttempt` (the existing report/evaluator):
+
+- `not-started`: no saved attempt. `attempted`: at least one saved attempt, with no proven
+  improvement or current-version requirements-met result. Active, missing and unavailable
+  evidence counts as activity, never as requirements met.
+- `requirements-met`: some evaluated attempt met the **current** challenge version. The
+  evaluator checks that attempt's recorded version, hash and evidence; no old run is
+  reinterpreted under new rules. `fromEarlierVersion` records any older-version activity;
+  `earlierVersionRequirementsMet` preserves earlier met results for review suggestions.
+- `improved-after-attempt`: an evaluated attempt explicitly recorded as an improvement of
+  its earlier, same-owner source met more raw requirements, with equal requirement totals,
+  under `classifyComparison`'s same challenge conditions. This is a within-version recorded
+  difference, not a mastery score, causal conclusion or general ranking. Meeting the current
+  requirements takes precedence. `improvement` identifies the source and later run.
+- `predictionReviewed` means a prediction was recorded (with its submission time), and that
+  attempt was judged met/not-met. It says nothing about prediction correctness or whether a
+  person opened a review. `sameConditionsComparison` means an inactive pair exists which the
+  existing classifier calls same challenge conditions; it does not assert someone viewed
+  Compare, that outcomes are known, or that all causal-comparison checks pass.
+- `lastRunId`/`lastAttemptAt` identify the most recently started attempt (created time, then
+  id). `lastActivityAt` is the latest saved update across attempts, not a measurement time.
+
+The pure selector exported by `@infraforge/contracts/learning` follows track/module/lesson order, skips current requirements-met labs
+and device-marked readings, and advises lessons whose prerequisites were at least attempted
+or marked read. Continue uses the most recent real attempt's lesson if it is not met,
+otherwise next. Review includes attempted/unmet labs and earlier met versions needing a
+current attempt. Every suggestion explains these facts; there is no elapsed-time decay.
+
+The server has no reading/conceptual completion evidence and accepts no reading marks.
+Consequently its suggestions start at the first unread prerequisite when none can be known.
+A later web caller can supply device-local marks to `selectLearningSuggestions`; those marks
+never enter server progress. Foundations currently contains only reading/conceptual content,
+so the production catalog legitimately has an empty progress list until lab content is registered.
+The focused tests inject validated test-only labs linked to real published challenges.
+
+```text
+bun --no-env-file test apps/backend/tests/learningProgress.test.ts apps/backend/tests/learningRoutes.test.ts
+```
+
+The HTTP test uses real engine-produced attempt rows, the production reader/query shape,
+report evaluator, comparison classifier, router and session middleware. Its session lookup
+and database are stand-ins isolated in a child process; it does not establish real database
+persistence or Better Auth cookie validation. The optional integration test uses an already
+prepared disposable API/worker and real sessions, without applying migrations itself.
