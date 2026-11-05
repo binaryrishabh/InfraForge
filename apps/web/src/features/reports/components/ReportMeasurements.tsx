@@ -1,3 +1,5 @@
+import { DatabaseReplicationReadings } from "@/features/live/DatabaseReplicationReadings";
+import { DataDeliveryReadings } from "@/features/live/DataDeliveryReadings";
 import { ServerlessReadings } from "@/features/live/ServerlessReadings";
 import { SchedulerReadings } from "@/features/live/SchedulerReadings";
 import type { RunReport } from "@infraforge/contracts/reports";
@@ -64,7 +66,7 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
                   </li>
                 ))}
               </ul>
-              {checkpoint.resources.filter(r => r.serverless || r.scheduler || r.eventBus || r.gateway || r.lbAccounting).map(r => <div key={r.id} className="mt-4"><h3 className="font-semibold">{r.id}</h3>{r.serverless && <ServerlessReadings metrics={r.serverless} />}{r.scheduler && <SchedulerReadings metrics={r.scheduler} />}{r.eventBus && <EventBusReadings metrics={r.eventBus} />}{r.gateway && <GatewayReadings metrics={r.gateway} />}{r.lbAccounting && <LbAccountingReadings metrics={r.lbAccounting} />}</div>)}
+              {checkpoint.resources.filter(r => r.database || r.databaseReplication || r.serverless || r.scheduler || r.eventBus || r.gateway || r.lbAccounting).map(r => <div key={r.id} className="mt-4"><h3 className="font-semibold">{r.id}</h3>{r.database && <DataDeliveryReadings type="Database" metrics={r} />}{r.databaseReplication && <DatabaseReplicationReadings metrics={r} />}{r.serverless && <ServerlessReadings metrics={r.serverless} />}{r.scheduler && <SchedulerReadings metrics={r.scheduler} />}{r.eventBus && <EventBusReadings metrics={r.eventBus} />}{r.gateway && <GatewayReadings metrics={r.gateway} />}{r.lbAccounting && <LbAccountingReadings metrics={r.lbAccounting} />}</div>)}
               {report.guidedReview && <a href="#guided-review" className="mt-3 inline-block text-sm font-medium text-accent underline">Back to guided review</a>}
             </div>
           )}

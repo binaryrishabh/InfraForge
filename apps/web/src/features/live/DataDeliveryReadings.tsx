@@ -5,7 +5,7 @@ const database = [["serving", "Serving queries"], ["waiting", "Queries waiting f
 const cache = [["hits", "Cache hits"], ["misses", "Cache misses"], ["expirations", "Cache expirations"], ["evictions", "Cache evictions"], ["coalescedWaiters", "Coalesced waiters (application helpers)"]] as const;
 const cdn = [["hits", "CDN hits"], ["misses", "CDN misses"], ["originRequests", "Origin requests"], ["fills", "CDN fills"], ["expirations", "CDN expirations"], ["evictions", "CDN evictions"], ["coalesced", "Coalesced requests"], ["cdn-waiter-capacity", "CDN waiter capacity refusals"], ["purged", "Purged entries"], ["staleFills", "Stale fills prevented"]] as const;
 
-export function DataDeliveryReadings({ type, metrics }: { type: ResourceType; metrics?: ResourceMetrics }) {
+export function DataDeliveryReadings({ type, metrics }: { type: ResourceType; metrics?: ResourceMetrics | Pick<ResourceMetrics, "database" | "cache" | "cdn"> }) {
   const rows = type === "Database" ? database : type === "Cache" ? cache : type === "CDN" ? cdn : undefined;
   const values = type === "Database" ? metrics?.database : type === "Cache" ? metrics?.cache : metrics?.cdn;
   if (!rows) return null;

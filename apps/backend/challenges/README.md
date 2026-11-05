@@ -155,6 +155,31 @@ overlap admissions and are never added. A passing load budget can coexist with a
 saturated service and does not establish sufficient throughput or availability.
 The criterion renders through the existing generic requirement list.
 
+## Database labs
+
+`move-reads-off-the-writer@1` compares explicit primary-only and replica-preferred
+routing with unchanged capacity. Member CPU work and read-source counts show reads
+moving while primary commits continue. Aggregate CPU averages both member budgets,
+so a Healthy database can hide a busy primary. The captured fixed-delay replication
+also records stale reads; lower latency does not establish application consistency.
+
+`budget-app-database-sessions@1` fills lazy per-instance pools during a two-second
+CPU slowdown, then scores spare sessions and completed-request p95 in second 6.
+Changing only the load balancer pool minimum changes initial Model 2 instances;
+this run ends before the first ten-second controller evaluation. The reference
+avoids session refusals but still has whole-run failures and a longer latency tail.
+
+`replicas-do-not-take-writes@1` makes adding a replica an instructive near miss:
+application writes stay on the primary and caller latency is unchanged. The
+db.t3.micro tier reference increases writer capacity; its other tier settings
+change too. A few replica reads are startup probes, not application read traffic.
+
+Reports retain validated optional database populations, replication counters and
+member routing measurements from the terminal capture. The existing live database
+readouts also render them in saved reports. Missing historical counters stay absent;
+malformed counters cannot produce a scored terminal measurement. All three latency
+requirements concern completions in second 6, not a whole-run SLO.
+
 ## Check
 
 ```

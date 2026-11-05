@@ -26,6 +26,10 @@ import { routeAroundASlowVmV1 } from "./route-around-a-slow-vm/v1";
 import { leaveRoomForABurstV1 } from "./leave-room-for-a-burst/v1";
 import { retryingAFullPoolV1 } from "./retrying-a-full-pool/v1";
 
+import { moveReadsOffTheWriterV1 } from "./move-reads-off-the-writer/v1";
+import { budgetAppDatabaseSessionsV1 } from "./budget-app-database-sessions/v1";
+import { replicasDoNotTakeWritesV1 } from "./replicas-do-not-take-writes/v1";
+
 /* Every published version of every challenge, calibrated against simulation model
 "1" and catalog "2026-08". Versions are immutable and never removed: historical
 attempts are judged by exactly the version that created them. Order sets the
@@ -58,4 +62,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   routeAroundASlowVmV1,
   leaveRoomForABurstV1,
   retryingAFullPoolV1,
+  moveReadsOffTheWriterV1,
+  budgetAppDatabaseSessionsV1,
+  replicasDoNotTakeWritesV1,
 ];

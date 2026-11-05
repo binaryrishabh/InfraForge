@@ -29,6 +29,10 @@ import { routeAroundASlowVmV1 } from "../challenges/definitions/route-around-a-s
 import { leaveRoomForABurstV1 } from "../challenges/definitions/leave-room-for-a-burst/v1";
 import { retryingAFullPoolV1 } from "../challenges/definitions/retrying-a-full-pool/v1";
 
+import { moveReadsOffTheWriterV1 } from "../challenges/definitions/move-reads-off-the-writer/v1";
+import { budgetAppDatabaseSessionsV1 } from "../challenges/definitions/budget-app-database-sessions/v1";
+import { replicasDoNotTakeWritesV1 } from "../challenges/definitions/replicas-do-not-take-writes/v1";
+
 // Historical report fixtures deliberately keep their published Model 1 conditions.
 export const legacyDefinition = (id: string) => findChallenge(id, 1)!.definition;
 export const definition = (id: string) => latestChallenge(id)!.definition;
@@ -46,6 +50,9 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "move-reads-off-the-writer": {...moveReadsOffTheWriterV1.starter!, resources: moveReadsOffTheWriterV1.starter!.resources.map(r => r.id === "db" ? {...r, databaseReadRouting: {version: 1, policy: "replica-preferred"}} : r)},
+  "budget-app-database-sessions": {...budgetAppDatabaseSessionsV1.starter!, resources: budgetAppDatabaseSessionsV1.starter!.resources.map(r => r.id === "lb" ? {...r, autoscaling: {...r.autoscaling!, minReplicas: 4}} : r)},
+  "replicas-do-not-take-writes": {...replicasDoNotTakeWritesV1.starter!, resources: replicasDoNotTakeWritesV1.starter!.resources.map(r => r.id === "db" ? {...r, skuId: "db.t3.micro"} : r)},
   "route-around-a-slow-vm": {...routeAroundASlowVmV1.starter!, resources: routeAroundASlowVmV1.starter!.resources.map(r => r.id === "lb" ? {...r, lbSelection: {version: 1, policy: "least-outstanding"}} : r)},
   "leave-room-for-a-burst": {...leaveRoomForABurstV1.starter!, resources: leaveRoomForABurstV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.large"} : r)},
   "leave-room-for-a-burst-large": {...leaveRoomForABurstV1.starter!, resources: leaveRoomForABurstV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r)},

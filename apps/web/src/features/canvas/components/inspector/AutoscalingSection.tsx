@@ -23,7 +23,7 @@ export function AutoscalingSection({ resource, disabled }: { resource: Resource;
   return (
     <InspectorSection title="Autoscaling pool">
       <Switch checked={enabled} disabled={disabled} onChange={(value) => commit({ enabled: value })} label="Add replicas under load"
-        description={`After ${A.HOT_TICKS} seconds above the target CPU, one replica is added. It takes ${A.PROVISION_TICKS} seconds to come online.`} />
+        description="Model 2 checks CPU every 10 simulated seconds. Added instances need modeled provisioning and startup time." />
       {enabled && (
         <div className="mt-4 flex flex-col gap-4">
           <div>
@@ -49,7 +49,7 @@ export function AutoscalingSection({ resource, disabled }: { resource: Resource;
             )}</Field>
           </div>
           <p className="text-xs leading-relaxed text-ink-3">
-            The maximum is capped at {A.DEFAULT_MAX_CAP}. The minimum only limits scale-down: it does not start extra servers at launch.
+            The maximum is capped at {A.DEFAULT_MAX_CAP}. Model 2 starts the minimum number of instances and uses it as the scale-down floor.
           </p>
         </div>
       )}
