@@ -14,6 +14,9 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
+  "where-does-the-time-go@1": "58174698cfd975ad0117a8cf029a13293c720115455140058090c0de9814b5e9",
+  "waiting-with-spare-cpu@1": "e4fec65bcf80c96d30f239f2c7d6d4d8e3bc9427220c0bf5b40d6c47e8777f37",
+  "one-bigger-or-two-smaller@1": "48b7361f4daf5649bf8ea465c307df7b5567bf32254743206e8a6cd80da13a56",
   "bound-retries-during-slowdown@1": "4325607f00dad696daf8bbf3da2c09891c137aaa9c984a8a3f6be9d8cf2cf4c2",
   "after-the-cache-returns@2": "3161f592b368a34b7b16d0c3804d08cae4ca44ecc9c70315ed83d70dd300bcce",
   "after-the-cache-returns@1": "4511ec082bcd0127140ea1689ccdc0fb5179362f891645ccef6008dde0e645e6",
