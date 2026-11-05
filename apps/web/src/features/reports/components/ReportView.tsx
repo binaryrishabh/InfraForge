@@ -24,6 +24,7 @@ import { STAGE_LABEL, STAGE_STATUS_LABEL } from "../labels";
 import { ReplayStage } from "@/features/replay/ReplayStage";
 import { NextExperiment } from "@/features/replay/NextExperiment";
 import { LiveRunNotice } from "./LiveRunNotice";
+import { ReportLesson } from "@/features/learning/ReportLesson";
 
 const active = isActiveRunStatus;
 
@@ -79,6 +80,7 @@ export function ReportView({ report, onStopped }: { report: RunReport; onStopped
         {run.status === "live" && <LiveRunNotice key={run.id} id={run.id} onStopped={onStopped} />}
         {!run.hasReportData && <Notice className="mt-4" tone="warn">No usable stages, events or checkpoint data were retained for this run.</Notice>}
       </header>
+      {report.challenge && <ReportLesson challengeId={report.challenge.challengeId} />}
       {run.learning && <aside aria-label="Your experiment hypothesis" className="mt-5 border-l-2 border-accent pl-4 text-sm">
         <p className="font-semibold">{run.learning.intent === "repeat" ? "Deliberate repeat" : "Improvement experiment"}</p><p className="mt-1">Your hypothesis: {run.learning.hypothesis}</p>
         {run.learning.sourceRunId ? <Link to={`/runs/${run.learning.sourceRunId}`} className="mt-1 inline-block text-accent underline">Read the source attempt</Link> : <p className="mt-1 text-ink-3">The source attempt was deleted. Your hypothesis is retained; its comparison is unavailable.</p>}

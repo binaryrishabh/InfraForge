@@ -7,6 +7,8 @@ import { Loading, Notice, Page, PageHeader, Section } from "@/ui/Page";
 import { Tag } from "@/ui/Tag";
 import { activityLabel, availableLessons, discoverLessons, discoveryTerms, EMPTY_FILTERS, KIND_LABEL, lessonMode, type LearningFilters } from "./discovery";
 import { useLearningCatalog } from "./hooks";
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import { LearningFocus } from "./LearningFocus";
 
 export interface LearningRequest<T> { data: T | null; loading: boolean; error: string | null; retry(): void }
 export function LearningFailure({ error, retry }: { error: string; retry(): void }) {
@@ -28,8 +30,19 @@ export function LearningList({ data, loading, error, retry, filters, onFilters }
   if (error || !data) return <LearningFailure error={error ?? "Learning could not be loaded."} retry={retry} />;
   const lessons = discoverLessons(data, filters), ids = new Set(lessons.map((l) => l.id));
   const resources = [...new Set(availableLessons(data).flatMap((l) => discoveryTerms(l, data).resources))].sort();
+  const visible = new Map(availableLessons(data).map((l) => [l.id, l]));
+  const reviews = data.suggestions.reviewCandidates.flatMap((suggestion) => {
+    const lesson = visible.get(suggestion.lessonId);
+    return lesson ? [{ lesson, reason: suggestion.reason }] : [];
+  });
   const change = (key: keyof LearningFilters, value: string) => onFilters({ ...filters, [key]: value });
   return <>
+    {reviews.length > 0 && <Section title="Worth revisiting" className="mt-6">
+      <ul>{reviews.map(({ lesson, reason }) => <li key={lesson.id} className="mt-3">
+        <Link className="text-accent hover:underline" to={`/learning/lessons/${encodeURIComponent(lesson.id)}`}>{lesson.title}</Link>
+        <p className="mt-1 text-sm text-ink-2">{reason}</p>
+      </li>)}</ul>
+    </Section>}
     <fieldset aria-describedby="learning-filter-help" className="mt-6">
       <legend className="font-semibold">Find a lesson</legend>
       <p id="learning-filter-help" className="mt-2 text-sm text-ink-3">Filter by level, kind, resource topic or track. Prerequisites are suggestions; every available lesson can be opened.</p>
@@ -57,10 +70,15 @@ export function LearningList({ data, loading, error, retry, filters, onFilters }
   </>;
 }
 
-export function LearningPage() {
+function LearningSession() {
   const request = useLearningCatalog();
   const [filters, setFilters] = useState<LearningFilters>({ ...EMPTY_FILTERS });
-  return <Page><PageHeader title="Learning" lede="Follow a request, reason about a design, then try a linked challenge lab when one is available. Reading marks and check answers stay on this device; server activity comes from recorded attempts." />
+  return <LearningFocus destination="learning"><Page><PageHeader title="Learning" lede="Follow a request, reason about a design, then try a linked challenge lab when one is available. Reading marks and check answers stay on this device; server activity comes from recorded attempts." />
     <LearningList {...request} filters={filters} onFilters={setFilters} />
-  </Page>;
+  </Page></LearningFocus>;
+}
+
+export function LearningPage() {
+  const owner = useAuthStore((s) => s.user?.id);
+  return <LearningSession key={owner} />;
 }

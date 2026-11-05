@@ -13,7 +13,7 @@ import { Field, Textarea } from "@/ui/Field";
 import { Notice } from "@/ui/Page";
 import type { ChallengeImprovementContext } from "../learningContext";
 
-export function BeginImprovement({ report }: { report: RunReport }) {
+export function BeginImprovement({ report, suggestion }: { report: RunReport; suggestion?: string }) {
   const [open, setOpen] = useState(false), [hypothesis, setHypothesis] = useState("");
   const [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null), [replace, setReplace] = useState(false);
   const inFlight = useRef(false), navigate = useNavigate();
@@ -51,8 +51,9 @@ export function BeginImprovement({ report }: { report: RunReport }) {
       footer={<><Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>Keep reading</Button><Button type="submit" form="learning-plan" variant="primary" loading={busy} disabled={!hypothesis.trim() || active || (unsaved && !replace)}>Open experiment workspace</Button></>}>
       <form id="learning-plan" onSubmit={submit} className="space-y-4">
         <Field label="What one change do you want to test, and what do you expect?" hint={`${hypothesis.length}/${HYPOTHESIS_MAX} characters. You choose the hypothesis; InfraForge does not supply a solution.`}>
-          {({ id, describedBy }) => <Textarea id={id} aria-describedby={describedBy} value={hypothesis} onChange={(e) => setHypothesis(e.target.value)} maxLength={HYPOTHESIS_MAX} required rows={4} />}
+          {({ id, describedBy }) => <Textarea id={id} aria-describedby={describedBy} value={hypothesis} placeholder={suggestion} onChange={(e) => setHypothesis(e.target.value)} maxLength={HYPOTHESIS_MAX} required rows={4} />}
         </Field>
+        {suggestion && <p className="text-sm text-ink-3">Lesson suggestion (a hint only): {suggestion} Write your own hypothesis above.</p>}
         <p className="text-xs text-ink-3">Source attempt: {report.run.id}. Challenge version, workload, seed, scheduled fault and evaluation time stay fixed. Predict again before the new run.</p>
         {active && <Notice tone="warn">A run is still open in the workspace. Finish or leave it before opening another design.</Notice>}
         {unsaved && <label className="flex items-start gap-2 text-sm text-ink-2"><input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} />Replace my current unsaved canvas. Those edits will be lost.</label>}

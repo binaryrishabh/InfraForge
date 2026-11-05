@@ -11,7 +11,7 @@ import { ActionTimeline } from "./ActionTimeline";
 import { ReportSection, Statement } from "./ReportSection";
 import { runKind, runStatus } from "../runKind";
 import { workloadChangeLines } from "../workloadChange";
-import { STAGE_LABEL, STAGE_STATUS_LABEL } from "../labels";
+import { challengeConditionsLabel, STAGE_LABEL, STAGE_STATUS_LABEL } from "../labels";
 import { DesignChangeSummary } from "@/features/challenges/components/DesignChangeSummary";
 
 const HEADLINE: Record<RunComparison["headline"], { title: string; body: string }> = {
@@ -70,9 +70,7 @@ export function CompareView({ comparison: c }: { comparison: RunComparison }) {
             <dd className="text-ink"><ul className="list-disc pl-5">{workloadChangeLines(c.starting.workload).map(line => <li key={line}>{line}</li>)}</ul>
               <span className="text-ink-2">The design, resource settings, seed, model and catalog, and every other workload setting are the same in both runs.</span>
               {c.conduct.code !== "same" && <span className="mt-1 block font-medium text-warn">The recorded actions differ too, for example a fault in one run and not the other, so the traffic change alone does not explain the differences below.</span>}</dd></div>}
-          {c.challengeConditions && <div className="sm:col-span-3"><dt className="text-xs text-ink-3">Challenge conditions</dt><dd className="text-ink">{c.challengeConditions === "same"
-            ? "Same challenge version, rules, workload, seed, evaluation second and scheduled fault."
-            : "Different challenge versions or recorded conditions; their results were judged by different rules."}</dd></div>}
+          {c.challengeConditions && <div className="sm:col-span-3"><dt className="text-xs text-ink-3">Challenge conditions</dt><dd className="text-ink">{challengeConditionsLabel(c.challengeConditions)}</dd></div>}
         </dl>
         <p className="mt-2 text-xs text-ink-3">{c.conduct.speedNote}</p>
         {!c.available && <p role="status" className="mt-2 text-sm text-warn">{c.unavailableReason}</p>}

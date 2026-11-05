@@ -59,6 +59,21 @@ scores. The `first-runs` module is intentionally reserved for Lane B's runnable 
 
 ## Checks
 
+Run `bun run check:learning` from the root before publishing content. Like
+`check:challenges`, it runs authoring tests included in the existing backend CI
+`test` lane. It prints track, current lesson, executable lab and archive counts,
+validates all content (including drafts and archives), and refuses missing challenges.
+
+`reviewedChallenges.ts` records the challenge id, version and spec hash reviewed for
+each executable `lessonId@contentVersion`. Current labs must match the latest rules.
+A challenge version or hash moving since that contentVersion is a hard failure:
+**needs a human look**. Read the new definition, predictions, evidence and limitations;
+publish a new reviewed contentVersion and retain the old content and review record.
+Do not refresh an old review record to silence the failure. Archived lessons keep
+their original published challenge identity, which must remain resolvable.
+The gate's own tests deliberately break content, references and review identities,
+and introduce a new challenge version to prove these failures.
+
 ```text
 bun --no-env-file test apps/backend/tests/learningContent.test.ts scripts/tests/dockerfile-folders.test.ts
 bun --no-env-file scripts/check-boundaries.ts
@@ -115,9 +130,9 @@ current attempt. Every suggestion explains these facts; there is no elapsed-time
 The server has no reading/conceptual completion evidence and accepts no reading marks.
 Consequently its suggestions start at the first unread prerequisite when none can be known.
 A later web caller can supply device-local marks to `selectLearningSuggestions`; those marks
-never enter server progress. Foundations currently contains only reading/conceptual content,
-so the production catalog legitimately has an empty progress list until lab content is registered.
-The focused tests inject validated test-only labs linked to real published challenges.
+never enter server progress. Foundations currently includes three executable first-run labs
+alongside ten reading/conceptual lessons. Their progress comes from their linked published
+challenges. Some focused tests also inject validated test-only labs for refusal cases.
 
 ```text
 bun --no-env-file test apps/backend/tests/learningProgress.test.ts apps/backend/tests/learningRoutes.test.ts
@@ -128,3 +143,38 @@ report evaluator, comparison classifier, router and session middleware. Its sess
 and database are stand-ins isolated in a child process; it does not establish real database
 persistence or Better Auth cookie validation. The optional integration test uses an already
 prepared disposable API/worker and real sessions, without applying migrations itself.
+
+## Journey proof
+
+```text
+cd apps/web
+bun --no-env-file --no-install test ./tests/learnerJourney.test.tsx ./tests/learningPages.test.tsx ./tests/learningLaunch.test.ts ./tests/learningLoop.test.tsx
+```
+
+The existing `tests/journeyProof.fixture.ts` now has a `JOURNEY_INPUT={"learning":true}`
+mode. The web journey test starts it as a subprocess on an ephemeral loopback port,
+opens a registered lesson, records a prediction through the real attempt route, runs
+the product browser controller/runner/worker host, and submits over real HTTP. The
+production submission route queues the independent production server runtime replay;
+its terminal writer supplies the report and learning progress. Only the stop second
+and actions are submitted. The test rejects client-authored measurements, incomplete
+predictions and duplicate submissions, and checks that an active run has no terminal
+result. It then records a one-change improvement, compares through the existing route,
+and renders the lesson/list from server-derived progress. Browser and server terminal
+traffic must agree; this does not generalize a single pair to other inputs or seeds.
+
+The session provider, Prisma-shaped in-memory storage, queue delivery and gate
+completion are isolated fixture seams. Validation, security and cost functions run;
+the test does not prove real gate orchestration, database transactions/locks, Redis,
+Better Auth cookies, DOM navigation, native keyboard behavior or a separate browser
+worker thread. Existing launch/loop tests cover component handlers and navigation
+seams. `learningPages.test.tsx` covers associated labels, native radio/keyboard
+semantics, focus destination identity and the focus helper; live focus/Tab/Escape
+checks still require an available browser.
+
+For an already prepared disposable API/worker, the existing
+`learningProgress.integration.test.ts` also opens the lesson, refuses incomplete
+predictions, starts real attempts, submits through the browser replay helper, records
+the improvement hypothesis/lineage, compares, and checks owner isolation. It opts in
+with `INTEGRATION_RUN=1`, `INTEGRATION_LEARNING_API=1` and the existing local harness
+settings. It starts no services and applies no migrations. The default suite skips it.

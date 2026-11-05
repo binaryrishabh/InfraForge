@@ -10,7 +10,7 @@ export function NextExperiment({ report }: { report: RunReport }) {
     <section aria-labelledby="next-title" className="mt-6 grid gap-6 border border-line bg-surface p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
       <div>
         <h2 id="next-title" className="if-title text-[22px] text-ink">Change one thing, then run it again</h2>
-        <p className="mt-1 max-w-[62ch] text-sm text-ink-2">The next attempt keeps the same workload, the same {evaluation.experiment ? "fault at the same second" : "evaluation second"} and the same seed, so the difference you see comes from your change.</p>
+        <p className="mt-1 max-w-[62ch] text-sm text-ink-2">The next attempt keeps the same workload, the same {evaluation.experiment ? "fault at the same second" : "evaluation second"} and the same seed. Inspect the recorded changes and comparison limits before relating any outcome difference to your change.</p>
         {evaluation.inspectNext.length > 0 && <ul className="mt-3 space-y-1 text-sm text-ink-2">
           {evaluation.inspectNext.map((s) => <li key={s} className="flex gap-2"><span aria-hidden="true" className="mt-2 size-1.5 shrink-0 bg-accent" />{s}</li>)}
         </ul>}

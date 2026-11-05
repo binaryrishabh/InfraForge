@@ -8,6 +8,10 @@ import { activityLabel, availableLessons, KIND_LABEL, lessonMode, prerequisiteLe
 import { useDeviceLesson, useLearningCatalog, useLearningLesson } from "./hooks";
 import { LearningFailure, type LearningRequest } from "./LearningPage";
 import type { DeviceLessonState } from "./deviceLocal";
+import { LessonActivity } from "./LessonActivity";
+import { latestLessonRun } from "./lessonActivityData";
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import { LearningFocus } from "./LearningFocus";
 
 export function LessonBody({ detail, catalog, local, storageAvailable, onLocal, onOpen, busy }: {
   detail: LearningLessonDetail; catalog: LearningCatalog | null; local: DeviceLessonState; storageAvailable: boolean;
@@ -77,22 +81,28 @@ export function LessonBody({ detail, catalog, local, storageAvailable, onLocal, 
 function DeviceLesson({ detail, catalog }: { detail: LearningLessonDetail; catalog: LearningCatalog | null }) {
   const local = useDeviceLesson(detail.lesson.id, detail.lesson.contentVersion);
   const { open, busy } = useOpenChallenge();
-  return <LessonBody detail={detail} catalog={catalog} local={local.value} storageAvailable={local.available} onLocal={local.update} onOpen={(id) => void open(id)} busy={busy !== null} />;
+  return <><LessonBody detail={detail} catalog={catalog} local={local.value} storageAvailable={local.available} onLocal={local.update} onOpen={(id) => void open(id)} busy={busy !== null} />
+    {latestLessonRun(detail) && <LessonActivity detail={detail} />}</>;
 }
 
 export function LessonView({ data, loading, error, retry, catalog }: LearningRequest<LearningLessonDetail> & { catalog: LearningRequest<LearningCatalog> }) {
-  if (loading) return <Page><h1 className="mt-8 text-2xl">Lesson</h1><Loading label="Loading lesson…" /></Page>;
-  if (error || !data) return <Page><h1 className="mt-8 text-2xl">Lesson unavailable</h1><LearningFailure error={error ?? "This lesson could not be loaded."} retry={retry} /><Link to="/learning">Back to Learning</Link></Page>;
-  return <Page width="narrow"><Link className="mt-6 inline-block text-accent hover:underline" to="/learning">Back to Learning</Link>
+  if (loading) return <LearningFocus destination="loading"><Page><h1 className="mt-8 text-2xl">Lesson</h1><Loading label="Loading lesson…" /></Page></LearningFocus>;
+  if (error || !data) return <LearningFocus destination="unavailable"><Page><h1 className="mt-8 text-2xl">Lesson unavailable</h1><LearningFailure error={error ?? "This lesson could not be loaded."} retry={retry} /><Link to="/learning">Back to Learning</Link></Page></LearningFocus>;
+  return <LearningFocus destination={`${data.lesson.id}:${data.lesson.contentVersion}`}><Page width="narrow"><Link className="mt-6 inline-block text-accent hover:underline" to="/learning">Back to Learning</Link>
     <PageHeader title={data.lesson.title} lede={data.lesson.summary} />
     {catalog.loading && <Loading label="Loading prerequisite and follow-up links…" />}
     {catalog.error && <LearningFailure error="Prerequisite and follow-up links could not be loaded." retry={catalog.retry} />}
     <DeviceLesson key={`${data.lesson.id}:${data.lesson.contentVersion}`} detail={data} catalog={catalog.data} />
-  </Page>;
+  </Page></LearningFocus>;
 }
 
-export function LessonPage() {
+function LessonSession() {
   const { lessonId = "" } = useParams();
   const detail = useLearningLesson(lessonId), catalog = useLearningCatalog();
   return <LessonView {...detail} catalog={catalog} />;
+}
+
+export function LessonPage() {
+  const owner = useAuthStore((s) => s.user?.id);
+  return <LessonSession key={owner} />;
 }
