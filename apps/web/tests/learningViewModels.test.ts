@@ -89,7 +89,10 @@ test("comparison and report follow-up projections refuse incomplete and duplicat
   const comparison = { available: true, runs: [{ id: "a" }, { id: "b" }], challengeConditions: null } as RunComparison;
   expect(comparisonView(comparison)?.href).toBe("/runs/compare?a=a&b=b");
   expect(comparisonView(comparison)?.conditions).toBe("Unknown");
-  for (const value of [null, { ...comparison, available: false }, { ...comparison, runs: [] }, { ...comparison, runs: [comparison.runs[0]!, comparison.runs[0]!] }]) {
+  // Deliberately malformed runtime payload: the API type promises two runs.
+  const invalidPairs: Array<RunComparison | null> = [null, { ...comparison, available: false },
+    { ...comparison, runs: [] as unknown as RunComparison["runs"] }, { ...comparison, runs: [comparison.runs[0], comparison.runs[0]] }];
+  for (const value of invalidPairs) {
     expect(comparisonView(value)).toBeNull();
   }
   expect(reportLessonView(detail(reading))).toBeNull();
@@ -102,5 +105,5 @@ test("run summary is only a matching lab projection; missing terminal remains Un
   expect(lessonRunSummaryView(report, reading)).toBeNull();
   expect(lessonRunSummaryView({ ...report, challenge: null }, lab)).toBeNull();
   expect(lessonRunSummaryView(report, lab)?.terminalLabel).toBe("Unknown");
-  expect(lessonRunSummaryView(report, lab)?.result).toEqual(report.challenge);
+  expect(lessonRunSummaryView(report, lab)?.result).toEqual(report.challenge!);
 });

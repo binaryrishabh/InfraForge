@@ -45,8 +45,8 @@ const report: RunReport = { version: 1, run: { id: "fixture-run", infrastructure
   topology: { original: null, accepted: null, changes: null }, checkpoint: null, terminal: null, actions: [],
   provenance: { inputVersion: null, simulationModelVersion: null, catalogSnapshot: null }, observed: [], interpreted: [], unknown: [], inspectNext: [],
   challenge: { challengeId: lab.experiment!.challengeId, version: 2, title: "Fixture", evaluationSeconds: 120, definitionMatches: true,
-    status: "unknown", statusDetail: "No evidence", metCount: 0, total: 0, criteria: [], predictions: [], reasoning: null,
-    predictionSubmittedAt: null, inspectNext: [], experiment: null },
+    status: "not-evaluated", statusDetail: "No evidence", metCount: 0, total: 0, criteria: [], predictions: [], reasoning: null,
+    predictionSubmittedAt: "", inspectNext: [], experiment: null },
 };
 const comparison = { available: true, runs: [report.run, { ...report.run, id: "other" }], challengeConditions: null } as RunComparison;
 
@@ -211,7 +211,7 @@ test("inventory includes every learning route and existing Home/report learning 
   visit(source);
   expect(paths.filter(path => path.startsWith("/learning")).sort()).toEqual(Object.keys(routes).filter(path => path.startsWith("/learning")).sort());
   for (const route of Object.keys(routes)) expect(paths).toContain(route);
-  expect([...new Set(Object.values(routes).flat())].sort()).toEqual(Object.keys(LEARNING_VIEW_STATES).sort());
+  expect([...new Set<string>(Object.values(routes).flat())].sort()).toEqual(Object.keys(LEARNING_VIEW_STATES).sort());
 });
 for (const [route, groups] of Object.entries(routes)) for (const group of groups) {
   for (const [state, run] of Object.entries(cases[group])) test(`${route}: ${group}/${state}`, run);
