@@ -96,6 +96,9 @@ currentReport = recorded;
 const lessonHtml = route(lessonPath);
 assert.ok(lessonHtml.includes("Open challenge lab"));
 assert.ok(lessonHtml.includes("Your latest recorded attempt"));
+assert.ok(lessonHtml.includes("What did my run show?"));
+assert.ok(lessonHtml.indexOf("What did my run show?") > lessonHtml.indexOf("Your latest recorded attempt"));
+assert.ok(lessonHtml.includes(`${currentReport.terminal!.traffic!.latencyMs.p95} ms`));
 assert.ok(lessonHtml.includes("Plan one change"));
 assert.ok(!lessonHtml.includes("Compare recorded attempts"));
 for (const cue of currentReport.guidedReview!.cues) {
@@ -110,6 +113,10 @@ for (const suggestion of catalog.suggestions.reviewCandidates) assert.ok(route("
 const missing = render(<LessonActivityContent {...ready({ ...currentReport, guidedReview: null })} />);
 assert.ok(missing.includes("No guided review cues were retained"));
 assert.ok(missing.includes("disabled"));
+const missingMeasurements = render(<LessonActivityContent {...ready({ ...currentReport, terminal: null, checkpoint: currentReport.terminal })} lesson={detail.lesson} />);
+assert.ok(missingMeasurements.includes("What did my run show?"));
+assert.ok(missingMeasurements.includes("<dt class=\"font-medium\">p95</dt><dd>Unknown</dd>"));
+assert.ok(!render(<LessonActivityContent {...ready<RunReport>(null)} error="No outcome is known" lesson={detail.lesson} />).includes("What did my run show?"));
 assert.ok(render(<LessonActivityContent {...ready<RunReport>(null)} error="No outcome is known" />).includes("No outcome is known"));
 assert.ok(!render(<LessonComparisonContent {...ready<RunComparison>(null)} />).includes("Compare recorded attempts"));
 assert.ok(render(<LessonComparisonContent {...ready<RunComparison>(null)} error="Comparison unknown" />).includes("Comparison unknown"));

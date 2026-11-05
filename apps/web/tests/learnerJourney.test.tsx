@@ -22,6 +22,8 @@ import { getRunReport, getComparison } from "../src/api/reports.api";
 import { LessonView } from "../src/features/learning/LessonPage";
 import { LearningList } from "../src/features/learning/LearningPage";
 import { EMPTY_FILTERS } from "../src/features/learning/discovery";
+import { LessonRunSummary } from "../src/features/learning/LessonRunSummary";
+import { getLatestLessonReport } from "../src/features/learning/lessonActivityData";
 
 // The first two journeys: the workload is built with the same helpers the run dialog calls, the
 // product-compiled engine runs it, and the live panel, the stored report and the comparison are rendered
@@ -240,10 +242,22 @@ test("lesson -> prediction -> browser attempt -> server replay -> factual progre
     expect(detail.progress).toMatchObject({ activity: "requirements-met", attempts: 2, predictionReviewed: true, sameConditionsComparison: true, lastRunId: second.id });
     expect(catalog.progress.find((p) => p.lessonId === lessonId)).toEqual(detail.progress!);
     expect(lessonMarkup()).toContain("Current requirements met");
+    const latest = (await getLatestLessonReport(detail))!;
+    expect(latest.run.id).toBe(second.id);
+    const summary = text(renderToStaticMarkup(<LessonRunSummary report={latest} lesson={detail.lesson} />));
+    expect(summary).toContain("What did my run show?");
+    expect(summary).toContain(`Run ${second.id}`);
+    expect(summary).not.toContain(`Run ${first.id}`);
+    expect(summary).toContain(`p95 ${after.terminal!.traffic!.latencyMs.p95} ms`);
+    expect(summary).toContain(`Completed requests/s ${after.terminal!.traffic!.completedRps}`);
+    expect(summary).toContain("Requirements: Met");
     const list = renderToStaticMarkup(<MemoryRouter><LearningList {...ready(catalog)} filters={EMPTY_FILTERS} onFilters={() => {}} /></MemoryRouter>);
     expect(list).toContain("Current requirements met");
     cookie = "journey=bob";
-    expect((await getLearningLesson(lessonId)).progress).toMatchObject({ activity: "not-started", attempts: 0, lastRunId: null });
+    const otherOwner = await getLearningLesson(lessonId);
+    expect(otherOwner.progress).toMatchObject({ activity: "not-started", attempts: 0, lastRunId: null });
+    expect(await getLatestLessonReport(otherOwner)).toBeNull();
+    await expect(getLatestLessonReport(detail)).rejects.toThrow();
     await expect(getRunReport(first.id)).rejects.toThrow();
     await expect(getComparison(first.id, second.id)).rejects.toThrow();
     console.info("learning-journey", JSON.stringify({ source: before.challenge?.status, later: after.challenge?.status,

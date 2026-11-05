@@ -9,6 +9,8 @@ import { challengeConditionsLabel } from "@/features/reports/labels";
 import { Loading, Section } from "@/ui/Page";
 import { LearningFailure, type LearningRequest } from "./LearningPage";
 import { getLatestLessonReport, getLessonComparison } from "./lessonActivityData";
+import { LessonRunSummary } from "./LessonRunSummary";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
 export function LessonComparisonContent({ data, loading, error, retry }: LearningRequest<RunComparison>) {
   if (loading) return <Loading label="Finding eligible recorded runs…" />;
@@ -26,20 +28,20 @@ function LessonComparison({ report }: { report: RunReport }) {
     <p className="mt-2 text-xs text-ink-3">Candidates come from the existing comparison list, up to 100 finished runs.</p></>;
 }
 
-export function LessonActivityContent({ data, loading, error, retry, suggestion }: LearningRequest<RunReport> & { suggestion?: string }) {
+export function LessonActivityContent({ data, loading, error, retry, suggestion, lesson }: LearningRequest<RunReport> & { suggestion?: string; lesson?: LearningLesson }) {
   if (loading) return <Loading label="Loading your latest recorded cues…" />;
   if (error) return <LearningFailure error={error} retry={retry} />;
   if (!data) return null;
-  return <Section title="Your latest recorded attempt" className="mt-6">
+  return <><Section title="Your latest recorded attempt" className="mt-6">
     <Link className="text-accent hover:underline" to={`/runs/${encodeURIComponent(data.run.id)}`}>Read the recorded report</Link>
     {data.guidedReview ? <GuidedReview report={data} readOnly withImprovement={false} />
       : <p className="mt-3">No guided review cues were retained. Inspect the report’s evidence limits; no measured outcome is claimed here.</p>}
     <div className="mt-4"><BeginImprovement key={data.run.id} report={data} suggestion={suggestion} /></div>
     <LessonComparison report={data} />
-  </Section>;
+  </Section>{lesson && <LessonRunSummary report={data} lesson={lesson} />}</>;
 }
 
 export function LessonActivity({ detail }: { detail: LearningLessonDetail }) {
   const load = useCallback(() => getLatestLessonReport(detail), [detail]);
-  return <LessonActivityContent {...useRequest(load, "Your recorded cues could not be loaded. No outcome is known.")} suggestion={detail.lesson.followUp} />;
+  return <LessonActivityContent {...useRequest(load, "Your recorded cues could not be loaded. No outcome is known.")} suggestion={detail.lesson.followUp} lesson={detail.lesson} />;
 }
