@@ -4,7 +4,8 @@ import * as scaling from "./scaling";
 import * as data from "./data";
 import * as asynchronous from "./async";
 import * as failures from "./failures";
+import * as missions from "./missions";
 
-export const tracks = [foundations, scaling.track, data.track, asynchronous.track, failures.track];
-export const lessons = [...foundationsLessons, ...scaling.lessons, ...data.lessons, ...asynchronous.lessons, ...failures.lessons];
+export const tracks = [foundations, scaling.track, data.track, asynchronous.track, failures.track, missions.track];
+export const lessons = [...foundationsLessons, ...scaling.lessons, ...data.lessons, ...asynchronous.lessons, ...failures.lessons, ...missions.lessons];
 export const learningContent: LearningContent = { tracks, lessons, archivedLessons: [] };

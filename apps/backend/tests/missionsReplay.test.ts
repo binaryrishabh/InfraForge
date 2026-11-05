@@ -3,6 +3,7 @@ import { mkdir, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { createModel2Run } from "@infraforge/simulation/model2-run";
+import { ResourceHealth } from "@infraforge/domain/resource";
 import { captureRunInputs, readRunInputs } from "../deployments/runInputs";
 import { challengeSeed } from "../challenges/registry";
 import { createModel2Engine } from "../simulator/model2Engine";
@@ -27,7 +28,7 @@ test("missions: captured browser and server runs agree through the burst and que
           // Retained terminal data and selected real state samples have the same source.
           if ([119, 125, 140, d.evaluationSeconds].includes(second)) expect(browser.evidence()).toEqual(server.evidence());
           if (id === "flash-sale-order-backlog") {
-            expect(view.metrics.app!.health).toBe("healthy");
+            expect(view.metrics.app!.health).toBe(ResourceHealth.HEALTHY);
             expect(view.traffic!.failedRps).toBe(0);
             expect(view.traffic!.latencyMs.p95!).toBeLessThan(10);
             const q = server.evidence().asynchronous.brokers[0]!;
