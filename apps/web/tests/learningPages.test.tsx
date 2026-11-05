@@ -136,3 +136,14 @@ test("Home keeps existing recommendation priorities and uses server continue bef
   expect(render(<ContinueLearning {...ready(catalog)} />)).toContain(catalog.suggestions.continue!.reason);
   expect(nextStep({ ...base, challenges: [{ ...summary, workspaceDesignId: "workspace" }] }).kind).toBe("continue");
 });
+
+test("lab pages show the authored evidence checklist and follow-up in lesson order", () => {
+  const authored = { ...lab, kind: "executable-lab" as const, followUp: "Explain which observations would contradict your prediction.",
+    experiment: { ...lab.experiment!, evidenceToInspect: ["Inspect the recorded application CPU.", "Compare completed requests over the stated interval."] } };
+  const html = render(<LessonBody {...bodyProps(detail(authored))} />);
+  for (const item of authored.experiment.evidenceToInspect) expect(html).toContain(item);
+  expect(html).toContain(authored.followUp);
+  expect(html.indexOf(authored.experiment.evidenceToInspect[0]!)).toBeLessThan(html.indexOf(">Limitations<"));
+  expect(html.indexOf(authored.followUp)).toBeGreaterThan(html.indexOf(">Limitations<"));
+  expect(html.indexOf(authored.followUp)).toBeLessThan(html.indexOf(">Check question<"));
+});

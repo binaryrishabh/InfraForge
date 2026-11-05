@@ -20,6 +20,10 @@ export function LessonBody({ detail, catalog, local, storageAvailable, onLocal, 
   const next = index >= 0 ? ordered[index + 1] : null;
   const answer = lesson.check?.choices.find((c) => c.id === local.answer)?.id ?? null;
   const canOpen = lesson.kind === "executable-lab" && lesson.availability === "available" && challenge?.id === lesson.experiment.challengeId && challenge.executable;
+  const authoredEvidence = lesson.kind === "executable-lab" && "evidenceToInspect" in lesson.experiment ? lesson.experiment.evidenceToInspect : undefined;
+  const evidence = Array.isArray(authoredEvidence) ? authoredEvidence.filter((item): item is string => typeof item === "string") : [];
+  const followUp = "followUp" in lesson && typeof lesson.followUp === "string" && lesson.followUp.trim()
+    ? lesson.followUp : "Explain the idea in your own words and name one limitation.";
   return <>
     <p className="mt-4 text-sm text-ink-3"><Tag>{KIND_LABEL[lesson.kind]}</Tag> · {lesson.level} · {lessonMode(lesson)}</p>
     {activity && <p className="mt-2 text-sm"><Tag>Server activity: {activity}</Tag></p>}
@@ -42,12 +46,13 @@ export function LessonBody({ detail, catalog, local, storageAvailable, onLocal, 
       </Section>
       <Section title="Evidence to inspect" className="mt-6">
         <p>After a run is saved, inspect its report: the recorded inputs, each requirement and its evidence, and the prediction review. Missing measurements remain unknown. A terminal-second reading does not describe the whole run.</p>
+        {evidence.length > 0 && <ul className="mt-3 list-disc pl-5">{evidence.map((item) => <li key={item}>{item}</li>)}</ul>}
         {activity && progress?.lastRunId ? <Link className="mt-3 inline-block text-accent hover:underline" to={`/runs/${encodeURIComponent(progress.lastRunId)}`}>Inspect the latest recorded attempt</Link>
           : <p className="mt-3 text-sm text-ink-3">No recorded attempt is linked here. No outcome is claimed.</p>}
       </Section>
     </>}
     <Section title="Limitations" className="mt-6">{lesson.limitations.map((p) => <p key={p} className="mb-3 text-ink-2">{p}</p>)}</Section>
-    <Section title="Follow-up" className="mt-6"><p>Explain the idea in your own words and name one limitation.</p>
+    <Section title="Follow-up" className="mt-6"><p>{followUp}</p>
       {next ? <Link className="mt-3 inline-block text-accent hover:underline" to={`/learning/lessons/${encodeURIComponent(next.id)}`}>Next in track order: {next.title}</Link>
         : <Link className="mt-3 inline-block text-accent hover:underline" to="/learning">Find another lesson</Link>}
     </Section>
