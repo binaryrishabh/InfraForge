@@ -169,10 +169,11 @@ await step("the two runs can be compared and the comparison states its condition
   const improved = page.getByRole("link", { name: /compare with the attempt you improved/i });
   if (await improved.count()) await improved.first().click(); else await page.getByRole("link", { name: /compare with/i }).first().click();
   await page.waitForURL(/\/runs\/compare/, { timeout: 60_000 });
-  await page.waitForFunction(() => !/Loading comparison/.test(document.body.innerText) && document.body.innerText.length > 600, null, { timeout: 90_000 });
+  await page.getByRole("heading", { level: 1, name: /compare two runs/i }).waitFor({ timeout: 90_000 });
+  await page.waitForFunction(() => /Challenge conditions|One simulation-relevant design change|design change/i.test(document.body.innerText), null, { timeout: 90_000 });
   const body = await text();
   await page.screenshot({ path: `${SHOTS}/14-compare.png`, fullPage: true });
-  return { conditions: /same conditions|conditions (differ|are different)|different conditions|cannot be compared|Unknown/i.exec(body)?.[0] ?? null, snippet: body.replace(/^.*?Compar/i, "Compar").slice(0, 1100) };
+  return { verdictAndConditions: body.slice(body.indexOf("Compare two runs")).slice(0, 1500) };
 });
 await step("the lesson shows the factual progress after the improvement", async () => {
   await page.goto(`${WEB}/learn/lessons/where-does-the-time-go`, { waitUntil: "load" });
