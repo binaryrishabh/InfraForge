@@ -90,7 +90,7 @@ class Judge {
   // can decide either success or failure. Historical criteria retain their rules.
   scenarioCriterionProblem(c: ChallengeCriterion): string | null {
     const input = this.evidence.input, terminal = this.atEvaluation;
-    if (["overall-health", "no-saturation", "database-healthy", "database-connections", "terminal-p95", "survivors-unsaturated"].includes(c.kind) &&
+    if (["overall-health", "no-saturation", "database-healthy", "database-connections", "terminal-p95", "survivors-unsaturated", "backend-admission-budget"].includes(c.kind) &&
       terminal?.measurementFreshness !== "current-revision") return "A current evaluation measurement was not recorded.";
     const finite = (n: unknown): n is number => typeof n === "number" && Number.isFinite(n) && n >= 0;
     const health = (ids: string[]) => !!terminal && ids.every(id => {
@@ -139,6 +139,9 @@ class Judge {
       case "survivors-unsaturated":
         return this.plan && input && health(input.resources.filter(r => r.id !== this.plan!.targetResourceId).map(r => r.id))
           ? null : "Complete experiment survivor measurements were not recorded.";
+      case "backend-admission-budget":
+        // Counter completeness and the cumulative window are checked below.
+        return null;
     }
   }
 
@@ -156,7 +159,7 @@ class Judge {
     const pending = (detail: string, sources: string[]) => ({ ...base, status: this.active ? "pending" as const : "not-evaluated" as const, detail, sources });
     const decided = (met: boolean, detail: string, sources: string[]) => ({ ...base, status: met ? "met" as const : "not-met" as const, detail, sources });
     // A fixed-load latency lab uses the same captured terminal evidence as a scenario.
-    const missing = this.definition.scenario || c.kind === "terminal-p95" ? this.scenarioCriterionProblem(c) : null;
+    const missing = this.definition.scenario || c.kind === "terminal-p95" || c.kind === "backend-admission-budget" ? this.scenarioCriterionProblem(c) : null;
     if (missing) return pending(missing, ["runInputs", "stages", "terminalSnapshot"]);
     const input = this.evidence.input;
     switch (c.kind) {
@@ -203,6 +206,21 @@ class Judge {
         const t = this.atEvaluation, traffic = t?.traffic;
         if (!t || !traffic || traffic.latencyMs.p95 === null || traffic.completedRps <= 0) return pending("No completed-request latency measurement exists at the evaluation second.", ["terminalSnapshot.traffic"]);
         return decided(traffic.latencyMs.p95 <= c.maxMs, `At second ${t.simulatedSeconds}, p95 was ${traffic.latencyMs.p95.toFixed(3)} ms from ${traffic.completedRps} completed requests; the limit is ${c.maxMs} ms.`, ["terminalSnapshot.traffic"]);
+      }
+      case "backend-admission-budget": {
+        const t = this.atEvaluation, whole = t?.traffic?.wholeRun;
+        const sources = ["terminalSnapshot.metrics.lbAccounting", "terminalSnapshot.traffic.wholeRun", "runInputs.resources"];
+        if (!input || !t || !whole || whole.throughSecond !== t.simulatedSeconds) return pending("Cumulative caller and backend admission evidence at the evaluation second is required.", sources);
+        const lbs = input.resources.filter(r => r.type === RESOURCE_TYPES.LoadBalancer);
+        if (!lbs.length) return decided(false, "The captured design has no load balancer to measure.", sources);
+        const counters = lbs.map(lb => t.resources.find(r => r.id === lb.id)?.lbAccounting);
+        if (counters.some(a => !a || a.profile !== "lb-accounting/1")) return pending("Backend admission counters were not recorded for every captured load balancer.", sources);
+        const offered = whole.completed + whole.failed + whole.deadlineExceeded + whole.abandoned + whole.inFlight;
+        if (!Number.isSafeInteger(offered) || offered <= 0) return pending("A positive, safe offered caller count was not recorded; amplification is Unknown.", sources);
+        const attempts = counters.reduce((sum, a) => sum + a!.acceptedByBackend + a!.rejectedByVm, 0);
+        if (!Number.isSafeInteger(attempts)) return pending("The backend admission total exceeds safe counter precision.", sources);
+        const ratio = attempts / offered;
+        return decided(ratio <= c.maxPerOfferedRequest, `Through second ${t.simulatedSeconds}, ${attempts} backend admission attempts (accepted + VM refusals) / ${offered} offered caller requests = ${ratio.toFixed(3)}; limit ${c.maxPerOfferedRequest}. Queue counts overlap admissions. This budget does not establish sufficient capacity.`, sources);
       }
       case "no-saturation": {
         const t = this.atEvaluation;

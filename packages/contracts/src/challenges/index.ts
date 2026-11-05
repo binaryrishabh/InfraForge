@@ -21,6 +21,9 @@ export type ChallengeCriterion =
   | { id: string; kind: "overall-health"; label: string; allowed: OverallHealth[] }
   | { id: string; kind: "no-saturation"; label: string }
   | { id: string; kind: "terminal-p95"; label: string; maxMs: number }
+  // Cumulative accepted backend admissions + VM refusals across every captured LB,
+  // divided by cumulative offered caller requests (all outcomes plus in-flight).
+  | { id: string; kind: "backend-admission-budget"; label: string; maxPerOfferedRequest: number }
   | { id: string; kind: "database-healthy"; label: string }
   | { id: string; kind: "database-connections"; label: string; requireSpare?: boolean }
   // Every resource except the experiment's target stays out of saturation and failure.

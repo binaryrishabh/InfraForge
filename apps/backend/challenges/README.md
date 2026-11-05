@@ -138,6 +138,23 @@ Research applied to model 1 (not imported as real-cloud guarantees):
   exploration and explanation support inquiry. InfraForge keeps a short prediction, an evidence
   review and a learner-owned one-change hypothesis, without asking for an exact recovery second.
 
+## Scaling labs
+
+`route-around-a-slow-vm@1` compares saved `lbSelection` policies under an unchanged
+CPU quota. `leave-room-for-a-burst@1` scores second 125 during the modeled 120-140s
+burst, and compares catalog CPU headroom with educational monthly estimates.
+Neither terminal-second latency requirement is a whole-run SLO.
+
+`retrying-a-full-pool@1` uses `backend-admission-budget`: sum `acceptedByBackend +
+rejectedByVm` from `lb-accounting/1` for every captured load balancer, divided by
+whole-run `completed + failed + deadlineExceeded + abandoned + inFlight` callers.
+Both counts must cover the evaluation second with current topology measurements.
+Missing counters, a missing LB sample, a mismatched cumulative window, zero offered
+callers or unsafe counter precision leave the requirement unscored. Queue counters
+overlap admissions and are never added. A passing load budget can coexist with a
+saturated service and does not establish sufficient throughput or availability.
+The criterion renders through the existing generic requirement list.
+
 ## Check
 
 ```

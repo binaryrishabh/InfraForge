@@ -25,6 +25,9 @@ import { boundRetriesDuringSlowdownV1 } from "../challenges/definitions/bound-re
 import { whereDoesTheTimeGoV1 } from "../challenges/definitions/where-does-the-time-go/v1";
 import { waitingWithSpareCpuV1 } from "../challenges/definitions/waiting-with-spare-cpu/v1";
 import { oneBiggerOrTwoSmallerV1 } from "../challenges/definitions/one-bigger-or-two-smaller/v1";
+import { routeAroundASlowVmV1 } from "../challenges/definitions/route-around-a-slow-vm/v1";
+import { leaveRoomForABurstV1 } from "../challenges/definitions/leave-room-for-a-burst/v1";
+import { retryingAFullPoolV1 } from "../challenges/definitions/retrying-a-full-pool/v1";
 
 // Historical report fixtures deliberately keep their published Model 1 conditions.
 export const legacyDefinition = (id: string) => findChallenge(id, 1)!.definition;
@@ -43,6 +46,10 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "route-around-a-slow-vm": {...routeAroundASlowVmV1.starter!, resources: routeAroundASlowVmV1.starter!.resources.map(r => r.id === "lb" ? {...r, lbSelection: {version: 1, policy: "least-outstanding"}} : r)},
+  "leave-room-for-a-burst": {...leaveRoomForABurstV1.starter!, resources: leaveRoomForABurstV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.large"} : r)},
+  "leave-room-for-a-burst-large": {...leaveRoomForABurstV1.starter!, resources: leaveRoomForABurstV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r)},
+  "retrying-a-full-pool": {...retryingAFullPoolV1.starter!, resources: retryingAFullPoolV1.starter!.resources.map(r => r.id === "lb" ? {...r, retry: {...r.retry!, maxAttempts: 2}} : r)},
   "where-does-the-time-go": {...whereDoesTheTimeGoV1.starter!, resources: whereDoesTheTimeGoV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.large"} : r)},
   "waiting-with-spare-cpu": {...waitingWithSpareCpuV1.starter!, resources: waitingWithSpareCpuV1.starter!.resources.map(r => r.id === "app" ? {...r, vmExecution: {...r.vmExecution!, workers: 4}} : r)},
   "one-bigger-or-two-smaller": {...oneBiggerOrTwoSmallerV1.starter!, resources: oneBiggerOrTwoSmallerV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r)},

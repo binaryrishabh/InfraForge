@@ -22,6 +22,9 @@ import { boundRetriesDuringSlowdownV1 } from "./bound-retries-during-slowdown/v1
 import { whereDoesTheTimeGoV1 } from "./where-does-the-time-go/v1";
 import { waitingWithSpareCpuV1 } from "./waiting-with-spare-cpu/v1";
 import { oneBiggerOrTwoSmallerV1 } from "./one-bigger-or-two-smaller/v1";
+import { routeAroundASlowVmV1 } from "./route-around-a-slow-vm/v1";
+import { leaveRoomForABurstV1 } from "./leave-room-for-a-burst/v1";
+import { retryingAFullPoolV1 } from "./retrying-a-full-pool/v1";
 
 /* Every published version of every challenge, calibrated against simulation model
 "1" and catalog "2026-08". Versions are immutable and never removed: historical
@@ -52,4 +55,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   whereDoesTheTimeGoV1,
   waitingWithSpareCpuV1,
   oneBiggerOrTwoSmallerV1,
+  routeAroundASlowVmV1,
+  leaveRoomForABurstV1,
+  retryingAFullPoolV1,
 ];
