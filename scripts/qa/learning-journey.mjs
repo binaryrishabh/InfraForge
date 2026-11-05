@@ -166,11 +166,13 @@ await step("the improved design runs through the same prediction gate and its re
   return { verdict: /(\d+ of \d+ requirements? met at \d+s)/.exec(body)?.[1], whatChanged: body.slice(Math.max(0, body.search(/change|hypothesis|compared|same conditions/i))).slice(0, 700) };
 });
 await step("the two runs can be compared and the comparison states its conditions", async () => {
-  await page.getByRole("link", { name: /compare with/i }).first().click().catch(async () => { await page.getByRole("button", { name: /compare with/i }).first().click(); });
-  await page.waitForLoadState("networkidle").catch(() => {});
+  const improved = page.getByRole("link", { name: /compare with the attempt you improved/i });
+  if (await improved.count()) await improved.first().click(); else await page.getByRole("link", { name: /compare with/i }).first().click();
+  await page.waitForURL(/\/runs\/compare/, { timeout: 60_000 });
+  await page.waitForFunction(() => !/Loading comparison/.test(document.body.innerText) && document.body.innerText.length > 600, null, { timeout: 90_000 });
   const body = await text();
   await page.screenshot({ path: `${SHOTS}/14-compare.png`, fullPage: true });
-  return { url: page.url().replace(WEB, "").replace(/\?.*/, "?<ids>"), conditions: /same conditions|different conditions|Unknown/i.exec(body)?.[0] ?? null, snippet: body.slice(0, 900) };
+  return { conditions: /same conditions|conditions (differ|are different)|different conditions|cannot be compared|Unknown/i.exec(body)?.[0] ?? null, snippet: body.replace(/^.*?Compar/i, "Compar").slice(0, 1100) };
 });
 await step("the lesson shows the factual progress after the improvement", async () => {
   await page.goto(`${WEB}/learn/lessons/where-does-the-time-go`, { waitUntil: "load" });
