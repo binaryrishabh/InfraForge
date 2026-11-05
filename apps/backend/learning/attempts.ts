@@ -5,11 +5,11 @@ import type { LearningRun } from "./progress";
 // Same report projection as challenge history; full actions match the comparison route.
 export const learningAttemptSelection = { ...reportSelection, ownerId: true,
   actions: { orderBy: { sequence: "asc" }, take: 501 } } as const;
-export interface LearningAttemptQuery {
+export type LearningAttemptQuery = {
   where: { ownerId: string; challengeId: { in: string[] } };
   select: typeof learningAttemptSelection;
   orderBy: [{ createdAt: "desc" }, { id: "desc" }];
-}
+};
 export interface LearningAttemptDatabase {
   deployment: { findMany(query: LearningAttemptQuery): Promise<(LearningRun & { _count: { actions: number } })[]> };
 }
