@@ -15,6 +15,7 @@ import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { EventBusMetricsSchema, GatewayMetricsSchema } from "./newResourceSchema";
 import { DatabaseMetricsSchema, DatabaseReplicationMetricsSchema } from "./databaseSchema";
 import { QueueWorkSchema } from "./queueWorkSchema";
+import { SecurityMetricsSchema } from "./securitySchema";
 
 const text = z.string().min(1).max(4000);
 const timestamp = z.iso.datetime({ offset: true });
@@ -30,7 +31,7 @@ const stage = z.object({ name: text, status: z.enum(["pending", "running", "comp
   message: text, startedAt: timestamp, completedAt: timestamp, details: z.unknown().optional() });
 // Model 2 records a value it does not model as null ("unknown"); reports treat it as not recorded, never as zero.
 const health = z.enum(["healthy", "degraded", "saturated", "failed", "unknown"]);
-const metrics = z.object({ queueWork: QueueWorkSchema.optional(), database: DatabaseMetricsSchema.optional(), databaseReplication: DatabaseReplicationMetricsSchema.optional(), lbAccounting: LbAccountingSchema.optional(), serverless: ServerlessMetricsSchema.optional(), scheduler: SchedulerMetricsSchema.optional(), eventBus: EventBusMetricsSchema.optional(), gateway: GatewayMetricsSchema.optional(), vmMemory: VmMemorySchema.optional(), cpu: amount.max(100).nullable().optional(), memory: amount.max(100).nullable().optional(),
+const metrics = z.object({ security: SecurityMetricsSchema.optional(), queueWork: QueueWorkSchema.optional(), database: DatabaseMetricsSchema.optional(), databaseReplication: DatabaseReplicationMetricsSchema.optional(), lbAccounting: LbAccountingSchema.optional(), serverless: ServerlessMetricsSchema.optional(), scheduler: SchedulerMetricsSchema.optional(), eventBus: EventBusMetricsSchema.optional(), gateway: GatewayMetricsSchema.optional(), vmMemory: VmMemorySchema.optional(), cpu: amount.max(100).nullable().optional(), memory: amount.max(100).nullable().optional(),
   rps: amount.optional(), connections: amount.optional(), health: health.optional() });
 const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction: amount.optional(),
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).optional(), accumulatedCostUsd: amount.optional(),

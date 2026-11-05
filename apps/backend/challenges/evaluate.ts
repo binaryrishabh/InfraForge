@@ -15,6 +15,7 @@ import type { RecordedScenario } from "@infraforge/contracts/challenges";
 import type { RunInputs } from "@infraforge/contracts/run-inputs";
 import { orderedScenarioSteps } from "@infraforge/simulation/model2-run";
 import { QueueWorkSchema } from "../reports/queueWorkSchema";
+import { SecurityMetricsSchema } from "../reports/securitySchema";
 
 export interface ChallengeAttemptRecord {
   challengeId: string; challengeVersion: number | null; challengeSpecHash: string | null;
@@ -83,7 +84,7 @@ class Judge {
     return this.experiment?.state === "not-applied" ? `${this.experiment.detail} This attempt is not judged as a resilience experiment.` : null;
   }
   stage(name: string) {
-    if (this.definition.scenario && this.evidence.stageEvidence?.[name] !== true) return null;
+    if ((this.definition.scenario || this.definition.criteria.some(c => c.kind === "firewall-admission-budget")) && this.evidence.stageEvidence?.[name] !== true) return null;
     return this.evidence.stages.find((s) => s.name === name && s.status === "completed") ?? null;
   }
 
@@ -91,7 +92,7 @@ class Judge {
   // can decide either success or failure. Historical criteria retain their rules.
   scenarioCriterionProblem(c: ChallengeCriterion): string | null {
     const input = this.evidence.input, terminal = this.atEvaluation;
-    if (["overall-health", "no-saturation", "database-healthy", "database-connections", "terminal-p95", "survivors-unsaturated", "backend-admission-budget", "queue-work"].includes(c.kind) &&
+    if (["overall-health", "no-saturation", "database-healthy", "database-connections", "terminal-p95", "survivors-unsaturated", "backend-admission-budget", "queue-work", "firewall-admission-budget"].includes(c.kind) &&
       terminal?.measurementFreshness !== "current-revision") return "A current evaluation measurement was not recorded.";
     const finite = (n: unknown): n is number => typeof n === "number" && Number.isFinite(n) && n >= 0;
     const health = (ids: string[]) => !!terminal && ids.every(id => {
@@ -142,6 +143,7 @@ class Judge {
           ? null : "Complete experiment survivor measurements were not recorded.";
       case "backend-admission-budget":
       case "queue-work":
+      case "firewall-admission-budget":
         // Counter completeness and the cumulative window are checked below.
         return null;
     }
@@ -161,10 +163,20 @@ class Judge {
     const pending = (detail: string, sources: string[]) => ({ ...base, status: this.active ? "pending" as const : "not-evaluated" as const, detail, sources });
     const decided = (met: boolean, detail: string, sources: string[]) => ({ ...base, status: met ? "met" as const : "not-met" as const, detail, sources });
     // A fixed-load latency lab uses the same captured terminal evidence as a scenario.
-    const missing = this.definition.scenario || c.kind === "terminal-p95" || c.kind === "backend-admission-budget" || c.kind === "queue-work" ? this.scenarioCriterionProblem(c) : null;
+    const missing = this.definition.scenario || c.kind === "terminal-p95" || c.kind === "backend-admission-budget" || c.kind === "queue-work" || c.kind === "firewall-admission-budget" ? this.scenarioCriterionProblem(c) : null;
     if (missing) return pending(missing, ["runInputs", "stages", "terminalSnapshot"]);
     const input = this.evidence.input;
     switch (c.kind) {
+      case "firewall-admission-budget": {
+        const t = this.atEvaluation, sources = ["terminalSnapshot.metrics.security.firewall", "runInputs.resources"];
+        if (!t || !input) return pending(this.missingMeasurement(), sources);
+        if (input.resources.filter(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.Firewall).length !== 1) return pending("The named firewall was not retained in the captured design.", sources);
+        const rows = t.resources.filter(r => r.id === c.resourceId), parsed = SecurityMetricsSchema.safeParse(rows[0]?.security);
+        const f = parsed.success ? parsed.data.firewall : undefined;
+        if (rows.length !== 1 || !f || f.policyDenied == null || f["flow-capacity"] == null) return pending("Complete firewall admission counters were not recorded; absent refusals are Unknown.", sources);
+        return decided(f.admissions >= c.minAdmissions && f.policyDenied <= c.maxPolicyDenied && f["flow-capacity"] <= c.maxCapacityRefused,
+          `Through second ${t.simulatedSeconds}, ${c.resourceId}: ${f.admissions} tracked admissions (minimum ${c.minAdmissions}), ${f.policyDenied} policy denials (maximum ${c.maxPolicyDenied}), ${f["flow-capacity"]} flow capacity refusals (maximum ${c.maxCapacityRefused}); occupancy ${f.occupancy}/${f.limit}. Includes probes; this is not caller availability.`, sources);
+      }
       case "deployment-checks": {
         const done = GATES.filter((g) => this.stage(g));
         if (done.length === GATES.length) return decided(true, "Validate, SecurityScan and CostEstimate all completed.", ["stages"]);
@@ -275,6 +287,32 @@ class Judge {
     const t = this.atEvaluation, input = this.evidence.input;
     const choice = (value: string) => q.kind === "busiest-type" ? value : PREDICTION_CHOICES[q.kind].find((c) => c.value === value)?.label ?? value;
     switch (q.kind) {
+      case "database-admission": {
+        const sources = ["terminalSnapshot.metrics.security.edges", "runInputs.resources"];
+        if (!t || !input || t.measurementFreshness !== "current-revision") return unknown("Current database admission measurements were not recorded.", sources);
+        const dbs = input.resources.filter(r => r.type === RESOURCE_TYPES.Database);
+        if (!dbs.length) return unknown("No captured database exists.", sources);
+        const edges = [];
+        for (const db of dbs) {
+          const rows = t.resources.filter(r => r.id === db.id), parsed = SecurityMetricsSchema.safeParse(rows[0]?.security);
+          if (rows.length !== 1 || !parsed.success) return unknown("Complete database security counters were not recorded.", sources);
+          const incoming = parsed.data.edges.filter(e => e.target === db.id);
+          const links = input.connectionLines.filter(e => e.targetId === db.id && input.resources.find(r => r.id === e.sourceId)?.type !== RESOURCE_TYPES.Firewall);
+          const fixedSources = links.every(e => !input.resources.find(r => r.id === e.sourceId)?.autoscaling?.enabled);
+          const expectedPaths = links.map(e => `${e.id}:${e.sourceId}:${db.id}`);
+          if (!fixedSources || !expectedPaths.length || incoming.length !== expectedPaths.length || expectedPaths.some(path => !incoming.some(e => e.path === path))) return unknown("Complete fixed direct database paths were not retained; replica or helper coverage is Unknown.", sources);
+          if (!incoming.length || incoming.some(e => e.denied === null || e.noListener === null || e.backendDeliveries === null || e.policyDenied === null)) return unknown("Incoming database counter coverage is missing; no zero is inferred.", sources);
+          edges.push(...incoming);
+        }
+        if (new Set(edges.map(e => e.path)).size !== edges.length) return unknown("Database admission paths are duplicated.", sources);
+        const denied = edges.reduce((n, e) => n + e.denied!, 0), noListener = edges.reduce((n, e) => n + e.noListener!, 0);
+        const policy = edges.reduce((n, e) => n + Object.values(e.policyDenied!).reduce((a, b) => a + b, 0), 0);
+        const delivered = edges.reduce((n, e) => n + e.backendDeliveries!, 0);
+        if (![denied, noListener, policy, delivered].every(Number.isSafeInteger) || denied === 0 && delivered === 0) return unknown("No safe positive admission or delivery population was retained.", sources);
+        const actual = denied === 0 ? "no-denials" : policy === denied ? "policy-denied" : noListener === denied ? "no-listener" : "other-or-mixed";
+        const rules = edges.flatMap(e => Object.entries(e.policyDenied!).filter(([, n]) => n > 0).map(([rule, n]) => `${rule}: ${n}`));
+        return compare(actual, actual === predicted, `Through second ${t.simulatedSeconds}: ${denied} database admission denials, ${noListener} missing-listener denials, ${delivered} backend deliveries. Recorded rule counters: ${rules.join("; ") || "none"}. CPU and health alone do not identify a rule. Packet traces and application correctness are not recorded.`, sources);
+      }
       case "security-clean": {
         const scan = this.stage("SecurityScan");
         if (!scan) return unknown("The security scan did not complete.", ["stages.SecurityScan"]);

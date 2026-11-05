@@ -42,8 +42,8 @@ const definition = z.object({
 }).strict();
 
 const CRITERIA = ["deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
-  "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work"];
-const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health"];
+  "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "firewall-admission-budget"];
+const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
 
 function checkDefinition(d: ChallengeDefinition): string[] {
@@ -65,6 +65,11 @@ function checkDefinition(d: ChallengeDefinition): string[] {
   unique("criterion", d.criteria.map((c) => c.id));
   unique("prediction", d.predictions.map((p) => p.id));
   for (const c of d.criteria) {
+    if (c.kind === "firewall-admission-budget") {
+      if (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isSafeInteger(c.minAdmissions) || c.minAdmissions < 1 ||
+        !Number.isSafeInteger(c.maxPolicyDenied) || c.maxPolicyDenied < 0 || !Number.isSafeInteger(c.maxCapacityRefused) || c.maxCapacityRefused < 0 ||
+        !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.Firewall)) problems.push(`${where}: firewall-admission-budget needs Model 2, a named starter firewall and safe limits with positive minAdmissions`);
+    }
     if (c.kind === "queue-work") {
       if (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isSafeInteger(c.minAcknowledged) || c.minAcknowledged < 1 ||
         !Number.isSafeInteger(c.maxOutstanding) || c.maxOutstanding < 0 || !Number.isSafeInteger(c.maxRedeliveries) || c.maxRedeliveries < 0) problems.push(`${where}: queue-work needs Model 2, a queue id and safe nonnegative limits with positive minAcknowledged`);
@@ -77,6 +82,7 @@ function checkDefinition(d: ChallengeDefinition): string[] {
     if (NEEDS_EXPERIMENT.has(c.kind) && !d.experiment) problems.push(`${where}: criterion ${c.id} needs an experiment`);
   }
   for (const p of d.predictions) {
+    if (p.kind === "database-admission" && (d.engine !== "2" || !d.starter?.resources.some(r => r.type === RESOURCE_TYPES.Database))) problems.push(`${where}: database-admission needs Model 2 and a starter database`);
     if (!PREDICTIONS.includes(p.kind)) problems.push(`${where}: prediction ${p.id} has unsupported kind ${p.kind}`);
     if (NEEDS_EXPERIMENT.has(p.kind) && !d.experiment) problems.push(`${where}: prediction ${p.id} can only be judged with an experiment`);
   }

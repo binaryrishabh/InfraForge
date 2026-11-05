@@ -203,6 +203,45 @@ The cheap current counter accessors expose existing engine state; no queue behav
 published definition or historical pin changes. Bus dispatch failures and queue consumer
 redeliveries are different stages and must not be combined into one failure population.
 
+## Security and incident evidence labs
+
+`find-the-denying-rule@1` begins with a failed dependency and a clean exposure scan.
+The learner runs unchanged, reads the saved rule counters, then submits a diagnosis
+prediction in another unchanged attempt before editing. `database-admission` classifies
+incoming database denials from complete fixed direct paths: policy, missing listener,
+other/mixed, or positive delivery without denials. Safe counters and current terminal
+evidence are required. Missing paths, missing counters, helper or replica coverage,
+and no positive admission/delivery population leave the answer Unknown. Rule counters
+identify the policy decision; CPU or health alone do not. The prediction does not
+establish application correctness or explain every caller error.
+
+`leave-room-for-firewall-flows@1` separates tracked admission, current occupancy,
+expiry, policy denials and flow-capacity refusals. Its startup probe refusals coexist
+with successful callers; removing those refusals is not an availability improvement.
+`firewall-admission-budget` requires a named captured firewall, positive admission
+minimum and safe cumulative denial/refusal limits at the exact evaluation second.
+Missing optional security counters remain unscored, never inferred as zero. Omitted
+connection detail rows do not erase exact aggregate counters. These new admission
+exercises require valid scan-stage evidence; historical definitions keep their rules.
+
+Reports now preserve validated optional security measurements and reuse the existing
+security readings. Omitted connection details stay Unknown. These counters were
+already produced by the engine; neither its behavior nor historical definition hashes
+change. No packet-level evidence, provider security certification or availability is
+claimed.
+
+`choose-a-retry-mitigation@1` partitions the app-to-database link at second 2 for two
+seconds. Four, two and five maximum attempts are compared under the identical script.
+Two attempts reduce second-6 completed-request p95 and cumulative admission pressure,
+but also reduce whole-run completions. Five attempts worsen the measured tail and
+queue admissions slightly while finishing an extra caller. Requirements score the
+stated tail only; a Healthy terminal sample is not continuous recovery or MTTR.
+
+There is no DNS-cache lesson here: resolver state is not retained in saved reports.
+Scenario serving-path validation currently refuses a background-worker outage, and
+the intervention catalog has no VM or load-balancer process-outage action. Those
+limits are not bypassed or relabeled as implemented outages.
+
 ## Check
 
 ```

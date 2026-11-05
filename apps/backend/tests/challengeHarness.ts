@@ -35,6 +35,9 @@ import { replicasDoNotTakeWritesV1 } from "../challenges/definitions/replicas-do
 import { keepUpWithTheQueueV1 } from "../challenges/definitions/keep-up-with-the-queue/v1";
 import { leaveTimeToAcknowledgeV1 } from "../challenges/definitions/leave-time-to-acknowledge/v1";
 import { openOneSubscriberV1 } from "../challenges/definitions/open-one-subscriber/v1";
+import { findTheDenyingRuleV1 } from "../challenges/definitions/find-the-denying-rule/v1";
+import { leaveRoomForFirewallFlowsV1 } from "../challenges/definitions/leave-room-for-firewall-flows/v1";
+import { chooseARetryMitigationV1 } from "../challenges/definitions/choose-a-retry-mitigation/v1";
 
 // Historical report fixtures deliberately keep their published Model 1 conditions.
 export const legacyDefinition = (id: string) => findChallenge(id, 1)!.definition;
@@ -53,6 +56,9 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "find-the-denying-rule": {...findTheDenyingRuleV1.starter!, resources: findTheDenyingRuleV1.starter!.resources.map(r => r.id === "fw" ? {...r, firewallSettings: {...r.firewallSettings!, rules: r.firewallSettings!.rules.map(rule => rule.id === "quarantine-db" ? {...rule, priority: 20} : rule)}} : r)},
+  "leave-room-for-firewall-flows": {...leaveRoomForFirewallFlowsV1.starter!, resources: leaveRoomForFirewallFlowsV1.starter!.resources.map(r => r.id === "fw" ? {...r, firewallCapacity: {version: 1, maxFlows: 8}} : r)},
+  "choose-a-retry-mitigation": {...chooseARetryMitigationV1.starter!, resources: chooseARetryMitigationV1.starter!.resources.map(r => r.id === "lb" ? {...r, retry: {...r.retry!, maxAttempts: 2}} : r)},
   "keep-up-with-the-queue": {...keepUpWithTheQueueV1.starter!, resources: keepUpWithTheQueueV1.starter!.resources.map(r => r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, cpuMsPerJob: 50}} : r)},
   "leave-time-to-acknowledge": {...leaveTimeToAcknowledgeV1.starter!, resources: leaveTimeToAcknowledgeV1.starter!.resources.map(r => r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, visibilityTimeoutSeconds: 5}} : r)},
   "open-one-subscriber": {...openOneSubscriberV1.starter!, resources: openOneSubscriberV1.starter!.resources.map(r => r.id === "queue" ? {...r, listenerSettings: {version: 1, ports: [5672]}} : r)},

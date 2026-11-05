@@ -14,6 +14,9 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
+  "find-the-denying-rule@1": "e002c76a7884c02b542cad296516b26d3c5eaceaa1f9991adaf490c8b690d7b3",
+  "leave-room-for-firewall-flows@1": "492dca0578609884ed0729140e110de02cfd689831faecaa172f43eca803c705",
+  "choose-a-retry-mitigation@1": "6ca83f5bd42df0ea1f6ad09bb15d139a7b3b15abb3083a93b0e4d7e8b65ef46e",
   "keep-up-with-the-queue@1": "80c57013d6a2e71fa6f89b77ba17a61ac682995aa376fada131d88cdcca96627",
   "leave-time-to-acknowledge@1": "545ede03623d81e9654e578a9ce2406689f162bce5543af7ddc84cd0701888e7",
   "open-one-subscriber@1": "bc2e0e6372b2bde7615fc4daa6b1f7a3c780bbf2b53a57c70d359945a69ba247",
@@ -48,7 +51,7 @@ export const PUBLISHED: Record<string, string> = {
   "headroom-under-cpu-pressure@2": "f72994553399762ecd00739b55aedf34651618f23946f601e25f8ddfcfce9677",
 };
 
-const ANSWERS = { "overall-health": "healthy", "database-health": "healthy", "busiest-type": "Database", "security-clean": "yes",
+const ANSWERS = { "database-admission": "no-denials", "overall-health": "healthy", "database-health": "healthy", "busiest-type": "Database", "security-clean": "yes",
   "scale-out": "no", "baseline-health": "healthy", "survivor-health": "degraded", "target-health": "healthy" };
 const cache = CHALLENGE_VERSIONS.find((d) => d.id === "cache-failure")!;
 const withEdit = (edit: (d: ChallengeDefinition) => ChallengeDefinition) => CHALLENGE_VERSIONS.map((d) => d === cache ? edit(structuredClone(d)) : d);

@@ -32,6 +32,9 @@ import { replicasDoNotTakeWritesV1 } from "./replicas-do-not-take-writes/v1";
 import { keepUpWithTheQueueV1 } from "./keep-up-with-the-queue/v1";
 import { leaveTimeToAcknowledgeV1 } from "./leave-time-to-acknowledge/v1";
 import { openOneSubscriberV1 } from "./open-one-subscriber/v1";
+import { findTheDenyingRuleV1 } from "./find-the-denying-rule/v1";
+import { leaveRoomForFirewallFlowsV1 } from "./leave-room-for-firewall-flows/v1";
+import { chooseARetryMitigationV1 } from "./choose-a-retry-mitigation/v1";
 
 /* Every published version of every challenge, calibrated against simulation model
 "1" and catalog "2026-08". Versions are immutable and never removed: historical
@@ -71,4 +74,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   keepUpWithTheQueueV1,
   leaveTimeToAcknowledgeV1,
   openOneSubscriberV1,
+  findTheDenyingRuleV1,
+  leaveRoomForFirewallFlowsV1,
+  chooseARetryMitigationV1,
 ];
