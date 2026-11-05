@@ -16,6 +16,9 @@ const replicationSource = "apps/web/src/features/live/DatabaseReplicationReading
 const securitySource = "apps/web/src/features/canvas/components/inspector/SecuritySection.tsx";
 const lbSource = "apps/web/src/features/reports/components/LbAccountingReadings.tsx";
 const queueSource = "apps/backend/challenges/evaluate.ts";
+const gatewaySource = "apps/web/src/features/live/GatewayReadings.tsx";
+const schedulerSource = "apps/web/src/features/live/SchedulerReadings.tsx";
+const functionSource = "apps/web/src/features/live/ServerlessReadings.tsx";
 
 export const LEARNING_REPORT_MEASUREMENTS = {
   "Offered requests/s": { scope: "traffic", path: "offeredRps", source: trafficSource, marker: "Offered requests/s" },
@@ -70,6 +73,26 @@ export const LEARNING_REPORT_MEASUREMENTS = {
   "Retries": { scope: "resource", path: "eventBus.subscriptions.*.retried", resourceType: "Event Bus", source: "apps/web/src/features/live/EventBusReadings.tsx", marker: "Retries" },
   "Failed attempts": { scope: "resource", path: "eventBus.subscriptions.*.deliveryAccounting.failedAttempts", resourceType: "Event Bus", source: "apps/web/src/features/live/EventBusReadings.tsx", marker: "Failed attempts" },
   "Exhausted deliveries": { scope: "resource", path: "eventBus.subscriptions.*.deliveryAccounting.exhausted", resourceType: "Event Bus", source: "apps/web/src/features/live/EventBusReadings.tsx", marker: "Exhausted deliveries" },
+  "Route throttles (429)": { scope: "resource", path: "gateway.throttled", resourceType: "API Gateway", source: gatewaySource, marker: "Route throttles (429)" },
+  "Capacity refusals (503)": { scope: "resource", path: "gateway.overloaded", resourceType: "API Gateway", source: gatewaySource, marker: "Capacity refusals (503)" },
+  "Gateway failures (503)": { scope: "resource", path: "gateway.gatewayFailed", resourceType: "API Gateway", source: gatewaySource, marker: "Gateway failures (503)" },
+  "Upstream failures (502)": { scope: "resource", path: "gateway.upstreamFailed", resourceType: "API Gateway", source: gatewaySource, marker: "Upstream failures (502)" },
+  "Due triggers": { scope: "resource", path: "scheduler.due", resourceType: "Scheduler", source: schedulerSource, marker: "Due triggers" },
+  "Attempts fired": { scope: "resource", path: "scheduler.fired", resourceType: "Scheduler", source: schedulerSource, marker: "Attempts fired" },
+  "Completed invocations": { scope: "resource", path: "scheduler.completed", resourceType: "Scheduler", source: schedulerSource, marker: "Completed invocations" },
+  "Skipped overlap": { scope: "resource", path: "scheduler.skippedOverlap", resourceType: "Scheduler", source: schedulerSource, marker: "Skipped overlap" },
+  "Missed triggers": { scope: "resource", path: "scheduler.missed", resourceType: "Scheduler", source: schedulerSource, marker: "Missed triggers" },
+  "Failed invocations": { scope: "resource", path: "scheduler.failed", resourceType: "Scheduler", source: schedulerSource, marker: "Failed invocations" },
+  "Active invocations": { scope: "resource", path: "scheduler.active", resourceType: "Scheduler", source: schedulerSource, marker: "Active invocations" },
+  "Waiting invocations": { scope: "resource", path: "scheduler.queued", resourceType: "Scheduler", source: schedulerSource, marker: "Waiting invocations" },
+  "Delayed original starts": { scope: "resource", path: "scheduler.attemptAccounting.delayedStarts", resourceType: "Scheduler", source: schedulerSource, marker: "Delayed original starts" },
+  "Maximum original start delay (us)": { scope: "resource", path: "scheduler.attemptAccounting.maxStartDelayUs", resourceType: "Scheduler", source: schedulerSource, marker: "Maximum original start delay (us)" },
+  "Cold starts": { scope: "resource", path: "serverless.coldStarts", resourceType: "Serverless Function", source: functionSource, marker: "Cold starts" },
+  "Warm starts": { scope: "resource", path: "serverless.warmStarts", resourceType: "Serverless Function", source: functionSource, marker: "Warm starts" },
+  "Throttled invocations": { scope: "resource", path: "serverless.throttled", resourceType: "Serverless Function", source: functionSource, marker: "Throttled invocations" },
+  "Peak instances": { scope: "resource", path: "serverless.peakInstances", resourceType: "Serverless Function", source: functionSource, marker: "Peak instances" },
+  "Database calls": { scope: "resource", path: "serverless.downstreamCalls", resourceType: "Serverless Function", source: functionSource, marker: "Database calls" },
+  "Database wait time (us)": { scope: "resource", path: "serverless.lifecycle.downstreamUs", resourceType: "Serverless Function", source: functionSource, marker: "Database wait time (us)" },
 } satisfies Record<string, Measurement>;
 
 export type LearningMeasurementLabel = keyof typeof LEARNING_REPORT_MEASUREMENTS;

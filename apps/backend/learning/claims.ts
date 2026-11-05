@@ -14,7 +14,9 @@ export function lessonText(lesson: LearningLesson): Array<[string, string]> {
     ...(lesson.check ? [["check.question", lesson.check.question], ["check.explanation", lesson.check.explanation],
       ...lesson.check.choices.map((choice, i) => [`check.choices.${i}`, choice.text])] as Array<[string, string]> : []),
     ...(lesson.experiment ? [["prediction", lesson.experiment.prediction ?? ""],
-      ...(lesson.experiment.evidenceToInspect ?? []).map((text, i) => [`evidence.${i}`, text])] as Array<[string, string]> : []),
+      // Audited measurement names (some carry HTTP status codes) are validated against the report vocabulary separately;
+      // only free text left over after removing them is scanned for numeric claims.
+      ...(lesson.experiment.evidenceToInspect ?? []).map((text, i) => [`evidence.${i}`, evidenceLabels(text).filter(label => !learningMeasurement(label)).join("; ")])] as Array<[string, string]> : []),
   ];
 }
 
@@ -76,6 +78,8 @@ function pinnedValues(definition: ChallengeDefinition): Set<string> {
   const perSecond = requestsPerSecond(w);
   values.add(String(perSecond));
   values.add(String(perSecond * w.peakMultiplier));
+  // Per-operation rates follow from the pinned total and read share (for example a 50/50 split of 2000/s).
+  for (const share of [w.readWriteRatio, 1 - w.readWriteRatio]) values.add(String(Math.round(perSecond * share * 1e6) / 1e6));
   // Quotas/ratios are authored as fractions, while lessons use percentages.
   for (const value of [...values]) if (Number(value) > 0 && Number(value) < 1) values.add(String(Number(value) * 100));
   return values;
@@ -115,7 +119,8 @@ export function checkLessonClaims(lesson: LearningLesson, definition?: Challenge
     for (const match of quantities.matchAll(/(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:requests?|reads?|writes?)(?:\s*\/\s*|\s+(?:per|each)\s+)(?:second|s)\b/gi)) {
       const rate = Number(match[1]!.replaceAll(",", ""));
       const w = definition.workload, base = requestsPerSecond(w);
-      if (rate !== base && rate !== base * w.peakMultiplier && !exceptions.some(e => e.values.includes(String(rate)))) errors.push(`${identity} ${field}: unsupported request rate ${rate}`);
+      const perOperation = [w.readWriteRatio, 1 - w.readWriteRatio].map(share => Math.round(base * share * 1e6) / 1e6);
+      if (rate !== base && rate !== base * w.peakMultiplier && !perOperation.includes(rate) && !exceptions.some(e => e.values.includes(String(rate)))) errors.push(`${identity} ${field}: unsupported request rate ${rate}`);
     }
   }
   if (text.some(([, prose]) => numericClaims(prose).length) &&
