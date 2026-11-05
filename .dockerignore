@@ -126,6 +126,16 @@ apps/backend/challenges/**
 !apps/backend/challenges/definitions/*.ts
 !apps/backend/challenges/definitions/*/
 !apps/backend/challenges/definitions/*/*.ts
+!apps/backend/learning/
+apps/backend/learning/**
+!apps/backend/learning/*.ts
+!apps/backend/learning/README.md
+!apps/backend/learning/content/
+!apps/backend/learning/content/*.ts
+!apps/backend/learning/content/*/
+!apps/backend/learning/content/*/*.ts
+!apps/backend/learning/content/*/lessons/
+!apps/backend/learning/content/*/lessons/*.ts
 !apps/backend/scripts/
 apps/backend/scripts/**
 !apps/backend/scripts/recover-ownership.ts
