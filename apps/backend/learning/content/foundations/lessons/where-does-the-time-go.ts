@@ -14,5 +14,6 @@ export const whereDoesTheTimeGo: LearningLesson = {
   limitations: ["Instance selection changes assumed cores and default worker slots together; this comparison does not isolate their effects.",
     "p95 covers completions in the last second. It excludes unfinished requests and does not prove a whole-run response-time objective.",
     "CPU costs and health thresholds are educational assumptions, not cloud benchmarks."],
+  check: null,
   followUp: "Explain why the database-only change leaves the app waiting. Name the measurements that support your explanation.",
 };

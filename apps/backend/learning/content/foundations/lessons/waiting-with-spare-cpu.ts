@@ -14,5 +14,6 @@ export const waitingWithSpareCpu: LearningLesson = {
   limitations: ["A worker represents modeled request concurrency and holds its slot across dependency calls; it is not an operating-system thread benchmark.",
     "Last-second p95 excludes incomplete and failed requests. Inspect throughput as well.",
     "Additional workers can increase downstream demand. This example establishes no general rule that more concurrency is better."],
+  check: null,
   followUp: "Explain why app CPU can rise while p95 falls after adding worker slots. Refer to both recorded runs.",
 };

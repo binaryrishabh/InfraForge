@@ -14,5 +14,6 @@ export const oneBiggerOrTwoSmaller: LearningLesson = {
   limitations: ["Catalog labels and monthly estimates are fixed educational inputs, not current provider quotes or cloud performance benchmarks.",
     "No outage is applied. Two app instances do not establish failover, outage tolerance or availability; the load balancer and database remain shared dependencies.",
     "p95 is a last-second measurement of completed requests, not a whole-run SLO. The lower-rate control is a separate calibration, not a second scored workload."],
+  check: null,
   followUp: "Record both passing estimates and explain which cost and failure claims these runs leave Unknown.",
 };
