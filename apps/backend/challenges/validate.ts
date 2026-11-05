@@ -65,7 +65,7 @@ function checkDefinition(d: ChallengeDefinition): string[] {
   unique("criterion", d.criteria.map((c) => c.id));
   unique("prediction", d.predictions.map((p) => p.id));
   for (const c of d.criteria) {
-    if (c.kind === "terminal-p95" && (!d.scenario || !Number.isFinite(c.maxMs) || c.maxMs <= 0)) problems.push(`${where}: terminal-p95 needs a scenario and a positive finite maxMs`);
+    if (c.kind === "terminal-p95" && (d.engine !== "2" || !Number.isFinite(c.maxMs) || c.maxMs <= 0)) problems.push(`${where}: terminal-p95 needs Model 2 and a positive finite maxMs`);
     if (c.kind === "database-connections" && c.requireSpare !== undefined && typeof c.requireSpare !== "boolean") problems.push(`${where}: criterion ${c.id} requireSpare must be boolean`);
     if (!CRITERIA.includes(c.kind)) problems.push(`${where}: criterion ${c.id} has unsupported kind ${c.kind}`);
     if (NEEDS_EXPERIMENT.has(c.kind) && !d.experiment) problems.push(`${where}: criterion ${c.id} needs an experiment`);

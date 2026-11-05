@@ -155,7 +155,8 @@ class Judge {
     const base = { id: c.id, label: c.label };
     const pending = (detail: string, sources: string[]) => ({ ...base, status: this.active ? "pending" as const : "not-evaluated" as const, detail, sources });
     const decided = (met: boolean, detail: string, sources: string[]) => ({ ...base, status: met ? "met" as const : "not-met" as const, detail, sources });
-    const missing = this.definition.scenario ? this.scenarioCriterionProblem(c) : null;
+    // A fixed-load latency lab uses the same captured terminal evidence as a scenario.
+    const missing = this.definition.scenario || c.kind === "terminal-p95" ? this.scenarioCriterionProblem(c) : null;
     if (missing) return pending(missing, ["runInputs", "stages", "terminalSnapshot"]);
     const input = this.evidence.input;
     switch (c.kind) {

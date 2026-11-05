@@ -21,13 +21,13 @@ function refuses(change: (c: Fixture) => void, message: string) {
   expect(validateLearningContent(c).join("\n")).toContain(message);
 }
 
-test("real foundations content validates and follows the whole beginner path without invented labs", () => {
+test("real foundations content validates and follows the whole beginner path; runnable labs live only in first-runs", () => {
   expect(validateLearningContent(learningContent)).toEqual([]);
   const track = LEARNING_REGISTRY.findTrack("foundations")!;
   expect(track.title).toBe("Track 1: Foundations");
-  expect(track.modules.map((m) => m.id)).toEqual(["requests-and-routing", "compute-and-data", "load-and-limits"]);
-  const ids = track.modules.flatMap((m) => m.lessonIds);
-  expect(ids).toEqual(learningContent.lessons.map((l) => l.id));
+  expect(track.modules.map((m) => m.id)).toEqual(["requests-and-routing", "compute-and-data", "load-and-limits", "first-runs"]);
+  const ids = track.modules.filter((m) => m.id !== "first-runs").flatMap((m) => m.lessonIds);
+  expect([...ids, ...track.modules.find((m) => m.id === "first-runs")!.lessonIds]).toEqual(learningContent.lessons.map((l) => l.id));
   expect(ids).toHaveLength(10);
   for (const id of ids) {
     const l = LEARNING_REGISTRY.findLesson(id)!;
@@ -37,7 +37,7 @@ test("real foundations content validates and follows the whole beginner path wit
     expect(l.prerequisites.every((prerequisite) => ids.indexOf(prerequisite) < ids.indexOf(id))).toBe(true);
     if (l.kind === "conceptual-exercise") expect(l.check.choices.some((c) => c.id === l.check.correctChoiceId)).toBe(true);
   }
-  expect(LEARNING_REGISTRY.findModule("foundations", "first-runs")).toBeNull();
+  for (const id of track.modules.find((m) => m.id === "first-runs")!.lessonIds) expect(LEARNING_REGISTRY.findLesson(id)!.kind).toBe("executable-lab");
 });
 
 describe("authoring refusals", () => {
@@ -174,7 +174,7 @@ test("published old versions stay resolvable without duplicating the current les
   const registry = buildLearningRegistry(c);
   expect(registry.findLesson(first(c).id)?.contentVersion).toBe(2);
   expect(registry.findLesson(first(c).id, 1)?.title).toBe("What is a request?");
-  expect(registry.listLessons()).toHaveLength(10);
+  expect(registry.listLessons()).toHaveLength(13);
 });
 
 for (const [name, change] of [

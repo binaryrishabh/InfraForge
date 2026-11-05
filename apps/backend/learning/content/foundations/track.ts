@@ -1,4 +1,5 @@
 import type { LearningTrack } from "@infraforge/contracts/learning";
+import { firstRuns } from "./first-runs";
 
 export const track: LearningTrack = {
   id: "foundations", title: "Track 1: Foundations", availability: "available",
@@ -13,5 +14,6 @@ export const track: LearningTrack = {
     { id: "load-and-limits", title: "Load and limits", availability: "available",
       summary: "Separate waiting time from work rate, then look for the first constraint.",
       lessonIds: ["response-time-and-throughput", "more-users-more-pressure", "first-bottleneck"] },
+    firstRuns,
   ],
 };

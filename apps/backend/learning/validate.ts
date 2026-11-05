@@ -22,11 +22,12 @@ const base = {
   prerequisites: z.array(id).max(CONTENT_LIMITS.prerequisites),
   problem: paragraphs(1, CONTENT_LIMITS.problem), explanation: paragraphs(2, CONTENT_LIMITS.explanation),
   limitations: paragraphs(1, CONTENT_LIMITS.limitations),
+  followUp: text(400).optional(),
 };
 const lesson = z.discriminatedUnion("kind", [
   z.object({ ...base, kind: z.literal("reading"), experiment: z.null(), check: check.nullable() }).strict(),
   z.object({ ...base, kind: z.literal("conceptual-exercise"), experiment: z.null(), check }).strict(),
-  z.object({ ...base, kind: z.literal("executable-lab"), experiment: z.object({ challengeId: id, prediction: text(400).nullable() }).strict(), check: check.nullable() }).strict(),
+  z.object({ ...base, kind: z.literal("executable-lab"), experiment: z.object({ challengeId: id, prediction: text(400).nullable(), evidenceToInspect: z.array(text(240)).min(1).max(6).optional() }).strict(), check: check.nullable() }).strict(),
 ]);
 const track = z.object({
   id, title: text(CONTENT_LIMITS.title), summary: text(CONTENT_LIMITS.summary), availability,

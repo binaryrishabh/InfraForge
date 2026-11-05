@@ -23,12 +23,13 @@ interface LessonContent {
   problem: string[];
   explanation: string[];
   limitations: string[];
+  followUp?: string;
 }
 
 export type LearningLesson = LessonContent & (
   | { kind: "reading"; experiment: null; check: LearningCheck | null }
   | { kind: "conceptual-exercise"; experiment: null; check: LearningCheck }
-  | { kind: "executable-lab"; experiment: { challengeId: string; prediction: string | null }; check: LearningCheck | null }
+  | { kind: "executable-lab"; experiment: { challengeId: string; prediction: string | null; evidenceToInspect?: string[] }; check: LearningCheck | null }
 );
 
 export interface LearningModule {

@@ -19,6 +19,9 @@ import { scaleOutSafelyV2 } from "./scale-out-safely/v2";
 import { peakTrafficV2 } from "./peak-traffic/v2";
 import { headroomUnderCpuPressureV2 } from "./headroom-under-cpu-pressure/v2";
 import { boundRetriesDuringSlowdownV1 } from "./bound-retries-during-slowdown/v1";
+import { whereDoesTheTimeGoV1 } from "./where-does-the-time-go/v1";
+import { waitingWithSpareCpuV1 } from "./waiting-with-spare-cpu/v1";
+import { oneBiggerOrTwoSmallerV1 } from "./one-bigger-or-two-smaller/v1";
 
 /* Every published version of every challenge, calibrated against simulation model
 "1" and catalog "2026-08". Versions are immutable and never removed: historical
@@ -46,4 +49,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   headroomUnderCpuPressureV2,
   afterTheCacheReturnsV2,
   boundRetriesDuringSlowdownV1,
+  whereDoesTheTimeGoV1,
+  waitingWithSpareCpuV1,
+  oneBiggerOrTwoSmallerV1,
 ];

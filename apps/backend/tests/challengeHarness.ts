@@ -22,6 +22,9 @@ import { currentSecond } from "../simulator/engineView";
 import { recordedScenario } from "../challenges/scenario";
 import { dueScenarioSteps } from "@infraforge/simulation/model2-run";
 import { boundRetriesDuringSlowdownV1 } from "../challenges/definitions/bound-retries-during-slowdown/v1";
+import { whereDoesTheTimeGoV1 } from "../challenges/definitions/where-does-the-time-go/v1";
+import { waitingWithSpareCpuV1 } from "../challenges/definitions/waiting-with-spare-cpu/v1";
+import { oneBiggerOrTwoSmallerV1 } from "../challenges/definitions/one-bigger-or-two-smaller/v1";
 
 // Historical report fixtures deliberately keep their published Model 1 conditions.
 export const legacyDefinition = (id: string) => findChallenge(id, 1)!.definition;
@@ -40,6 +43,13 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "where-does-the-time-go": {...whereDoesTheTimeGoV1.starter!, resources: whereDoesTheTimeGoV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.large"} : r)},
+  "waiting-with-spare-cpu": {...waitingWithSpareCpuV1.starter!, resources: waitingWithSpareCpuV1.starter!.resources.map(r => r.id === "app" ? {...r, vmExecution: {...r.vmExecution!, workers: 4}} : r)},
+  "one-bigger-or-two-smaller": {...oneBiggerOrTwoSmallerV1.starter!, resources: oneBiggerOrTwoSmallerV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r)},
+  // Alternative passing design for the same comparison. Never imported by runtime code.
+  "one-bigger-or-two-smaller-horizontal": starter([["lb", T.LoadBalancer, 0, 0], ["app", T.VirtualMachine, 1, 0, {skuId: "c5.large"}],
+    ["app2", T.VirtualMachine, 1, 1, {skuId: "c5.large"}], ["db", T.Database, 2, 0, {size: "medium"}]],
+  [["lb", "app"], ["app", "db"], ["lb", "app2"], ["app2", "db"]]),
   "bound-retries-during-slowdown": {...boundRetriesDuringSlowdownV1.starter!, resources: boundRetriesDuringSlowdownV1.starter!.resources.map(r => r.id === "lb" ?
     {...r, retry: {enabled: true, maxAttempts: 2, backoffMs: 100, jitterRatio: 0.2, maxConcurrentRetries: 4, retryOn: ["backendFailure", "timeout", "connectionFailure"]}} : r)},
   "after-the-cache-returns": { ...afterTheCacheReturnsV2.starter!, resources: afterTheCacheReturnsV2.starter!.resources.map((r) =>
