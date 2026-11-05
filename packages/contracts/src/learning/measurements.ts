@@ -19,6 +19,8 @@ const queueSource = "apps/backend/challenges/evaluate.ts";
 const gatewaySource = "apps/web/src/features/live/GatewayReadings.tsx";
 const schedulerSource = "apps/web/src/features/live/SchedulerReadings.tsx";
 const functionSource = "apps/web/src/features/live/ServerlessReadings.tsx";
+const actionSource = "apps/web/src/features/reports/components/ActionTimeline.tsx";
+const dataSource = "apps/web/src/features/live/DataDeliveryReadings.tsx";
 
 export const LEARNING_REPORT_MEASUREMENTS = {
   "Offered requests/s": { scope: "traffic", path: "offeredRps", source: trafficSource, marker: "Offered requests/s" },
@@ -34,6 +36,8 @@ export const LEARNING_REPORT_MEASUREMENTS = {
   "Whole run: Completed": { scope: "traffic", path: "wholeRun.completed", source: wholeSource, marker: '"Completed"' },
   "Whole run: Failed": { scope: "traffic", path: "wholeRun.failed", source: wholeSource, marker: '"Failed"' },
   "Whole run: In-flight": { scope: "traffic", path: "wholeRun.inFlight", source: wholeSource, marker: '"In-flight"' },
+  "Deadline exceeded": { scope: "traffic", path: "wholeRun.deadlineExceeded", source: wholeSource, marker: '"Deadline exceeded"' },
+  Abandoned: { scope: "traffic", path: "wholeRun.abandoned", source: wholeSource, marker: '"Abandoned"' },
   "Whole run: p95 bucket": { scope: "traffic", path: "wholeRun.percentiles.p95", source: wholeSource, marker: "w.percentiles[p].highMs" },
   "Monthly estimate (CostEstimate gate)": { scope: "monthly", path: "monthlyEstimateUsd", unit: "USD", source: resourceSource, marker: "Monthly estimate (CostEstimate gate)" },
   "Queue: originals": { scope: "resource", path: "queueWork.originals", resourceType: "Message Queue", source: queueSource, marker: "${q.originals} originals" },
@@ -55,6 +59,12 @@ export const LEARNING_REPORT_MEASUREMENTS = {
   "Primary CPU core-us": { scope: "resource", path: "database.readRouting.members.primary.consumedCoreUs", resourceType: "Database", source: replicationSource, marker: "m.consumedCoreUs" },
   "Replica CPU core-us": { scope: "resource", path: "database.readRouting.members.replica.consumedCoreUs", resourceType: "Database", source: replicationSource, marker: "m.consumedCoreUs" },
   "Refused session opens": { scope: "resource", path: "database.sessionRefused", resourceType: "Database", source: "apps/web/src/features/live/DataDeliveryReadings.tsx", marker: '"Refused session opens"' },
+  "Serving queries": { scope: "resource", path: "database.serving", resourceType: "Database", source: dataSource, marker: '"Serving queries"' },
+  "Queries waiting for locks": { scope: "resource", path: "database.waiting", resourceType: "Database", source: dataSource, marker: '"Queries waiting for locks"' },
+  "Connection acquisition wait": { scope: "traffic", path: "latency.typical.categories.connectionWait.meanMs", unit: "ms", source: "apps/web/src/features/live/LatencyBreakdown.tsx", marker: '"Connection acquisition wait"' },
+  "Resolved targets:": { scope: "snapshot", path: "actions.*.outcome.intervention.resolvedTargets", source: actionSource, marker: "Resolved targets:" },
+  "Applies at": { scope: "snapshot", path: "actions.*.outcome.intervention.atUs", unit: "us", source: actionSource, marker: "Applies at" },
+  "baseline restore at": { scope: "snapshot", path: "actions.*.outcome.intervention.endUs", unit: "us", source: actionSource, marker: "baseline restore at" },
   "Admitted by backend (attempts)": { scope: "resource", path: "lbAccounting.acceptedByBackend", resourceType: "Load Balancer", source: lbSource, marker: '"Admitted by backend (attempts)"' },
   "Queued at VM (attempts)": { scope: "resource", path: "lbAccounting.queuedAtVm", resourceType: "Load Balancer", source: lbSource, marker: '"Queued at VM (attempts)"' },
   "Refused by VM (attempts)": { scope: "resource", path: "lbAccounting.rejectedByVm", resourceType: "Load Balancer", source: lbSource, marker: '"Refused by VM (attempts)"' },

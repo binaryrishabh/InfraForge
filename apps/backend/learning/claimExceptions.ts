@@ -8,6 +8,54 @@ export interface ClaimException {
 }
 export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
   {
+    lesson: "diagnose-lost-app-capacity@1", field: "explanation.2",
+    text: "After verifying the diagnosis, change only fw Tracked connection limit from 1 to 8, then compare both apps' work, admissions, second-6 p95 and whole-run caller failures. Try enlarging app alone as a near miss; explain why fixing a visible symptom can leave a requirement unmet.",
+    values: ["8"],
+    reason: "The starter firewallCapacity.maxFlows is 1; 8 is the controlled reference setting, not a measured admission count. Sources: apps/backend/tests/challengeHarness.ts REFERENCE and apps/backend/tests/advancedLabsCalibration.test.ts.",
+  },
+  {
+    lesson: "investigate-a-pool-reset@1", field: "explanation.3",
+    text: "Change only lb Maximum attempts from 4 to 2 and run the same script. Compare the tail and whole-run failures. Try 5 separately. Explain the measured difference without inventing incident alerts, operators, users, logs or recovery timestamps.",
+    values: ["2", "5"],
+    reason: "The pinned starter retry.maxAttempts is 4. Two attempts is the controlled reference input; five is the separate near miss. Sources: apps/backend/tests/challengeHarness.ts REFERENCE and apps/backend/tests/advancedLabsCalibration.test.ts.",
+  },
+  {
+    lesson: "budget-for-a-partition@1", field: "problem.1",
+    text: "Assumptions: two initial one-core apps; 3 ms app CPU and 1 ms DB CPU per read; a two-core database; least-outstanding selection; two total attempts. Consider a two-core c5.large peer and a four-core c5.xlarge peer under the same workload and fault.",
+    values: ["3", "c5.large", "4", "c5.xlarge"],
+    reason: "The canvas default is 3000 cpu-us per app read (3 ms), from packages/simulation/src/model2/product/fromDesign.ts application.demands. The controlled c5.large and c5.xlarge alternatives have two and four educational cores in packages/catalog/src/aws.catalog.ts; regression: apps/backend/tests/advancedLabsCalibration.test.ts and reference inputs: apps/backend/tests/challengeHarness.ts.",
+  },
+  {
+    lesson: "budget-for-a-partition@1", field: "explanation.0",
+    text: "Run unchanged, then change only peer's instance to c5.large and run again. Verify the exact partition target and end receipt before reading the requirements. Keep the app, DB, retry and selection settings fixed.",
+    values: ["c5.large"],
+    reason: "c5.large is the peer-only controlled reference input, not the starter instance. Sources: apps/backend/tests/challengeHarness.ts REFERENCE and apps/backend/tests/advancedLabsCalibration.test.ts.",
+  },
+  {
+    lesson: "budget-for-a-partition@1", field: "explanation.1",
+    text: "Try c5.xlarge on peer as a second valid design. Compare educational monthly estimate, peer CPU at second 5, final p95 and cumulative caller outcomes. State the smaller design's headroom concession and the larger design's cost concession.",
+    values: ["c5.xlarge"],
+    reason: "c5.xlarge is the separate peer-only headroom reference input. Sources: apps/backend/tests/challengeHarness.ts REFERENCE budget-for-a-partition-headroom and apps/backend/tests/advancedLabsCalibration.test.ts.",
+  },
+  {
+    lesson: "trace-a-saturation-cascade@1", field: "problem.0",
+    text: "A four-core app receives 800 requests/s, half reads and half writes. Its one-core database executes 1 ms reads and 2 ms writes. The database becomes saturated while the app still has spare CPU and the load balancer reports failed callers.",
+    values: ["2"],
+    reason: "The canvas database plan authors 2000 cpu-us per write (2 ms), outside the challenge starter fields. Source: packages/simulation/src/model2/product/fromDesign.ts Database plan; regression: apps/backend/tests/advancedLabsCalibration.test.ts.",
+  },
+  {
+    lesson: "trace-a-saturation-cascade@1", field: "explanation.1",
+    text: "Change only db to db.m5.large with 2 educational cores. Compare current DB waiting work and connection wait with the changed tail, completions and failures. App CPU can rise when downstream capacity lets more useful work finish.",
+    values: ["db.m5.large", "2"],
+    reason: "db.m5.large is the controlled database-only reference input from apps/backend/tests/challengeHarness.ts REFERENCE, with two educational cores from packages/catalog/src/aws.catalog.ts. Regression: apps/backend/tests/advancedLabsCalibration.test.ts.",
+  },
+  {
+    lesson: "trace-a-saturation-cascade@1", field: "limitations.1",
+    text: "Both variants remain within the database session ceiling with zero session refusals. The demonstrated mechanism is DB CPU/occupied-connection pressure; it is not session exhaustion or proven VM admission-queue pressure.",
+    values: ["0"],
+    reason: "Zero session refusals is a calibrated result for the compared variants, not a general database guarantee. Source: apps/backend/tests/advancedLabsCalibration.test.ts explicitly asserts database.sessionRefused equals 0 for starter, reference and near miss.",
+  },
+  {
     "lesson": "where-does-the-time-go@1",
     "field": "explanation.0",
     "text": "The starter offers 350 reads each second. Each read asks for 3 ms of app CPU work and 1 ms of database CPU work in this educational profile.",

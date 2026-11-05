@@ -55,6 +55,13 @@ export function sizeClaims(text: string): string[] {
   ].filter(value => !/^second-\d+$/i.test(value)).map(value => value.toLowerCase());
 }
 
+function scenarioSeconds(definition: ChallengeDefinition): number[] {
+  return (definition.scenario?.steps ?? []).flatMap(step => {
+    const duration = step.request.parameters.duration;
+    return typeof duration === "number" ? [step.atSecond, step.atSecond + duration] : [step.atSecond];
+  });
+}
+
 function pinnedValues(definition: ChallengeDefinition): Set<string> {
   const values = new Set<string>();
   const visit = (value: unknown) => {
@@ -69,6 +76,12 @@ function pinnedValues(definition: ChallengeDefinition): Set<string> {
   const { workload: w } = definition;
   visit(w);
   values.add(String(definition.evaluationSeconds));
+  // Scenario ids, targets and revisions are not numeric evidence. Only the
+  // scheduled boundaries and numeric intervention inputs authorize prose.
+  scenarioSeconds(definition).forEach(second => values.add(String(second)));
+  for (const step of definition.scenario?.steps ?? []) {
+    for (const value of Object.values(step.request.parameters)) if (typeof value === "number") visit(value);
+  }
   for (const criterion of definition.criteria) {
     for (const [key, value] of Object.entries(criterion)) if (!["id", "label", "resourceId", "kind"].includes(key)) visit(value);
   }
@@ -100,6 +113,7 @@ export function checkLessonClaims(lesson: LearningLesson, definition?: Challenge
   }
   if (!definition) return errors; // Identity failures are reported by authoring.ts.
   const allowed = pinnedValues(definition);
+  const seconds = new Set([definition.evaluationSeconds, ...scenarioSeconds(definition)]);
   for (const [field, prose] of text) {
     const exceptions = CLAIM_EXCEPTIONS.filter(e => e.lesson === identity && e.field === field && e.text === prose && e.reason.trim());
     const quantities = normalizeQuantities(prose);
@@ -107,7 +121,7 @@ export function checkLessonClaims(lesson: LearningLesson, definition?: Challenge
       errors.push(`${identity} ${field}: unsupported numeric/size claim ${token}: ${prose}`);
     }
     for (const match of quantities.matchAll(/\bsecond[ -]+(\d+(?:\.\d+)?)/gi)) {
-      if (Number(match[1]) !== definition.evaluationSeconds && !exceptions.some(e => e.values.includes(match[1]!))) {
+      if (!seconds.has(Number(match[1])) && !exceptions.some(e => e.values.includes(match[1]!))) {
         errors.push(`${identity} ${field}: unsupported evaluation second ${match[1]}`);
       }
     }
