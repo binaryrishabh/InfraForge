@@ -12,6 +12,7 @@ import { recordedExperiment } from "./experiment";
 import { scenarioError } from "@infraforge/simulation/model2-run";
 import { recordedScenario } from "./scenario";
 import { captureRunInputs } from "../deployments/runInputs";
+import { isDepthCriterion, depthResourceType, depthCriterionLimits } from "./depthCriteria";
 
 /* Authoring checks for source-controlled challenges. Everything here is static and
 deterministic; calibration (the starter fails, a hidden reference passes) runs the
@@ -42,7 +43,7 @@ const definition = z.object({
 }).strict();
 
 const CRITERIA = ["deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
-  "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "firewall-admission-budget"];
+  "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work"];
 const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
 
@@ -65,6 +66,10 @@ function checkDefinition(d: ChallengeDefinition): string[] {
   unique("criterion", d.criteria.map((c) => c.id));
   unique("prediction", d.predictions.map((p) => p.id));
   for (const c of d.criteria) {
+    if (isDepthCriterion(c)) {
+      if (d.engine !== "2" || !id.safeParse(c.resourceId).success || !depthCriterionLimits(c) || !d.starter?.resources.some(r => r.id === c.resourceId && r.type === depthResourceType(c))) problems.push(`${where}: ${c.kind} needs Model 2, its named starter resource and safe limits with positive minCompleted`);
+      if (c.kind === "gateway-route-work" && (!id.safeParse(c.routeId).success || !d.starter?.resources.find(r => r.id === c.resourceId)?.apiGateway?.routes?.some(r => r.id === c.routeId))) problems.push(`${where}: gateway-route-work needs its named explicit starter route`);
+    }
     if (c.kind === "firewall-admission-budget") {
       if (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isSafeInteger(c.minAdmissions) || c.minAdmissions < 1 ||
         !Number.isSafeInteger(c.maxPolicyDenied) || c.maxPolicyDenied < 0 || !Number.isSafeInteger(c.maxCapacityRefused) || c.maxCapacityRefused < 0 ||

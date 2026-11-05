@@ -13,6 +13,9 @@ export type OverallHealth = "healthy" | "degraded" | "saturated" | "critical";
 /* Requirements are evaluated by the server from recorded run evidence.
 The client renders labels; it never decides whether one was met. */
 export type ChallengeCriterion =
+  | { id: string; kind: "gateway-route-work"; label: string; resourceId: string; routeId: string; minCompleted: number; maxUpstreamFailed: number }
+  | { id: string; kind: "scheduler-work"; label: string; resourceId: string; minCompleted: number; maxMissed: number; maxOutstanding: number }
+  | { id: string; kind: "function-work"; label: string; resourceId: string; minCompleted: number; maxThrottled: number; maxDownstreamFailed: number }
   | { id: string; kind: "deployment-checks"; label: string }
   | { id: string; kind: "min-app-servers"; label: string; count: number }
   | { id: string; kind: "catalog-sizes"; label: string }

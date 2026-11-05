@@ -3,7 +3,7 @@ import { starter } from "../../starter";
 import { MODEL_NOTE } from "../modelNote";
 
 export const catalogueLinkFlashV1: ChallengeDefinition = {
-  engine: "2", id: "catalogue-link-flash", version: 1, title: "Mission: a flash of popular links", difficulty: "advanced",
+  engine: "2", id: "catalogue-link-flash", version: 1, title: "Mission: popular link flash", difficulty: "advanced",
   summary: "Combine app headroom and cache capacity for a read-only catalogue behind DNS and a load balancer.",
   concepts: ["Request routing", "Burst headroom", "Cache working set", "Database pressure"],
   story: ["A catalogue has sixteen modeled keys with the engine's fixed hot-key access pattern. DNS routes through a load balancer to one app, then a cache backed by a database. Traffic rises from 200 to 800 reads/second at second 120 until 140.",

@@ -40,6 +40,9 @@ import { leaveRoomForFirewallFlowsV1 } from "../challenges/definitions/leave-roo
 import { chooseARetryMitigationV1 } from "../challenges/definitions/choose-a-retry-mitigation/v1";
 import { catalogueLinkFlashV1 } from "../challenges/definitions/catalogue-link-flash/v1";
 import { flashSaleOrderBacklogV1 } from "../challenges/definitions/flash-sale-order-backlog/v1";
+import { protectOneApiRouteV1 } from "../challenges/definitions/protect-one-api-route/v1";
+import { queueOverlappingJobsV1 } from "../challenges/definitions/queue-overlapping-jobs/v1";
+import { boundFunctionPoolPressureV1 } from "../challenges/definitions/bound-function-pool-pressure/v1";
 
 // Historical report fixtures deliberately keep their published Model 1 conditions.
 export const legacyDefinition = (id: string) => findChallenge(id, 1)!.definition;
@@ -58,6 +61,9 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "protect-one-api-route": {...protectOneApiRouteV1.starter!, resources: protectOneApiRouteV1.starter!.resources.map(r => r.id === "gateway" ? {...r, apiGateway: {...r.apiGateway!, routes: r.apiGateway!.routes!.map(route => route.id === "read" ? {...route, burstRequests: 1} : route)}} : r)},
+  "queue-overlapping-jobs": {...queueOverlappingJobsV1.starter!, resources: queueOverlappingJobsV1.starter!.resources.map(r => r.id === "timer" ? {...r, scheduler: {...r.scheduler!, overlap: "queue"}} : r)},
+  "bound-function-pool-pressure": {...boundFunctionPoolPressureV1.starter!, resources: boundFunctionPoolPressureV1.starter!.resources.map(r => r.id === "fn" ? {...r, serverless: {...r.serverless!, concurrency: 32}} : r)},
   "catalogue-link-flash": {...catalogueLinkFlashV1.starter!, resources: catalogueLinkFlashV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r.id === "cache" ? {...r, cachePolicy: {version: 2, capacityEntries: 16}} : r)},
   "flash-sale-order-backlog": {...flashSaleOrderBacklogV1.starter!, resources: flashSaleOrderBacklogV1.starter!.resources.map(r => r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, cpuMsPerJob: 100}} : r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, visibilityTimeoutSeconds: 5}} : r)},
   "find-the-denying-rule": {...findTheDenyingRuleV1.starter!, resources: findTheDenyingRuleV1.starter!.resources.map(r => r.id === "fw" ? {...r, firewallSettings: {...r.firewallSettings!, rules: r.firewallSettings!.rules.map(rule => rule.id === "quarantine-db" ? {...rule, priority: 20} : rule)}} : r)},

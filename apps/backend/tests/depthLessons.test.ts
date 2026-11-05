@@ -1,0 +1,30 @@
+import { expect, test } from "bun:test";
+import { learningContent } from "../learning/content";
+import { lessons, track } from "../learning/content/depth";
+import { validateLearningContent } from "../learning/validate";
+import { LEARNING_REGISTRY } from "../learning/registry";
+import { checkLearningAuthoring } from "../learning/authoring";
+import { definition } from "./challengeHarness";
+
+test("depth lessons use canonical shapes, resolve prerequisites and register three runnable experiments", () => {
+  expect(validateLearningContent(learningContent)).toEqual([]);
+  expect(lessons).toHaveLength(3);
+  expect(LEARNING_REGISTRY.findTrack("depth")).toEqual(track);
+  for (const lesson of lessons) {
+    expect(LEARNING_REGISTRY.findLesson(lesson.id)).toEqual(lesson);
+    expect(lesson.kind).toBe("executable-lab"); expect(lesson.check).toBeNull();
+    expect(lesson.limitations.length).toBeGreaterThan(0);
+    for (const prerequisite of lesson.prerequisites) expect(LEARNING_REGISTRY.findLesson(prerequisite)).not.toBeNull();
+    expect(lesson.experiment!.challengeId).toBe(lesson.id);
+    expect(lesson.experiment!.evidenceToInspect!.length).toBeGreaterThan(1);
+    expect(definition(lesson.id).difficulty).toBe(lesson.level === "advanced" ? "advanced" : "core");
+  }
+  const broken = structuredClone(learningContent);
+  broken.lessons.find(l => l.id === lessons[0]!.id)!.limitations = [];
+  expect(validateLearningContent(broken).join("\n")).toContain("limitations");
+});
+
+test("new depth content cannot silently claim a human challenge review", () => {
+  // Lane A owns review receipts. Do not fabricate a human review to clear its gate.
+  expect(() => checkLearningAuthoring({tracks: [track], lessons: lessons.map(l => ({...l, prerequisites: []})), archivedLessons: []})).toThrow("missing challenge review; needs a human look");
+});

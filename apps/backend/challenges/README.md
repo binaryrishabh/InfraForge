@@ -270,6 +270,48 @@ These missions reuse existing criteria and replay/report paths. No simulator,
 scoring system or attempt history is added. The `missions` lessons list existing
 earlier lessons as advisory prerequisites, with one small lesson file per mission.
 
+## Resource depth labs
+
+`protect-one-api-route@1` changes only the read route's initial burst credits.
+Its independent token bucket protects a one-worker upstream while the write
+route retains the same admission and completion counts. The engine has no
+selectable shared route bucket. Gateway command CPU, transport and the global
+in-flight bound remain shared; this controlled result is not a universal
+fairness or no-starvation guarantee. Deliberate rate refusals still count as
+failed callers, so protection can pass with unhealthy overall health.
+
+`queue-overlapping-jobs@1` changes only scheduler overlap from allow to queue.
+The first cold invocation lasts beyond several due times. Queuing delays starts
+while preserving all twenty timer jobs; skip loses triggers and allow hits the
+function's concurrency ceiling. Foreground caller outcomes and scheduled jobs
+are separate populations. The saved start delay is not a recovery-time claim.
+
+`bound-function-pool-pressure@1` changes only function concurrency. It reduces
+cold starts and connection wait on the shared ten-session database pool, but
+increases throttles and reduces total completions. Both the useful-completion
+minimum and the refusal budget matter alongside second-3 p95. This is not
+database session exhaustion: open sessions remain below the database limit,
+with zero session refusals. The challenge serving-path validator currently
+refuses the session-capacity intervention for this function path; it is not
+bypassed. Function instance timing and CPU/database capacity are educational.
+
+The new `gateway-route-work`, `scheduler-work` and `function-work` requirements
+read existing validated optional counters at the exact evaluation second with
+current topology measurements. They require named captured resources, positive
+completion minima and safe nonnegative limits. Route outcomes must match saved
+bindings; scheduler attempt accounting and function lifecycle measurements must
+exist. Function work must retain its attached database path. Missing, malformed,
+stale or historical evidence stays unscored. Requirements use the existing
+generic label/status/detail rendering. No engine behavior or published version
+changes, and no second judge, report store or attempt history is introduced.
+
+DNS cache versus record changes remains outside this slice: saved reports lack
+resolver populations, and no usable record-change/outage challenge was
+calibrated. Load-balancer process outages are not supported by the intervention
+catalog; no recovery-time or partial-recovery lab is claimed. Event bus retry
+exhaustion already appears in `open-one-subscriber@1`; a separate calibrated
+retry/dead-letter-overflow exercise is not added here.
+
 ## Check
 
 ```
