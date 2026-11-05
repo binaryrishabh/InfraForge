@@ -44,6 +44,9 @@ import { diagnoseLostAppCapacityV1 } from "./diagnose-lost-app-capacity/v1";
 import { investigateAPoolResetV1 } from "./investigate-a-pool-reset/v1";
 import { budgetForAPartitionV1 } from "./budget-for-a-partition/v1";
 import { traceASaturationCascadeV1 } from "./trace-a-saturation-cascade/v1";
+import { cacheOrDatabaseV1 } from "./cache-or-database/v1";
+import { oneVmOrAPoolV1 } from "./one-vm-or-a-pool/v1";
+import { limitOrCapacityV1 } from "./limit-or-capacity/v1";
 
 /* Every published version of every challenge, calibrated against simulation model
 "1" and catalog "2026-08". Versions are immutable and never removed: historical
@@ -95,4 +98,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   investigateAPoolResetV1,
   budgetForAPartitionV1,
   traceASaturationCascadeV1,
+  cacheOrDatabaseV1,
+  oneVmOrAPoolV1,
+  limitOrCapacityV1,
 ];

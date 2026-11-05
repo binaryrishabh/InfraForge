@@ -1,5 +1,28 @@
 # Authoring challenges
 
+## Architecture choices
+
+`cache-or-database@1`, `one-vm-or-a-pool@1` and `limit-or-capacity@1` each have two
+passing designs under fixed requirements. Hidden designs remain in the test harness.
+Cost comparisons are educational estimates; the gateway estimate remains Unknown.
+Cache counters are checked during replay calibration, not claimed as saved report fields.
+
+`caller-outcomes` uses the retained `traffic.wholeRun` populations through the exact
+evaluation second: completed must meet a positive minimum; failed + deadlineExceeded +
+abandoned must stay within a nonnegative limit. In-flight work belongs to neither
+population. Missing capture/design, stale topology, absent or malformed counters,
+mismatched cumulative windows and unsafe totals remain unscored. The existing generic
+requirements list renders the resulting label, status, detail and evidence sources.
+
+`vm-crash@1` is a versioned scenario intervention for a fixed primary VM compute role.
+Its duration includes an explicit one-second restart and must be at least two seconds.
+It compiles to the existing Crash cancellation, service-state and readiness mechanisms;
+its receipt ends only when readiness restores. Overlapping crashes and replacement
+windows are refused. No process failure is substituted with a link partition.
+The pool exercise evaluates cumulative callers as well as final latency so a fast
+post-restart sample cannot conceal earlier caller failures. No continuous-health or
+availability assertion follows from these measurements.
+
 Challenges are source-controlled. There is no admin interface and no database-authored rule.
 
 ## Identity and versions

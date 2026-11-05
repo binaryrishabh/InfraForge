@@ -43,7 +43,7 @@ const definition = z.object({
 }).strict();
 
 const CRITERIA = ["deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
-  "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work"];
+  "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work", "caller-outcomes"];
 const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
 
@@ -81,6 +81,7 @@ function checkDefinition(d: ChallengeDefinition): string[] {
       if (!d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.MessageQueue && r.asyncQueue?.enabled)) problems.push(`${where}: queue-work needs its named enabled starter queue`);
     }
     if (c.kind === "terminal-p95" && (d.engine !== "2" || !Number.isFinite(c.maxMs) || c.maxMs <= 0)) problems.push(`${where}: terminal-p95 needs Model 2 and a positive finite maxMs`);
+    if (c.kind === "caller-outcomes" && (d.engine !== "2" || !Number.isSafeInteger(c.minCompleted) || c.minCompleted <= 0 || !Number.isSafeInteger(c.maxUnsuccessful) || c.maxUnsuccessful < 0)) problems.push(`${where}: caller-outcomes needs Model 2, positive safe minCompleted and nonnegative safe maxUnsuccessful`);
     if (c.kind === "backend-admission-budget" && (d.engine !== "2" || !Number.isFinite(c.maxPerOfferedRequest) || c.maxPerOfferedRequest <= 0)) problems.push(`${where}: backend-admission-budget needs Model 2 and a positive finite maxPerOfferedRequest`);
     if (c.kind === "database-connections" && c.requireSpare !== undefined && typeof c.requireSpare !== "boolean") problems.push(`${where}: criterion ${c.id} requireSpare must be boolean`);
     if (!CRITERIA.includes(c.kind)) problems.push(`${where}: criterion ${c.id} has unsupported kind ${c.kind}`);

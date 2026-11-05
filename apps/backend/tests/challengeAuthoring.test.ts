@@ -14,6 +14,9 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
+  "cache-or-database@1": "7e141efce731cbf7f0c531002f8b6b8c4e82af638a63ff05bd45bb667e14c0b0",
+  "one-vm-or-a-pool@1": "c85cf9886ed04a2e284d20aa0de128b0ed311fd23ac0dbe668b448f7f55bec79",
+  "limit-or-capacity@1": "48a7fce6157a217fd36abfc226be5a74d9aa453906fe2a23fb21175beed66423",
   "diagnose-lost-app-capacity@1": "c96034e934dbd75035b519f13035467cdae6eb9d8f08b921c06ad18cdb2466f2",
   "investigate-a-pool-reset@1": "ed61ae0627f3d15dcab41899f5cc80c5c54edf207c3068bdc9abe765e590500e",
   "budget-for-a-partition@1": "7b35c54cc84b3f4bc7af1e315fe55ed29b400b4395dca7fcce17a071b5e0d960",
