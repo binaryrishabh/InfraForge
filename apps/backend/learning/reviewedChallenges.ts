@@ -14,9 +14,12 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "find-the-denying-rule@1": { challengeId: "find-the-denying-rule", version: 1, hash: "e002c76a7884c02b542cad296516b26d3c5eaceaa1f9991adaf490c8b690d7b3" },
   "leave-room-for-firewall-flows@1": { challengeId: "leave-room-for-firewall-flows", version: 1, hash: "492dca0578609884ed0729140e110de02cfd689831faecaa172f43eca803c705" },
   "choose-a-retry-mitigation@1": { challengeId: "choose-a-retry-mitigation", version: 1, hash: "6ca83f5bd42df0ea1f6ad09bb15d139a7b3b15abb3083a93b0e4d7e8b65ef46e" },
-  "catalogue-link-flash@1": { challengeId: "catalogue-link-flash", version: 1, hash: "43c39cdf15b738830ed6b85a5385b198a017a6e39b4240d033e7d39cb41dd65c" },
+  "catalogue-link-flash@1": { challengeId: "catalogue-link-flash", version: 1, hash: "2d6afe745f45e31593096d34ae669138f45f2d6dadc2eff02295a71114ca7a6e" },
   "flash-sale-order-backlog@1": { challengeId: "flash-sale-order-backlog", version: 1, hash: "c84cc970bee937a37136dd716a85724ee589fd8706b82fbd709e64de825b4093" },
   "where-does-the-time-go@1": { challengeId: "where-does-the-time-go", version: 1, hash: "58174698cfd975ad0117a8cf029a13293c720115455140058090c0de9814b5e9" },
   "waiting-with-spare-cpu@1": { challengeId: "waiting-with-spare-cpu", version: 1, hash: "e4fec65bcf80c96d30f239f2c7d6d4d8e3bc9427220c0bf5b40d6c47e8777f37" },
   "one-bigger-or-two-smaller@1": { challengeId: "one-bigger-or-two-smaller", version: 1, hash: "48b7361f4daf5649bf8ea465c307df7b5567bf32254743206e8a6cd80da13a56" },
+  "protect-one-api-route@1": { challengeId: "protect-one-api-route", version: 1, hash: "695b5f64876c96ff10cc0f6f37a9f74190b41a9378d92c0cc75a163ca7a509ea" },
+  "queue-overlapping-jobs@1": { challengeId: "queue-overlapping-jobs", version: 1, hash: "ff340d09b24bff1c2f824e408ae3025f8bd39b7b6cec7cc9917fbcafaf6405cc" },
+  "bound-function-pool-pressure@1": { challengeId: "bound-function-pool-pressure", version: 1, hash: "b58e0c704222b88d8e5d83d99dc998624c8b70f322e82d115ebd33767cd71d50" },
 };

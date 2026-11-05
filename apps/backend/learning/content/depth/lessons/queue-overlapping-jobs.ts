@@ -4,7 +4,7 @@ export const queueOverlappingJobs: LearningLesson = {
   id: "queue-overlapping-jobs", contentVersion: 1, trackId: "depth", moduleId: "resource-pressure",
   title: "Queue overlapping jobs", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Use scheduler overlap policy to preserve a finite burst of jobs while accepting measured start delay.",
-  prerequisites: ["keep-up-with-the-queue"],
+  prerequisites: ["queue-ownership-and-acknowledgement", "keep-up-with-the-queue"],
   problem: ["Timer schedules twenty reads from 100 ms, every 50 ms. A function initializes cold instances for 300 ms and executes each invocation for 100 ms before querying db. Its four slots also serve one foreground read each second.",
     "Complete all twenty timer jobs by second 4, with none missed or outstanding. Timer currently allows overlap with a ceiling of 32 active jobs. Capacities and durations are educational assumptions."],
   explanation: ["Predict overall health and run unchanged. Compare timer due, completed, missed and failed counts with function throttles. Foreground completed requests count a separate population from scheduled jobs.",

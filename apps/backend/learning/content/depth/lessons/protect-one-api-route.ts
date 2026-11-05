@@ -4,7 +4,7 @@ export const protectOneApiRoute: LearningLesson = {
   id: "protect-one-api-route", contentVersion: 1, trackId: "depth", moduleId: "resource-pressure",
   title: "Protect one API route", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Protect a bounded read backend while keeping a second route's independent admission budget useful.",
-  prerequisites: ["route-around-a-slow-vm"],
+  prerequisites: ["load-balancer-policies", "route-around-a-slow-vm"],
   problem: ["The gateway receives 1000 reads and 1000 writes each second. Read has 10000 initial burst credits, refills at one per second and targets a one-worker backend with no waiting queue. Write has its own 100-credit bucket, refilling at 100/s.",
     "By second 2, complete two reads and 250 writes without upstream failures on either route. These educational requirements allow deliberate rate refusals; count those callers too."],
   explanation: ["Predict terminal health, then run unchanged. Inspect read-route completions and upstream failures alongside the backend's CPU. Separate gateway rate refusals from admitted calls that fail upstream.",

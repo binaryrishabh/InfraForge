@@ -4,7 +4,7 @@ export const boundFunctionPoolPressure: LearningLesson = {
   id: "bound-function-pool-pressure", contentVersion: 1, trackId: "depth", moduleId: "resource-pressure",
   title: "Bound function pool pressure", kind: "executable-lab", level: "advanced", availability: "available",
   summary: "Balance useful completions, cold starts, throttling and contention on a shared database connection pool.",
-  prerequisites: ["budget-app-database-sessions"],
+  prerequisites: ["connection-pool-budgets", "budget-app-database-sessions"],
   problem: ["A function receives 3000 reads/s with a 128-invocation ceiling. Each cold instance takes 100 ms to initialize; each body takes 100 ms before querying db. All its instances share one lazy ten-session pool against a generic one-core database.",
     "Complete at least 800 invocations through second 3, with at most 8500 throttles and no downstream failures. Completed-request p95 in second 3 must be at most 110 ms. Durations and capacities are educational inputs."],
   explanation: ["Predict database health and run unchanged. Inspect cold and warm starts, initialization time, active invocations, database CPU and sessions. Compare the successful callers' connection-wait contribution with their latency tail.",
