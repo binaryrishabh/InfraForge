@@ -17,6 +17,10 @@
       "types": "./src/challenges/index.ts",
       "default": "./src/challenges/index.ts"
     },
+    "./learning": {
+      "types": "./src/learning/index.ts",
+      "default": "./src/learning/index.ts"
+    },
     "./reports": {
       "types": "./src/reports/index.ts",
       "default": "./src/reports/index.ts"
