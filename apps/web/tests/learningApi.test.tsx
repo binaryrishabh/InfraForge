@@ -46,7 +46,7 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
     const foundations = await getLearningCatalog();
     const html = render(<LearningList {...ready(foundations)} filters={EMPTY_FILTERS} onFilters={() => {}} />);
     expect(html).toContain("Track 1: Foundations"); expect(html).toContain("What is a request?"); expect(html).toContain("Client and server");
-    expect(foundations.tracks.map(track => track.id)).toEqual(["foundations", "scaling", "data", "async", "failures", "missions"]);
+    expect(foundations.tracks.map(track => track.id)).toEqual(["foundations", "scaling", "data", "async", "failures", "missions", "depth"]);
     expect(availableLessons(foundations)).toHaveLength(foundations.lessons.length);
     for (const track of foundations.tracks) {
       expect(html).toContain(track.title);

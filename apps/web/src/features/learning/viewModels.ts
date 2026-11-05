@@ -29,11 +29,14 @@ export const LEARNING_VIEW_STATES = {
   check: ["absent", "unanswered", "correct", "incorrect"],
   storage: ["unused", "saved", "unavailable"],
   prerequisites: ["ready", "unavailable", "missing-reference"],
+  catalogLinks: ["loading", "error", "ready"],
+  progress: ["not-started", "attempted", "improved-after-attempt", "requirements-met", "earlier-version"],
   activity: ["absent", "recorded", "review-unavailable"],
   comparison: ["unavailable", "available"],
   followup: ["absent", "linked"],
   summary: ["absent", "recorded"],
   suggestion: ["empty", "suggested"],
+  runStart: ["quota", "refused"],
 } as const;
 type ViewState<K extends keyof typeof LEARNING_VIEW_STATES> = typeof LEARNING_VIEW_STATES[K][number];
 
