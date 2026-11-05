@@ -1,10 +1,12 @@
 import { expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
 import type { ChallengeDefinition, ChallengeStarter } from "@infraforge/contracts/challenges";
 import type { SimulationSnapshot } from "@infraforge/contracts/telemetry";
 import { buildRunReport } from "../reports/report";
 import { captureRunInputs } from "../deployments/runInputs";
-import { buildRegistry, challengeSeed } from "../challenges/registry";
+import { buildRegistry, challengeSeed, specHash } from "../challenges/registry";
 import { preflight } from "../challenges/preflight";
+import { validateChallengeVersions } from "../challenges/validate";
 import { readPrediction } from "../challenges/prediction";
 import { definition, REFERENCE, attemptRow, answers } from "./challengeHarness";
 
@@ -21,6 +23,11 @@ const leaves = (a: unknown, b: unknown): number => {
 
 for (const id of ids) test(`${id}: controlled one-setting engine runs, near miss and retained evidence refusal`, () => {
   const d = definition(id), start = d.starter!, fixed = REFERENCE[id]!, near = structuredClone(start);
+  // Read the real published pin without importing the older engine calibration suite.
+  const published = readFileSync(new URL("./challengeAuthoring.test.ts", import.meta.url), "utf8");
+  const hash = new RegExp(`"${id}@1": "([a-f0-9]{64})"`).exec(published)?.[1];
+  expect(hash).toBe(specHash(d));
+  expect(validateChallengeVersions([d], {[`${id}@1`]: hash!})).toEqual([]);
   if (id === ids[0]) resource(near, "app").size = "large";
   else if (id === ids[1]) resource(near, "lb").retry!.maxAttempts = 5;
   else resource(near, "app").skuId = "m5.2xlarge";
