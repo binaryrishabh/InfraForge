@@ -105,7 +105,8 @@ await step("a prediction is locked and the real browser run starts and stops at 
   await page.getByRole("link", { name: /see the result/i }).waitFor({ timeout: 240_000 });
   await page.screenshot({ path: `${SHOTS}/7a-finished.png` });
   await page.getByRole("link", { name: /see the result/i }).click();
-  await page.waitForFunction(() => /Challenge result/.test(document.body.innerText) && /Prediction against the record/.test(document.body.innerText), null, { timeout: 120_000 });
+  await page.waitForURL(/\/runs\//, { timeout: 120_000 });
+  await page.waitForFunction(() => /Your prediction/.test(document.body.innerText) && /requirements? met/.test(document.body.innerText), null, { timeout: 120_000 });
   await page.waitForTimeout(2000);
   await page.screenshot({ path: `${SHOTS}/7-after-run.png` });
   const body = await text();
@@ -115,7 +116,7 @@ await step("the recorded result page shows the challenge verdict, the prediction
   await page.waitForURL(/\/runs\//, { timeout: 60_000 }).catch(() => {});
   const body = await text();
   await page.screenshot({ path: `${SHOTS}/8-result.png`, fullPage: true });
-  return { url: page.url().replace(WEB, "").replace(/runs\/.*/, "runs/<id>"), verdict: /Every requirement was met|Not every requirement was met/.exec(body)?.[0] ?? null, predictionComparison: /Prediction against the record/.test(body), partOfLesson: /Part of lesson/.test(body), debrief: body.slice(Math.max(0, body.indexOf("Challenge result"))).slice(0, 1200) };
+  return { url: page.url().replace(WEB, "").replace(/runs\/.*/, "runs/<id>"), verdict: /(\d+ of \d+ requirements? met at \d+s)/.exec(body)?.[1] ?? null, notMetOrMet: /Not met|Met/.exec(body)?.[0] ?? null, predictionComparison: /Your prediction/.test(body) && /recorded/.test(body), partOfLesson: /Part of lesson/.test(body), debrief: body.slice(Math.max(0, body.indexOf("Your design"))).slice(0, 900) };
 });
 await step("the lesson now shows the learner's own recorded attempt from the server", async () => {
   await page.goto(`${WEB}/learn/lessons/where-does-the-time-go`, { waitUntil: "load" });
@@ -124,6 +125,11 @@ await step("the lesson now shows the learner's own recorded attempt from the ser
   const body = await text();
   await page.screenshot({ path: `${SHOTS}/9-lesson-after.png`, fullPage: true });
   return { activity: /Server activity: ([^·]*)/.exec(body)?.[1]?.trim(), whatRunShowed: body.slice(Math.max(0, body.search(/latest (recorded )?attempt|What (did )?your run/i))).slice(0, 700) };
+});
+await step("the result offers one change and a rerun; the improvement flow opens the earlier design", async () => {
+  await page.goBack().catch(() => {}); await page.goBack().catch(() => {});
+  await page.goto(page.url().includes("/runs/") ? page.url() : `${WEB}/runs`, { waitUntil: "load" });
+  return { url: page.url().replace(WEB, "").replace(/runs\/.*/, "runs/<id>"), buttons: await page.getByRole("button").allInnerTexts(), links: (await page.getByRole("link").allInnerTexts()).slice(0, 20) };
 });
 await step("keyboard: lesson page can be operated with Tab only", async () => {
   await page.goto(`${WEB}/learn/lessons/client-and-server`, { waitUntil: "load" });
