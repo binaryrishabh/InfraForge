@@ -1,5 +1,11 @@
 import type { RunAction } from "@infraforge/contracts/actions";
-import type { StartingComparison } from "@infraforge/contracts/reports";
+import type { RunComparison, StartingComparison } from "@infraforge/contracts/reports";
+
+// Presentation of the existing server classifier, shared with lesson follow-ups.
+export function challengeConditionsLabel(value: RunComparison["challengeConditions"]): string {
+  return value === "same" ? "Same challenge version, rules, workload, seed, evaluation second and scheduled fault."
+    : value === "different" ? "Different challenge versions or recorded conditions; their results were judged by different rules." : "Unknown";
+}
 
 export const GRADE_LABEL: Record<StartingComparison["grade"], string> = {
   "same-starting-point": "Same starting point", "one-change-design": "One change: design", "one-change-workload": "One change: workload",

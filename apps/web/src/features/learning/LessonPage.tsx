@@ -8,6 +8,9 @@ import { activityLabel, availableLessons, KIND_LABEL, lessonMode, prerequisiteLe
 import { useDeviceLesson, useLearningCatalog, useLearningLesson } from "./hooks";
 import { LearningFailure, type LearningRequest } from "./LearningPage";
 import type { DeviceLessonState } from "./deviceLocal";
+import { LessonActivity } from "./LessonActivity";
+import { latestLessonRun } from "./lessonActivityData";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 
 export function LessonBody({ detail, catalog, local, storageAvailable, onLocal, onOpen, busy }: {
   detail: LearningLessonDetail; catalog: LearningCatalog | null; local: DeviceLessonState; storageAvailable: boolean;
@@ -77,7 +80,8 @@ export function LessonBody({ detail, catalog, local, storageAvailable, onLocal, 
 function DeviceLesson({ detail, catalog }: { detail: LearningLessonDetail; catalog: LearningCatalog | null }) {
   const local = useDeviceLesson(detail.lesson.id, detail.lesson.contentVersion);
   const { open, busy } = useOpenChallenge();
-  return <LessonBody detail={detail} catalog={catalog} local={local.value} storageAvailable={local.available} onLocal={local.update} onOpen={(id) => void open(id)} busy={busy !== null} />;
+  return <><LessonBody detail={detail} catalog={catalog} local={local.value} storageAvailable={local.available} onLocal={local.update} onOpen={(id) => void open(id)} busy={busy !== null} />
+    {latestLessonRun(detail) && <LessonActivity detail={detail} />}</>;
 }
 
 export function LessonView({ data, loading, error, retry, catalog }: LearningRequest<LearningLessonDetail> & { catalog: LearningRequest<LearningCatalog> }) {
@@ -91,8 +95,13 @@ export function LessonView({ data, loading, error, retry, catalog }: LearningReq
   </Page>;
 }
 
-export function LessonPage() {
+function LessonSession() {
   const { lessonId = "" } = useParams();
   const detail = useLearningLesson(lessonId), catalog = useLearningCatalog();
   return <LessonView {...detail} catalog={catalog} />;
+}
+
+export function LessonPage() {
+  const owner = useAuthStore((s) => s.user?.id);
+  return <LessonSession key={owner} />;
 }
