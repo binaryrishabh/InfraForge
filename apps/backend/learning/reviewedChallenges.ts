@@ -2,6 +2,9 @@
  * Keep old records. A changed challenge needs a new reviewed contentVersion. */
 export interface LearningChallengeReview { challengeId: string; version: number; hash: string }
 export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeReview>> = {
+  "cache-or-database@1": {challengeId: "cache-or-database", version: 1, hash: "7e141efce731cbf7f0c531002f8b6b8c4e82af638a63ff05bd45bb667e14c0b0"},
+  "one-vm-or-a-pool@1": {challengeId: "one-vm-or-a-pool", version: 1, hash: "c85cf9886ed04a2e284d20aa0de128b0ed311fd23ac0dbe668b448f7f55bec79"},
+  "limit-or-capacity@1": {challengeId: "limit-or-capacity", version: 1, hash: "48a7fce6157a217fd36abfc226be5a74d9aa453906fe2a23fb21175beed66423"},
   "route-around-a-slow-vm@1": { challengeId: "route-around-a-slow-vm", version: 1, hash: "96465260711b0f1ac74f1d62c606146c356721bde0b3843e0423d11b022a3f52" },
   "leave-room-for-a-burst@1": { challengeId: "leave-room-for-a-burst", version: 1, hash: "f7cbf5006543fbbe1739e32bc9f25d2a1761d7ef9227dbdf11afbe5a9e42f9e2" },
   "retrying-a-full-pool@1": { challengeId: "retrying-a-full-pool", version: 1, hash: "5d8317a0a3d135a19466ec5e1da5b86e7d46bd6a4ffaebbaadaec4bf443ca49c" },
