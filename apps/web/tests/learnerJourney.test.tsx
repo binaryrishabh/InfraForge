@@ -23,7 +23,7 @@ import { LessonView } from "../src/features/learning/LessonPage";
 import { LearningList } from "../src/features/learning/LearningPage";
 import { EMPTY_FILTERS } from "../src/features/learning/discovery";
 
-// Learner journey with real parts: the workload is built with the same helpers the run dialog calls, the
+// The first two journeys: the workload is built with the same helpers the run dialog calls, the
 // product-compiled engine runs it, and the live panel, the stored report and the comparison are rendered
 // from that engine's output. Sign-in, the canvas and the network are NOT part of this proof.
 const base = { ...WORKLOAD_PRESETS[0]!.profile, targetThroughput: 72000, throughputUnit: "per-minute" as const, readWriteRatio: 1, payloadSize: "light" as const };
@@ -149,14 +149,17 @@ test("lesson -> prediction -> browser attempt -> server replay -> factual progre
     const { url } = JSON.parse(line) as { url: string };
     expect(new URL(url).hostname).toBe("127.0.0.1");
     expect((await fetch(`${url}/learning`)).status).toBe(401);
+    let cookie = "journey=alice";
     const requests: Array<{ path: string; method: string; body: unknown; status: number }> = [];
     // A network adapter only: never supply response payloads or outcomes here.
     http.defaults.adapter = async (config) => {
       expect(config.withCredentials).toBe(true);
       const target = new URL(config.url!.replace(API_URL, url));
+      // A changed client URL must never send test traffic/cookies outside this fixture.
+      if (target.origin !== new URL(url).origin) throw Error(`Non-local journey request refused: ${target.origin}`);
       for (const [key, value] of Object.entries(config.params ?? {})) if (value !== undefined) target.searchParams.set(key, String(value));
       const response = await fetch(target, { method: config.method?.toUpperCase(),
-        headers: { cookie: "journey=alice", "Content-Type": "application/json" }, body: config.data as string | undefined });
+        headers: { cookie, "Content-Type": "application/json" }, body: config.data as string | undefined });
       const data = await response.json();
       requests.push({ path: target.pathname, method: config.method!, body: config.data ? JSON.parse(config.data as string) : null, status: response.status });
       if (!response.ok) throw Object.assign(Error(data.message), { response: { status: response.status } });
@@ -199,7 +202,9 @@ test("lesson -> prediction -> browser attempt -> server replay -> factual progre
       const report = await wait(() => getRunReport(id), (r) => r.run.status === "torn-down");
       expect(report.terminal?.traffic).toEqual(shown.get(detail.challenge!.id));
       expect(report.terminal?.simulatedSeconds).toBe(detail.challenge!.evaluationSeconds);
-      expect(requests.some((r) => r.path.endsWith(`/${id}/submit`) && r.status === 202)).toBe(true);
+      const submissions = requests.filter((r) => r.path.endsWith(`/${id}/submit`) && r.status === 202);
+      expect(submissions).toHaveLength(1);
+      expect(submissions[0]!.body).toEqual({ stopAtSecond: detail.challenge!.evaluationSeconds, actions: [] });
       return report;
     };
     detail = await getLearningLesson(lessonId);
@@ -207,6 +212,8 @@ test("lesson -> prediction -> browser attempt -> server replay -> factual progre
     expect((await getRunReport(first.id)).terminal).toBeNull();
     expect(lessonMarkup()).toContain("Server activity: Recorded attempt");
     await expect(http.post(`${API_URL}/deployments/${first.id}/submit`, { stopAtSecond: 12, actions: [], metrics: { healthy: true } })).rejects.toThrow();
+    expect((await getRunReport(first.id)).terminal).toBeNull();
+    expect((await getLearningLesson(lessonId)).progress).toMatchObject({ activity: "attempted", predictionReviewed: false, sameConditionsComparison: false });
     const before = await finish(first.id);
     expect(before.challenge?.status).toBe("not-met");
     expect(before.challenge?.reasoning).toBe(prediction.reasoning);
@@ -222,6 +229,7 @@ test("lesson -> prediction -> browser attempt -> server replay -> factual progre
     const hypothesis = "I expect the app size change to reduce app CPU at second 12.";
     const second = await startChallengeAttempt(detail.challenge!.id, improved.id, { answers: { busiest: "Database" }, reasoning: "A new expectation after changing the app." },
       { sourceRunId: first.id, hypothesis, intent: "improvement", inputHash: review.inputHash!, acknowledgeMultiple: false }, detail.challenge!.version);
+    expect((await getLearningLesson(lessonId)).progress).toMatchObject({ activity: "attempted", attempts: 2, sameConditionsComparison: false });
     const after = await finish(second.id);
     expect(after.challenge?.status).toBe("met");
     expect(after.run.learning).toMatchObject({ sourceRunId: first.id, hypothesis, intent: "improvement" });
@@ -234,6 +242,10 @@ test("lesson -> prediction -> browser attempt -> server replay -> factual progre
     expect(lessonMarkup()).toContain("Current requirements met");
     const list = renderToStaticMarkup(<MemoryRouter><LearningList {...ready(catalog)} filters={EMPTY_FILTERS} onFilters={() => {}} /></MemoryRouter>);
     expect(list).toContain("Current requirements met");
+    cookie = "journey=bob";
+    expect((await getLearningLesson(lessonId)).progress).toMatchObject({ activity: "not-started", attempts: 0, lastRunId: null });
+    await expect(getRunReport(first.id)).rejects.toThrow();
+    await expect(getComparison(first.id, second.id)).rejects.toThrow();
     console.info("learning-journey", JSON.stringify({ source: before.challenge?.status, later: after.challenge?.status,
       activity: detail.progress?.activity, attempts: detail.progress?.attempts, httpRequests: requests.length, serverReplay: true }));
   } finally {

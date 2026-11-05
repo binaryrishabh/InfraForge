@@ -136,7 +136,11 @@ async function learningJourneyServer() {
   mock.module("../infra/pubsub", () => ({ publishSimulationSnapshot: async () => {}, publishDeploymentFailed: async () => {} }));
   mock.module("../infra/redis", () => ({ redis: { publish: async () => {} } }));
   mock.module("../auth/auth", () => ({ authSettings: { origins: ["http://localhost"] }, auth: { api: {
-    getSession: async ({ headers }: { headers: Headers }) => headers.get("cookie") === "journey=alice" ? { user: { id: "alice" } } : null,
+    getSession: async ({ headers }: { headers: Headers }) => {
+      const cookie = headers.get("cookie");
+      const owner = cookie === "journey=alice" ? "alice" : cookie === "journey=bob" ? "bob" : null;
+      return owner ? { user: { id: owner } } : null;
+    },
   } } }));
   const { requireSession } = await import("../auth/httpSecurity");
   const { challengeRouter } = await import("../challenges/routes");
