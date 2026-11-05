@@ -10,6 +10,18 @@ import { useSimulationStore } from "../src/features/monitoring/store/simulationS
 import { ReportMeasurements } from "../src/features/reports/components/ReportMeasurements";
 import { SourceInputFacts } from "../src/features/reports/components/SourceInputFacts";
 import { CompareContent } from "../src/features/reports/components/CompareView";
+import type { LearningCatalog, LearningLessonDetail } from "@infraforge/contracts/learning";
+import type { FromWorker, ToWorker } from "../src/features/model2Run/protocol";
+import { createBrowserRuns } from "../src/features/model2Run/browserRuns";
+import { startModel2Run } from "../src/features/model2Run/runner";
+import { createRunHost } from "../src/features/model2Run/worker/host";
+import { API_URL, http } from "../src/client/httpClient";
+import { getLearningCatalog, getLearningLesson } from "../src/features/learning/learning.api";
+import { openChallengeWorkspace, startChallengeAttempt, openImprovementWorkspace, previewImprovement } from "../src/api/challenges.api";
+import { getRunReport, getComparison } from "../src/api/reports.api";
+import { LessonView } from "../src/features/learning/LessonPage";
+import { LearningList } from "../src/features/learning/LearningPage";
+import { EMPTY_FILTERS } from "../src/features/learning/discovery";
 
 // Learner journey with real parts: the workload is built with the same helpers the run dialog calls, the
 // product-compiled engine runs it, and the live panel, the stored report and the comparison are rendered
@@ -121,3 +133,112 @@ test("a controlled traffic experiment compares a source run with one changed set
 function compareText(data: RunComparison) {
   return text(renderToStaticMarkup(<MemoryRouter><CompareContent loading={false} error={null} retry={() => {}} data={data} /></MemoryRouter>));
 }
+
+// Extends the existing journey proof, using a loopback server and real product routes.
+// The worker's message transport is in-process; the engine, browser controller,
+// HTTP submission and independent server replay are real. This is not DOM automation
+// or proof of database persistence / production authentication.
+test("lesson -> prediction -> browser attempt -> server replay -> factual progress -> improve -> compare", async () => {
+  const child = Bun.spawn([process.execPath, "--no-env-file", resolve(import.meta.dir, "../../backend/tests/journeyProof.fixture.ts")], {
+    stdout: "pipe", stderr: "pipe", env: { ...process.env, JOURNEY_INPUT: JSON.stringify({ learning: true }) } });
+  const stderr = new Response(child.stderr).text(), reader = child.stdout.getReader();
+  const previous = http.defaults.adapter;
+  try {
+    let line = "";
+    while (!line.includes("\n")) { const chunk = await reader.read(); if (chunk.done) throw Error(`Journey server did not start: ${await stderr}`); line += new TextDecoder().decode(chunk.value); }
+    const { url } = JSON.parse(line) as { url: string };
+    expect(new URL(url).hostname).toBe("127.0.0.1");
+    expect((await fetch(`${url}/learning`)).status).toBe(401);
+    const requests: Array<{ path: string; method: string; body: unknown; status: number }> = [];
+    // A network adapter only: never supply response payloads or outcomes here.
+    http.defaults.adapter = async (config) => {
+      expect(config.withCredentials).toBe(true);
+      const target = new URL(config.url!.replace(API_URL, url));
+      for (const [key, value] of Object.entries(config.params ?? {})) if (value !== undefined) target.searchParams.set(key, String(value));
+      const response = await fetch(target, { method: config.method?.toUpperCase(),
+        headers: { cookie: "journey=alice", "Content-Type": "application/json" }, body: config.data as string | undefined });
+      const data = await response.json();
+      requests.push({ path: target.pathname, method: config.method!, body: config.data ? JSON.parse(config.data as string) : null, status: response.status });
+      if (!response.ok) throw Object.assign(Error(data.message), { response: { status: response.status } });
+      return { data, status: response.status, statusText: response.statusText, config, headers: {} };
+    };
+    const ready = <T,>(data: T) => ({ data, loading: false, error: null, retry() {} });
+    const lessonId = "where-does-the-time-go";
+    let catalog: LearningCatalog = await getLearningCatalog(), detail: LearningLessonDetail = await getLearningLesson(lessonId);
+    expect(detail.progress).toMatchObject({ activity: "not-started", attempts: 0 });
+    const lessonMarkup = () => renderToStaticMarkup(<MemoryRouter><LessonView {...ready(detail)} catalog={ready(catalog)} /></MemoryRouter>);
+    expect(lessonMarkup()).toContain("Open challenge lab");
+    expect(lessonMarkup()).toContain(detail.lesson.experiment!.prediction!);
+    const workspace = await openChallengeWorkspace(detail.challenge!.id);
+    await expect(startChallengeAttempt(detail.challenge!.id, workspace.designId, { answers: {}, reasoning: null })).rejects.toThrow();
+    expect((await getLearningLesson(lessonId)).progress?.attempts).toBe(0);
+    const prediction = { answers: { busiest: "Virtual Machine" }, reasoning: "The starter app has more assumed CPU work per request." };
+    const first = await startChallengeAttempt(detail.challenge!.id, workspace.designId, prediction);
+    const wait = async <T,>(read: () => Promise<T>, done: (value: T) => boolean) => {
+      const until = Date.now() + 30000;
+      while (Date.now() < until) { const value = await read(); if (done(value)) return value; await new Promise((r) => setTimeout(r, 30)); }
+      throw Error("Journey state did not settle");
+    };
+    const shown = new Map<string, NonNullable<SimulationSnapshot["traffic"]>>();
+    const browsers = createBrowserRuns({ http, apiUrl: API_URL, startRun: (start, callbacks) =>
+      startModel2Run(start, callbacks, () => {
+        // Same host and runner as the Web Worker; only its message port and timers are seams.
+        const worker = { onmessage: null as ((event: MessageEvent<FromWorker>) => void) | null, onerror: null,
+          postMessage: (message: ToWorker) => host.handle(message), terminate() {} };
+        const host = createRunHost((data) => {
+          if (data.type === "second" && data.view.traffic) shown.set(start.challengeId!, data.view.traffic);
+          worker.onmessage?.({ data } as MessageEvent<FromWorker>);
+        }, { set: (fn) => setTimeout(fn, 0), clear: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>) });
+        return worker as never;
+      }) });
+    const finish = async (id: string) => {
+      await wait(async () => (await http.get(`${API_URL}/deployments/${id}`)).data.deployment.status as string, (status) => status === "browser");
+      await new Promise<void>((resolveEnd, reject) => {
+        void browsers.startBrowserRun(id, (error) => error ? reject(Error(error)) : resolveEnd()).catch(reject);
+      });
+      const report = await wait(() => getRunReport(id), (r) => r.run.status === "torn-down");
+      expect(report.terminal?.traffic).toEqual(shown.get(detail.challenge!.id));
+      expect(report.terminal?.simulatedSeconds).toBe(detail.challenge!.evaluationSeconds);
+      expect(requests.some((r) => r.path.endsWith(`/${id}/submit`) && r.status === 202)).toBe(true);
+      return report;
+    };
+    detail = await getLearningLesson(lessonId);
+    expect(detail.progress).toMatchObject({ activity: "attempted", predictionReviewed: false, attempts: 1 });
+    expect((await getRunReport(first.id)).terminal).toBeNull();
+    expect(lessonMarkup()).toContain("Server activity: Recorded attempt");
+    await expect(http.post(`${API_URL}/deployments/${first.id}/submit`, { stopAtSecond: 12, actions: [], metrics: { healthy: true } })).rejects.toThrow();
+    const before = await finish(first.id);
+    expect(before.challenge?.status).toBe("not-met");
+    expect(before.challenge?.reasoning).toBe(prediction.reasoning);
+    await expect(http.post(`${API_URL}/deployments/${first.id}/submit`, { stopAtSecond: 12, actions: [] })).rejects.toThrow();
+    detail = await getLearningLesson(lessonId);
+    expect(detail.progress).toMatchObject({ activity: "attempted", predictionReviewed: true, attempts: 1 });
+    const improved = await openImprovementWorkspace(detail.challenge!.id, first.id);
+    const layout = structuredClone(improved.layout)!;
+    layout.resources!.find((r) => r.id === "app")!.skuId = "c5.large";
+    const review = await previewImprovement(detail.challenge!.id, first.id, improved.id, layout);
+    expect(review).toMatchObject({ count: 1, classification: "one-change" });
+    await http.put(`${API_URL}/infrastructure/${improved.id}`, { layout });
+    const hypothesis = "I expect the app size change to reduce app CPU at second 12.";
+    const second = await startChallengeAttempt(detail.challenge!.id, improved.id, { answers: { busiest: "Database" }, reasoning: "A new expectation after changing the app." },
+      { sourceRunId: first.id, hypothesis, intent: "improvement", inputHash: review.inputHash!, acknowledgeMultiple: false }, detail.challenge!.version);
+    const after = await finish(second.id);
+    expect(after.challenge?.status).toBe("met");
+    expect(after.run.learning).toMatchObject({ sourceRunId: first.id, hypothesis, intent: "improvement" });
+    const comparison = await getComparison(first.id, second.id);
+    expect(comparison).toMatchObject({ available: true, challengeConditions: "same", lineage: "source-and-improvement", designChangeReview: { count: 1 } });
+    expect(compareText(comparison)).toContain("Traffic outcomes");
+    catalog = await getLearningCatalog(); detail = await getLearningLesson(lessonId);
+    expect(detail.progress).toMatchObject({ activity: "requirements-met", attempts: 2, predictionReviewed: true, sameConditionsComparison: true, lastRunId: second.id });
+    expect(catalog.progress.find((p) => p.lessonId === lessonId)).toEqual(detail.progress!);
+    expect(lessonMarkup()).toContain("Current requirements met");
+    const list = renderToStaticMarkup(<MemoryRouter><LearningList {...ready(catalog)} filters={EMPTY_FILTERS} onFilters={() => {}} /></MemoryRouter>);
+    expect(list).toContain("Current requirements met");
+    console.info("learning-journey", JSON.stringify({ source: before.challenge?.status, later: after.challenge?.status,
+      activity: detail.progress?.activity, attempts: detail.progress?.attempts, httpRequests: requests.length, serverReplay: true }));
+  } finally {
+    http.defaults.adapter = previous;
+    child.kill(); await child.exited; await reader.cancel();
+    expect(await stderr).toBe("");
+  }
+}, 180000);

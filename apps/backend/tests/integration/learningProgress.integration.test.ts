@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { randomUUID } from "node:crypto";
-import type { LearningCatalog } from "@infraforge/contracts/learning";
+import type { LearningCatalog, LearningLessonDetail } from "@infraforge/contracts/learning";
+import type { DesignChangeReview } from "@infraforge/contracts/reports";
 import { listLearningLessons } from "../../learning/registry";
 import { latestChallenge } from "../../challenges/registry";
 import { choicesFor } from "../../challenges/prediction";
@@ -37,21 +38,35 @@ integration("learning API derives saved challenge/replay progress with real sess
     const alice = await register(), bob = await register(); h.cookie = alice;
     expect(await progress()).toMatchObject({ activity: "not-started", attempts: 0 });
     await h.request("/learning/lessons/not-a-lesson", undefined, "GET", 404);
-    const workspace = (await h.request(`/challenges/${d.id}/workspace`, {}, "POST", 201)).designId;
+    const detail = await h.request(`/learning/lessons/${lab.id}`) as LearningLessonDetail;
+    expect(detail.challenge).toMatchObject({ id: d.id, version: d.version, executable: true });
+    let workspace = (await h.request(`/challenges/${detail.challenge!.id}/workspace`, {}, "POST", 201)).designId;
     designs.push(workspace);
     for (const [i, layout] of [d.starter ?? tier(1), REFERENCE[d.id]!].entries()) {
+      let improvement;
+      if (i > 0) {
+        const copy = (await h.request(`/challenges/${d.id}/improvement-workspace`, { sourceRunId: runs[0] }, "POST", 201)).infrastructure;
+        workspace = copy.id; designs.push(workspace);
+        const review = (await h.request(`/challenges/${d.id}/improvement-preview`, { sourceRunId: runs[0], infrastructureId: workspace,
+          layout: { ...layout, layoutVersion: 3 } }, "POST")).review as DesignChangeReview;
+        expect(review.count).toBeGreaterThan(0);
+        improvement = { sourceRunId: runs[0], hypothesis: "I expect the changed capacity to meet more of the recorded requirements.",
+          intent: "improvement", inputHash: review.inputHash, acknowledgeMultiple: review.classification === "several-changes" };
+      }
       await h.request(`/infrastructure/${workspace}`, { layout: { ...layout, layoutVersion: 3 } }, "PUT");
       const prediction = { answers: Object.fromEntries(d.predictions.map((q) => [q.id, choicesFor(q.kind, layout.resources.map((r) => r.type), d.engine)[0]!])), reasoning: null };
-      const run = (await h.request(`/challenges/${d.id}/attempts`, { infrastructureId: workspace, prediction }, "POST", 201)).createdDeployment;
+      await h.request(`/challenges/${d.id}/attempts`, { infrastructureId: workspace, prediction: { answers: {}, reasoning: null }, ...(improvement ? { improvement } : {}) }, "POST", 400);
+      const run = (await h.request(`/challenges/${d.id}/attempts`, { infrastructureId: workspace, prediction, ...(improvement ? { improvement } : {}) }, "POST", 201)).createdDeployment;
       runs.push(run.id);
       expect(await progress()).toMatchObject({ activity: "attempted", attempts: i + 1 });
       await submitBrowserRun(h, run.id, d.evaluationSeconds);
       const report = (await h.request(`/deployments/${run.id}/report`)).report;
       expect(report.challenge.status).toBe(i === 0 ? "not-met" : "met");
+      if (improvement) expect(report.run.learning).toMatchObject({ sourceRunId: runs[0], intent: "improvement", hypothesis: improvement.hypothesis });
       expect(await progress()).toMatchObject({ activity: i === 0 ? "attempted" : "requirements-met", predictionReviewed: true, attempts: i + 1, lastRunId: run.id });
     }
     const comparison = (await h.request(`/deployments/compare?a=${runs[0]}&b=${runs[1]}`)).comparison;
-    expect(comparison.challengeConditions).toBe("same");
+    expect(comparison).toMatchObject({ challengeConditions: "same", lineage: "source-and-improvement" });
     expect((await progress()).sameConditionsComparison).toBe(true);
     h.cookie = bob;
     expect(await progress()).toMatchObject({ activity: "not-started", attempts: 0, lastRunId: null, sameConditionsComparison: false });
