@@ -1,6 +1,6 @@
-import type { LessonDefinition } from "@infraforge/contracts/learning";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
-export const leaveTimeToAcknowledge: LessonDefinition = {
+export const leaveTimeToAcknowledge: LearningLesson = {
   id: "leave-time-to-acknowledge", contentVersion: 1, trackId: "async", moduleId: "queued-work",
   title: "Finish the effect, then acknowledge", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Compare originals, delivery attempts and repeated object effects when an acknowledgement outlives its lease.",

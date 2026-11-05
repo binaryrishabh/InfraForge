@@ -1,6 +1,6 @@
-import type { LessonDefinition } from "@infraforge/contracts/learning";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
-export const keepUpWithTheQueue: LessonDefinition = {
+export const keepUpWithTheQueue: LearningLesson = {
   id: "keep-up-with-the-queue", contentVersion: 1, trackId: "async", moduleId: "queued-work",
   title: "Follow the work after publishing", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Separate producer success from consumer progress, then reduce the worker's assumed CPU work per job.",

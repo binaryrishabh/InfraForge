@@ -1,6 +1,6 @@
-import type { LessonDefinition } from "@infraforge/contracts/learning";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
-export const openOneSubscriber: LessonDefinition = {
+export const openOneSubscriber: LearningLesson = {
   id: "open-one-subscriber", contentVersion: 1, trackId: "async", moduleId: "queued-work",
   title: "Inspect each fan-out branch", kind: "executable-lab", level: "intermediate", availability: "available",
   summary: "Repair one queue's listener admission and check that the other subscriber keeps its own delivery progress.",
