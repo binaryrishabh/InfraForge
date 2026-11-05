@@ -5,6 +5,7 @@ import { LEARNING_REGISTRY } from "../../learning/registry";
 import { deriveLessonProgress } from "../../learning/progress";
 import { buildRunReport } from "../../reports/report";
 import { classifyComparison } from "../../comparison/classify";
+import { specHash } from "../../challenges/registry";
 import { answers, attemptRow, definition, REFERENCE } from "../challengeHarness";
 
 const d = definition("where-does-the-time-go"), lesson = LEARNING_REGISTRY.findLesson(d.id)!;
@@ -19,7 +20,9 @@ const catalogFor = (rows: typeof source[]): LearningCatalog => {
   return { tracks, lessons, progress, suggestions: selectLearningSuggestions(tracks, lessons, progress) };
 };
 const catalog = catalogFor([source]), laterCatalog = catalogFor([source, improved]);
-const detail = { lesson, challenge: null, progress: catalog.progress.find((p) => p.lessonId === lesson.id)! };
+const detail = { lesson, challenge: { id: d.id, version: d.version, specHash: specHash(d), title: d.title, summary: d.summary,
+  evaluationSeconds: d.evaluationSeconds, requirementCount: d.criteria.length, executable: d.engine === "2" },
+  progress: catalog.progress.find((p) => p.lessonId === lesson.id)! };
 const laterDetail = { ...detail, progress: laterCatalog.progress.find((p) => p.lessonId === lesson.id)! };
 const sourceReport = buildRunReport(source), improvedReport = buildRunReport(improved), comparison = classifyComparison(source, improved);
 assert.equal(sourceReport.provenance.simulationModelVersion, "2");

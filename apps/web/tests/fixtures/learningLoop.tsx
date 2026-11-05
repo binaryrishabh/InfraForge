@@ -35,7 +35,7 @@ http.defaults.adapter = async (config) => {
   return { data, status: 200, statusText: "OK", config, headers: {} };
 };
 const { getLearningCatalog, getLearningLesson } = await import("../../src/features/learning/learning.api");
-const { findReportLesson } = await import("../../src/features/learning/ReportLesson");
+const { findReportLesson } = await import("../../src/features/learning/reportLessonData");
 const { getLatestLessonReport, getLessonComparison } = await import("../../src/features/learning/lessonActivityData");
 const { getRunReport, getComparison } = await import("../../src/api/reports.api");
 const ready = <T,>(data: T | null) => ({ data, loading: false, error: null, retry() {} });
@@ -67,7 +67,7 @@ mock.module("../../src/api/useRequest", () => ({ useRequest: (_load: unknown, me
   return ready(null);
 } }));
 const router = await import("react-router-dom");
-let navigation: { to: string; options: unknown }[] = [];
+const navigation: { to: string; options: unknown }[] = [];
 mock.module("react-router-dom", () => ({ ...router, useNavigate: () => (to: string, options: unknown) => { navigation.push({ to, options }); } }));
 const { RunReportPage } = await import("../../src/features/reports/pages/RunReportPage");
 const { LessonPage } = await import("../../src/features/learning/LessonPage");
@@ -89,7 +89,12 @@ assert.ok(reportHtml.includes(`Part of lesson ${detail.lesson.title}`));
 assert.ok(reportHtml.includes(detail.lesson.followUp!));
 const lessonPath = `/learning/lessons/${detail.lesson.id}`;
 assert.ok(reportHtml.includes(`href="${lessonPath}"`));
+const recorded = currentReport;
+currentReport = { ...recorded, challenge: null, run: { ...recorded.run, challenge: null } };
+assert.ok(!route(`/runs/${currentReport.run.id}`).includes("Part of lesson"));
+currentReport = recorded;
 const lessonHtml = route(lessonPath);
+assert.ok(lessonHtml.includes("Open challenge lab"));
 assert.ok(lessonHtml.includes("Your latest recorded attempt"));
 assert.ok(lessonHtml.includes("Plan one change"));
 assert.ok(!lessonHtml.includes("Compare recorded attempts"));
@@ -107,6 +112,7 @@ assert.ok(missing.includes("No guided review cues were retained"));
 assert.ok(missing.includes("disabled"));
 assert.ok(render(<LessonActivityContent {...ready<RunReport>(null)} error="No outcome is known" />).includes("No outcome is known"));
 assert.ok(!render(<LessonComparisonContent {...ready<RunComparison>(null)} />).includes("Compare recorded attempts"));
+assert.ok(render(<LessonComparisonContent {...ready<RunComparison>(null)} error="Comparison unknown" />).includes("Comparison unknown"));
 
 // Drive the real improvement form handlers with a small isolated hook state seam.
 // This proves a placeholder cannot become the submitted learner hypothesis.
@@ -181,6 +187,9 @@ options = [{ ...proof.sourceReport.run, status: "browser" }, { ...proof.sourceRe
 assert.equal(await getLessonComparison(currentReport), null);
 options = [proof.sourceReport.run];
 pair = { ...proof.comparison, available: false };
+assert.equal(await getLessonComparison(currentReport), null);
+assert.ok(!render(<LessonComparisonContent {...ready(pair)} />).includes("Compare recorded attempts"));
+pair = { ...proof.comparison, runs: [proof.improvedReport.run, proof.improvedReport.run] };
 assert.equal(await getLessonComparison(currentReport), null);
 assert.ok(!render(<LessonComparisonContent {...ready(pair)} />).includes("Compare recorded attempts"));
 for (const conditions of ["different", null] as const) {
