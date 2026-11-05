@@ -10,6 +10,7 @@ import { AccountMenu } from "./AccountMenu";
 const NAV = [
   { to: "/home", label: "Home" },
   { to: "/challenges", label: "Challenges" },
+  { to: "/learning", label: "Learning" },
   { to: "/designs", label: "Designs" },
   { to: "/runs", label: "Runs" },
 ] as const;

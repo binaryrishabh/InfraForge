@@ -23,6 +23,8 @@ import { Loading, Page, Section } from "@/ui/Page";
 import { MiniMap } from "@/features/timetable/MiniMap";
 import { LearningHistory } from "@/features/challenges/components/LearningHistory";
 import { StarterMap } from "@/features/challenges/components/StarterMap";
+import { ContinueLearning } from "@/features/learning/ContinueLearning";
+import { useLearningCatalog } from "@/features/learning/hooks";
 
 function ChallengeVisual({ id }: { id: string }) {
   const load = useCallback(() => getChallenge(id), [id]);
@@ -93,6 +95,7 @@ const safe = <T,>(promise: Promise<T>, fallback: T) => promise.catch(() => fallb
 
 export function HomePage() {
   const user = useAuthStore((s) => s.user);
+  const learning = useLearningCatalog();
   const load = useCallback(async (): Promise<HomeData> => {
     const [live, challenges, history, designs] = await Promise.all([safe(getLiveDeployments(), []), safe(listChallenges(), []),
       safe(getRunHistory(5), { runs: [], nextCursor: null }), safe(getAllInfrastructure(), [])]);
@@ -110,6 +113,7 @@ export function HomePage() {
       </header>
       {loading || !data ? <Loading label="Gathering your work…" /> : <>
         <NextStep next={next!} onChanged={retry} />
+        <ContinueLearning {...learning} />
         <Section title="Your lines" className="mt-12" aside={<Link to="/challenges" className="text-sm font-medium text-accent hover:underline">All challenges</Link>}>
           <CurriculumLine challenges={data.challenges} next={next && "challenge" in next ? next.challenge.id : null} />
         </Section>

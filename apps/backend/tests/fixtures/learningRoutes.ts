@@ -40,6 +40,8 @@ const database: LearningAttemptDatabase = { deployment: {
 const app = express();
 app.use("/api/learning", requireSession);
 app.use("/api/learning", createLearningRouter({ registry, readAttempts: (ownerId, ids) => readLearningAttempts(ownerId, ids, database) }));
+// Real published foundations content for the web's API-to-page proof; no DB rows are needed for readings.
+app.use("/api/foundations", requireSession, createLearningRouter({ readAttempts: async () => [] }));
 app.use((error: Error & { statusCode?: number }, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   res.status(error.statusCode ?? 500).json({ message: error.message });
 });
@@ -80,6 +82,7 @@ try {
   assert.equal((await progress()).predictionReviewed, true);
   assert.equal((await progress()).attempts, 1);
   assert.equal((await catalog()).suggestions.continue?.lessonId, "api-lab");
+  const attemptedCatalog = await catalog();
 
   // Bob's passing run cannot meet Alice's requirements or establish her comparison/lineage.
   rows.push({ ...met, ownerId: "bob" });
@@ -125,8 +128,15 @@ try {
     assert.equal(data.progress?.attempts, 1);
     assert.equal(data.progress?.activity, "attempted");
   } finally { mixedServer.closeAllConnections(); await new Promise<void>((resolve) => mixedServer.close(() => resolve())); }
+  const foundationGet = async (path = "") => {
+    const response = await fetch(base.replace("/api/learning", "/api/foundations") + path, { headers: { cookie: "fixture=alice" } });
+    assert.equal(response.status, 200);
+    return response.json();
+  };
   console.log(JSON.stringify({ realEngineSequence: ["not-started", "attempted", "requirements-met"], sessionReads,
-    ownerScopedQueries: queries.length, authAnd404: true, earlierVersions: true, ownerIsolation: true }));
+    ownerScopedQueries: queries.length, authAnd404: true, earlierVersions: true, ownerIsolation: true,
+    webProof: { foundations: await foundationGet(), reading: await foundationGet("/lessons/what-is-a-request"),
+      concept: await foundationGet("/lessons/client-and-server"), attemptedCatalog, lab: detail } }));
 } finally {
   server.closeAllConnections();
   await new Promise<void>((resolve) => server.close(() => resolve()));

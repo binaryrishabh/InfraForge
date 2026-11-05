@@ -8,10 +8,10 @@ import { StatusMark } from "../src/ui/StatusMark";
 import { HealthMark } from "../src/ui/HealthMark";
 import { summary } from "./fixtures";
 
-test("the shell offers four destinations, marks the current one and starts with a skip link", () => {
+test("the shell keeps existing destinations, adds Learning, marks the current one and starts with a skip link", () => {
   const html = renderToStaticMarkup(<MemoryRouter initialEntries={["/runs"]}><Routes><Route element={<AppShell />}><Route path="/runs" element={<p>runs page</p>} /></Route></Routes></MemoryRouter>);
   expect(html.indexOf("Skip to content")).toBeLessThan(html.indexOf("Home"));
-  for (const href of ["/home", "/challenges", "/designs", "/runs"]) expect(html).toContain(`href="${href}"`);
+  for (const href of ["/home", "/challenges", "/learning", "/designs", "/runs"]) expect(html).toContain(`href="${href}"`);
   expect(html).toContain('aria-current="page"');
   expect(html).toContain('id="main"');
   expect(html).toContain("runs page");
