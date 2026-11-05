@@ -180,8 +180,6 @@ readouts also render them in saved reports. Missing historical counters stay abs
 malformed counters cannot produce a scored terminal measurement. All three latency
 requirements concern completions in second 6, not a whole-run SLO.
 
-## Check
-
 ## Asynchronous work labs
 
 `keep-up-with-the-queue@1` compares one worker's authored CPU milliseconds per job
