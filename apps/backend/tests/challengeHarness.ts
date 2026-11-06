@@ -45,6 +45,8 @@ import { queueOverlappingJobsV1 } from "../challenges/definitions/queue-overlapp
 import { boundFunctionPoolPressureV1 } from "../challenges/definitions/bound-function-pool-pressure/v1";
 import { writesCostMoreThanReadsV1 } from "../challenges/definitions/writes-cost-more-than-reads/v1";
 import { balancerSharesTurnsV1 } from "../challenges/definitions/balancer-shares-turns/v1";
+import { notificationRetryStormV1 } from "../challenges/definitions/notification-retry-storm/v1";
+import { analyticsBurstBufferV1 } from "../challenges/definitions/analytics-burst-buffer/v1";
 import { diagnoseLostAppCapacityV1 } from "../challenges/definitions/diagnose-lost-app-capacity/v1";
 import { investigateAPoolResetV1 } from "../challenges/definitions/investigate-a-pool-reset/v1";
 import { budgetForAPartitionV1 } from "../challenges/definitions/budget-for-a-partition/v1";
@@ -89,6 +91,8 @@ export const REFERENCE: Record<string, ChallengeStarter> = {
   "bound-function-pool-pressure": {...boundFunctionPoolPressureV1.starter!, resources: boundFunctionPoolPressureV1.starter!.resources.map(r => r.id === "fn" ? {...r, serverless: {...r.serverless!, concurrency: 32}} : r)},
   "catalogue-link-flash": {...catalogueLinkFlashV1.starter!, resources: catalogueLinkFlashV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r.id === "cache" ? {...r, cachePolicy: {version: 2, capacityEntries: 16}} : r)},
   "flash-sale-order-backlog": {...flashSaleOrderBacklogV1.starter!, resources: flashSaleOrderBacklogV1.starter!.resources.map(r => r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, cpuMsPerJob: 100}} : r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, visibilityTimeoutSeconds: 5}} : r)},
+  "notification-retry-storm": {...notificationRetryStormV1.starter!, resources: notificationRetryStormV1.starter!.resources.map(r => r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, maxReceives: 2}} : r)},
+  "analytics-burst-buffer": {...analyticsBurstBufferV1.starter!, resources: analyticsBurstBufferV1.starter!.resources.map(r => r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, capacityMessages: 400}} : r)},
   "find-the-denying-rule": {...findTheDenyingRuleV1.starter!, resources: findTheDenyingRuleV1.starter!.resources.map(r => r.id === "fw" ? {...r, firewallSettings: {...r.firewallSettings!, rules: r.firewallSettings!.rules.map(rule => rule.id === "quarantine-db" ? {...rule, priority: 20} : rule)}} : r)},
   "leave-room-for-firewall-flows": {...leaveRoomForFirewallFlowsV1.starter!, resources: leaveRoomForFirewallFlowsV1.starter!.resources.map(r => r.id === "fw" ? {...r, firewallCapacity: {version: 1, maxFlows: 8}} : r)},
   "choose-a-retry-mitigation": {...chooseARetryMitigationV1.starter!, resources: chooseARetryMitigationV1.starter!.resources.map(r => r.id === "lb" ? {...r, retry: {...r.retry!, maxAttempts: 2}} : r)},

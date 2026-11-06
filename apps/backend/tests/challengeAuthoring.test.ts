@@ -28,6 +28,8 @@ export const PUBLISHED: Record<string, string> = {
   "balancer-shares-turns@1": "2cd489a91c966d7138831326bec893927e16e0a13f6d9fd9bd9935a97dc9eddc",
   "catalogue-link-flash@1": "2d6afe745f45e31593096d34ae669138f45f2d6dadc2eff02295a71114ca7a6e",
   "flash-sale-order-backlog@1": "c84cc970bee937a37136dd716a85724ee589fd8706b82fbd709e64de825b4093",
+  "notification-retry-storm@1": "e154e1b8a5741ba5754d9f1bb1bc95e6fb567530610563789f84aa709d2af3de",
+  "analytics-burst-buffer@1": "b50e5b7b36b243530a74502c9bd4665ae9ebc74d1daeef70c2859456acfb91de",
   "find-the-denying-rule@1": "e002c76a7884c02b542cad296516b26d3c5eaceaa1f9991adaf490c8b690d7b3",
   "leave-room-for-firewall-flows@1": "492dca0578609884ed0729140e110de02cfd689831faecaa172f43eca803c705",
   "choose-a-retry-mitigation@1": "6ca83f5bd42df0ea1f6ad09bb15d139a7b3b15abb3083a93b0e4d7e8b65ef46e",
