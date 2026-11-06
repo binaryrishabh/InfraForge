@@ -16,6 +16,8 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "choose-a-retry-mitigation@1": { challengeId: "choose-a-retry-mitigation", version: 1, hash: "6ca83f5bd42df0ea1f6ad09bb15d139a7b3b15abb3083a93b0e4d7e8b65ef46e" },
   "catalogue-link-flash@1": { challengeId: "catalogue-link-flash", version: 1, hash: "2d6afe745f45e31593096d34ae669138f45f2d6dadc2eff02295a71114ca7a6e" },
   "flash-sale-order-backlog@1": { challengeId: "flash-sale-order-backlog", version: 1, hash: "c84cc970bee937a37136dd716a85724ee589fd8706b82fbd709e64de825b4093" },
+  "notification-retry-storm@1": { challengeId: "notification-retry-storm", version: 1, hash: "e154e1b8a5741ba5754d9f1bb1bc95e6fb567530610563789f84aa709d2af3de" },
+  "analytics-burst-buffer@1": { challengeId: "analytics-burst-buffer", version: 1, hash: "b50e5b7b36b243530a74502c9bd4665ae9ebc74d1daeef70c2859456acfb91de" },
   "where-does-the-time-go@1": { challengeId: "where-does-the-time-go", version: 1, hash: "58174698cfd975ad0117a8cf029a13293c720115455140058090c0de9814b5e9" },
   "waiting-with-spare-cpu@1": { challengeId: "waiting-with-spare-cpu", version: 1, hash: "e4fec65bcf80c96d30f239f2c7d6d4d8e3bc9427220c0bf5b40d6c47e8777f37" },
   "one-bigger-or-two-smaller@1": { challengeId: "one-bigger-or-two-smaller", version: 1, hash: "48b7361f4daf5649bf8ea465c307df7b5567bf32254743206e8a6cd80da13a56" },
