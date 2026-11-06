@@ -17,6 +17,8 @@ export const PUBLISHED: Record<string, string> = {
   "protect-one-api-route@1": "695b5f64876c96ff10cc0f6f37a9f74190b41a9378d92c0cc75a163ca7a509ea",
   "queue-overlapping-jobs@1": "ff340d09b24bff1c2f824e408ae3025f8bd39b7b6cec7cc9917fbcafaf6405cc",
   "bound-function-pool-pressure@1": "b58e0c704222b88d8e5d83d99dc998624c8b70f322e82d115ebd33767cd71d50",
+  "writes-cost-more-than-reads@1": "05111fafb9ef1821ac835740cf56c38d5adec1ea93d966181d29eaf19d0507a9",
+  "balancer-shares-turns@1": "2cd489a91c966d7138831326bec893927e16e0a13f6d9fd9bd9935a97dc9eddc",
   "catalogue-link-flash@1": "2d6afe745f45e31593096d34ae669138f45f2d6dadc2eff02295a71114ca7a6e",
   "flash-sale-order-backlog@1": "c84cc970bee937a37136dd716a85724ee589fd8706b82fbd709e64de825b4093",
   "find-the-denying-rule@1": "e002c76a7884c02b542cad296516b26d3c5eaceaa1f9991adaf490c8b690d7b3",

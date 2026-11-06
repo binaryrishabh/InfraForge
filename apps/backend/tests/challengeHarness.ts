@@ -43,6 +43,8 @@ import { flashSaleOrderBacklogV1 } from "../challenges/definitions/flash-sale-or
 import { protectOneApiRouteV1 } from "../challenges/definitions/protect-one-api-route/v1";
 import { queueOverlappingJobsV1 } from "../challenges/definitions/queue-overlapping-jobs/v1";
 import { boundFunctionPoolPressureV1 } from "../challenges/definitions/bound-function-pool-pressure/v1";
+import { writesCostMoreThanReadsV1 } from "../challenges/definitions/writes-cost-more-than-reads/v1";
+import { balancerSharesTurnsV1 } from "../challenges/definitions/balancer-shares-turns/v1";
 
 // Historical report fixtures deliberately keep their published Model 1 conditions.
 export const legacyDefinition = (id: string) => findChallenge(id, 1)!.definition;
@@ -82,6 +84,13 @@ export const REFERENCE: Record<string, ChallengeStarter> = {
   "where-does-the-time-go": {...whereDoesTheTimeGoV1.starter!, resources: whereDoesTheTimeGoV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.large"} : r)},
   "waiting-with-spare-cpu": {...waitingWithSpareCpuV1.starter!, resources: waitingWithSpareCpuV1.starter!.resources.map(r => r.id === "app" ? {...r, vmExecution: {...r.vmExecution!, workers: 4}} : r)},
   "one-bigger-or-two-smaller": {...oneBiggerOrTwoSmallerV1.starter!, resources: oneBiggerOrTwoSmallerV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r)},
+  // Request-path labs: the one-setting fix, and the plausible change that must still fail.
+  "writes-cost-more-than-reads": {...writesCostMoreThanReadsV1.starter!, resources: writesCostMoreThanReadsV1.starter!.resources.map(r => r.id === "db" ? {...r, size: "medium"} : r)},
+  "writes-cost-more-than-reads-second-app": starter([["dns", T.DNS, 0, 0], ["lb", T.LoadBalancer, 1, 0], ["app", T.VirtualMachine, 2, 0, {size: "large"}], ["app2", T.VirtualMachine, 2, 1, {size: "large"}],
+    ["db", T.Database, 3, 0, {size: "small"}]], [["dns", "lb"], ["lb", "app"], ["app", "db"], ["lb", "app2"], ["app2", "db"]]),
+  "balancer-shares-turns": {...balancerSharesTurnsV1.starter!, resources: balancerSharesTurnsV1.starter!.resources.map(r => r.id === "app-a" ? {...r, skuId: "c5.large"} : r)},
+  "balancer-shares-turns-bigger-b": {...balancerSharesTurnsV1.starter!, resources: balancerSharesTurnsV1.starter!.resources.map(r => r.id === "app-b" ? {...r, skuId: "c5.xlarge"} : r)},
+  "balancer-shares-turns-least-outstanding": {...balancerSharesTurnsV1.starter!, resources: balancerSharesTurnsV1.starter!.resources.map(r => r.id === "lb" ? {...r, lbSelection: {version: 1 as const, policy: "least-outstanding" as const}} : r)},
   // Alternative passing design for the same comparison. Never imported by runtime code.
   "one-bigger-or-two-smaller-horizontal": starter([["lb", T.LoadBalancer, 0, 0], ["app", T.VirtualMachine, 1, 0, {skuId: "c5.large"}],
     ["app2", T.VirtualMachine, 1, 1, {skuId: "c5.large"}], ["db", T.Database, 2, 0, {size: "medium"}]],

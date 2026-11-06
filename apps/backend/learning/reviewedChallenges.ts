@@ -22,4 +22,6 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "protect-one-api-route@1": { challengeId: "protect-one-api-route", version: 1, hash: "695b5f64876c96ff10cc0f6f37a9f74190b41a9378d92c0cc75a163ca7a509ea" },
   "queue-overlapping-jobs@1": { challengeId: "queue-overlapping-jobs", version: 1, hash: "ff340d09b24bff1c2f824e408ae3025f8bd39b7b6cec7cc9917fbcafaf6405cc" },
   "bound-function-pool-pressure@1": { challengeId: "bound-function-pool-pressure", version: 1, hash: "b58e0c704222b88d8e5d83d99dc998624c8b70f322e82d115ebd33767cd71d50" },
+  "writes-cost-more-than-reads@1": { challengeId: "writes-cost-more-than-reads", version: 1, hash: "05111fafb9ef1821ac835740cf56c38d5adec1ea93d966181d29eaf19d0507a9" },
+  "balancer-shares-turns@1": { challengeId: "balancer-shares-turns", version: 1, hash: "2cd489a91c966d7138831326bec893927e16e0a13f6d9fd9bd9935a97dc9eddc" },
 };
