@@ -40,6 +40,8 @@ import { flashSaleOrderBacklogV1 } from "./flash-sale-order-backlog/v1";
 import { protectOneApiRouteV1 } from "./protect-one-api-route/v1";
 import { queueOverlappingJobsV1 } from "./queue-overlapping-jobs/v1";
 import { boundFunctionPoolPressureV1 } from "./bound-function-pool-pressure/v1";
+import { notificationRetryStormV1 } from "./notification-retry-storm/v1";
+import { analyticsBurstBufferV1 } from "./analytics-burst-buffer/v1";
 
 /* Every published version of every challenge, calibrated against simulation model
 "1" and catalog "2026-08". Versions are immutable and never removed: historical
@@ -87,4 +89,6 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   protectOneApiRouteV1,
   queueOverlappingJobsV1,
   boundFunctionPoolPressureV1,
+  notificationRetryStormV1,
+  analyticsBurstBufferV1,
 ];
