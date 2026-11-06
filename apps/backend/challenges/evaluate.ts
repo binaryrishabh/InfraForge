@@ -15,6 +15,7 @@ import type { RecordedScenario } from "@infraforge/contracts/challenges";
 import type { RunInputs } from "@infraforge/contracts/run-inputs";
 import { orderedScenarioSteps } from "@infraforge/simulation/model2-run";
 import { QueueWorkSchema } from "../reports/queueWorkSchema";
+import { WholeRunSchema } from "../reports/wholeRunSchema";
 import { SecurityMetricsSchema } from "../reports/securitySchema";
 import { isDepthCriterion, evaluateDepthCriterion } from "./depthCriteria";
 
@@ -143,6 +144,7 @@ class Judge {
       case "survivors-unsaturated":
         return this.plan && input && health(input.resources.filter(r => r.id !== this.plan!.targetResourceId).map(r => r.id))
           ? null : "Complete experiment survivor measurements were not recorded.";
+      case "caller-outcomes":
       case "backend-admission-budget":
       case "queue-work":
       case "firewall-admission-budget":
@@ -165,7 +167,7 @@ class Judge {
     const pending = (detail: string, sources: string[]) => ({ ...base, status: this.active ? "pending" as const : "not-evaluated" as const, detail, sources });
     const decided = (met: boolean, detail: string, sources: string[]) => ({ ...base, status: met ? "met" as const : "not-met" as const, detail, sources });
     // A fixed-load latency lab uses the same captured terminal evidence as a scenario.
-    const missing = this.definition.scenario || isDepthCriterion(c) || c.kind === "terminal-p95" || c.kind === "backend-admission-budget" || c.kind === "queue-work" || c.kind === "firewall-admission-budget" ? this.scenarioCriterionProblem(c) : null;
+    const missing = this.definition.scenario || isDepthCriterion(c) || c.kind === "caller-outcomes" || c.kind === "terminal-p95" || c.kind === "backend-admission-budget" || c.kind === "queue-work" || c.kind === "firewall-admission-budget" ? this.scenarioCriterionProblem(c) : null;
     if (missing) return pending(missing, ["runInputs", "stages", "terminalSnapshot"]);
     const input = this.evidence.input;
     if (isDepthCriterion(c)) {
@@ -226,6 +228,16 @@ class Judge {
         const t = this.atEvaluation, traffic = t?.traffic;
         if (!t || !traffic || traffic.latencyMs.p95 === null || traffic.completedRps <= 0) return pending("No completed-request latency measurement exists at the evaluation second.", ["terminalSnapshot.traffic"]);
         return decided(traffic.latencyMs.p95 <= c.maxMs, `At second ${t.simulatedSeconds}, p95 was ${traffic.latencyMs.p95.toFixed(3)} ms from ${traffic.completedRps} completed requests; the limit is ${c.maxMs} ms.`, ["terminalSnapshot.traffic"]);
+      }
+      case "caller-outcomes": {
+        const t = this.atEvaluation, parsed = WholeRunSchema.safeParse(t?.traffic?.wholeRun), w = parsed.success ? parsed.data : null;
+        const sources = ["terminalSnapshot.traffic.wholeRun"];
+        if (!input || !t || t.measurementFreshness !== "current-revision" || !w || w.throughSecond !== t.simulatedSeconds) return pending("Current cumulative caller outcomes through the evaluation second are required.", sources);
+        const populations = [w.completed, w.failed, w.deadlineExceeded, w.abandoned, w.inFlight];
+        if (!populations.every(n => Number.isSafeInteger(n) && n >= 0) || !Number.isSafeInteger(populations.reduce((a,b) => a+b, 0))) return pending("Complete safe caller populations are required.", sources);
+        const unsuccessful = w.failed + w.deadlineExceeded + w.abandoned;
+        return decided(w.completed >= c.minCompleted && unsuccessful <= c.maxUnsuccessful,
+          `Through second ${t.simulatedSeconds}: ${w.completed} completed (minimum ${c.minCompleted}); ${unsuccessful} unsuccessful (${w.failed} failed + ${w.deadlineExceeded} deadline exceeded + ${w.abandoned} abandoned; maximum ${c.maxUnsuccessful}); ${w.inFlight} in flight, not counted as successful or unsuccessful. This is a fixed-horizon count, not an availability guarantee.`, sources);
       }
       case "queue-work": {
         const t = this.atEvaluation;

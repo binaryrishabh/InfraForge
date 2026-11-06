@@ -42,6 +42,13 @@ import { queueOverlappingJobsV1 } from "./queue-overlapping-jobs/v1";
 import { boundFunctionPoolPressureV1 } from "./bound-function-pool-pressure/v1";
 import { writesCostMoreThanReadsV1 } from "./writes-cost-more-than-reads/v1";
 import { balancerSharesTurnsV1 } from "./balancer-shares-turns/v1";
+import { diagnoseLostAppCapacityV1 } from "./diagnose-lost-app-capacity/v1";
+import { investigateAPoolResetV1 } from "./investigate-a-pool-reset/v1";
+import { budgetForAPartitionV1 } from "./budget-for-a-partition/v1";
+import { traceASaturationCascadeV1 } from "./trace-a-saturation-cascade/v1";
+import { cacheOrDatabaseV1 } from "./cache-or-database/v1";
+import { oneVmOrAPoolV1 } from "./one-vm-or-a-pool/v1";
+import { limitOrCapacityV1 } from "./limit-or-capacity/v1";
 
 /* Every published version of every challenge, calibrated against simulation model
 "1" and catalog "2026-08". Versions are immutable and never removed: historical
@@ -91,4 +98,11 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   boundFunctionPoolPressureV1,
   writesCostMoreThanReadsV1,
   balancerSharesTurnsV1,
+  diagnoseLostAppCapacityV1,
+  investigateAPoolResetV1,
+  budgetForAPartitionV1,
+  traceASaturationCascadeV1,
+  cacheOrDatabaseV1,
+  oneVmOrAPoolV1,
+  limitOrCapacityV1,
 ];

@@ -10,6 +10,8 @@ export const OPS = slash(process.env.LANE_OPS ?? `${ROOT}/InfraForge_Code/.agent
 export const LAUNCHER = process.env.LANE_LAUNCHER ?? `${OPS}/codex-launch.ps1`;
 export const LANES = `${OPS}/lanes`;
 export const POLL_MS = Number(process.env.LANE_POLL_MS ?? 60_000);
+// A worker whose process looks dead on two probes still counts as alive while its log keeps changing.
+export const SILENT_MS = Number(process.env.LANE_SILENT_MS ?? 180_000);
 export const QUOTA_SLACK_MS = Number(process.env.LANE_QUOTA_SLACK_MS ?? 60_000);
 export const QUOTA_MIN_MS = Number(process.env.LANE_QUOTA_MIN_MS ?? 60_000);
 

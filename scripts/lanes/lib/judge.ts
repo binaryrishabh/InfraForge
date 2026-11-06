@@ -44,3 +44,7 @@ export function judge(s: State, c: Current): Judgement {
   if (exit !== 0 && commits === 0) return { verdict: "failed", why: facts, sha, resetAt: null };
   return { verdict: "incomplete", why: facts, sha, resetAt: null };
 }
+
+export const logAgeMs = (c: Current, nowMs = Date.now()): number => {
+  try { return nowMs - statSync(logPath(c)).mtimeMs; } catch { return Number.POSITIVE_INFINITY; }
+};

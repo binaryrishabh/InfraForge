@@ -38,7 +38,7 @@ function writeState(queue: string[], extra: Record<string, unknown> = {}) {
   for (const q of queue) writeFileSync(`${ops}/briefs/${q}.md`, `slice ${q}`);
 }
 function startController() {
-  const p = Bun.spawn(["bun", "--no-env-file", CONTROLLER, "t"], { env: { ...process.env, LANE_ROOT: root, LANE_OPS: ops, LANE_LAUNCHER: `${HERE}/fake-launch.ps1`, TZ: process.env.TZ ?? "UTC", LANE_POLL_MS: "1000", LANE_QUOTA_SLACK_MS: "500", LANE_QUOTA_MIN_MS: "500" }, stdout: "ignore", stderr: "ignore" });
+  const p = Bun.spawn(["bun", "--no-env-file", CONTROLLER, "t"], { env: { ...process.env, LANE_ROOT: root, LANE_OPS: ops, LANE_LAUNCHER: `${HERE}/fake-launch.ps1`, TZ: process.env.TZ ?? "UTC", LANE_POLL_MS: "1000", LANE_SILENT_MS: "4000", LANE_QUOTA_SLACK_MS: "500", LANE_QUOTA_MIN_MS: "500" }, stdout: "ignore", stderr: "ignore" });
   procs.push(p); return p;
 }
 async function until(cond: () => boolean, what: string, ms = 90_000) {
@@ -169,3 +169,13 @@ printf 'SLICE_RESULT: complete\n' >> "$OPS/reports/$SLICE.md"`);
   expect(existsSync(`${wt}/.git/MERGE_HEAD`)).toBe(false);
   expect(sh(wt, "status", "--porcelain").stdout.trim()).toBe("");
 }, 200_000);
+
+// Unit-level (no processes): one failed liveness probe must never end a live attempt (lb8 was wrongly judged dead on 5 Nov).
+import { workerGone } from "../lib/liveness";
+bunTest("a transient failed liveness probe on a worker with a fresh log is not treated as the worker's death", () => {
+  expect(workerGone({ marker: false, aliveFirst: false, aliveSecond: false, logAgeMs: 20_000 })).toBe(false);   // log still moving
+  expect(workerGone({ marker: false, aliveFirst: false, aliveSecond: true, logAgeMs: 900_000 })).toBe(false);   // second probe sees it
+  expect(workerGone({ marker: false, aliveFirst: true, aliveSecond: false, logAgeMs: 900_000 })).toBe(false);
+  expect(workerGone({ marker: false, aliveFirst: false, aliveSecond: false, logAgeMs: 900_000 })).toBe(true);   // dead twice and silent
+  expect(workerGone({ marker: true, aliveFirst: true, aliveSecond: true, logAgeMs: 0 })).toBe(true);            // end marker wins
+});

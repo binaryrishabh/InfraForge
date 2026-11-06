@@ -116,6 +116,27 @@ test("claim rates use the domain's per-hour conversion as well as per-minute", (
   expect(checkLessonClaims(lesson, pinned)).toContain(`${lesson.id}@1 problem.0: unsupported request rate 12`);
 });
 
+test("scenario claims use pinned step times, end boundaries and numeric inputs, refusing unrelated seconds", () => {
+  const lesson = structuredClone(learningContent.lessons.find(l => l.id === "investigate-a-pool-reset")!);
+  const pinned = structuredClone(REGISTRY.latest(lesson.experiment!.challengeId)!.definition);
+  pinned.scenario!.steps[0] = {id: "step-98765", atSecond: 17, request: {
+    interventionId: "cpu-capacity", revision: 98765, target: {resourceId: "db-98765"}, parameters: {cores: 0.03, duration: 11},
+  }};
+  pinned.scenario!.steps[1]!.atSecond = 19;
+  lesson.problem[0] = "At second 17, reduce DB CPU to 0.03 cores for eleven seconds, ending just after second 28. Reset the pool at second 19; evaluate at second 6.";
+  expect(checkLessonClaims(lesson, pinned)).toEqual([]);
+  // Four is pinned as the starter retry limit; eleven is a duration, not a boundary.
+  for (const second of [4, 11, 18]) {
+    lesson.problem[0] = `Inspect CPU at second ${second}.`;
+    expect(checkLessonClaims(lesson, pinned)).toContain(`${lesson.id}@1 problem.0: unsupported evaluation second ${second}`);
+  }
+  // Descriptive ids, target ids and request revisions must never authorize prose.
+  lesson.problem[0] = "The intervention uses 98765 cores.";
+  expect(checkLessonClaims(lesson, pinned).join("\n")).toContain("unsupported numeric/size claim 98765");
+  lesson.problem[0] = "The intervention uses 0.04 cores.";
+  expect(checkLessonClaims(lesson, pinned).join("\n")).toContain("unsupported numeric/size claim 0.04");
+});
+
 test("queue counters are allowed only when this challenge renders their requirement detail", () => {
   const content = structuredClone(learningContent);
   content.lessons.find(l => l.id === "where-does-the-time-go")!.experiment!.evidenceToInspect = ["Queue: acknowledged"];
@@ -165,9 +186,12 @@ test("measurement allow-list stays anchored in existing saved-report renderers",
     expect(source).toContain(definition.marker);
     if (definition.source.includes("/live/") || definition.source.includes("SecuritySection")) {
       const component = definition.source.split("/").at(-1)!.replace(".tsx", "");
-      // WholeRunReadings is reached through TrafficEvidence.
-      expect(component === "WholeRunReadings"
+      // These nested components are reached through TrafficEvidence.
+      expect(["WholeRunReadings", "LatencyBreakdown"].includes(component)
         ? readFileSync(new URL("apps/web/src/features/live/TrafficEvidence.tsx", root), "utf8") : report).toContain(component);
+    }
+    if (definition.source.endsWith("/ActionTimeline.tsx")) {
+      expect(readFileSync(new URL("apps/web/src/features/reports/components/ReportView.tsx", root), "utf8")).toContain("<ActionTimeline actions={report.actions}");
     }
   }
   // Queue fields are rendered by the existing requirement-detail row.
@@ -195,4 +219,17 @@ test("numeric exception reviews are exact, scoped, justified and used", () => {
   expect(() => checkLearningAuthoring(content)).toThrow("unsupported numeric/size claim c5.large");
   lab.explanation[2] = "The starter Instance size is Medium.";
   expect(() => checkLearningAuthoring(content)).toThrow("unsupported numeric/size claim medium");
+});
+
+test("advanced reference and calibrated-result exceptions refuse changed prose", () => {
+  for (const [id, field, token] of [
+    ["diagnose-lost-app-capacity", "explanation", "8"],
+    ["budget-for-a-partition", "explanation", "c5.large"],
+    ["trace-a-saturation-cascade", "limitations", "0"],
+  ] as const) {
+    const lesson = structuredClone(learningContent.lessons.find(l => l.id === id)!);
+    const index = id === "diagnose-lost-app-capacity" ? 2 : field === "limitations" ? 1 : 0;
+    lesson[field][index] += " Cite the report.";
+    expect(checkLessonClaims(lesson, REGISTRY.latest(id)!.definition).join("\n")).toContain(`unsupported numeric/size claim ${token}`);
+  }
 });

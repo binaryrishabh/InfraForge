@@ -10,8 +10,9 @@
 //  - the integration branch is merged between slices ONLY if git merges it without conflict (see lib/sync.ts);
 //  - an empty queue idles the controller and a slice dropped into <lane>.inbox/ starts within seconds.
 import { existsSync, mkdirSync, readFileSync, unlinkSync, watch, writeFileSync } from "node:fs";
-import { LANES, LAUNCHER, OPS, POLL_MS, QUOTA_MIN_MS, QUOTA_SLACK_MS, ROOT, inboxPath, lane, lockPath } from "./lib/config";
-import { doneExit, judge, logPath, logText } from "./lib/judge";
+import { LANES, LAUNCHER, OPS, POLL_MS, QUOTA_MIN_MS, QUOTA_SLACK_MS, ROOT, SILENT_MS, inboxPath, lane, lockPath } from "./lib/config";
+import { doneExit, judge, logAgeMs, logPath, logText } from "./lib/judge";
+import { workerGone } from "./lib/liveness";
 import { aliveAs, git, sh, sleep, workerAlive } from "./lib/proc";
 import { drainInbox, nextSlice, park } from "./lib/queue";
 import { event, load, now, save, type Current, type State } from "./lib/state";
@@ -58,10 +59,20 @@ function trySync(): boolean { const s = load(), changed = syncBase(s); save(s); 
 async function waitForEnd(c: Current) {
   await new Promise<void>((resolve) => {
     let w: ReturnType<typeof watch> | undefined;
-    const check = () => { if (doneExit(c) !== null || !workerAlive(c)) { clearInterval(t); w?.close(); resolve(); } };
+    let probing = false;
+    const check = async () => {
+      if (probing) return;
+      probing = true;
+      try {
+        const marker = doneExit(c) !== null, first = marker ? false : workerAlive(c);
+        let second = first;
+        if (!marker && !first) { await sleep(8_000); second = workerAlive(c); }
+        if (workerGone({ marker, aliveFirst: first, aliveSecond: second, logAgeMs: logAgeMs(c) }, SILENT_MS)) { clearInterval(t); w?.close(); resolve(); }
+      } finally { probing = false; }
+    };
     const t = setInterval(check, POLL_MS);
-    try { w = watch(logPath(c), () => { if (doneExit(c) !== null) check(); }); } catch {}
-    check();
+    try { w = watch(logPath(c), () => { if (doneExit(c) !== null) void check(); }); } catch {}
+    void check();
   });
 }
 async function idleUntilWork() {

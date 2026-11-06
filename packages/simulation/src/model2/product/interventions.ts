@@ -1,6 +1,7 @@
 import { INTERVENTIONS, interventionError, type InterventionRequest, type InterventionTarget } from "@infraforge/domain/resource";
 import type { InterventionReceipt, InterventionOption } from "@infraforge/contracts/actions";
-import type { ProductContract, SavedProductDesign } from "./contracts";
+import type { CompiledProduct, ProductContract, SavedProductDesign } from "./contracts";
+import { compileFaults } from "./faults";
 import type { SystemsInput } from "../systems/contracts";
 import type { derivedLedger } from "./provenance";
 import { requireKnown } from "../../reality/quantity";
@@ -62,7 +63,7 @@ export function incomingMaterializedLinks(input: SystemsInput, node: string): st
   const owns = (id: string) => id === node || id.startsWith(`${node}/`) || id.startsWith(`${node}#`);
   return input.links.filter(l => owns(l.to)).map(l => l.id).sort();
 }
-export function compileInterventions(design: SavedProductDesign, contract: ProductContract, input: SystemsInput, provenance: ReturnType<typeof derivedLedger>): InterventionReceipt[] {
+export function compileInterventions(design: SavedProductDesign, contract: ProductContract, input: SystemsInput, provenance: ReturnType<typeof derivedLedger>, crashes: CompiledProduct["crashes"] = []): InterventionReceipt[] {
   const rows = contract.interventions ?? [];
   if (rows.length > 20) throw Error("INTERVENTION_BUDGET: at most 20 actions");
   const receipts: InterventionReceipt[] = [], ids = new Set<string>();
@@ -76,6 +77,10 @@ export function compileInterventions(design: SavedProductDesign, contract: Produ
     if (row.atUs > requireKnown(input.horizon, "us")) throw Error("INTERVENTION_HORIZON: action is outside the run");
     const {interventionId: kind, parameters} = row.request;
     const durationUs = INTERVENTIONS.find(d => d.id === kind)!.endPolicy === "one-shot" ? undefined : Number(parameters.duration) * SECOND, endUs = durationUs === undefined ? null : row.atUs + durationUs;
+    if (kind === "vm-crash") {
+      if (Number(parameters.duration) < 2) throw Error("INTERVENTION_BOUNDS: VM outage includes a one-second restart and needs at least two seconds");
+      if (contract.faults.some(f => f.kind === "Crash" && option.resolvedTargets.includes(f.target) && requireKnown(f.at, "us") < endUs! && requireKnown(f.at, "us") + requireKnown(f.duration, "us") + (f.restart ? requireKnown(f.restart, "us") : 0) > row.atUs)) throw Error("INTERVENTION_OVERLAP: VM crash overlaps a process restart");
+    }
     if ((kind === "db-fail-primary" || kind === "db-fail-replica") && contract.faults.some(f => f.kind === "Crash" && option.resolvedTargets.includes(f.target) && requireKnown(f.at, "us") < endUs! && requireKnown(f.at, "us") + requireKnown(f.duration, "us") + (f.restart ? requireKnown(f.restart, "us") : 0) > row.atUs)) throw Error("INTERVENTION_OVERLAP: database member outage overlaps resource Crash");
     const sameDatabase = (other: typeof row) => "resourceId" in other.request.target && "resourceId" in row.request.target && other.request.target.resourceId === row.request.target.resourceId;
     if (kind === "db-fail-replica" && rows.some(other => sameDatabase(other) && other.request.interventionId === "db-promote-replica" && other.atUs <= row.atUs)) throw Error("INTERVENTION_ROLE: promoted writer is no longer a replica");
@@ -120,6 +125,8 @@ export function compileInterventions(design: SavedProductDesign, contract: Produ
           fromPort: q("port", Number(parameters.port), "count"), toPort: q("portEnd", Number(parameters.port), "count"), priority: provenance.q(`intervention.${row.id}.priority`, -1, "count", ["deny-port@1: reserved priority ahead of nonnegative baseline rules"], "implementation-policy"), action: "deny",
         }]}, {...common, id: `${common.id}:restore`, at: q("restore", endUs!, "us"), kind: "firewall-rules", restore: true, rules: baseline.rules});
       }
+      else if (kind === "vm-crash") crashes.push(...compileFaults([{id: row.id, kind: "Crash", target, at,
+        duration: q("unavailable", durationUs! - SECOND, "us"), restart: q("restart", SECOND, "us"), profile: "retain-logical-state/1"}], input, id => [id], provenance));
       else if (kind === "consumer-outage") input.asyncInterventions.push({...common, kind: "consumer-state", available: false, duration: duration!});
       else if (kind === "pool-reset") input.networkInterventions.push({...common, kind: "reset", evidenceActionId: row.id});
       else if (kind === "db-promote-replica") input.dataInterventions.push({...common, kind});
