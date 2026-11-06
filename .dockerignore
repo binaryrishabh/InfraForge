@@ -134,6 +134,7 @@ apps/backend/learning/**
 !apps/backend/learning/content/*.ts
 !apps/backend/learning/content/*/
 !apps/backend/learning/content/*/*.ts
+!apps/backend/learning/content/*/README.md
 !apps/backend/learning/content/*/lessons/
 !apps/backend/learning/content/*/lessons/*.ts
 !apps/backend/scripts/

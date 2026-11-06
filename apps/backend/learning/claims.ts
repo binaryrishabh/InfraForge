@@ -14,7 +14,9 @@ export function lessonText(lesson: LearningLesson): Array<[string, string]> {
     ...(lesson.check ? [["check.question", lesson.check.question], ["check.explanation", lesson.check.explanation],
       ...lesson.check.choices.map((choice, i) => [`check.choices.${i}`, choice.text])] as Array<[string, string]> : []),
     ...(lesson.experiment ? [["prediction", lesson.experiment.prediction ?? ""],
-      ...(lesson.experiment.evidenceToInspect ?? []).map((text, i) => [`evidence.${i}`, text])] as Array<[string, string]> : []),
+      // Audited measurement names (some carry HTTP status codes) are validated against the report vocabulary separately;
+      // only free text left over after removing them is scanned for numeric claims.
+      ...(lesson.experiment.evidenceToInspect ?? []).map((text, i) => [`evidence.${i}`, evidenceLabels(text).filter(label => !learningMeasurement(label)).join("; ")])] as Array<[string, string]> : []),
   ];
 }
 
@@ -53,6 +55,13 @@ export function sizeClaims(text: string): string[] {
   ].filter(value => !/^second-\d+$/i.test(value)).map(value => value.toLowerCase());
 }
 
+function scenarioSeconds(definition: ChallengeDefinition): number[] {
+  return (definition.scenario?.steps ?? []).flatMap(step => {
+    const duration = step.request.parameters.duration;
+    return typeof duration === "number" ? [step.atSecond, step.atSecond + duration] : [step.atSecond];
+  });
+}
+
 function pinnedValues(definition: ChallengeDefinition): Set<string> {
   const values = new Set<string>();
   const visit = (value: unknown) => {
@@ -67,6 +76,12 @@ function pinnedValues(definition: ChallengeDefinition): Set<string> {
   const { workload: w } = definition;
   visit(w);
   values.add(String(definition.evaluationSeconds));
+  // Scenario ids, targets and revisions are not numeric evidence. Only the
+  // scheduled boundaries and numeric intervention inputs authorize prose.
+  scenarioSeconds(definition).forEach(second => values.add(String(second)));
+  for (const step of definition.scenario?.steps ?? []) {
+    for (const value of Object.values(step.request.parameters)) if (typeof value === "number") visit(value);
+  }
   for (const criterion of definition.criteria) {
     for (const [key, value] of Object.entries(criterion)) if (!["id", "label", "resourceId", "kind"].includes(key)) visit(value);
   }
@@ -76,6 +91,8 @@ function pinnedValues(definition: ChallengeDefinition): Set<string> {
   const perSecond = requestsPerSecond(w);
   values.add(String(perSecond));
   values.add(String(perSecond * w.peakMultiplier));
+  // Per-operation rates follow from the pinned total and read share (for example a 50/50 split of 2000/s).
+  for (const share of [w.readWriteRatio, 1 - w.readWriteRatio]) values.add(String(Math.round(perSecond * share * 1e6) / 1e6));
   // Quotas/ratios are authored as fractions, while lessons use percentages.
   for (const value of [...values]) if (Number(value) > 0 && Number(value) < 1) values.add(String(Number(value) * 100));
   return values;
@@ -96,6 +113,7 @@ export function checkLessonClaims(lesson: LearningLesson, definition?: Challenge
   }
   if (!definition) return errors; // Identity failures are reported by authoring.ts.
   const allowed = pinnedValues(definition);
+  const seconds = new Set([definition.evaluationSeconds, ...scenarioSeconds(definition)]);
   for (const [field, prose] of text) {
     const exceptions = CLAIM_EXCEPTIONS.filter(e => e.lesson === identity && e.field === field && e.text === prose && e.reason.trim());
     const quantities = normalizeQuantities(prose);
@@ -103,7 +121,7 @@ export function checkLessonClaims(lesson: LearningLesson, definition?: Challenge
       errors.push(`${identity} ${field}: unsupported numeric/size claim ${token}: ${prose}`);
     }
     for (const match of quantities.matchAll(/\bsecond[ -]+(\d+(?:\.\d+)?)/gi)) {
-      if (Number(match[1]) !== definition.evaluationSeconds && !exceptions.some(e => e.values.includes(match[1]!))) {
+      if (!seconds.has(Number(match[1])) && !exceptions.some(e => e.values.includes(match[1]!))) {
         errors.push(`${identity} ${field}: unsupported evaluation second ${match[1]}`);
       }
     }
@@ -115,7 +133,8 @@ export function checkLessonClaims(lesson: LearningLesson, definition?: Challenge
     for (const match of quantities.matchAll(/(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:requests?|reads?|writes?)(?:\s*\/\s*|\s+(?:per|each)\s+)(?:second|s)\b/gi)) {
       const rate = Number(match[1]!.replaceAll(",", ""));
       const w = definition.workload, base = requestsPerSecond(w);
-      if (rate !== base && rate !== base * w.peakMultiplier && !exceptions.some(e => e.values.includes(String(rate)))) errors.push(`${identity} ${field}: unsupported request rate ${rate}`);
+      const perOperation = [w.readWriteRatio, 1 - w.readWriteRatio].map(share => Math.round(base * share * 1e6) / 1e6);
+      if (rate !== base && rate !== base * w.peakMultiplier && !perOperation.includes(rate) && !exceptions.some(e => e.values.includes(String(rate)))) errors.push(`${identity} ${field}: unsupported request rate ${rate}`);
     }
   }
   if (text.some(([, prose]) => numericClaims(prose).length) &&

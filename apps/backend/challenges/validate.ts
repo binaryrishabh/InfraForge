@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isDeepStrictEqual } from "node:util";
 import { DeploymentChaosNames, RESOURCE_TYPES } from "@infraforge/domain/resource";
 import { validateConnection } from "@infraforge/domain/validation";
 import { validateModel2Readiness } from "@infraforge/simulation/internal-product";
@@ -43,14 +44,21 @@ const definition = z.object({
 }).strict();
 
 const CRITERIA = ["deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
-  "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work"];
+  "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work", "caller-outcomes"];
 const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
+
+// Authoring checks repeatedly visit the same source definitions. Reuse only a
+// successful semantic check of an identical deep snapshot. Schema validation,
+// registry structure and published identities are still checked on every call.
+const validatedDefinitions = new WeakMap<ChallengeDefinition, ChallengeDefinition>();
 
 function checkDefinition(d: ChallengeDefinition): string[] {
   const where = `${d.id}@${d.version}`;
   const parsed = definition.safeParse(d);
   if (!parsed.success) return parsed.error.issues.map((issue) => `${where}: ${issue.path.join(".") || "definition"} ${issue.message}`);
+  const previous = validatedDefinitions.get(d);
+  if (previous && isDeepStrictEqual(previous, d)) return [];
   const problems: string[] = [];
   if (d.scenario !== undefined) {
     const error = scenarioError(d.scenario, d.evaluationSeconds);
@@ -81,6 +89,7 @@ function checkDefinition(d: ChallengeDefinition): string[] {
       if (!d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.MessageQueue && r.asyncQueue?.enabled)) problems.push(`${where}: queue-work needs its named enabled starter queue`);
     }
     if (c.kind === "terminal-p95" && (d.engine !== "2" || !Number.isFinite(c.maxMs) || c.maxMs <= 0)) problems.push(`${where}: terminal-p95 needs Model 2 and a positive finite maxMs`);
+    if (c.kind === "caller-outcomes" && (d.engine !== "2" || !Number.isSafeInteger(c.minCompleted) || c.minCompleted <= 0 || !Number.isSafeInteger(c.maxUnsuccessful) || c.maxUnsuccessful < 0)) problems.push(`${where}: caller-outcomes needs Model 2, positive safe minCompleted and nonnegative safe maxUnsuccessful`);
     if (c.kind === "backend-admission-budget" && (d.engine !== "2" || !Number.isFinite(c.maxPerOfferedRequest) || c.maxPerOfferedRequest <= 0)) problems.push(`${where}: backend-admission-budget needs Model 2 and a positive finite maxPerOfferedRequest`);
     if (c.kind === "database-connections" && c.requireSpare !== undefined && typeof c.requireSpare !== "boolean") problems.push(`${where}: criterion ${c.id} requireSpare must be boolean`);
     if (!CRITERIA.includes(c.kind)) problems.push(`${where}: criterion ${c.id} has unsupported kind ${c.kind}`);
@@ -120,6 +129,10 @@ function checkDefinition(d: ChallengeDefinition): string[] {
     if (d.evaluationSeconds !== evaluation) problems.push(e.postFaultObservationSeconds === undefined
       ? `${where}: evaluation must be at second ${last}, the fault's last active second`
       : `${where}: evaluation must be at second ${evaluation}: fault ends at ${last} plus ${e.postFaultObservationSeconds} observation seconds`);
+  }
+  if (!problems.length) {
+    try { validatedDefinitions.set(d, structuredClone(d)); }
+    catch { /* Non-cloneable inputs are validated normally and never cached. */ }
   }
   return problems;
 }
