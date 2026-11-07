@@ -100,6 +100,20 @@ reconstructs it from that plan and establishes each durable action before advanc
 Only exact stored steps may carry the internal scenario step id; learner interventions remain
 refused. Scoring requires every exact application and end receipt plus terminal evidence.
 
+Database member failures and promotion are currently available only in Free World live runs.
+The scenario validator rejects `db-fail-primary`, `db-fail-replica` and `db-promote-replica`,
+even though the engine implements them. The saved canvas has no promotion-step or timing
+setting. Adding a step to a definition changes its authored rules; it is not a learner design
+change. A lab that requires the learner to add promotion needs a captured recovery-plan
+control and scenario support before it can meet the runnable-lab standard.
+
+`tests/databasePromotionEvidence.test.ts` verifies the Free World mechanism, browser/server
+parity, saved measurements and challenge refusal. Those runs are regression evidence, not
+scored challenge attempts. The `data/writer-failure` lessons remain conceptual. Promotion
+clears the old pending-replication population; zero pending work and new writer commits do
+not alone prove preservation of earlier commits. The model does not create a second replica
+after promotion. Keep data-preservation and automatic-failover claims outside these totals.
+
 Use `revealed` for this slice. `debrief` is a presentation designation: a browser-executed
 script is inspectable and provides no secrecy. No hidden-reveal UI is provided.
 `terminal-p95` uses existing completed-request traffic evidence at the exact evaluation second;
