@@ -14,12 +14,14 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
+  "split-the-capacity-budget@2": "b31028311687a8a42cba0be3bc68c3c30e575fa68def548daf8b7be55b97dbc1",
+  "fit-a-request-in-memory@2": "7add8b437cf66bebd6ed45c0db752157eb8ff095b9f3817e88723e2a015c65d0",
+  "open-and-size-an-api@1": "e63360ab61b729141f588a3a4f9c612a14c9e195f3024cdd9e08b7df5c829cce",
   "parallel-jobs-for-a-burst@1": "ebba322f2f43e7e6f3d90c5772ebf6c3ac227b25573911d352626471e2d7fe45",
   "check-the-missing-server@1": "8985ae0fdff18a9480d4f04c5141124da791b62bf81c647c6b91966ac936afe3",
   "keep-waiting-work@1": "e38032b569056c8d43e914fdb68aab62eb64a71869cfcb2b52c5b897fc85ed60",
   "share-a-cache-fill@1": "39cffc8c5eadbe309c710409abe4a0d4f3431b94c05ef9352f95596ef0ae6954",
   "reuse-before-expiry@1": "7eb2268b199d88bf9f961d0638bc98f28aecfac5ea08db66cff6855ba10362c0",
-  "open-and-size-an-api@1": "e63360ab61b729141f588a3a4f9c612a14c9e195f3024cdd9e08b7df5c829cce",
   "split-the-capacity-budget@1": "db47968e9080943fbcc8ac3c883fb4c0a4d486f143fc94b575ca7f57e8ca82a6",
   "diagnose-consumer-credit@1": "a236d0e516f6213362c7241dc1dcc309157870d403553239b71a01bdc6867f34",
   "fit-a-request-in-memory@1": "f9d6da9199e8abbc5045bcae85c2cec56d85f821ee86233d313a962be77e9763",

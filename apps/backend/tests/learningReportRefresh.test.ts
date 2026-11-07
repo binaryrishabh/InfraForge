@@ -22,15 +22,16 @@ for (const [file, hash] of [
   expect(createHash("sha256").update(source).digest("hex")).toBe(hash!);
 });
 
-for (const old of [memoryIsNotCpu, fitARequestInMemory]) test(`${old.id}: latest listing uses v2 and explicit v1 lookup keeps the original`, () => {
+for (const old of [memoryIsNotCpu, fitARequestInMemory]) test(`${old.id}: latest listing uses the reviewed version and explicit old lookup keeps the original`, () => {
   const current = LEARNING_REGISTRY.findLesson(old.id)!;
-  expect(current.contentVersion).toBe(2);
+  const latestVersion = old.id === "fit-a-request-in-memory" ? 3 : 2;
+  expect(current.contentVersion).toBe(latestVersion);
   expect(LEARNING_REGISTRY.findLesson(old.id, 1)).toEqual(old);
   expect(learningContent.archivedLessons).toContainEqual(old);
-  expect(LEARNING_REGISTRY.findLesson(old.id, 2)).toEqual(current);
-  expect(LEARNING_REGISTRY.findLesson(old.id, 3)).toBeNull();
+  expect(LEARNING_REGISTRY.findLesson(old.id, latestVersion)).toEqual(current);
+  expect(LEARNING_REGISTRY.findLesson(old.id, latestVersion + 1)).toBeNull();
   expect(LEARNING_REGISTRY.listLessons({trackId: old.trackId, moduleId: old.moduleId})
-    .filter(l => l.id === old.id).map(l => l.contentVersion)).toEqual([2]);
+    .filter(l => l.id === old.id).map(l => l.contentVersion)).toEqual([latestVersion]);
   expect(current.limitations.join(" ")).toContain("Unknown");
   // Registry reads are isolated; retrieving an archive cannot mutate the next read.
   const copy = LEARNING_REGISTRY.findLesson(old.id, 1)!; copy.explanation[0] = "changed";
@@ -40,7 +41,7 @@ for (const old of [memoryIsNotCpu, fitARequestInMemory]) test(`${old.id}: latest
 test("memory lesson v2 requires both unchanged challenge identities and refuses missing or changed reviews", () => {
   const id = "fit-a-request-in-memory", latest = LEARNING_REGISTRY.findLesson(id)!;
   expect(latest.experiment!.evidenceToInspect!.flatMap(evidenceLabels).filter(label => label.startsWith("VM memory:"))).toHaveLength(7);
-  expect(checkLearningAuthoring(learningContent).archived).toBe(4);
+  expect(checkLearningAuthoring(learningContent).archived).toBe(6);
   for (const version of [1, 2]) {
     const key = `${id}@${version}`, review = REVIEWED_CHALLENGES[key]!;
     expect(review).toEqual({challengeId: id, version: 1, hash: findChallenge(id, 1)!.hash});

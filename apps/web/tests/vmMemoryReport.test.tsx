@@ -19,11 +19,13 @@ test("saved VM memory: engine counters render with resource identity and scoped 
     lessons: Array<{old: LearningLesson; current: LearningLesson}>;
     reports: RunReport[]; missing: RunReport; unknown: RunReport; invalid: RunReport; checkpointOnly: RunReport; noSnapshot: RunReport;
   };
-  expect(reports).toHaveLength(4); expect(labels).toHaveLength(7);
+  expect(reports).toHaveLength(4);
+  expect(reports.every(report => report.challenge!.version === 2)).toBe(true);
+  expect(labels).toHaveLength(7);
   // The old wording describes an actual gap; the new versions name the now-rendered block.
   expect(lessons).toHaveLength(2);
   for (const {old, current} of lessons) {
-    expect(old.contentVersion).toBe(1); expect(current.contentVersion).toBe(2);
+    expect(old.contentVersion).toBe(1); expect(current.contentVersion).toBe(current.id === "fit-a-request-in-memory" ? 3 : 2);
     expect(old.explanation.join(" ")).toMatch(/omits the detailed memory block|does not render those detailed counters/);
     expect(current.explanation.join(" ")).toContain("Refused allocations");
     expect(current.explanation.join(" ")).toContain("memory measurements");

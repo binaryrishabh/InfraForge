@@ -24,16 +24,18 @@ test("capacity budget: real saved reports render retained resource prices and si
     failedCost: RunReport; duplicateCost: RunReport; wrongIdentity: RunReport; noBudget: RunReport;
   };
   expect(reports).toHaveLength(2);
-  expect(lessons.map(l => l.contentVersion)).toEqual([1, 2, 3]);
+  expect(lessons.map(l => l.contentVersion)).toEqual([1, 2, 3, 4]);
   expect(lessons[0]!.limitations.join(" ")).toContain("omits individual SKU prices");
   expect(lessons[1]!.experiment!.evidenceToInspect!.flatMap(evidenceLabels)).not.toContain(costLabels[1]);
   for (const label of costLabels) {
     expect(lessons[2]!.experiment!.evidenceToInspect!.flatMap(evidenceLabels)).toContain(label);
     expect(lessons[2]!.explanation.join(" ")).toContain(label);
+    expect(lessons[3]!.experiment!.evidenceToInspect!.flatMap(evidenceLabels)).toContain(label);
   }
   for (const [i, report] of reports.entries()) {
     const total = report.stages.find(s => s.name === "CostEstimate")!.monthlyEstimateUsd!;
     expect(report.challenge!.challengeId).toBe("split-the-capacity-budget");
+    expect(report.challenge!.version).toBe(2);
     expect(total).toBe(i === 0 ? 108 : 216);
     const html = render(report);
     for (const text of ["Monthly estimate (CostEstimate gate)", `Estimated $${total.toFixed(2)} a month; the limit is $180.00.`,
