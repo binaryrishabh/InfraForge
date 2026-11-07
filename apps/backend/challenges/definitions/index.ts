@@ -1,3 +1,4 @@
+import { diagnoseConsumerCreditV1 } from "./diagnose-consumer-credit/v1";
 import { fitARequestInMemoryV1 } from "./fit-a-request-in-memory/v1";
 import { diagnoseQueryAdmissionV1 } from "./diagnose-query-admission/v1";
 import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
@@ -63,6 +64,7 @@ challenge list. See ../README.md for the authoring rules. */
 export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   reuseBeforeExpiryV1,
   shareACacheFillV1,
+  diagnoseConsumerCreditV1,
   fitARequestInMemoryV1,
   diagnoseQueryAdmissionV1,
   firstProductionApiV1,
