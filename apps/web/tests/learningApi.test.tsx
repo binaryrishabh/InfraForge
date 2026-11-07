@@ -73,7 +73,7 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
       if (loaded.lesson.kind === "reading" && loaded.lesson.check === null) continue; // A reading's check is optional; a conceptual exercise's is required.
       const check = loaded.lesson.check!;
       expect(check).not.toBeNull();
-      expect(check.choices).toHaveLength(3);
+      expect(check.choices.length).toBeGreaterThanOrEqual(2); // The content contract allows 2 to 6 choices.
       const wrong = check.choices.find(choice => choice.id !== check.correctChoiceId)!;
       expect(lesson(loaded, wrong.id)).toContain("Revisit the explanation.");
       const checkedConcept = lesson(loaded, check.correctChoiceId);
