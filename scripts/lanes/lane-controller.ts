@@ -13,11 +13,13 @@ import { existsSync, mkdirSync, readFileSync, unlinkSync, watch, writeFileSync }
 import { LANES, LAUNCHER, OPS, POLL_MS, QUOTA_MIN_MS, QUOTA_SLACK_MS, ROOT, SILENT_MS, inboxPath, lane, lockPath } from "./lib/config";
 import { doneExit, judge, logAgeMs, logPath, logText } from "./lib/judge";
 import { workerGone } from "./lib/liveness";
+import { launcherRefusal, transientRefusal } from "./lib/launch";
 import { aliveAs, git, sh, sleep, workerAlive } from "./lib/proc";
 import { drainInbox, nextSlice, park } from "./lib/queue";
 import { event, load, now, save, type Current, type State } from "./lib/state";
 import { syncBase } from "./lib/sync";
 
+const LAUNCH_TIMEOUT_MS = Number(process.env.LANE_LAUNCH_TIMEOUT_MS ?? 120_000);
 function takeLock() {
   if (existsSync(lockPath)) {
     const held = JSON.parse(readFileSync(lockPath, "utf8")) as { pid: number };
@@ -37,9 +39,9 @@ function launch(s: State, id: string, attempt: number, resumes: number, brief: s
   }
   const log = `${id}-a${attempt}r${resumes}-${Date.now().toString(36)}.log`;
   const cmd = `& pwsh -NoProfile -File '${LAUNCHER}' -Account ${s.account} -Model ${s.model} -Effort ${s.effort} -Worktree ${s.worktree} -Brief ${brief} -Log ${log}` + (resumeSession ? ` -Resume ${resumeSession}` : "");
-  const r = sh("powershell.exe", ["-NoProfile", "-Command", cmd]);
+  const r = sh("powershell.exe", ["-NoProfile", "-Command", cmd], undefined, LAUNCH_TIMEOUT_MS);
   const pid = Number(/started pid (\d+)/.exec(r.stdout)?.[1] ?? 0), script = /script (\S+detached-[0-9a-f]+\.sh)/.exec(r.stdout)?.[1];
-  if (!pid) throw new Error(`launcher refused: ${(r.stdout + r.stderr).replace(/\x1b\[[0-9;]*m/g, "").trim().slice(0, 300)}`);
+  if (!pid) throw Object.assign(new Error(launcherRefusal(r)), { transient: transientRefusal(r) });
   const prev = load().current;
   s.current = { id, attempt, resumes, sessionId: resumeSession, baseSha: prev && prev.id === id ? prev.baseSha : git(s.worktree, "rev-parse", "HEAD"),
     startedAt: now(), log, logStart: 0, pid, script, quotaRetries };
@@ -49,7 +51,9 @@ function launch(s: State, id: string, attempt: number, resumes: number, brief: s
 async function launchPatiently(...a: Parameters<typeof launch>) {
   for (let i = 0; ; i++) {
     try { return launch(...a); } catch (e) {
-      if (!/already has a running Codex session/.test(String((e as Error).message)) || i >= 10) throw e;
+      const msg = String((e as Error).message);
+      if ((e as { transient?: boolean }).transient && i < 3) { event(`WAIT launcher did not answer (${msg.slice(0, 160)}); retry ${i + 1}/3`); await sleep(20_000); continue; }
+      if (!/already has a running Codex session/.test(msg) || i >= 10) throw e;
       event(`WAIT account busy, retry ${i + 1}/10`); await sleep(30_000);
     }
   }
