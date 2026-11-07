@@ -10,7 +10,7 @@ import { pathToFileURL } from "node:url";
 
 // One row per lesson: workspace title, prediction/hypothesis, the exact resource and
 // improvement control, and expected recorded verdict text (expectations, never results).
-// Add labs here, keeping the shared 17 steps below unchanged. Separate JOURNEY_SHOTS
+// Add labs here, reusing the shared steps below. Separate JOURNEY_SHOTS
 // directories keep each lab's screenshots. The first row preserves the original choices.
 // The database row uses the catalog size db.m5.large (2 vCPU), the inspector's equivalent of the lab's generic small -> medium
 // (1 -> 2 cores); the inspector has no generic-size control. The run decides whether it really meets the requirements.
@@ -48,6 +48,82 @@ export const JOURNEY_LABS = [
     },
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "keep-waiting-work", title: /Keep waiting work/,
+    prediction: "Final health alone cannot tell whether messages expired instead of being acknowledged.",
+    hypothesis: "Keeping messages for 60 seconds lets the unchanged worker acknowledge more waiting work instead of losing it to expiry.",
+    improvement: {
+      stepName: "queue's message retention is changed from 1 to 60 seconds",
+      nodeSelector: '[data-resource-id="queue"]', nodeText: /Message Queue/, fallbackText: "queue",
+      role: "spinbutton", name: /^Message retention \(seconds\)$/, resourceId: "queue", setting: "asyncQueue.retentionSeconds", from: 1, to: 60,
+    },
+    expected: { starter: "Not met", improved: "Met" },
+  },
+  {
+    lessonId: "check-the-missing-server", title: /Check the missing server/,
+    prediction: "The final health sample cannot erase callers that failed while the crashed server still received turns.",
+    hypothesis: "Checking every second removes the crashed app from routing sooner, so more callers should reach the unchanged surviving server.",
+    improvement: {
+      stepName: "lb's health-check interval is changed from 60 to 1 second",
+      nodeSelector: '[data-resource-id="lb"]', nodeText: /Load Balancer/, fallbackText: "lb",
+      role: "spinbutton", name: /^Check interval \(seconds\)$/, resourceId: "lb", setting: "lbHealth.intervalSeconds", from: 60, to: 1,
+    },
+    expected: { starter: "Not met", improved: "Met" },
+  },
+  {
+    lessonId: "parallel-jobs-for-a-burst", title: /Parallel jobs for a burst/,
+    prediction: "A Healthy worker with modest CPU can still leave burst work waiting when only one job runs at a time.",
+    hypothesis: "Two parallel jobs use the worker's existing spare core, so acknowledgements should rise and outstanding work and ready age should fall.",
+    improvement: {
+      stepName: "worker's Jobs in parallel is changed from 1 to 2",
+      nodeSelector: '[data-resource-id="worker"]', nodeText: /Virtual Machine/, fallbackText: "worker",
+      role: "spinbutton", name: /^Jobs in parallel$/, resourceId: "worker", setting: "asyncWorker.concurrency", from: 1, to: 2,
+    },
+    expected: { starter: "Not met", improved: "Met" },
+  },
+  {
+    // The current-only lesson page now serves v3; v2 introduced the saved budget guidance.
+    // Both versions use the same published challenge, starter and inspector controls.
+    lessonId: "split-the-capacity-budget", title: /Split the capacity budget/,
+    prediction: "The cheapest app should be busiest and the initial allocation should not record Healthy overall health.",
+    predictionQuestions: [/Which resource type will record the highest CPU in second 6/, /What overall health will this allocation record in second 6/],
+    hypothesis: "Sizing app and db together should remove both capacity constraints while keeping the recorded catalog estimate within $180. This pair changes two settings and cannot isolate either effect.",
+    improvement: {
+      stepName: "app and db are sized to the smaller passing DigitalOcean allocation",
+      controls: [
+        {
+          // The starter's SKU selects DigitalOcean when this inspector mounts.
+          nodeSelector: '[data-resource-id="app"]', nodeText: /Virtual Machine/, fallbackText: "app",
+          role: "radio", name: /^Basic — 4 vCPU \/ 8 GB\b/, resourceId: "app", setting: "skuId", from: "s-1vcpu-512mb-10gb", to: "s-4vcpu-8gb",
+        },
+        {
+          nodeSelector: '[data-resource-id="db"]', nodeText: /Database/, fallbackText: "db",
+          role: "radio", name: /^Managed PG — 2 vCPU \/ 4 GB\b/, resourceId: "db", setting: "skuId", from: "db-s-1vcpu-1gb", to: "db-s-2vcpu-4gb",
+        },
+      ],
+    },
+    reportRequirements: [/^Catalog snapshot monthly estimate is at most \$180$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
+  {
+    lessonId: "open-and-size-an-api", title: /Mission: open and size an API/,
+    prediction: "The deny rule blocks database admission; opening it alone would still leave the small app short of CPU.",
+    hypothesis: "Moving quarantine-db after the allow rule and resizing app to c5.large should permit the dependency and give it enough capacity. Two settings change, so this pair cannot isolate either effect.",
+    improvement: {
+      stepName: "quarantine-db priority is changed to 20 and app is sized to c5.large",
+      controls: [
+        {
+          nodeSelector: '[data-resource-id="fw"]', nodeText: /Firewall/, fallbackText: "fw",
+          group: /^quarantine-db$/, role: "spinbutton", name: /^Priority$/, resourceId: "fw", setting: "firewallSettings.rules.quarantine-db.priority", from: 0, to: 20,
+        },
+        {
+          nodeSelector: '[data-resource-id="app"]', nodeText: /Virtual Machine/, fallbackText: "app",
+          role: "radio", name: /c5\.large/i, resourceId: "app", setting: "skuId", from: null, to: "c5.large",
+        },
+      ],
+    },
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 export function journeyLab(id = "where-does-the-time-go") {
@@ -64,13 +140,54 @@ export function isLocalJourneyRequest(value) {
 }
 
 export async function changeJourneyControl(page, improvement) {
+  if (!["radio", "spinbutton"].includes(improvement.role)) throw new Error(`Unsupported journey control role: ${improvement.role}`);
   await page.locator(improvement.nodeSelector).filter({ hasText: improvement.nodeText }).first().click({ timeout: 20_000 }).catch(async () => {
     await page.getByText(improvement.fallbackText, { exact: true }).first().click();
   });
-  const size = page.getByRole(improvement.role, { name: improvement.name }).first();
+  const scope = improvement.group ? page.getByRole("group", { name: improvement.group }) : page;
+  const size = scope.getByRole(improvement.role, { name: improvement.name }).first();
   await size.waitFor({ timeout: 20_000 });
-  await size.check();
+  if (improvement.role === "spinbutton") await size.fill(String(improvement.to));
+  else await size.check();
   return size;
+}
+
+export async function applyJourneyImprovement(page, improvement) {
+  const chosen = [];
+  for (const edit of improvement.controls ?? [improvement]) {
+    const control = await changeJourneyControl(page, edit);
+    const value = edit.role === "spinbutton" ? await control.inputValue() : await control.isChecked();
+    if (!improvement.controls && edit.role === "radio") return value;
+    if (value !== (edit.role === "spinbutton" ? String(edit.to) : true)) throw new Error(`Journey control did not retain ${edit.resourceId}.${edit.setting}`);
+    chosen.push({ resourceId: edit.resourceId, setting: edit.setting, value });
+  }
+  return chosen;
+}
+
+export async function answerJourneyPredictions(dialog, lab) {
+  if (!lab.predictionQuestions) return dialog.getByRole("radio").first().check();
+  for (const name of lab.predictionQuestions) await dialog.getByRole("group", { name }).getByRole("radio").first().check();
+}
+
+export async function acknowledgeJourneyChanges(dialog, improvement) {
+  if (improvement.controls?.length > 1) {
+    // The real review must finish and expose its consent; never bypass the server's review.
+    await dialog.getByRole("checkbox", { name: "Continue deliberately with these changes", exact: true }).check({ timeout: 120_000 });
+  }
+}
+
+export async function inspectJourneyRequirements(page, lab) {
+  if (!lab.reportRequirements) return [];
+  const record = page.locator("details").filter({ has: page.getByText("Full evidence record", { exact: true }) });
+  await record.locator("summary").first().click();
+  const details = [];
+  for (const name of lab.reportRequirements) {
+    // The result hero repeats the requirement label without its saved amount or source.
+    const row = record.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) }).first();
+    await row.waitFor({ timeout: 30_000 });
+    details.push(await row.innerText());
+  }
+  return details;
 }
 
 async function runJourney() {
@@ -169,11 +286,11 @@ async function runJourney() {
   });
   await step("a prediction is locked and the real browser run starts and stops at its evaluation second", async () => {
     const dialog = page.getByRole("dialog").first();
-    await dialog.getByRole("radio").first().check();
+    await answerJourneyPredictions(dialog, lab);
     await dialog.getByRole("textbox").first().fill(lab.prediction).catch(() => {});
     await dialog.getByRole("button", { name: /lock prediction and run/i }).click();
     await page.screenshot({ path: `${SHOTS}/6-running.png` });
-    // The run is limited to simulated second 12; wait for the app to show a finished attempt rather than guessing a duration.
+    // Each challenge supplies its evaluation second; wait for the app to show a finished attempt.
     await page.getByRole("link", { name: /see the result/i }).waitFor({ timeout: 240_000 });
     await page.screenshot({ path: `${SHOTS}/7a-finished.png` });
     await page.getByRole("link", { name: /see the result/i }).click();
@@ -189,7 +306,9 @@ async function runJourney() {
     const body = await text();
     await page.screenshot({ path: `${SHOTS}/8-result.png`, fullPage: true });
     await page.getByText(lab.expected.starter, { exact: true }).first().waitFor({ timeout: 30_000 });
-    return { url: page.url().replace(WEB, "").replace(/runs\/.*/, "runs/<id>"), verdict: /(\d+ of \d+ requirements? met at \d+s)/.exec(body)?.[1] ?? null, notMetOrMet: /Not met|Met/.exec(body)?.[0] ?? null, predictionComparison: /Your prediction/.test(body) && /recorded/.test(body), partOfLesson: /Part of lesson/.test(body), debrief: body.slice(Math.max(0, body.indexOf("Your design"))).slice(0, 900) };
+    const requirements = await inspectJourneyRequirements(page, lab);
+    if (lab.reportRequirements) await page.screenshot({ path: `${SHOTS}/8-budget-requirement.png`, fullPage: true });
+    return { url: page.url().replace(WEB, "").replace(/runs\/.*/, "runs/<id>"), verdict: /(\d+ of \d+ requirements? met at \d+s)/.exec(body)?.[1] ?? null, notMetOrMet: /Not met|Met/.exec(body)?.[0] ?? null, predictionComparison: /Your prediction/.test(body) && /recorded/.test(body), partOfLesson: /Part of lesson/.test(body), debrief: body.slice(Math.max(0, body.indexOf("Your design"))).slice(0, 900), ...(lab.reportRequirements ? { requirements } : {}) };
   });
   await step("the lesson now shows the learner's own recorded attempt from the server", async () => {
     await page.goto(`${WEB}/learn/lessons/${lab.lessonId}`, { waitUntil: "load" });
@@ -217,15 +336,16 @@ async function runJourney() {
     return { url: page.url().replace(WEB, "").replace(/design=.*/, "design=<id>"), hasHypothesisNotice: /hypothesis|one change|improvement/i.test(await text()) };
   });
   await step(lab.improvement.stepName, async () => {
-    const size = await changeJourneyControl(page, lab.improvement);
+    const chosen = await applyJourneyImprovement(page, lab.improvement);
     await page.screenshot({ path: `${SHOTS}/12-size-changed.png` });
-    return { chosen: await size.isChecked(), resources: /(\d+) resources/.exec(await text())?.[1] };
+    return { chosen, resources: /(\d+) resources/.exec(await text())?.[1] };
   });
   await step("the improved design runs through the same prediction gate and its recorded result is shown", async () => {
     await page.getByRole("button", { name: /predict and run/i }).click();
     const dialog = page.getByRole("dialog").first();
     await dialog.waitFor({ timeout: 30_000 });
-    await dialog.getByRole("radio").first().check();
+    await answerJourneyPredictions(dialog, lab);
+    await acknowledgeJourneyChanges(dialog, lab.improvement);
     await dialog.getByRole("button", { name: /lock prediction and run/i }).click();
     await page.getByRole("link", { name: /see the result/i }).waitFor({ timeout: 240_000 });
     await page.getByRole("link", { name: /see the result/i }).click();
@@ -234,7 +354,9 @@ async function runJourney() {
     const body = await text();
     await page.screenshot({ path: `${SHOTS}/13-improved-result.png`, fullPage: true });
     await page.getByText(lab.expected.improved, { exact: true }).first().waitFor({ timeout: 30_000 });
-    return { verdict: /(\d+ of \d+ requirements? met at \d+s)/.exec(body)?.[1], whatChanged: body.slice(Math.max(0, body.search(/change|hypothesis|compared|same conditions/i))).slice(0, 700) };
+    const requirements = await inspectJourneyRequirements(page, lab);
+    if (lab.reportRequirements) await page.screenshot({ path: `${SHOTS}/13-budget-requirement.png`, fullPage: true });
+    return { verdict: /(\d+ of \d+ requirements? met at \d+s)/.exec(body)?.[1], whatChanged: body.slice(Math.max(0, body.search(/change|hypothesis|compared|same conditions/i))).slice(0, 700), ...(lab.reportRequirements ? { requirements } : {}) };
   });
   await step("the two runs can be compared and the comparison states its conditions", async () => {
     const improved = page.getByRole("link", { name: /compare with the attempt you improved/i });

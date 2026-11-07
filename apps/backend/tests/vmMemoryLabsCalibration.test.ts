@@ -33,7 +33,7 @@ test("fit-a-request-in-memory: controlled size and request-memory runs pass; a s
   expect(near.resources.filter(r => r.id !== "app2")).toEqual(start.resources);
   expect(near.connectionLines.filter(c => c.sourceId !== "app2" && c.targetId !== "app2")).toEqual(start.connectionLines);
   expect(validateInfrastructureName(d.title)).toBeNull(); expect(d.hints).toHaveLength(3);
-  const pin = new RegExp(`"${id}@1": "([a-f0-9]{64})"`).exec(readFileSync(new URL("./challengeAuthoring.test.ts", import.meta.url), "utf8"))![1]!;
+  const pin = new RegExp(`"${id}@${d.version}": "([a-f0-9]{64})"`).exec(readFileSync(new URL("./challengeAuthoring.test.ts", import.meta.url), "utf8"))![1]!;
   expect(specHash(d)).toBe(pin);
   const captured = captureRunInputs(start, d.workload, challengeSeed(d));
   for (const design of [start, fixed, reduced, near]) {
