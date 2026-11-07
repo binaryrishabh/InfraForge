@@ -11,6 +11,7 @@ import { TrafficEvidence } from "@/features/live/TrafficEvidence";
 import { measurementId } from "../resourceFocus";
 import { LbAccountingReadings } from "./LbAccountingReadings";
 import { SecurityReadings } from "@/features/canvas/components/inspector/SecuritySection";
+import { DurationReadings } from "./DurationReadings";
 import { MonitoringReadings } from "./MonitoringReadings";
 import { CdnReadings } from "./CdnReadings";
 import { CacheReadings } from "./CacheReadings";
@@ -87,6 +88,7 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
               {report.guidedReview && <a href="#guided-review" className="mt-3 inline-block text-sm font-medium text-accent underline">Back to guided review</a>}
             </div>
           )}
+          <DurationReadings evidence={checkpoint.durationEvidence} />
           {monitoringResources.map(r => <MonitoringReadings key={`monitor-${r.id}`} resource={r} />)}
         </ReportSection>
       )}

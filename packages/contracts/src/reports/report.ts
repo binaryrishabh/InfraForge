@@ -78,6 +78,7 @@ export interface ReportTopology {
 }
 
 export interface ReportCheckpoint {
+  durationEvidence?: import("./durations").DurationEvidence;
   traffic?: { wholeRun?: import("../telemetry/WholeRunMetrics.interface").WholeRunMetrics; objective?: import("../telemetry/ObjectiveMetrics.interface").ObjectiveMetrics; latency?: import("../telemetry/LatencyMetrics.interface").LatencyMetrics; clientRetry?: import("../telemetry/ClientRetryMetrics.interface").ClientRetryLiveMetrics; offeredRps: number; completedRps: number; failedRps: number; latencyMs: {p50: number | null; p95: number | null; p99?: number | null} };
   capturedAt?: string;
   topologyRevision?: number;

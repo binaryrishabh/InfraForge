@@ -175,6 +175,20 @@ export const LEARNING_REPORT_MEASUREMENTS = {
   "Peak instances": { scope: "resource", path: "serverless.peakInstances", resourceType: "Serverless Function", source: functionSource, marker: "Peak instances" },
   "Database calls": { scope: "resource", path: "serverless.downstreamCalls", resourceType: "Serverless Function", source: functionSource, marker: "Database calls" },
   "Database wait time (us)": { scope: "resource", path: "serverless.lifecycle.downstreamUs", resourceType: "Serverless Function", source: functionSource, marker: "Database wait time (us)" },
+  "Duration: Through time": { scope: "snapshot", path: "durationEvidence.throughUs", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: '"Duration: Through time"' },
+  "Duration: Slot hold": { scope: "snapshot", path: "durationEvidence.resources.*.busySlotUs", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: '"Duration: Slot hold"' },
+  "Duration: CPU consumption": { scope: "snapshot", path: "durationEvidence.resources.*.consumedCoreUs", unit: "core-us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: '"Duration: CPU consumption"' },
+  "Duration: Query queue": { scope: "snapshot", path: "durationEvidence.resources.*.phasesUs.queued", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: '"Duration: Query queue"' },
+  "Duration: Query lock": { scope: "snapshot", path: "durationEvidence.resources.*.phasesUs.lock", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: '"Duration: Query lock"' },
+  "Duration: Query CPU phase": { scope: "snapshot", path: "durationEvidence.resources.*.phasesUs.cpu", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: '"Duration: Query CPU phase"' },
+  "Duration: Query IO phase": { scope: "snapshot", path: "durationEvidence.resources.*.phasesUs.io", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: '"Duration: Query IO phase"' },
+  "Duration: Query blocking phase": { scope: "snapshot", path: "durationEvidence.resources.*.phasesUs.wait", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: '"Duration: Query blocking phase"' },
+  "Duration: Query commit phase": { scope: "snapshot", path: "durationEvidence.resources.*.phasesUs.commit", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: '"Duration: Query commit phase"' },
+  "Duration: Acquired pool wait": { scope: "snapshot", path: "durationEvidence.paths.*.reachedPhaseUs.connectionWaitUs", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: '"Duration: Acquired pool wait"' },
+  "Duration: Delivered request transport": { scope: "snapshot", path: "durationEvidence.paths.*.reachedPhaseUs.requestTransportUs", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: '"Duration: Delivered request transport"' },
+  "Duration: Returned remote service": { scope: "snapshot", path: "durationEvidence.paths.*.reachedPhaseUs.remoteServiceUs", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: '"Duration: Returned remote service"' },
+  "Duration: Delivered response transport": { scope: "snapshot", path: "durationEvidence.paths.*.reachedPhaseUs.responseTransportUs", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: '"Duration: Delivered response transport"' },
+  "Duration: Unfinished acquisition": { scope: "snapshot", path: "durationEvidence.paths.*.unfinishedAcquisitionUs", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: '"Duration: Unfinished acquisition"' },
 } satisfies Record<string, Measurement>;
 
 export type LearningMeasurementLabel = keyof typeof LEARNING_REPORT_MEASUREMENTS;
