@@ -143,6 +143,8 @@ export function checkLessonClaims(lesson: LearningLesson, definition?: Challenge
   }
   if (!lesson.experiment.evidenceToInspect?.length) errors.push(`${identity}: needs named report measurements in evidenceToInspect`);
   for (const item of lesson.experiment.evidenceToInspect ?? []) for (const label of evidenceLabels(item)) {
+    // Saved schema support or a live-only renderer (for example VM memory) is
+    // insufficient: evidenceToInspect must name an audited saved-report label.
     if (!learningMeasurement(label)) errors.push(`${identity}: report does not render measurement ${label}`);
     else if (label.startsWith("Queue:") && !definition.criteria.some(criterion => criterion.kind === "queue-work")) {
       errors.push(`${identity}: report does not render measurement ${label} without a queue-work requirement`);

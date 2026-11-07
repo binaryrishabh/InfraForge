@@ -22,6 +22,11 @@ const functionSource = "apps/web/src/features/live/ServerlessReadings.tsx";
 const actionSource = "apps/web/src/features/reports/components/ActionTimeline.tsx";
 const dataSource = "apps/web/src/features/live/DataDeliveryReadings.tsx";
 
+// vmMemory.resources.* retains residentBytes, limitBytes, headroomBytes,
+// holdingRequests, activeRequests, allocationRejected and peakResidentBytes.
+// VmMemoryReadings renders them only on the live canvas, not in ReportMeasurements.
+// None is an audited saved-report label until that report actually renders it.
+
 export const LEARNING_REPORT_MEASUREMENTS = {
   "Offered requests/s": { scope: "traffic", path: "offeredRps", source: trafficSource, marker: "Offered requests/s" },
   "Completed requests/s": { scope: "traffic", path: "completedRps", source: trafficSource, marker: "Completed requests/s" },
