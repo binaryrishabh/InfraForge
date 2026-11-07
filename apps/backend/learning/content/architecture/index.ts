@@ -1,2 +1,4 @@
 export { track } from "./track";
-export { crossResourceChoicesLessons as lessons } from "./cross-resource-choices";
+import { crossResourceChoicesLessons } from "./cross-resource-choices";
+import { capacityBudgetsLessons } from "./capacity-budgets";
+export const lessons = [...crossResourceChoicesLessons, ...capacityBudgetsLessons];
