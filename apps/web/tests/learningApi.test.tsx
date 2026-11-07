@@ -46,7 +46,9 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
     const foundations = await getLearningCatalog();
     const html = render(<LearningList {...ready(foundations)} filters={EMPTY_FILTERS} onFilters={() => {}} />);
     expect(html).toContain("Track 1: Foundations"); expect(html).toContain("What is a request?"); expect(html).toContain("Client and server");
-    expect(foundations.tracks.map(track => track.id)).toEqual(["foundations", "scaling", "data", "async", "failures", "missions", "depth"]);
+    const trackIds = foundations.tracks.map(track => track.id);
+    expect(trackIds.slice(0, 7)).toEqual(["foundations", "scaling", "data", "async", "failures", "missions", "depth"]); // Later tracks may follow.
+    expect(new Set(trackIds).size).toBe(trackIds.length);
     expect(availableLessons(foundations)).toHaveLength(foundations.lessons.length);
     for (const track of foundations.tracks) {
       expect(html).toContain(track.title);
@@ -68,8 +70,10 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
       for (const id of loaded.lesson.prerequisites) expect(markup).toContain(`href="/learn/lessons/${id}"`);
       if (loaded.lesson.trackId === "foundations" || loaded.lesson.kind === "executable-lab") continue;
       expect(loaded.challenge).toBeNull(); expect(loaded.progress).toBeNull();
+      if (loaded.lesson.kind === "reading" && loaded.lesson.check === null) continue; // A reading's check is optional; a conceptual exercise's is required.
       const check = loaded.lesson.check!;
-      expect(check.choices).toHaveLength(3);
+      expect(check).not.toBeNull();
+      expect(check.choices.length).toBeGreaterThanOrEqual(2); // The content contract allows 2 to 6 choices.
       const wrong = check.choices.find(choice => choice.id !== check.correctChoiceId)!;
       expect(lesson(loaded, wrong.id)).toContain("Revisit the explanation.");
       const checkedConcept = lesson(loaded, check.correctChoiceId);

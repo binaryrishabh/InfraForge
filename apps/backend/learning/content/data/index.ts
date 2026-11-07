@@ -1,2 +1,5 @@
 export { track } from "./track";
-export { databasePressureLessons as lessons } from "./database-pressure";
+import { databasePressureLessons } from "./database-pressure";
+import { cacheLifetimeLessons } from "./cache-lifetime";
+import { writerFailureLessons } from "./writer-failure";
+export const lessons = [...databasePressureLessons, ...cacheLifetimeLessons, ...writerFailureLessons];

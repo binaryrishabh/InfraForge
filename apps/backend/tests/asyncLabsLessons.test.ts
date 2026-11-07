@@ -1,16 +1,18 @@
 import { expect, test } from "bun:test";
 import { tracks, lessons as registeredLessons } from "../learning/content";
 import { track, lessons } from "../learning/content/async";
-import { queuedWork } from "../learning/content/async/queued-work";
+import { queuedWork, queuedWorkLessons } from "../learning/content/async/queued-work";
+import { firstQueue } from "../learning/content/async/first-queue";
+import { burstWorkers } from "../learning/content/async/burst-workers";
 import { latestChallenge } from "../challenges/registry";
 import { REFERENCE } from "./challengeHarness";
 
-test("async track registers three executable lessons with calibrated challenges and honest limitations", () => {
+test("async queued-work module retains three executable lessons with calibrated challenges and honest limitations", () => {
   expect(tracks.filter(t => t.id === "async")).toEqual([track]);
-  expect(track.modules).toEqual([queuedWork]);
+  expect(track.modules).toEqual([firstQueue, queuedWork, burstWorkers]);
   expect(registeredLessons.filter(l => l.trackId === "async")).toEqual(lessons);
-  expect(queuedWork.lessonIds).toEqual(lessons.map(l => l.id));
-  const labs = lessons.filter(lesson => lesson.kind === "executable-lab");
+  expect(queuedWork.lessonIds).toEqual(queuedWorkLessons.map(l => l.id));
+  const labs = queuedWorkLessons.filter(lesson => lesson.kind === "executable-lab");
   expect(labs).toHaveLength(3);
   expect(new Set(registeredLessons.map(l => l.id)).size).toBe(registeredLessons.length);
   expect(new Set(tracks.map(t => t.id)).size).toBe(tracks.length);

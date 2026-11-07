@@ -1,9 +1,14 @@
 import { splitTheCapacityBudgetV1 } from "./split-the-capacity-budget/v1";
 import { diagnoseConsumerCreditV1 } from "./diagnose-consumer-credit/v1";
+import { parallelJobsForABurstV1 } from "./parallel-jobs-for-a-burst/v1";
 import { fitARequestInMemoryV1 } from "./fit-a-request-in-memory/v1";
+import { keepWaitingWorkV1 } from "./keep-waiting-work/v1";
+import { checkTheMissingServerV1 } from "./check-the-missing-server/v1";
 import { diagnoseQueryAdmissionV1 } from "./diagnose-query-admission/v1";
 import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
 import { openAndSizeAnApiV1 } from "./open-and-size-an-api/v1";
+import { reuseBeforeExpiryV1 } from "./reuse-before-expiry/v1";
+import { shareACacheFillV1 } from "./share-a-cache-fill/v1";
 import { firstProductionApiV1 } from "./first-production-api/v1";
 import { secureTheEdgeV1 } from "./secure-the-edge/v1";
 import { cacheMattersV1 } from "./cache-matters/v1";
@@ -62,6 +67,11 @@ import { limitOrCapacityV1 } from "./limit-or-capacity/v1";
 attempts are judged by exactly the version that created them. Order sets the
 challenge list. See ../README.md for the authoring rules. */
 export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
+  parallelJobsForABurstV1,
+  keepWaitingWorkV1,
+  checkTheMissingServerV1,
+  reuseBeforeExpiryV1,
+  shareACacheFillV1,
   diagnoseConsumerCreditV1,
   fitARequestInMemoryV1,
   diagnoseQueryAdmissionV1,

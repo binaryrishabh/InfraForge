@@ -78,6 +78,21 @@ describe("request-path labs: controlled Model 2 evidence", () => {
     refusesBrokenEvidence(attemptRow(d, fixed, prediction(d)));
   }, 120000);
 
+  test("writes-cost-more-than-reads: the catalog size a learner picks in the Instance size control also fixes it", () => {
+    const d = writesCostMoreThanReadsV1, start = d.starter!, picked = REFERENCE[`${d.id}-catalog`]!;
+    // Undo exactly the one control the learner touches; every other byte of design stays equal.
+    const restored = structuredClone(picked);
+    delete restored.resources.find(r => r.id === "db")!.skuId;
+    expect(restored).toEqual(start);
+    expect(preflight(d, picked).valid).toBe(true);
+    const after = report(d, picked);
+    expect(after.challenge?.status).toBe("met");
+    expect(after.terminal!.simulatedSeconds).toBe(12);
+    expect(p95(after)).toBeLessThan(20);
+    expect(after.terminal!.traffic!.failedRps).toBe(0);
+    console.info(JSON.stringify({lab: d.id, via: "catalog db.m5.large", second: 12, after: summary(after, ["app", "db"])}));
+  }, 120000);
+
   test("balancer-shares-turns: matching the small server fixes it; enlarging the other does not", () => {
     const d = balancerSharesTurnsV1, start = d.starter!, fixed = REFERENCE[d.id]!, near = REFERENCE[`${d.id}-bigger-b`]!, alt = REFERENCE[`${d.id}-least-outstanding`]!;
     const restored = structuredClone(fixed);

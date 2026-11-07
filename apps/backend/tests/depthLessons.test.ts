@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { learningContent } from "../learning/content";
 import { lessons, track } from "../learning/content/depth";
+import { resourcePressureLessons } from "../learning/content/depth/resource-pressure";
 import { validateLearningContent } from "../learning/validate";
 import { LEARNING_REGISTRY } from "../learning/registry";
 import { checkLearningAuthoring } from "../learning/authoring";
@@ -8,9 +9,9 @@ import { definition } from "./challengeHarness";
 
 test("depth lessons use canonical shapes, resolve prerequisites and register three runnable experiments", () => {
   expect(validateLearningContent(learningContent)).toEqual([]);
-  expect(lessons).toHaveLength(3);
+  expect(resourcePressureLessons).toHaveLength(3);
   expect(LEARNING_REGISTRY.findTrack("depth")).toEqual(track);
-  for (const lesson of lessons) {
+  for (const lesson of resourcePressureLessons) {
     expect(LEARNING_REGISTRY.findLesson(lesson.id)).toEqual(lesson);
     expect(lesson.kind).toBe("executable-lab"); expect(lesson.check).toBeNull();
     expect(lesson.limitations.length).toBeGreaterThan(0);

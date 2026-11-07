@@ -1,7 +1,10 @@
 import { openAndSizeAnApiV1 } from "../challenges/definitions/open-and-size-an-api/v1";
 import { splitTheCapacityBudgetV1 } from "../challenges/definitions/split-the-capacity-budget/v1";
 import { diagnoseConsumerCreditV1 } from "../challenges/definitions/diagnose-consumer-credit/v1";
+import { parallelJobsForABurstV1 } from "../challenges/definitions/parallel-jobs-for-a-burst/v1";
 import { fitARequestInMemoryV1 } from "../challenges/definitions/fit-a-request-in-memory/v1";
+import { keepWaitingWorkV1 } from "../challenges/definitions/keep-waiting-work/v1";
+import { checkTheMissingServerV1 } from "../challenges/definitions/check-the-missing-server/v1";
 import { diagnoseQueryAdmissionV1 } from "../challenges/definitions/diagnose-query-admission/v1";
 import { randomUUID } from "node:crypto";
 import { RESOURCE_TYPES as T, type Resource } from "@infraforge/domain/resource";
@@ -24,6 +27,8 @@ import { afterTheCacheReturnsV2 } from "../challenges/definitions/after-the-cach
 import { createModel2Engine, type ContractBuilder } from "../simulator/model2Engine";
 import { buildModel2Contract } from "../simulator/contractBuilder";
 import { currentSecond } from "../simulator/engineView";
+import { reuseBeforeExpiryV1 } from "../challenges/definitions/reuse-before-expiry/v1";
+import { shareACacheFillV1 } from "../challenges/definitions/share-a-cache-fill/v1";
 import { recordedScenario } from "../challenges/scenario";
 import { dueScenarioSteps } from "@infraforge/simulation/model2-run";
 import { boundRetriesDuringSlowdownV1 } from "../challenges/definitions/bound-retries-during-slowdown/v1";
@@ -76,6 +81,16 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 export const REFERENCE: Record<string, ChallengeStarter> = {
   "open-and-size-an-api": {...openAndSizeAnApiV1.starter!, resources: openAndSizeAnApiV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.large"} : r.id === "fw" ? {...r, firewallSettings: {...r.firewallSettings!, rules: r.firewallSettings!.rules.map(rule => rule.id === "quarantine-db" ? {...rule, priority: 20} : rule)}} : r)},
   "open-and-size-an-api-headroom": {...openAndSizeAnApiV1.starter!, resources: openAndSizeAnApiV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r.id === "fw" ? {...r, firewallSettings: {...r.firewallSettings!, rules: r.firewallSettings!.rules.map(rule => rule.id === "quarantine-db" ? {...rule, priority: 20} : rule)}} : r)},
+  "parallel-jobs-for-a-burst": {...parallelJobsForABurstV1.starter!, resources: parallelJobsForABurstV1.starter!.resources.map(r =>
+    r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, concurrency: 2}} : r)},
+  "keep-waiting-work": {...keepWaitingWorkV1.starter!, resources: keepWaitingWorkV1.starter!.resources.map(r =>
+    r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, retentionSeconds: 60}} : r)},
+  "check-the-missing-server": {...checkTheMissingServerV1.starter!, resources: checkTheMissingServerV1.starter!.resources.map(r =>
+    r.id === "lb" ? {...r, lbHealth: {...r.lbHealth!, intervalSeconds: 1}} : r)},
+  "share-a-cache-fill": {...shareACacheFillV1.starter!, resources: shareACacheFillV1.starter!.resources.map(r =>
+    r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, singleFlight: true}} : r)},
+  "reuse-before-expiry": {...reuseBeforeExpiryV1.starter!, resources: reuseBeforeExpiryV1.starter!.resources.map(r =>
+    r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, ttlSeconds: 60}} : r)},
   "split-the-capacity-budget": {...splitTheCapacityBudgetV1.starter!, resources: splitTheCapacityBudgetV1.starter!.resources.map(r => ({...r, skuId: r.id === "app" ? "s-4vcpu-8gb" : "db-s-2vcpu-4gb"}))},
   "split-the-capacity-budget-app-headroom": {...splitTheCapacityBudgetV1.starter!, resources: splitTheCapacityBudgetV1.starter!.resources.map(r => ({...r, skuId: r.id === "app" ? "s-8vcpu-16gb" : "db-s-2vcpu-4gb"}))},
   "split-the-capacity-budget-db-headroom": {...splitTheCapacityBudgetV1.starter!, resources: splitTheCapacityBudgetV1.starter!.resources.map(r => ({...r, skuId: r.id === "app" ? "s-4vcpu-8gb" : "db-s-4vcpu-8gb"}))},
@@ -125,6 +140,8 @@ export const REFERENCE: Record<string, ChallengeStarter> = {
   "one-bigger-or-two-smaller": {...oneBiggerOrTwoSmallerV1.starter!, resources: oneBiggerOrTwoSmallerV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r)},
   // Request-path labs: the one-setting fix, and the plausible change that must still fail.
   "writes-cost-more-than-reads": {...writesCostMoreThanReadsV1.starter!, resources: writesCostMoreThanReadsV1.starter!.resources.map(r => r.id === "db" ? {...r, size: "medium"} : r)},
+  // The designer offers catalog sizes, not the generic size field: the same change as a learner makes it in the Instance size control.
+  "writes-cost-more-than-reads-catalog": {...writesCostMoreThanReadsV1.starter!, resources: writesCostMoreThanReadsV1.starter!.resources.map(r => r.id === "db" ? {...r, skuId: "db.m5.large"} : r)},
   "writes-cost-more-than-reads-second-app": starter([["dns", T.DNS, 0, 0], ["lb", T.LoadBalancer, 1, 0], ["app", T.VirtualMachine, 2, 0, {size: "large"}], ["app2", T.VirtualMachine, 2, 1, {size: "large"}],
     ["db", T.Database, 3, 0, {size: "small"}]], [["dns", "lb"], ["lb", "app"], ["app", "db"], ["lb", "app2"], ["app2", "db"]]),
   "balancer-shares-turns": {...balancerSharesTurnsV1.starter!, resources: balancerSharesTurnsV1.starter!.resources.map(r => r.id === "app-a" ? {...r, skuId: "c5.large"} : r)},

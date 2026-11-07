@@ -15,6 +15,11 @@ the next version file, register it in definitions/index.ts and pin it here. Run 
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
   "open-and-size-an-api@1": "e63360ab61b729141f588a3a4f9c612a14c9e195f3024cdd9e08b7df5c829cce",
+  "parallel-jobs-for-a-burst@1": "ebba322f2f43e7e6f3d90c5772ebf6c3ac227b25573911d352626471e2d7fe45",
+  "check-the-missing-server@1": "8985ae0fdff18a9480d4f04c5141124da791b62bf81c647c6b91966ac936afe3",
+  "keep-waiting-work@1": "e38032b569056c8d43e914fdb68aab62eb64a71869cfcb2b52c5b897fc85ed60",
+  "share-a-cache-fill@1": "39cffc8c5eadbe309c710409abe4a0d4f3431b94c05ef9352f95596ef0ae6954",
+  "reuse-before-expiry@1": "7eb2268b199d88bf9f961d0638bc98f28aecfac5ea08db66cff6855ba10362c0",
   "split-the-capacity-budget@1": "db47968e9080943fbcc8ac3c883fb4c0a4d486f143fc94b575ca7f57e8ca82a6",
   "diagnose-consumer-credit@1": "a236d0e516f6213362c7241dc1dcc309157870d403553239b71a01bdc6867f34",
   "fit-a-request-in-memory@1": "f9d6da9199e8abbc5045bcae85c2cec56d85f821ee86233d313a962be77e9763",
@@ -29,7 +34,7 @@ export const PUBLISHED: Record<string, string> = {
   "protect-one-api-route@1": "695b5f64876c96ff10cc0f6f37a9f74190b41a9378d92c0cc75a163ca7a509ea",
   "queue-overlapping-jobs@1": "ff340d09b24bff1c2f824e408ae3025f8bd39b7b6cec7cc9917fbcafaf6405cc",
   "bound-function-pool-pressure@1": "b58e0c704222b88d8e5d83d99dc998624c8b70f322e82d115ebd33767cd71d50",
-  "writes-cost-more-than-reads@1": "05111fafb9ef1821ac835740cf56c38d5adec1ea93d966181d29eaf19d0507a9",
+  "writes-cost-more-than-reads@1": "d869e00ed5a9bfde21637c6ff046a60feb6a2a5a589a3e019110ae8c759a2836",
   "balancer-shares-turns@1": "2cd489a91c966d7138831326bec893927e16e0a13f6d9fd9bd9935a97dc9eddc",
   "catalogue-link-flash@1": "2d6afe745f45e31593096d34ae669138f45f2d6dadc2eff02295a71114ca7a6e",
   "flash-sale-order-backlog@1": "c84cc970bee937a37136dd716a85724ee589fd8706b82fbd709e64de825b4093",
@@ -135,15 +140,27 @@ describe("challenge authoring", () => {
   test("the hidden reference designs never ship: no runtime module imports them and the image excludes tests", async () => {
     const root = join(import.meta.dir, "..");
     const offenders: string[] = [];
+    const sourceFiles: string[] = [];
+    // Bound concurrent reads so the complete packaging audit fits its original
+    // timeout on Windows too. Every discovered source still gets inspected.
+    const inspectFiles = async (files: string[], inspect: (path: string) => Promise<void>) => {
+      let next = 0;
+      await Promise.all(Array.from({length: Math.min(8, files.length)}, async () => {
+        while (next < files.length) await inspect(files[next++]!);
+      }));
+    };
     const walk = async (dir: string): Promise<void> => {
       for (const entry of await readdir(dir, { withFileTypes: true })) {
         if (["node_modules", "tests", "lib", ".turbo"].includes(entry.name)) continue;
         const path = join(dir, entry.name);
         if (entry.isDirectory()) await walk(path);
-        else if (path.endsWith(".ts") && /challengeHarness|\bREFERENCE\b/.test(await readFile(path, "utf8"))) offenders.push(path);
+        else if (path.endsWith(".ts")) sourceFiles.push(path);
       }
     };
     await walk(root);
+    await inspectFiles(sourceFiles, async path => {
+      if (/challengeHarness|\bREFERENCE\b/.test(await readFile(path, "utf8"))) offenders.push(path);
+    });
     expect(offenders).toEqual([]);
     const ignore = await readFile(join(root, "..", "..", ".dockerignore"), "utf8");
     expect(ignore).not.toMatch(/^!apps\/backend\/tests/m);
@@ -151,7 +168,7 @@ describe("challenge authoring", () => {
       const files: string[] = [];
       const list = async (dir: string): Promise<void> => { for (const e of await readdir(dir, { withFileTypes: true })) { const p = join(dir, e.name); if (e.isDirectory()) await list(p); else files.push(p); } };
       await list(join(root, "..", "web", web));
-      for (const file of files) expect(await readFile(file, "utf8")).not.toContain("challengeHarness");
+      await inspectFiles(files, async file => { expect(await readFile(file, "utf8")).not.toContain("challengeHarness"); });
     }
   });
 });

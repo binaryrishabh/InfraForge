@@ -3,6 +3,11 @@
 export interface LearningChallengeReview { challengeId: string; version: number; hash: string }
 export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeReview>> = {
   "open-and-size-an-api@1": {challengeId: "open-and-size-an-api", version: 1, hash: "e63360ab61b729141f588a3a4f9c612a14c9e195f3024cdd9e08b7df5c829cce"},
+  "parallel-jobs-for-a-burst@1": {challengeId: "parallel-jobs-for-a-burst", version: 1, hash: "ebba322f2f43e7e6f3d90c5772ebf6c3ac227b25573911d352626471e2d7fe45"},
+  "check-the-missing-server@1": {challengeId: "check-the-missing-server", version: 1, hash: "8985ae0fdff18a9480d4f04c5141124da791b62bf81c647c6b91966ac936afe3"},
+  "keep-waiting-work@1": {challengeId: "keep-waiting-work", version: 1, hash: "e38032b569056c8d43e914fdb68aab62eb64a71869cfcb2b52c5b897fc85ed60"},
+  "share-a-cache-fill@1": {challengeId: "share-a-cache-fill", version: 1, hash: "39cffc8c5eadbe309c710409abe4a0d4f3431b94c05ef9352f95596ef0ae6954"},
+  "reuse-before-expiry@1": {challengeId: "reuse-before-expiry", version: 1, hash: "7eb2268b199d88bf9f961d0638bc98f28aecfac5ea08db66cff6855ba10362c0"},
   "split-the-capacity-budget@1": {challengeId: "split-the-capacity-budget", version: 1, hash: "db47968e9080943fbcc8ac3c883fb4c0a4d486f143fc94b575ca7f57e8ca82a6"},
   "split-the-capacity-budget@2": {challengeId: "split-the-capacity-budget", version: 1, hash: "db47968e9080943fbcc8ac3c883fb4c0a4d486f143fc94b575ca7f57e8ca82a6"},
   "diagnose-consumer-credit@1": {challengeId: "diagnose-consumer-credit", version: 1, hash: "a236d0e516f6213362c7241dc1dcc309157870d403553239b71a01bdc6867f34"},
@@ -33,7 +38,7 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "protect-one-api-route@1": { challengeId: "protect-one-api-route", version: 1, hash: "695b5f64876c96ff10cc0f6f37a9f74190b41a9378d92c0cc75a163ca7a509ea" },
   "queue-overlapping-jobs@1": { challengeId: "queue-overlapping-jobs", version: 1, hash: "ff340d09b24bff1c2f824e408ae3025f8bd39b7b6cec7cc9917fbcafaf6405cc" },
   "bound-function-pool-pressure@1": { challengeId: "bound-function-pool-pressure", version: 1, hash: "b58e0c704222b88d8e5d83d99dc998624c8b70f322e82d115ebd33767cd71d50" },
-  "writes-cost-more-than-reads@1": { challengeId: "writes-cost-more-than-reads", version: 1, hash: "05111fafb9ef1821ac835740cf56c38d5adec1ea93d966181d29eaf19d0507a9" },
+  "writes-cost-more-than-reads@1": { challengeId: "writes-cost-more-than-reads", version: 1, hash: "d869e00ed5a9bfde21637c6ff046a60feb6a2a5a589a3e019110ae8c759a2836" },
   "balancer-shares-turns@1": { challengeId: "balancer-shares-turns", version: 1, hash: "2cd489a91c966d7138831326bec893927e16e0a13f6d9fd9bd9935a97dc9eddc" },
   "diagnose-lost-app-capacity@1": { challengeId: "diagnose-lost-app-capacity", version: 1, hash: "c96034e934dbd75035b519f13035467cdae6eb9d8f08b921c06ad18cdb2466f2" },
   "investigate-a-pool-reset@1": { challengeId: "investigate-a-pool-reset", version: 1, hash: "ed61ae0627f3d15dcab41899f5cc80c5c54edf207c3068bdc9abe765e590500e" },

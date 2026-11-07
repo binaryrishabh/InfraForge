@@ -82,8 +82,8 @@ test("a newly reviewed version can coexist with its immutable archived content",
   expect(versioned.archivedLessons.at(-1)).toEqual(oldLesson);
 });
 
-test("every lab refuses an unsupported workload number and an unrendered measurement", () => {
-  for (const original of learningContent.lessons.filter(l => l.kind === "executable-lab")) {
+for (const original of learningContent.lessons.filter(l => l.kind === "executable-lab")) {
+  test(`${original.id}: refuses an unsupported workload number and an unrendered measurement`, () => {
     const content = structuredClone(learningContent);
     const lab = content.lessons.find(l => l.id === original.id)!;
     lab.problem[0] = "The workload offers 98765 requests/second.";
@@ -92,8 +92,8 @@ test("every lab refuses an unsupported workload number and an unrendered measure
     lab.experiment!.evidenceToInspect = ["Cache hits; invented recovery duration"];
     expect(() => checkLearningAuthoring(content)).toThrow("report does not render measurement Cache hits");
     expect(() => checkLearningAuthoring(content)).toThrow("report does not render measurement invented recovery duration");
-  }
-});
+  });
+}
 
 test("numbers in another pinned field cannot authorize a wrong request rate or evaluation second", () => {
   const content = structuredClone(learningContent);

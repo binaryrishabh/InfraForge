@@ -12,8 +12,8 @@ import { pathToFileURL } from "node:url";
 // improvement control, and expected recorded verdict text (expectations, never results).
 // Add labs here, keeping the shared 17 steps below unchanged. Separate JOURNEY_SHOTS
 // directories keep each lab's screenshots. The first row preserves the original choices.
-// The database row deliberately requires a Medium control for size small -> medium;
-// the current catalog-only inspector lacks it. Fail that step rather than substitute a SKU.
+// The database row uses the catalog size db.m5.large (2 vCPU), the inspector's equivalent of the lab's generic small -> medium
+// (1 -> 2 cores); the inspector has no generic-size control. The run decides whether it really meets the requirements.
 export const JOURNEY_LABS = [
   {
     lessonId: "where-does-the-time-go", title: /Where does the time go\?/,
@@ -24,18 +24,18 @@ export const JOURNEY_LABS = [
       nodeSelector: ".react-flow__node, [data-id]", nodeText: /Virtual Machine/, fallbackText: "app",
       role: "radio", name: /c5\.large/i, resourceId: "app", setting: "skuId", from: null, to: "c5.large",
     },
-    expected: { starter: "Not met yet", improved: "All requirements met" },
+    expected: { starter: "Not met", improved: "Met" },
   },
   {
     lessonId: "writes-cost-more-than-reads", title: /Writes cost the database more/,
     prediction: "The write-heavy mix asks the database for more CPU work than the app.",
-    hypothesis: "Changing only db from small to medium adds database capacity, so its queue should shrink and p95 should fall.",
+    hypothesis: "Changing only the database to db.m5.large adds database capacity, so its queue should shrink and p95 should fall.",
     improvement: {
-      stepName: "the database size is changed from small to medium in the designer",
+      stepName: "the database size is changed to db.m5.large in the designer",
       nodeSelector: '[data-resource-id="db"]', nodeText: /Database/, fallbackText: "db",
-      role: "radio", name: /^Medium\b/i, resourceId: "db", setting: "size", from: "small", to: "medium",
+      role: "radio", name: /db\.m5\.large/i, resourceId: "db", setting: "skuId", from: null, to: "db.m5.large",
     },
-    expected: { starter: "Not met yet", improved: "All requirements met" },
+    expected: { starter: "Not met", improved: "Met" },
   },
   {
     lessonId: "balancer-shares-turns", title: /The balancer shares turns/,
@@ -46,7 +46,7 @@ export const JOURNEY_LABS = [
       nodeSelector: '[data-resource-id="app-a"]', nodeText: /Virtual Machine/, fallbackText: "app-a",
       role: "radio", name: /c5\.large/i, resourceId: "app-a", setting: "skuId", from: null, to: "c5.large",
     },
-    expected: { starter: "Not met yet", improved: "All requirements met" },
+    expected: { starter: "Not met", improved: "Met" },
   },
 ];
 

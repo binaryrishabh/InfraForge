@@ -1,5 +1,39 @@
 # Authoring challenges
 
+## Beginner on-ramps
+
+`keep-waiting-work@1` changes only Message retention (seconds). The queue
+already has space and one worker keeps its fixed work and concurrency. At second
+170, extending retention from 1 to 60 seconds changes acknowledged messages from
+151 to 218 and expired messages from 79 to 0. The passing snapshot still has 11
+ready messages with oldest ready age 10.996246 seconds. Both runs accept all 230
+producer requests. This teaches message expiry rather than the capacity refusals
+in `analytics-burst-buffer` or worker optimization in `keep-up-with-the-queue`.
+Saved reports render acknowledged, expired, ready and oldest ready age; absent
+observations and the absence of an oldest ready message stay Unknown.
+
+`check-the-missing-server@1` changes only Check interval (seconds), from 60 to 1.
+Two apps already have sufficient survivor capacity. Under the same `vm-crash@1`
+script, completed callers change from 800 to 1150 and failed callers from 400 to
+50 through second 12. More survivor CPU does not repair routing to the failed
+peer. This teaches detection rather than adding headroom or another server.
+Final health and p95 match in both runs and cannot erase earlier caller failures.
+
+Both are starter challenges with beginner lessons, one-setting hidden references,
+failing near misses, refusal tests, browser/server replay proofs and real report
+rendering tests in `beginnerOnramps*`. These numbers are deterministic educational
+outputs, not provider benchmarks or availability guarantees. No engine behavior
+or previously published challenge definition changes for these labs.
+
+`share-a-cache-fill@1` changes only the cache's saved Single-flight setting. One
+read-only key and an app-owned aside expose overlapping fills during an authored
+database CPU slowdown. Calibration compares independent real runs: second-5 p95
+142.648 -> 3.754 ms, with 1000 callers completed and none unsuccessful in either.
+The capacity-only near miss retains the failing tail. Existing `terminal-p95`
+and `caller-outcomes` criteria score saved outcomes; raw database fetches and
+coalesced waiters support calibration but are not saved report measurements.
+No whole-run latency, continuous recovery or cross-replica coordination is claimed.
+
 ## Architecture choices
 
 `cache-or-database@1`, `one-vm-or-a-pool@1` and `limit-or-capacity@1` each have two
@@ -91,6 +125,20 @@ reconstructs it from that plan and establishes each durable action before advanc
 Only exact stored steps may carry the internal scenario step id; learner interventions remain
 refused. Scoring requires every exact application and end receipt plus terminal evidence.
 
+Database member failures and promotion are currently available only in Free World live runs.
+The scenario validator rejects `db-fail-primary`, `db-fail-replica` and `db-promote-replica`,
+even though the engine implements them. The saved canvas has no promotion-step or timing
+setting. Adding a step to a definition changes its authored rules; it is not a learner design
+change. A lab that requires the learner to add promotion needs a captured recovery-plan
+control and scenario support before it can meet the runnable-lab standard.
+
+`tests/databasePromotionEvidence.test.ts` verifies the Free World mechanism, browser/server
+parity, saved measurements and challenge refusal. Those runs are regression evidence, not
+scored challenge attempts. The `data/writer-failure` lessons remain conceptual. Promotion
+clears the old pending-replication population; zero pending work and new writer commits do
+not alone prove preservation of earlier commits. The model does not create a second replica
+after promotion. Keep data-preservation and automatic-failover claims outside these totals.
+
 Use `revealed` for this slice. `debrief` is a presentation designation: a browser-executed
 script is inspectable and provides no secrecy. No hidden-reveal UI is provided.
 `terminal-p95` uses existing completed-request traffic evidence at the exact evaluation second;
@@ -179,6 +227,15 @@ saturated service and does not establish sufficient throughput or availability.
 The criterion renders through the existing generic requirement list.
 
 ## Database labs
+
+`reuse-before-expiry@1` isolates cache lifetime from logical capacity. The
+read-only uniform working set already fits. Changing only Cache TTL reduces
+expiry-driven source reads and second-6 completed-request p95; increasing only
+logical capacity leaves the expiry behavior unchanged. All three runs use the
+same captured workload and seed. Cumulative caller outcomes are scored alongside
+terminal latency. Live cache populations are calibration evidence, not retained
+saved-report fields; the lesson names only saved latency, CPU, health and caller
+measurements. No mutable-data freshness or whole-run latency guarantee follows.
 
 `move-reads-off-the-writer@1` compares explicit primary-only and replica-preferred
 routing with unchanged capacity. Member CPU work and read-source counts show reads
@@ -336,6 +393,22 @@ exhaustion already appears in `open-one-subscriber@1`; a separate calibrated
 retry/dead-letter-overflow exercise is not added here.
 
 ## Check
+
+`parallel-jobs-for-a-burst@1` changes only Jobs in parallel from one to two
+on an existing two-core worker. At the burst's end, second 140, the report
+compares acknowledgements and all outstanding work with broker-ready depth
+and age. Raising only prefetch is a deliberate near miss: jobs move into
+leases and ready age becomes Unknown while useful completion remains too low.
+Worker count, autoscaling and arbitrary slow-message classes are unavailable.
+
+The `queue-ready-age` requirement uses the existing optional saved `asyncQueue`
+observation plus matching `queueWork/1` ready count, current topology and the
+exact evaluation second. A nonempty ready population requires finite age
+between zero and elapsed run time. An observed zero ready count meets the
+requirement with null age explicitly; null age alone never establishes zero
+waiting. Missing, stale, inconsistent or malformed evidence stays unscored.
+This is a single sample, excluding leased jobs, not a whole-run wait target
+or backlog drain time. No engine behavior or historical definition changes.
 
 ```
 bun run check:challenges

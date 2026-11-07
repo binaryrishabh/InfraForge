@@ -18,7 +18,7 @@ test("the lab table has unique lesson ids, explicit controls and recorded-verdic
     expect(lab.improvement.fallbackText).toBe(lab.improvement.resourceId);
     expect(lab.improvement.role).toBe("radio");
     expect(lab.improvement.name.test(lab.improvement.to)).toBe(true);
-    expect(lab.expected).toEqual({ starter: "Not met yet", improved: "All requirements met" });
+    expect(lab.expected).toEqual({ starter: "Not met", improved: "Met" });
   }
 });
 
@@ -37,10 +37,10 @@ test("omitting JOURNEY_LAB preserves the original first lab's choices", () => {
 
 test("database resizing and balancing target the intended resource and setting", () => {
   const db = journeyLab("writes-cost-more-than-reads").improvement;
-  expect([db.resourceId, db.setting, db.from, db.to]).toEqual(["db", "size", "small", "medium"]);
+  expect([db.resourceId, db.setting, db.from, db.to]).toEqual(["db", "skuId", null, "db.m5.large"]);
   expect(db.nodeSelector).toBe('[data-resource-id="db"]');
-  expect(db.name.test("Medium")).toBe(true);
-  expect(db.name.test("db.t3.medium")).toBe(false); // A catalog SKU is a different change.
+  expect(db.name.test("db.m5.large - 2 vCPU / 8 GB")).toBe(true); // The inspector offers catalog sizes, not the generic size field.
+  expect(db.name.test("db.m5.xlarge")).toBe(false); // Neighbouring sizes in the list never count.
   const app = journeyLab("balancer-shares-turns").improvement;
   expect([app.resourceId, app.setting, app.from, app.to]).toEqual(["app-a", "skuId", null, "c5.large"]);
   expect(app.nodeSelector).toBe('[data-resource-id="app-a"]');
@@ -81,10 +81,10 @@ test("the shared change selects app-a explicitly and keeps the original exact-te
   expect(original.calls).toEqual([".react-flow__node, [data-id]", ["app", { exact: true }], ["radio", "c5\\.large"], "checked"]);
 });
 
-test("a missing Medium control fails rather than checking a substitute", async () => {
+test("a missing database size control fails rather than checking a substitute", async () => {
   const missing = fakePage({ controlMissing: true });
   await expect(changeJourneyControl(missing.page, journeyLab("writes-cost-more-than-reads").improvement)).rejects.toThrow("requested control is missing");
-  expect(missing.calls).toEqual(['[data-resource-id="db"]', ["radio", "^Medium\\b"]]);
+  expect(missing.calls).toEqual(['[data-resource-id="db"]', ["radio", "db\\.m5\\.large"]]);
 });
 
 test("unknown lesson selection is refused, including empty ids and inherited property names", () => {
