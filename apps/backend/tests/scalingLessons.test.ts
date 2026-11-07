@@ -3,14 +3,15 @@ import { tracks, lessons as registeredLessons } from "../learning/content";
 import { track, lessons } from "../learning/content/scaling";
 import { servingUnderLoad } from "../learning/content/scaling/serving-under-load";
 import { firstScalingChoices, firstScalingChoicesLessons } from "../learning/content/scaling/first-scaling-choices";
+import { scalingReasoning } from "../learning/content/scaling/scaling-reasoning";
 import { latestChallenge } from "../challenges/registry";
 import { REFERENCE } from "./challengeHarness";
 
 test("scaling registers three executable labs with real challenges, limitations and measured evidence", () => {
   expect(tracks.filter(t => t.id === "scaling")).toEqual([track]);
-  expect(track.modules).toEqual([firstScalingChoices, servingUnderLoad]);
+  expect(track.modules).toEqual([firstScalingChoices, servingUnderLoad, scalingReasoning]);
   expect(registeredLessons.filter(l => l.trackId === "scaling")).toEqual(lessons);
-  expect([...firstScalingChoices.lessonIds, ...servingUnderLoad.lessonIds]).toEqual(lessons.map(l => l.id));
+  expect([...firstScalingChoices.lessonIds, ...servingUnderLoad.lessonIds, ...scalingReasoning.lessonIds]).toEqual(lessons.map(l => l.id));
   expect(firstScalingChoicesLessons.map(l => l.kind)).toEqual(["reading", "conceptual-exercise"]);
   const labs = lessons.filter(lesson => lesson.kind === "executable-lab");
   expect(labs).toHaveLength(3);
