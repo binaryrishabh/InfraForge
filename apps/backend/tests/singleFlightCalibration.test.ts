@@ -14,7 +14,8 @@ test("single-flight: only joining fills relieves repeated source work; reports r
   const restored = structuredClone(fixed), near = structuredClone(start);
   restored.resources.find(r => r.id === "cache")!.cachePolicy!.singleFlight = false;
   expect(restored).toEqual(start);
-  near.resources.find(r => r.id === "cache")!.cachePolicy!.capacityEntries = 32;
+  const nearCache = near.resources.find(r => r.id === "cache")!;
+  nearCache.cachePolicy = {...nearCache.cachePolicy, version: 2, capacityEntries: 32};
   expect(validateInfrastructureName(d.title)).toBeNull();
   const designs = [start, fixed, near], inputs = designs.map(s => captureRunInputs(s, d.workload, challengeSeed(d)));
   for (const [i, design] of designs.entries()) {

@@ -18,7 +18,8 @@ test("single-flight starter, reference and capacity near miss match browser/serv
     if (await build.exited !== 0) throw Error(diagnostics);
     const browserRun: typeof createModel2Run = (await import(pathToFileURL(path).href)).createModel2Run;
     const d = definition("share-a-cache-fill"), near = structuredClone(d.starter!);
-    near.resources.find(r => r.id === "cache")!.cachePolicy!.capacityEntries = 32;
+    const nearCache = near.resources.find(r => r.id === "cache")!;
+    nearCache.cachePolicy = {...nearCache.cachePolicy, version: 2, capacityEntries: 32};
     for (const design of [d.starter!, REFERENCE[d.id]!, near]) {
       const captured = captureRunInputs(design, d.workload, challengeSeed(d));
       const input = readRunInputs(JSON.parse(JSON.stringify(captured)));
