@@ -32,7 +32,7 @@ test("failure controls register six honest concepts and one reviewed lab without
   const paths = Object.values(LEARNING_REPORT_MEASUREMENTS).map(m => m.path);
   expect(paths.some(p => /coalescedWaiters|circuitBreaker|clientRetry|suppressedByReason/.test(p))).toBe(false);
 
-  const missingReview = {...learningContent, lessons: [lab], tracks: [{...track, modules: [{...failureControls, lessonIds: [lab.id]}]}]};
+  const missingReview = {...learningContent, archivedLessons: [], lessons: [lab], tracks: [{...track, modules: [{...failureControls, lessonIds: [lab.id]}]}]};
   missingReview.lessons = [{...lab, prerequisites: []}];
   expect(() => checkLearningAuthoring(missingReview, {})).toThrow("missing challenge review");
   const missingLimits = structuredClone(learningContent);
