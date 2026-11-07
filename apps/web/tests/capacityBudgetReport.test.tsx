@@ -31,10 +31,16 @@ test("capacity budget: real saved reports render retained resource prices and si
     expect(report.challenge!.criteria.filter(c => c.status !== "met").map(c => c.id)).toEqual(i === 0 ? [] : ["budget"]);
     expect(html).toContain(i === 0 ? "Every requirement was met." : "Not every requirement was met.");
     for (const text of ["Monthly resource price line items", "Remaining monthly budget", "Monthly budget limit", "s-", "db-s-", "not current catalog prices", "negative amount is over budget"]) expect(html).toContain(text);
+    const breakdown = html.split("Monthly resource price line items")[1]!;
+    for (const item of report.stages.find(s => s.name === "CostEstimate")!.lineItems!) {
+      const row = breakdown.split(`>${item.resourceId}</th>`)[1]!.split("</tr>")[0]!;
+      expect(row).toContain(item.skuId!);
+      expect(row).toContain(`$${item.monthlyUsd.toFixed(2)}`);
+    }
     expect(html).toContain(i === 0 ? "$72.00" : "-$36.00");
     expect(report.monthlyBudgets![0]).toMatchObject({limitUsd: 180, remainingUsd: i === 0 ? 72 : -36});
   }
-  expect(reports[0]!.stages.find(s => s.name === "CostEstimate")!.lineItems).toEqual(storedItems);
+  expect(storedItems).toEqual(reports[0]!.stages.find(s => s.name === "CostEstimate")!.lineItems);
   for (const report of [legacy, ...invalidItems]) {
     expect(report.challenge).toEqual(reports[0]!.challenge);
     expect(report.stages.find(s => s.name === "CostEstimate")!.lineItems).toBeUndefined();
