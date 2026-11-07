@@ -28,7 +28,7 @@ test("diagnose-consumer-credit: browser and replay agree every tick; live age an
         browser.advance(); server.advance();
         expect(browser.view()).toEqual(server.view()); expect(browser.evidence()).toEqual(server.evidence());
         const e = server.evidence(), q = e.asynchronous.brokers[0]!, w = e.asynchronous.workers[0]!, metrics = server.view().metrics.queue!;
-        expect(QueueWorkSchema.parse(metrics.queueWork)).toEqual(metrics.queueWork);
+        expect(QueueWorkSchema.parse(metrics.queueWork)).toEqual(metrics.queueWork!);
         expect(metrics.queueWork).toMatchObject({originals: q.accepted, deliveries: q.deliveries, acknowledged: q.acknowledged,
           ready: q.ready, inFlight: q.inFlight, scheduled: q.scheduled, redeliveries: q.redelivered, effects: w.effects});
         expect(q.rejectedPublishes).toBe(0); expect(q.redelivered).toBe(0); expect(q.leaseExpired).toBe(0);

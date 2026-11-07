@@ -97,6 +97,18 @@ test("diagnose-consumer-credit: absent, stale, malformed and mismatched saved ev
   expect(buildRunReport(active).challenge!.criteria.find(c => c.id === "work")!.status).toBe("pending");
 });
 
+test("diagnose-consumer-credit: captured live age is retained without becoming an exposed saved-report measurement", () => {
+  const before = raw(rows[0]!).metrics.queue!.asyncQueue!, after = raw(rows[1]!).metrics.queue!.asyncQueue!;
+  expect(before.oldestReadyAgeSeconds).toBeGreaterThan(10);
+  expect(after.oldestReadyAgeSeconds).toBeNull(); // No ready population means Unknown, not zero age.
+  for (const [i, report] of reports.entries()) {
+    const persisted = JSON.parse(JSON.stringify(rows[i]!.terminalSnapshot)) as SimulationSnapshot;
+    expect(persisted.metrics.queue!.asyncQueue).toEqual(raw(rows[i]!).metrics.queue!.asyncQueue);
+    expect(report.terminal!.resources.find(r => r.id === "queue")).not.toHaveProperty("asyncQueue");
+    expect(report.challenge!.criteria.find(c => c.id === "work")!.detail).not.toContain("age");
+  }
+});
+
 test("diagnose-consumer-credit: unsupported worker crashes, unavailable background scripts and invalid credit are refused", () => {
   for (const [interventionId, reason] of [["vm-crash", "INTERVENTION_ROLE"], ["consumer-outage", "captured serving path"]]) {
     const scenario = {...d, scenario: {version: 1 as const, visibility: "revealed" as const, steps: [{id: "worker-outage", atSecond: 2,
