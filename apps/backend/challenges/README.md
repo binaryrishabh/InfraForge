@@ -1,5 +1,14 @@
 # Authoring challenges
 
+`share-a-cache-fill@1` changes only the cache's saved Single-flight setting. One
+read-only key and an app-owned aside expose overlapping fills during an authored
+database CPU slowdown. Calibration compares independent real runs: second-5 p95
+142.648 -> 3.754 ms, with 1000 callers completed and none unsuccessful in either.
+The capacity-only near miss retains the failing tail. Existing `terminal-p95`
+and `caller-outcomes` criteria score saved outcomes; raw database fetches and
+coalesced waiters support calibration but are not saved report measurements.
+No whole-run latency, continuous recovery or cross-replica coordination is claimed.
+
 ## Architecture choices
 
 `cache-or-database@1`, `one-vm-or-a-pool@1` and `limit-or-capacity@1` each have two

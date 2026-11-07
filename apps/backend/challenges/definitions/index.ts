@@ -1,5 +1,6 @@
 import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
 import { reuseBeforeExpiryV1 } from "./reuse-before-expiry/v1";
+import { shareACacheFillV1 } from "./share-a-cache-fill/v1";
 import { firstProductionApiV1 } from "./first-production-api/v1";
 import { secureTheEdgeV1 } from "./secure-the-edge/v1";
 import { cacheMattersV1 } from "./cache-matters/v1";
@@ -59,6 +60,7 @@ attempts are judged by exactly the version that created them. Order sets the
 challenge list. See ../README.md for the authoring rules. */
 export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   reuseBeforeExpiryV1,
+  shareACacheFillV1,
   firstProductionApiV1,
   secureTheEdgeV1,
   cacheMattersV1,
