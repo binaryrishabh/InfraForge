@@ -508,7 +508,9 @@ async function runJourney() {
   const page = await context.newPage();
   const problems = [];
   page.on("pageerror", (e) => problems.push(`pageerror ${page.url()} ${e.message.slice(0, 160)}`));
-  page.on("console", (m) => { if (m.type() === "error") problems.push(`console ${page.url()} ${m.text().slice(0, 160)}`); });
+  // This script aborts every non-local request on purpose, so those aborts are reported separately and never fail a journey.
+  const blockedRemote = [];
+  page.on("console", (m) => { if (m.type() !== "error") return; const line = `console ${page.url()} ${m.text().slice(0, 160)}`; (/ERR_BLOCKED_BY_CLIENT/.test(line) ? blockedRemote : problems).push(line); });
   page.on("response", (r) => { if (r.status() >= 400 && !/favicon/.test(r.url())) problems.push(`HTTP ${r.status()} ${r.url().replace(WEB, "")}`); });
 
   const results = [];
@@ -690,7 +692,7 @@ async function runJourney() {
   });
 
   }
-  console.log(JSON.stringify({ web: WEB, results, passed: results.filter((r) => r.ok).length, failed: results.filter((r) => !r.ok).length, problems: [...new Set(problems)].slice(0, 12) }, null, 1));
+  console.log(JSON.stringify({ web: WEB, results, passed: results.filter((r) => r.ok).length, failed: results.filter((r) => !r.ok).length, blockedRemote: [...new Set(blockedRemote)].length, problems: [...new Set(problems)].slice(0, 12) }, null, 1));
   if (results.some((r) => !r.ok) || (selection.kind === "lesson" && problems.length)) process.exitCode = 1;
   await browser.close();
 }
