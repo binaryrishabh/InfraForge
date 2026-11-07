@@ -7,10 +7,10 @@ import { REFERENCE } from "./challengeHarness";
 
 test("data track registers three executable lessons with calibrated challenges and honest evidence limits", () => {
   expect(tracks.filter(t => t.id === "data")).toEqual([track]);
-  expect(track.modules).toEqual([databasePressure]);
+  expect(track.modules.filter(m => m.id === databasePressure.id)).toEqual([databasePressure]);
   expect(registeredLessons.filter(l => l.trackId === "data")).toEqual(lessons);
-  expect(databasePressure.lessonIds).toEqual(lessons.map(l => l.id));
-  const labs = lessons.filter(lesson => lesson.kind === "executable-lab");
+  expect(databasePressure.lessonIds).toEqual(lessons.filter(l => l.moduleId === databasePressure.id).map(l => l.id));
+  const labs = lessons.filter(lesson => lesson.kind === "executable-lab" && lesson.moduleId === databasePressure.id);
   expect(labs).toHaveLength(3);
   expect(new Set(registeredLessons.map(l => l.id)).size).toBe(registeredLessons.length);
   expect(new Set(tracks.map(t => t.id)).size).toBe(tracks.length);
