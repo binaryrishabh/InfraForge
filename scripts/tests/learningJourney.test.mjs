@@ -18,7 +18,7 @@ test("the lab table has unique lesson ids, explicit controls and recorded-verdic
     expect(lab.improvement.fallbackText).toBe(lab.improvement.resourceId);
     expect(lab.improvement.role).toBe("radio");
     expect(lab.improvement.name.test(lab.improvement.to)).toBe(true);
-    expect(lab.expected).toEqual({ starter: "Not met yet", improved: "All requirements met" });
+    expect(lab.expected).toEqual({ starter: "Not met", improved: "Met" });
   }
 });
 
