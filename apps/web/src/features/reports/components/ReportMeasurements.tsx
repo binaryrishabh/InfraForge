@@ -12,6 +12,7 @@ import { measurementId } from "../resourceFocus";
 import { LbAccountingReadings } from "./LbAccountingReadings";
 import { LbResilienceReadings } from "./LbResilienceReadings";
 import { SecurityReadings } from "@/features/canvas/components/inspector/SecuritySection";
+import { MonitoringReadings } from "./MonitoringReadings";
 import { CdnReadings } from "./CdnReadings";
 import { CacheReadings } from "./CacheReadings";
 import { QueueReadings } from "./QueueReadings";
@@ -23,6 +24,10 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
   const checkpoint = report.terminal ?? report.checkpoint;
   const cost = report.stages.findLast((stage) => stage.name === "CostEstimate" && stage.monthlyEstimateUsd !== undefined);
   const types = new Map((report.topology.accepted ?? report.topology.original)?.resources.map(r => [r.id, r.type]));
+  const monitoringResources = [...new Set([
+    ...[...types].filter(([, type]) => type === "Monitoring Agent").map(([id]) => id),
+    ...(checkpoint?.resources.filter(r => r.monitoring || r.monitoringBackend).map(r => r.id) ?? []),
+  ])].map(id => checkpoint?.resources.find(r => r.id === id) ?? {id});
   const monthly = cost?.monthlyEstimateUsd;
   return (
     <>
@@ -93,6 +98,7 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
             ...((report.topology.accepted ?? report.topology.original)?.resources.filter(r => r.type === "Object Storage").map(r => r.id) ?? []),
             ...checkpoint.resources.filter(r => r.objectStorage).map(r => r.id),
           ])].map(id => <ObjectStorageReadings key={`object-${id}`} id={id} metrics={checkpoint.resources.find(r => r.id === id)?.objectStorage} />)}
+          {monitoringResources.map(r => <MonitoringReadings key={`monitor-${r.id}`} resource={r} />)}
         </ReportSection>
       )}
       {(monthly !== undefined || checkpoint?.accumulatedCostUsd !== undefined || !!report.monthlyBudgets?.length) && (
