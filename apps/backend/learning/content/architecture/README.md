@@ -24,9 +24,19 @@ design that fails only budget. `capacityBudgetReplay.test.ts` compares the brows
 bundle with server replay at every tick. The web report test renders actual engine
 reports through the shared measurement and requirement components.
 
+Lesson contentVersion 2 updates the cost guidance and limitations for the saved
+report. The original v1 source and review remain unchanged and registered as an
+archive; the v2 review uses the same pinned challenge definition. Current lists
+show v2, while explicit v1 lookup still returns its original text.
+
 Budget audit: the saved report renders **Monthly estimate (CostEstimate gate)**,
-and the generic budget requirement renders the estimate, limit, status and source.
-Individual SKU price line items and remaining-budget arithmetic are not exposed
-by that report projection. Those are documented gaps, not added measurements.
-Check individual prices in the designer. No maximum supported rate, continuous
-health, whole-run latency SLO, failure tolerance or production bill is established.
+retained resource price line items, the exact challenge limit and signed remaining
+budget. Prices come from the stored gate, without a current catalog lookup.
+Absent or malformed breakdowns stay Unknown without changing the recorded total
+or judge. Remaining budget is Unknown when a usable unique completed cost gate
+or judged budget evidence is absent. A negative amount is over budget.
+
+The immutable challenge v1 debrief and archived lesson v1 still describe the old
+report gap. They are historical authored text, not the current report capability;
+their pins and text were preserved. No maximum supported rate, continuous health,
+whole-run latency SLO, failure tolerance or production bill is established.

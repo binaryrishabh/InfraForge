@@ -4,7 +4,7 @@ import { topologyChanges, topologySummary } from "./topology";
 import { readReportActions } from "./actions";
 import type { RunAction as StoredAction } from "../lib/generated/prisma/client";
 import { evaluateAttempt } from "../challenges/evaluate";
-import type { ChallengeRegistry } from "../challenges/registry";
+import { REGISTRY, type ChallengeRegistry } from "../challenges/registry";
 import { buildExperimentTrace, type StoredEvidenceSample } from "../evidence/report";
 import { guidedReview } from "../challenges/guidedReview";
 import { improvementSource } from "../challenges/improvements";
@@ -76,6 +76,17 @@ export function buildRunReport(row: StoredRun, registry?: ChallengeRegistry): Ru
       changes: topologyChanges(records.input, records.live) }, checkpoint: records.checkpoint,
     observed: [{ id: "status", message: `The stored run status is ${run.status}.`, sources: ["status"] }],
     interpreted: [], unknown: limits, inspectNext: [], challenge };
+  if (challenge?.definitionMatches) {
+    const definition = (registry ?? REGISTRY).find(challenge.challengeId, challenge.version)?.definition;
+    const estimate = records.stageEvidence.CostEstimate === true
+      ? records.stages.find(s => s.name === "CostEstimate" && s.status === "completed")?.monthlyEstimateUsd : undefined;
+    const budgets = definition?.criteria.filter(c => c.kind === "monthly-budget").map(c => {
+      const status = challenge.criteria.find(result => result.id === c.id)?.status;
+      return { criterionId: c.id, label: c.label, limitUsd: c.maxUsd,
+        ...(estimate !== undefined && (status === "met" || status === "not-met") ? { remainingUsd: c.maxUsd - estimate } : {}) };
+    });
+    if (budgets?.length) report.monthlyBudgets = budgets;
+  }
   if (records.input && records.live && !report.topology.changes) {
     report.unknown.push("Duplicate resource identifiers or connections make the original/live topology comparison ambiguous; no edits were inferred.");
   }

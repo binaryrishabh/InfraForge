@@ -100,8 +100,9 @@ test("capacity budget: saved totals and generic requirement evidence are auditab
   const budget = report.challenge!.criteria.find(c => c.id === "budget")!;
   expect(budget).toMatchObject({status: "met", detail: "Estimated $108.00 a month; the limit is $180.00.", sources: ["stages.CostEstimate.monthlyEstimate"]});
   expect(cost(report)).toBe(108);
-  // Projection retains the total but does not expose a per-resource price breakdown.
-  expect(report.stages.find(s => s.name === "CostEstimate")).not.toHaveProperty("lineItems");
+  expect((row.stages as Array<{name: string; details: {lineItems: unknown}}>).find(s => s.name === "CostEstimate")!.details.lineItems)
+    .toEqual(report.stages.find(s => s.name === "CostEstimate")!.lineItems);
+  expect(report.monthlyBudgets).toEqual([{criterionId: "budget", label: d.criteria.find(c => c.id === "budget")!.label, limitUsd: 180, remainingUsd: 72}]);
   for (const value of [undefined, null, -1, "108", Number.NaN, Number.POSITIVE_INFINITY]) {
     const bad = structuredClone(row);
     const stages = bad.stages as Array<{name: string; details: {monthlyEstimate?: unknown}}>;
