@@ -7,6 +7,7 @@ import { buildRunReport } from "../reports/report";
 import { ObjectStorageSchema } from "../reports/objectStorageSchema";
 import { checkLessonClaims } from "../learning/claims";
 import { findLearningLesson } from "../learning/registry";
+import { LEARNING_REGISTRY } from "../learning/registry";
 import { definition } from "./challengeHarness";
 import { objectReportCases } from "./objectLedgerReport.fixture";
 
@@ -97,4 +98,21 @@ test("claim gate accepts audited object readings and refuses total-put attempts,
   for (const label of ["All attempted object puts", "Object version history", "Object durability percentage", "Exactly-once object effects"]) {
     expect(checkLessonClaims({...source, experiment: {...source.experiment, evidenceToInspect: [label]}}, d).join(" ")).toContain("report does not render measurement");
   }
+});
+
+test("registered conceptual check is grounded in a real refused replacement, without claiming a runnable designer experiment", () => {
+  const lesson = findLearningLesson("replace-within-the-byte-budget")!;
+  expect(lesson.kind).toBe("conceptual-exercise");
+  expect(lesson.experiment).toBeNull();
+  expect(checkLessonClaims(lesson)).toEqual([]);
+  expect(LEARNING_REGISTRY.findTrack("data")!.modules.find(m => m.id === lesson.moduleId)!.lessonIds).toContain(lesson.id);
+  expect(lesson.check!.correctChoiceId).toBe("retain");
+  const replacement = cases.lifecycle.samples[1]!.metrics, refused = cases.lifecycle.samples[2]!.metrics;
+  expect(replacement.objects!.find(o => o.key === "x")!.bytes).toBe(700000);
+  expect(refused.objects).toEqual(replacement.objects);
+  expect(refused.generation).toBe(replacement.generation);
+  expect(refused.storedBytes).toBe(replacement.storedBytes);
+  expect(refused.committedPuts).toBe(replacement.committedPuts);
+  expect(refused.puts).toBe(replacement.puts! + 1);
+  expect(refused.commandReasons!["object-capacity"]).toBe(1);
 });
