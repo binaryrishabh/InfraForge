@@ -707,7 +707,7 @@ async function walkJourneyFailure(page, entry, { web, api, shots, step, signIn, 
             await result.click();
             await page.waitForURL(`${web}/runs/${runId}`);
             const record = page.locator("details").filter({ has: page.locator("summary", { hasText: "Full evidence record" }) });
-            await record.locator("summary").click();
+            await record.locator("summary").first().click(); // The opened record holds nested summaries; the first one is the record's own.
             await waitVisible(record.getByRole("heading", { name: "Prediction against the record", exact: true }));
           }
         }
