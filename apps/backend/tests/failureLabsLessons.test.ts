@@ -1,17 +1,19 @@
 import { expect, test } from "bun:test";
 import { tracks, lessons as registered } from "../learning/content";
 import { track, lessons } from "../learning/content/failures";
-import { incidentEvidence } from "../learning/content/failures/incident-evidence";
+import { incidentEvidence, incidentEvidenceLessons } from "../learning/content/failures/incident-evidence";
+import { firstFailure } from "../learning/content/failures/first-failure";
+import { failureReasoning } from "../learning/content/failures/failure-reasoning";
 import { latestChallenge } from "../challenges/registry";
 import { REFERENCE } from "./challengeHarness";
 
 test("failures registers three executable lessons with calibrated experiments and evidence limitations", () => {
   expect(tracks.filter(t => t.id === "failures")).toEqual([track]); expect(track.availability).toBe("available");
-  expect(track.modules).toEqual([incidentEvidence]); expect(incidentEvidence.availability).toBe("available");
+  expect(track.modules).toEqual([firstFailure, incidentEvidence, failureReasoning]); expect(incidentEvidence.availability).toBe("available");
   expect(registered.filter(l => l.trackId === "failures")).toEqual(lessons);
-  const labs = lessons.filter(lesson => lesson.kind === "executable-lab");
+  const labs = incidentEvidenceLessons.filter(lesson => lesson.kind === "executable-lab");
   expect(labs).toHaveLength(3);
-  expect(incidentEvidence.lessonIds).toEqual(lessons.map(l => l.id)); expect(new Set(registered.map(l => l.id)).size).toBe(registered.length);
+  expect(incidentEvidence.lessonIds).toEqual(incidentEvidenceLessons.map(l => l.id)); expect(new Set(registered.map(l => l.id)).size).toBe(registered.length);
   for (const lesson of labs) {
     expect(lesson).toMatchObject({trackId: "failures", moduleId: "incident-evidence", contentVersion: 1, kind: "executable-lab", availability: "available"});
     expect(lesson.prerequisites.every(id => registered.some(l => l.id === id))).toBe(true);

@@ -6,6 +6,10 @@ import { REFERENCE } from "./challengeHarness";
 // Every reading/concept in scope has either real runnable practice for the named
 // portion or an explicit conceptual-only boundary. A link is not full coverage.
 const coverage = [
+  {track: "async", concept: "parallelism-and-shared-capacity", labs: ["parallel-jobs-for-a-burst", "keep-up-with-the-queue"], limitation: "Worker CPU and ownership only; downstream saturation remains conceptual."},
+  {track: "async", concept: "duplicate-effects-and-ownership", labs: ["leave-time-to-acknowledge"], limitation: "Repeated modeled object effects only; atomic deduplication and business transactions remain conceptual."},
+  {track: "failures", concept: "retry-ownership-across-layers", labs: ["choose-a-retry-mitigation"], limitation: "Single-layer attempt pressure only; layered retry multiplication and shared deadline propagation remain conceptual."},
+  {track: "failures", concept: "health-checks-and-failure-scope", labs: ["check-the-missing-server", "find-the-denying-rule"], limitation: "Distinct crash and policy comparisons; faster probes during a firewall denial remain conceptual."},
   {track: "async", concept: "why-work-waits", labs: ["keep-waiting-work", "keep-up-with-the-queue", "leave-time-to-acknowledge"], limitation: "Thought experiment only; later labs model logical retention, capacity and repeated object effects, not real delivery guarantees."},
   {track: "async", concept: "count-waiting-jobs", labs: ["keep-waiting-work", "keep-up-with-the-queue", "leave-time-to-acknowledge"], limitation: "Conceptual arithmetic and acknowledgement loss; no exactly-once business action or physical persistence proof."},
   {track: "async", concept: "queue-ownership-and-acknowledgement", labs: ["keep-up-with-the-queue", "leave-time-to-acknowledge"], limitation: "Logical ownership only; no physical durability or exactly-once transaction."},
