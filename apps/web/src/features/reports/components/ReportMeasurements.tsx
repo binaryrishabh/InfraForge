@@ -12,6 +12,7 @@ import { measurementId } from "../resourceFocus";
 import { LbAccountingReadings } from "./LbAccountingReadings";
 import { LbResilienceReadings } from "./LbResilienceReadings";
 import { SecurityReadings } from "@/features/canvas/components/inspector/SecuritySection";
+import { DurationReadings } from "./DurationReadings";
 import { MonitoringReadings } from "./MonitoringReadings";
 import { CdnReadings } from "./CdnReadings";
 import { CacheReadings } from "./CacheReadings";
@@ -99,6 +100,7 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
             ...((report.topology.accepted ?? report.topology.original)?.resources.filter(r => r.type === "Object Storage").map(r => r.id) ?? []),
             ...checkpoint.resources.filter(r => r.objectStorage).map(r => r.id),
           ])].map(id => <ObjectStorageReadings key={`object-${id}`} id={id} metrics={checkpoint.resources.find(r => r.id === id)?.objectStorage} />)}
+          <DurationReadings evidence={checkpoint.durationEvidence} />
           {monitoringResources.map(r => <MonitoringReadings key={`monitor-${r.id}`} resource={r} />)}
           {[...new Set([
             ...((report.topology.accepted ?? report.topology.original)?.resources.filter(r => r.type === "Container Registry" || r.type === "Virtual Machine").map(r => r.id) ?? []),

@@ -45,6 +45,9 @@ export function lessonRunMeasurements(report: RunReport, evidence: readonly stri
         monthlyBudgets: report.monthlyBudgets }, definition.path.split("."));
       return { label, value: rows.map(row => `${row.context ? `${row.context}: ` : ""}${recordedValue(row.value, definition.unit)}`).join("; ") };
     }
+    if (definition.scope === "snapshot" && definition.path.startsWith("durationEvidence.")) return {label,
+      value: entries(terminal, definition.path.split(".")).map(row =>
+        `${row.context ? `${row.context}: ` : ""}${recordedValue(row.value, definition.unit)}`).join("; ")};
     if (definition.scope === "traffic" || definition.scope === "snapshot") return { label,
       value: recordedValue(entries(definition.scope === "traffic" ? terminal?.traffic : terminal, definition.path.split("."))[0]?.value, definition.unit) };
     const ids = new Set([

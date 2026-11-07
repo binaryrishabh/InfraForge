@@ -76,7 +76,7 @@ for (const family of families) {
     }
     const identity = `${id}@${family.newLesson}`, entry = findChallenge(id, 2)!;
     expect(REVIEWED_CHALLENGES[identity]).toEqual({challengeId: id, version: 2, hash: entry.hash});
-    expect(checkLearningAuthoring(learningContent).archived).toBe(8);
+    expect(checkLearningAuthoring(learningContent).archived).toBe(18);
     expect(checkLessonClaims(latest, entry.definition)).toEqual([]);
     const missing = {...REVIEWED_CHALLENGES}; delete missing[identity];
     expect(() => checkLearningAuthoring(learningContent, missing)).toThrow(`${identity}: missing challenge review`);

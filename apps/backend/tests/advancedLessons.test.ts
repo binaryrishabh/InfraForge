@@ -14,7 +14,7 @@ test("advanced practice registers four canonical runnable lessons with concept a
   expect(LEARNING_REGISTRY.listLessons({trackId: "advanced"})).toEqual(lessons);
   for (const lesson of lessons) {
     expect(LEARNING_REGISTRY.findLesson(lesson.id)).toEqual(lesson);
-    expect(lesson).toMatchObject({contentVersion: 1, kind: "executable-lab", level: "advanced", availability: "available", check: null});
+    expect(lesson).toMatchObject({contentVersion: lesson.id === "trace-a-saturation-cascade" ? 2 : 1, kind: "executable-lab", level: "advanced", availability: "available", check: null});
     expect(lesson.prerequisites.length).toBeGreaterThan(0);
     const prerequisites = lesson.prerequisites.map(id => LEARNING_REGISTRY.findLesson(id)!);
     expect(prerequisites.some(l => l.kind !== "executable-lab")).toBe(true);

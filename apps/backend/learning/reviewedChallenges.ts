@@ -56,4 +56,7 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "budget-for-a-partition@1": { challengeId: "budget-for-a-partition", version: 1, hash: "7b35c54cc84b3f4bc7af1e315fe55ed29b400b4395dca7fcce17a071b5e0d960" },
   "trace-a-saturation-cascade@1": { challengeId: "trace-a-saturation-cascade", version: 1, hash: "b8b8a24164dfdc70aadc52aac2b4eb75c1bb8f3e6730d7206c400de777b29f64" },
   "test-a-circuit-again@1": { challengeId: "test-a-circuit-again", version: 1, hash: "a22e969c06464f71fb91d240cc03e3a8b3418743f5287ea507b5b578fcbd0ea6" },
+  "diagnose-query-admission@2": {challengeId: "diagnose-query-admission", version: 1, hash: "af3d1ac31f9cca4078a377cc11d2c7c64a524c2bd3b16aada23829499a71aff5"},
+  "diagnose-consumer-credit@3": {challengeId: "diagnose-consumer-credit", version: 2, hash: "df97ca199816deccd0b3cdcdd332775946ab04e1c36ab9380b9204bbb79a9e60"},
+  "trace-a-saturation-cascade@2": { challengeId: "trace-a-saturation-cascade", version: 1, hash: "b8b8a24164dfdc70aadc52aac2b4eb75c1bb8f3e6730d7206c400de777b29f64" },
 };

@@ -1,5 +1,6 @@
 import { ServerlessMetricsSchema } from "./serverlessSchema";
 import { SchedulerMetricsSchema } from "./schedulerSchema";
+import { DurationEvidenceSchema } from "./durationSchema";
 import { z } from "zod";
 import type { ReportCheckpoint, ReportStage } from "@infraforge/contracts/reports";
 import { readRunInputs } from "../deployments/runInputs";
@@ -45,7 +46,7 @@ const queueObservation = z.object({version: z.union([z.literal(1), z.literal(2)]
   readyDepth: amount.int().max(Number.MAX_SAFE_INTEGER).nullable(), oldestReadyAgeSeconds: amount.nullable()});
 const metrics = z.object({ startup: StartupSchema.optional(),  monitoring: MonitoringMetricsSchema.optional(), monitoringBackend: MonitoringBackendSchema.optional(),  objectStorage: ObjectStorageSchema.optional(),  cdn: CdnMetricsSchema.optional(), lbRetry: LbRetrySchema.optional(), circuitBreaker: CircuitBreakerSchema.optional(),  cache: CacheMetricsSchema.optional(), applicationHelpers: ApplicationHelperMetricsSchema.optional(), asyncQueue: queueObservation.optional(), security: SecurityMetricsSchema.optional(), queueWork: QueueWorkSchema.optional(), database: DatabaseMetricsSchema.optional(), databaseReplication: DatabaseReplicationMetricsSchema.optional(), lbAccounting: LbAccountingSchema.optional(), serverless: ServerlessMetricsSchema.optional(), scheduler: SchedulerMetricsSchema.optional(), eventBus: EventBusMetricsSchema.optional(), gateway: GatewayMetricsSchema.optional(), vmMemory: VmMemorySchema.optional(), cpu: amount.max(100).nullable().optional(), memory: amount.max(100).nullable().optional(),
   rps: amount.optional(), connections: amount.optional(), health: health.optional() });
-const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction: amount.optional(),
+const checkpoint = z.object({ durationEvidence: DurationEvidenceSchema.optional(), simulatedSeconds: amount.optional(), loadFraction: amount.optional(),
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).optional(), accumulatedCostUsd: amount.optional(),
   capturedAt: timestamp.optional(), topologyRevision: z.number().int().nonnegative().optional(), speed: amount.optional(),
   metricsComputedAt: timestamp.nullable().optional(), metricsTopologyRevision: z.number().int().nonnegative().optional(),
@@ -152,7 +153,7 @@ function readCheckpoint(value: unknown, limits: string[]): ReportCheckpoint | nu
   }
   if (!resources.length && data.simulatedSeconds === undefined && data.loadFraction === undefined &&
       data.overallHealth === undefined && data.accumulatedCostUsd === undefined) return null;
-  return { resources, simulatedSeconds: data.simulatedSeconds, loadFraction: data.loadFraction,
+  return { resources, ...(data.durationEvidence ? {durationEvidence: data.durationEvidence} : {}), simulatedSeconds: data.simulatedSeconds, loadFraction: data.loadFraction,
     capturedAt: data.capturedAt, topologyRevision: data.topologyRevision, speed: data.speed,
     metricsComputedAt: data.metricsComputedAt, metricsTopologyRevision: data.metricsTopologyRevision,
     health: data.overallHealth, accumulatedCostUsd: data.accumulatedCostUsd,

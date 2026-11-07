@@ -369,5 +369,29 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
       "generic"
     ],
     "reason": "Generic is the existing canvas Instance size label when no catalog SKU is selected, not a provider instance name. Source: apps/web/src/features/canvas/components/inspector/InstanceSection.tsx. The flat fallback is by resource type, not generic size: apps/backend/stages/costEstimation.stages.ts and packages/simulation/src/cost.ts."
-  }
+  },
+  {
+    lesson: "diagnose-query-admission@2", field: "explanation.2",
+    text: "Change only db Active queries from 1 to 4 and run again. Keep its db.m5.large SKU, queued-query limit, app and workload fixed. Compare both saved reports. As a near miss, restore the starter and change only db to db.m5.xlarge; explain why a lower CPU percentage can coexist with the same failures.",
+    values: ["4", "db.m5.xlarge"],
+    reason: "Controlled reference input activeQueries=4 and near-miss SKU db.m5.xlarge, not observed result numbers. Source: apps/backend/tests/diagnosisLabsCalibration.test.ts one-setting comparisons.",
+  },
+  {
+    lesson: "trace-a-saturation-cascade@2", field: "problem.0",
+    text: "A four-core app receives 800 requests/s, half reads and half writes. Its one-core database executes 1 ms reads and 2 ms writes. The database becomes saturated while the app still has spare CPU and the load balancer reports failed callers.",
+    values: ["2"],
+    reason: "The canvas database plan authors 2000 cpu-us per write (2 ms), outside the challenge starter fields. Source: packages/simulation/src/model2/product/fromDesign.ts Database plan; regression: apps/backend/tests/advancedLabsCalibration.test.ts.",
+  },
+  {
+    lesson: "trace-a-saturation-cascade@2", field: "explanation.1",
+    text: "Change only db to db.m5.large with 2 educational cores. Compare current DB waiting work and connection wait with the changed tail, completions and failures. App CPU can rise when downstream capacity lets more useful work finish.",
+    values: ["db.m5.large", "2"],
+    reason: "db.m5.large is the controlled database-only reference input verified in apps/backend/tests/advancedLabsCalibration.test.ts, with two educational cores from packages/catalog/src/aws.catalog.ts. Regression: apps/backend/tests/advancedLabsCalibration.test.ts.",
+  },
+  {
+    lesson: "trace-a-saturation-cascade@2", field: "limitations.1",
+    text: "Both variants remain within the database session ceiling with zero session refusals. The demonstrated mechanism is DB CPU/occupied-connection pressure; it is not session exhaustion or proven VM admission-queue pressure.",
+    values: ["0"],
+    reason: "Zero session refusals is a calibrated result for the compared variants, not a general database guarantee. Source: apps/backend/tests/advancedLabsCalibration.test.ts explicitly asserts database.sessionRefused equals 0 for starter, reference and near miss.",
+  },
 ];
