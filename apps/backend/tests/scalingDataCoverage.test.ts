@@ -21,12 +21,26 @@ const onramps = [
 ];
 // These registered lessons explicitly have no editable/scored promotion experiment.
 const conceptualOnly = ["promoting-a-replica", "promotion-and-pending-work"];
+// Advanced synthesis looks back at labs; it adds no prerequisites to published lessons.
+const reasoning = [
+  {concept: "choose-data-constraints", labs: ["move-reads-off-the-writer", "budget-app-database-sessions", "replicas-do-not-take-writes"]},
+  {concept: "initial-replicas-and-later-limits", labs: ["budget-app-database-sessions", "retrying-a-full-pool"]},
+];
 
 test("scaling/data coverage accounts for every concept exactly once and links real canonical runnable labs", () => {
   const concepts = learningContent.lessons.filter(l => ["scaling", "data"].includes(l.trackId) && l.kind !== "executable-lab");
-  const accounted = [...coverage.map(row => row.concept), ...onramps.map(row => row.concept), ...conceptualOnly];
+  const accounted = [...coverage.map(row => row.concept), ...onramps.map(row => row.concept), ...conceptualOnly, ...reasoning.map(row => row.concept)];
   expect(accounted.toSorted()).toEqual(concepts.map(l => l.id).toSorted());
   expect(new Set(accounted).size).toBe(accounted.length);
+  for (const row of reasoning) {
+    const lesson = concepts.find(l => l.id === row.concept)!;
+    expect(lesson.level).toBe("advanced"); expect(lesson.experiment).toBeNull();
+    for (const id of row.labs) {
+      expect(lesson.prerequisites).toContain(id);
+      expect(lesson.explanation.join(" ")).toContain(`(${id})`);
+      expect(learningContent.lessons.find(l => l.id === id)).toMatchObject({kind: "executable-lab", availability: "available"});
+    }
+  }
   for (const row of onramps) for (const id of row.labs) {
     expect(concepts.find(l => l.id === row.concept)!.followUp).toContain(`(${id})`);
     expect(learningContent.lessons.find(l => l.id === id)).toMatchObject({kind: "executable-lab", availability: "available"});

@@ -79,6 +79,8 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
       ["duplicate-effects-and-ownership", "repeat", "leave-time-to-acknowledge"],
       ["retry-ownership-across-layers", "six", "choose-a-retry-mitigation"],
       ["health-checks-and-failure-scope", "scope", "check-the-missing-server"],
+      ["choose-data-constraints", "unproven", "move-reads-off-the-writer"],
+      ["initial-replicas-and-later-limits", "initial", "budget-app-database-sessions"],
     ] as const) {
       const detail = await getLearningLesson(id);
       expect(detail.lesson.level).toBe("advanced");
