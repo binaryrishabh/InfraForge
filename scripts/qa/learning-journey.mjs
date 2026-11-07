@@ -479,7 +479,8 @@ export async function acknowledgeJourneyChanges(dialog, improvement) {
 
 export async function inspectJourneyRequirements(page, lab) {
   if (!lab.reportRequirements) return [];
-  const record = page.locator("details").filter({ has: page.getByText("Full evidence record", { exact: true }) });
+  // The summary text is "› Full evidence record" (the arrow is a child span), so match it by contained text, not exact text.
+  const record = page.locator("details").filter({ has: page.locator("summary", { hasText: "Full evidence record" }) });
   await record.locator("summary").first().click();
   const details = [];
   for (const name of lab.reportRequirements) {
@@ -690,7 +691,7 @@ async function runJourney() {
 
   }
   console.log(JSON.stringify({ web: WEB, results, passed: results.filter((r) => r.ok).length, failed: results.filter((r) => !r.ok).length, problems: [...new Set(problems)].slice(0, 12) }, null, 1));
-  if (selection.kind === "lesson" && (results.some((r) => !r.ok) || problems.length)) process.exitCode = 1;
+  if (results.some((r) => !r.ok) || (selection.kind === "lesson" && problems.length)) process.exitCode = 1;
   await browser.close();
 }
 
