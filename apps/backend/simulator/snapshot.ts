@@ -1,6 +1,7 @@
 import type { SimulationLog, SimulationSnapshot } from "@infraforge/contracts/telemetry";
 import type { SimulationInstance } from "./instance";
 import { monitoringSnapshot } from "./monitoringSnapshot";
+import { dnsSnapshot } from "./dnsSnapshot";
 import { durationSnapshot } from "./durationSnapshot";
 import { liveView } from "./engineView";
 
@@ -17,7 +18,8 @@ export function buildSnapshot(deploymentId: string, instance: SimulationInstance
 export function captureSnapshot(deploymentId: string, instance: SimulationInstance, kind: "terminal" | "checkpoint") {
   const snapshot = buildSnapshot(deploymentId, instance, [...instance.pendingLogs]), view = liveView(instance);
   const applicationFlow = instance.model2.applicationFlowEvidence();
-  return structuredClone({ ...snapshot, durationEvidence: durationSnapshot(instance.model2.evidence()), metrics: monitoringSnapshot(snapshot.metrics, instance.model2), ...(applicationFlow ? { applicationFlow } : {}), ...(view.burnRatePerHourUsd === undefined ? { version: 2, costCoverage: "unknown" } : { version: 1 }), kind, capturedAt: snapshot.timestamp,
+  const evidence = instance.model2.evidence();
+  return structuredClone({ ...snapshot, dnsEvidence: dnsSnapshot(evidence), durationEvidence: durationSnapshot(evidence), metrics: monitoringSnapshot(snapshot.metrics, instance.model2), ...(applicationFlow ? { applicationFlow } : {}), ...(view.burnRatePerHourUsd === undefined ? { version: 2, costCoverage: "unknown" } : { version: 1 }), kind, capturedAt: snapshot.timestamp,
     topologyRevision: instance.topologyRevision,
     metricsComputedAt: instance.metricsComputedAt, metricsTopologyRevision: instance.metricsTopologyRevision,
     overallHealth: snapshot.health, targetLoadFraction: view.targetLoadFraction,
