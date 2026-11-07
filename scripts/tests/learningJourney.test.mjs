@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { fileURLToPath } from "node:url";
-import { JOURNEY_LABS, acknowledgeJourneyChanges, answerJourneyPredictions, applyJourneyImprovement, changeJourneyControl, inspectJourneyRequirements, isLocalJourneyRequest, journeyLab } from "../qa/learning-journey.mjs";
+import { JOURNEY_LABS, JOURNEY_LESSONS, acknowledgeJourneyChanges, answerJourneyPredictions, applyJourneyImprovement, changeJourneyControl, inspectJourneyRequirements, isLocalJourneyRequest, journeyLab, journeyLesson, selectJourney, walkJourneyLesson } from "../qa/learning-journey.mjs";
 
 test("the lab table has unique lesson ids, explicit controls and recorded-verdict expectations", () => {
   expect(JOURNEY_LABS.map((lab) => lab.lessonId)).toEqual([
@@ -268,5 +268,211 @@ test("request routing permits the local web/API ports and refuses remote assets 
   }
   for (const url of ["https://example.test/", "http://localhost.example.test:3000/", "http://localhost:3000@elsewhere.test/", "file:///tmp/page", "invalid"]) {
     expect(isLocalJourneyRequest(url)).toBe(false);
+  }
+});
+
+// Selector doubles only: no browser, storage, server progress or run evidence is produced.
+function fakeLessonPage(lesson, faults = {}) {
+  const calls = [], steps = [];
+  let answer = null, read = false, reloaded = false;
+  const path = (entry) => `/learn/lessons/${entry.lessonId}`;
+  const role = (scope, name, options = {}) => {
+    calls.push({ scope, role: name, ...options });
+    const label = options.name;
+    const locator = {
+      async waitFor() {
+        if (faults.missingRole !== undefined && faults.missingRole === label) throw Error("named control missing");
+        if (name === "heading" && ![lesson.title, lesson.next.title, "Problem", "Plain explanation", "Prediction prompt", "Limitations", "Follow-up", "Check question"].includes(label)) throw Error("wrong heading selector");
+        if (["radio", "link", "button", "group", "complementary"].includes(name) && options.exact !== true) throw Error("control name must be exact");
+        if (name === "button" && label === "Remove read mark" && (!read || reloaded && faults.lostRead)) throw Error("read mark missing");
+        if (name === "status" && !locator.feedback) throw Error("feedback must be scoped and selected by its explanation");
+      },
+      async count() {
+        if (name === "link" && scope === "prerequisites") return lesson.prerequisites.length + (faults.extraPrerequisite ? 1 : 0);
+        if (name === "radio") return lesson.check ? 2 : faults.unexpectedRadio ? 1 : 0;
+        if (name === "button" && label === "Open challenge lab") return faults.labClaim ? 1 : 0;
+        return 0;
+      },
+      async getAttribute(attribute) {
+        if (attribute === "aria-pressed") return faults.unpressed ? "false" : "true";
+        if (attribute !== "href") throw Error("unexpected attribute");
+        if (faults.wrongHref === label) return "/learn/lessons/wrong-target";
+        if (scope === "prerequisites") {
+          const prerequisite = lesson.prerequisites.find(p => p.title === label);
+          if (!prerequisite) throw Error("wrong prerequisite selector");
+          return path(prerequisite);
+        }
+        return label === lesson.title ? path(lesson) : path(lesson.next);
+      },
+      async check() {
+        await locator.waitFor();
+        if (scope !== "check" || ![lesson.check?.wrong, lesson.check?.correct].includes(label)) throw Error("wrong or unscoped answer selector");
+        calls.push({ action: "check", name: label });
+        answer = label;
+      },
+      async isChecked() { return answer === label && !(reloaded && faults.lostAnswer) && !faults.unchecked; },
+      async click() {
+        await locator.waitFor();
+        calls.push({ action: "click", name: label });
+        if (name === "button") {
+          if (label !== "Mark as read") throw Error("wrong read control");
+          read = true;
+        }
+      },
+      filter({ hasText }) {
+        if (scope !== "check" || name !== "status") throw Error("unscoped feedback");
+        const expected = `${answer === lesson.check.correct ? "That matches the explanation. " : "Revisit the explanation. "}${lesson.check.explanation}`;
+        if (hasText !== expected) throw Error("wrong feedback selector");
+        calls.push({ action: "feedback", text: hasText, reloaded });
+        locator.feedback = true;
+        if (faults.missingFeedback === (answer === lesson.check.correct ? "matching" : "revisit")) locator.waitFor = async () => { throw Error("feedback missing"); };
+        return locator;
+      },
+      getByRole(nestedRole, nestedOptions) { return role(name === "group" ? "check" : "prerequisites", nestedRole, nestedOptions); },
+      getByText(text, textOptions) { return textLocator(text, textOptions, "prerequisites"); },
+    };
+    return locator;
+  };
+  const textLocator = (text, options = {}, scope = "page") => {
+    calls.push({ scope, text, ...options });
+    return {
+      async waitFor() {
+        if (faults.missingText === text) throw Error("expected lesson text missing");
+        if (options.exact !== true) throw Error("lesson text must match exactly");
+      },
+      async count() { return faults.serverClaim ? 1 : 0; },
+    };
+  };
+  const page = {
+    getByRole(name, options) { return role("page", name, options); },
+    getByText: textLocator,
+    async goto(url) { calls.push({ action: "goto", url }); },
+    async waitForURL(url) { calls.push({ action: "url", url }); },
+    async reload() { reloaded = true; calls.push({ action: "reload" }); },
+    async screenshot() {},
+  };
+  const options = { web: "http://localhost:5173", shots: "/unused-selector-shots", async step(name, fn) { steps.push(name); await fn(); } };
+  return { page, calls, steps, options };
+}
+
+test("the lesson matrix samples five conceptual tracks and one no-check reading", () => {
+  expect(JOURNEY_LESSONS.map(l => l.lessonId)).toEqual([
+    "client-and-server", "count-waiting-jobs", "missing-failure-observations", "choose-the-constrained-tier", "locate-the-missing-wait", "what-is-a-request",
+  ]);
+  expect(new Set(JOURNEY_LESSONS.map(l => l.lessonId)).size).toBe(6);
+  expect(JOURNEY_LESSONS.filter(l => l.check).map(l => l.trackId)).toEqual(["foundations", "async", "failures", "scaling", "diagnosis"]);
+  for (const lesson of JOURNEY_LESSONS) {
+    expect(lesson.limitations.length).toBeGreaterThan(0);
+    expect(lesson.next.lessonId).not.toBe(lesson.lessonId);
+    expect(lesson.next.title.length).toBeGreaterThan(0);
+    expect(journeyLesson(lesson.lessonId)).toBe(lesson);
+    if (lesson.check) {
+      expect(lesson.kind).toBe("conceptual-exercise");
+      expect(lesson.check.wrong).not.toBe(lesson.check.correct);
+      expect(lesson.check.explanation.length).toBeGreaterThan(0);
+    } else expect(lesson.kind).toBe("reading");
+  }
+});
+
+test("selection defaults to the unchanged lab path and explicitly selects lesson mode", () => {
+  expect(selectJourney()).toEqual({ kind: "lab", entry: journeyLab() });
+  expect(selectJourney({ JOURNEY_KIND: "lesson" })).toEqual({ kind: "lesson", entry: journeyLesson() });
+  for (const lab of JOURNEY_LABS) expect(selectJourney({ JOURNEY_LAB: lab.lessonId })).toEqual({ kind: "lab", entry: lab });
+  for (const lesson of JOURNEY_LESSONS) expect(selectJourney({ JOURNEY_KIND: "lesson", JOURNEY_LESSON: lesson.lessonId })).toEqual({ kind: "lesson", entry: lesson });
+  for (const id of ["", "constructor", "../client-and-server", "unknown"]) expect(() => journeyLesson(id)).toThrow("Unknown JOURNEY_LESSON");
+  for (const kind of ["", "reading", "constructor"]) expect(() => selectJourney({ JOURNEY_KIND: kind })).toThrow("Unknown JOURNEY_KIND");
+  expect(() => selectJourney({ JOURNEY_LESSON: "client-and-server" })).toThrow("requires JOURNEY_KIND=lesson");
+  expect(() => selectJourney({ JOURNEY_KIND: "lesson", JOURNEY_LAB: "where-does-the-time-go" })).toThrow("cannot be combined");
+});
+
+test("every conceptual lesson uses named list/prerequisite links, scoped wrong/right radios and the next link", async () => {
+  for (const lesson of JOURNEY_LESSONS.filter(l => l.check)) {
+    const fake = fakeLessonPage(lesson);
+    await walkJourneyLesson(fake.page, lesson, fake.options);
+    expect(fake.steps).toHaveLength(7);
+    expect(fake.calls.filter(c => c.action === "check").map(c => c.name)).toEqual([lesson.check.wrong, lesson.check.correct]);
+    expect(fake.calls.filter(c => c.action === "feedback").map(c => [c.text, c.reloaded])).toEqual([
+      [`Revisit the explanation. ${lesson.check.explanation}`, false],
+      [`That matches the explanation. ${lesson.check.explanation}`, false],
+      [`That matches the explanation. ${lesson.check.explanation}`, true],
+    ]);
+    expect(fake.calls.filter(c => c.action === "click").map(c => c.name)).toEqual([lesson.title, "Mark as read", `Next in track order: ${lesson.next.title}`]);
+    expect(fake.calls.filter(c => c.scope === "prerequisites" && c.role === "link" && c.name).map(c => c.name)).toEqual(lesson.prerequisites.map(p => p.title));
+    expect(fake.calls.filter(c => c.text && lesson.limitations.includes(c.text)).map(c => c.text)).toEqual(lesson.limitations);
+    expect(fake.calls.filter(c => c.action === "url").map(c => c.url)).toEqual([`http://localhost:5173/learn/lessons/${lesson.lessonId}`, `http://localhost:5173/learn/lessons/${lesson.next.lessonId}`]);
+    expect(fake.calls.some(c => c.role === "radio" && c.scope !== "check")).toBe(false);
+  }
+});
+
+test("the no-check reading asserts its message before and after reload without choosing a radio", async () => {
+  const lesson = journeyLesson("what-is-a-request"), fake = fakeLessonPage(lesson);
+  await walkJourneyLesson(fake.page, lesson, fake.options);
+  expect(fake.steps).toHaveLength(6);
+  expect(fake.calls.filter(c => c.text === "This lesson has no check question. Try explaining the problem in your own words.")).toHaveLength(2);
+  expect(fake.calls.filter(c => c.action === "check" || c.action === "feedback")).toEqual([]);
+  expect(fake.calls.filter(c => c.action === "click").map(c => c.name)).toEqual([lesson.title, "Mark as read", "Next in track order: Client and server"]);
+});
+
+test("missing accessible controls, prerequisite targets or next targets fail without selector fallbacks", async () => {
+  const lesson = journeyLesson();
+  for (const faults of [
+    { missingRole: lesson.title }, { missingRole: lesson.check.wrong }, { missingRole: lesson.check.correct },
+    { missingRole: "Mark as read" }, { missingRole: lesson.prerequisites[0].title },
+    { wrongHref: lesson.title }, { wrongHref: lesson.prerequisites[0].title },
+    { wrongHref: `Next in track order: ${lesson.next.title}` }, { extraPrerequisite: true },
+  ]) {
+    const fake = fakeLessonPage(lesson, faults);
+    await expect(walkJourneyLesson(fake.page, lesson, fake.options)).rejects.toThrow();
+  }
+});
+
+test("missing limitations, feedback or saved-note text fails instead of reporting success", async () => {
+  const lesson = journeyLesson();
+  for (const faults of [
+    { missingText: lesson.limitations[0] }, { missingFeedback: "revisit" }, { missingFeedback: "matching" },
+    { missingText: "Reading mark and check answers: saved on this device. These are personal notes, not server progress or mastery." },
+  ]) {
+    const fake = fakeLessonPage(lesson, faults);
+    await expect(walkJourneyLesson(fake.page, lesson, fake.options)).rejects.toThrow();
+  }
+});
+
+test("unselected answers, unpressed read marks and lost reload state fail", async () => {
+  const lesson = journeyLesson();
+  for (const faults of [{ unchecked: true }, { unpressed: true }, { lostAnswer: true }, { lostRead: true }]) {
+    const fake = fakeLessonPage(lesson, faults);
+    await expect(walkJourneyLesson(fake.page, lesson, fake.options)).rejects.toThrow();
+  }
+});
+
+test("a conceptual lesson cannot silently expose a lab or server progress claim", async () => {
+  for (const faults of [{ labClaim: true }, { serverClaim: true }]) {
+    const lesson = journeyLesson(), fake = fakeLessonPage(lesson, faults);
+    await expect(walkJourneyLesson(fake.page, lesson, fake.options)).rejects.toThrow("lab or server activity claim");
+  }
+});
+
+test("a no-check reading fails when its message is missing or it exposes answers", async () => {
+  const lesson = journeyLesson("what-is-a-request");
+  for (const faults of [{ missingText: "This lesson has no check question. Try explaining the problem in your own words." }, { unexpectedRadio: true }]) {
+    const fake = fakeLessonPage(lesson, faults);
+    await expect(walkJourneyLesson(fake.page, lesson, fake.options)).rejects.toThrow();
+  }
+});
+
+test("lesson CLI refuses invalid selectors and remote origins before loading Playwright", () => {
+  const script = fileURLToPath(new URL("../qa/learning-journey.mjs", import.meta.url));
+  const cases = [
+    [{ JOURNEY_KIND: "unknown" }, "Unknown JOURNEY_KIND"],
+    [{ JOURNEY_KIND: "lesson", JOURNEY_LESSON: "unknown" }, "Unknown JOURNEY_LESSON"],
+    [{ JOURNEY_LESSON: "client-and-server" }, "requires JOURNEY_KIND=lesson"],
+    [{ JOURNEY_KIND: "lesson", JOURNEY_LAB: "where-does-the-time-go" }, "cannot be combined"],
+    [{ JOURNEY_KIND: "lesson", JOURNEY_WEB: "https://example.test:5173" }, "journey only runs against a localhost dev stack"],
+  ];
+  for (const [env, error] of cases) {
+    const result = Bun.spawnSync(["node", script], { env: { PATH: process.env.PATH, PW_DIR: "/missing-playwright-installation", ...env } });
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr.toString()).toContain(error);
+    expect(result.stderr.toString()).not.toContain("Cannot find module");
   }
 });
