@@ -47,5 +47,5 @@ export const dnsCacheLifetime: LearningLesson = {
     "Saved resolver counts and bounded current cache rows do not retain a timestamped transition history or prove failover timing, continuous health or application recovery.",
     "A negative answer has no recorded generation or addresses. Missing or omitted evidence is Unknown. DNS delegation, CNAME, AAAA and DNSSEC are outside this model."
   ],
-  "followUp": "Separate a cached-answer observation from an application outcome. Explain why an expiry count alone cannot establish recovery."
+  "followUp": "Separate what a cached answer shows from an application outcome. Explain why an expiry count alone cannot establish recovery."
 };
