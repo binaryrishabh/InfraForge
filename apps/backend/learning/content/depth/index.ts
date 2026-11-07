@@ -1,2 +1,4 @@
 export { track } from "./track";
-export { resourcePressureLessons as lessons } from "./resource-pressure";
+import { resourcePressureLessons } from "./resource-pressure";
+import { failureControlLessons } from "./failure-controls";
+export const lessons = [...resourcePressureLessons, ...failureControlLessons];
