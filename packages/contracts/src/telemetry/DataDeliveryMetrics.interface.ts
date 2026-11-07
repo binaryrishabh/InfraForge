@@ -32,3 +32,15 @@ export interface CdnMetrics {
   staleFills: number | null;
   "cdn-waiter-capacity": number | null;
 }
+
+/** Each cache-aside helper owns its counters; all counts accumulate since run start.
+ * live and fillsInProgress are current populations. No caller or cache-command totals are inferred. */
+export interface ApplicationHelperMetrics {
+  version: 1;
+  helpers: Array<{
+    id: string; cacheId: string; databaseId: string;
+    received: number | null; completed: number | null; failed: number | null; live: number | null;
+    databaseFetches: number | null; cacheFailures: number | null; coalescedWaiters: number | null;
+    fillsInProgress: number | null; invalidations: number | null;
+  }>;
+}

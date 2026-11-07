@@ -12,4 +12,4 @@ import * as diagnosis from "./diagnosis";
 
 export const tracks = [foundations, scaling.track, data.track, asynchronous.track, failures.track, missions.track, depth.track, advanced.track, architecture.track, diagnosis.track];
 export const lessons = [...foundationsLessons, ...scaling.lessons, ...data.lessons, ...asynchronous.lessons, ...failures.lessons, ...missions.lessons, ...depth.lessons, ...advanced.lessons, ...architecture.lessons, ...diagnosis.lessons];
-export const learningContent: LearningContent = { tracks, lessons, archivedLessons: [...architecture.archivedLessons, ...diagnosis.archivedLessons, ...missions.archivedLessons] };
+export const learningContent: LearningContent = { tracks, lessons, archivedLessons: [...architecture.archivedLessons, ...diagnosis.archivedLessons, ...missions.archivedLessons, ...data.archivedLessons, ...depth.archivedLessons] };

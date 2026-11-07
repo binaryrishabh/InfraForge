@@ -1,9 +1,9 @@
 import type { LearningModule } from "@infraforge/contracts/learning";
 import { concurrentCacheMisses } from "./lessons/concurrent-cache-misses";
-import { shareACacheFill } from "./lessons/share-a-cache-fill";
+import { shareACacheFillV2 as shareACacheFill } from "./lessons/share-a-cache-fill-v2";
 import { circuitBreakerBoundaries } from "./lessons/circuit-breaker-boundaries";
 import { poolIsolationBoundaries } from "./lessons/pool-isolation-boundaries";
-import { timeoutOwnership } from "./lessons/timeout-ownership";
+import { timeoutOwnershipV2 as timeoutOwnership } from "./lessons/timeout-ownership-v2";
 import { retryLimitsAndBudgets } from "./lessons/retry-limits-and-budgets";
 import { backpressureBoundaries } from "./lessons/backpressure-boundaries";
 

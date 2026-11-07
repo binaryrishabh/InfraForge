@@ -33,6 +33,10 @@ test("database and cache live readings use their own official evidence", () => {
   expect(m.db!.database!.rejected).toBeGreaterThanOrEqual(0);
   expect(m.cache!.cache).toEqual({ version: 1, hits: cache.hits, misses: cache.misses, expirations: cache.expirations, evictions: cache.evictions, coalescedWaiters: e.data.applications.reduce((n, a) => n + a.coalescedWaiters, 0) });
   expect(m.cache!.database).toBeUndefined(); expect(m.db!.cache).toBeUndefined(); expect(m.app!.cache).toBeUndefined();
+  for (const node of Object.values(m)) for (const helper of node.applicationHelpers?.helpers ?? []) {
+    const official = e.data.applications.find(a => a.id === helper.id)!;
+    for (const key of ["received", "completed", "failed", "live", "databaseFetches", "cacheFailures", "coalescedWaiters", "fillsInProgress", "invalidations"] as const) expect(helper[key]).toBe(official[key]);
+  }
 });
 
 test("CDN reads the official counters and keeps an unrecorded refusal count Unknown", () => {
@@ -81,6 +85,18 @@ test("two databases and two caches in one design cannot exchange evidence", () =
     expect(m[id]!.cache).toEqual({ version: 1, hits: cache.hits, misses: cache.misses, expirations: cache.expirations, evictions: cache.evictions, coalescedWaiters: helpers.reduce((sum, h) => sum + e.data.applications.find(a => a.id === h.id)!.coalescedWaiters, 0) });
     expect(m[id]!.database).toBeUndefined(); expect(m[id]!.cdn).toBeUndefined();
   }
+  const projected = Object.entries(m).flatMap(([owner, metrics]) => (metrics.applicationHelpers?.helpers ?? []).map(h => ({owner, ...h})));
+  expect(projected).toHaveLength(e.data.applications.length);
+  for (const h of projected) {
+    const official = e.data.applications.find(a => a.id === h.id)!;
+    const config = f.compiled.input.resources.find(r => r.kind === "cache-aside" && r.id === h.id)!;
+    if (config.kind !== "cache-aside") throw Error("Expected helper");
+    expect(h.id.startsWith(`${h.owner}/`) || h.id.startsWith(`${h.owner}#`)).toBe(true);
+    expect(h.cacheId).toBe(config.cache); expect(h.databaseId).toBe(config.database);
+    expect(h.databaseFetches).toBe(official.databaseFetches); expect(h.coalescedWaiters).toBe(official.coalescedWaiters);
+    expect(m[h.owner]!.applicationHelpers!.helpers.find(helper => helper.id === h.id)!.databaseFetches).toBe(h.databaseFetches);
+  }
+  expect(new Set(projected.map(h => h.cacheId)).size).toBe(2);
   expect(m.cache!.cache!.hits).not.toBe(m.cache2!.cache!.hits);
   expect(m.db!.database!.rejected).not.toBe(m.db2!.database!.rejected);
 });
