@@ -479,7 +479,8 @@ export async function acknowledgeJourneyChanges(dialog, improvement) {
 
 export async function inspectJourneyRequirements(page, lab) {
   if (!lab.reportRequirements) return [];
-  const record = page.locator("details").filter({ has: page.getByText("Full evidence record", { exact: true }) });
+  // The summary text is "› Full evidence record" (the arrow is a child span), so match it by contained text, not exact text.
+  const record = page.locator("details").filter({ has: page.locator("summary", { hasText: "Full evidence record" }) });
   await record.locator("summary").first().click();
   const details = [];
   for (const name of lab.reportRequirements) {
@@ -507,7 +508,9 @@ async function runJourney() {
   const page = await context.newPage();
   const problems = [];
   page.on("pageerror", (e) => problems.push(`pageerror ${page.url()} ${e.message.slice(0, 160)}`));
-  page.on("console", (m) => { if (m.type() === "error") problems.push(`console ${page.url()} ${m.text().slice(0, 160)}`); });
+  // This script aborts every non-local request on purpose, so those aborts are reported separately and never fail a journey.
+  const blockedRemote = [];
+  page.on("console", (m) => { if (m.type() !== "error") return; const line = `console ${page.url()} ${m.text().slice(0, 160)}`; (/ERR_BLOCKED_BY_CLIENT/.test(line) ? blockedRemote : problems).push(line); });
   page.on("response", (r) => { if (r.status() >= 400 && !/favicon/.test(r.url())) problems.push(`HTTP ${r.status()} ${r.url().replace(WEB, "")}`); });
 
   const results = [];
@@ -689,8 +692,8 @@ async function runJourney() {
   });
 
   }
-  console.log(JSON.stringify({ web: WEB, results, passed: results.filter((r) => r.ok).length, failed: results.filter((r) => !r.ok).length, problems: [...new Set(problems)].slice(0, 12) }, null, 1));
-  if (selection.kind === "lesson" && (results.some((r) => !r.ok) || problems.length)) process.exitCode = 1;
+  console.log(JSON.stringify({ web: WEB, results, passed: results.filter((r) => r.ok).length, failed: results.filter((r) => !r.ok).length, blockedRemote: [...new Set(blockedRemote)].length, problems: [...new Set(problems)].slice(0, 12) }, null, 1));
+  if (results.some((r) => !r.ok) || (selection.kind === "lesson" && problems.length)) process.exitCode = 1;
   await browser.close();
 }
 

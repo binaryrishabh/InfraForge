@@ -228,13 +228,17 @@ test("the budget journey opens the evidence record and retains the exact budget 
   };
   const page = {
     getByText(name, options) { calls.push([name, options]); return { name }; },
-    locator(selector) { calls.push(selector); return { filter(options) { expect(options.has.name).toBe("Full evidence record"); return record; } }; },
+    locator(selector, options) {
+      if (selector === "summary") { calls.push(["summary", options.hasText]); return { summary: true }; }
+      calls.push(selector);
+      return { filter(o) { expect(o.has.summary).toBe(true); return record; } };
+    },
     getByRole() { throw Error("must not select the hero's requirement label without evidence detail"); },
   };
   expect(await inspectJourneyRequirements(page, journeyLab())).toEqual([]);
   expect(calls).toEqual([]);
   expect(await inspectJourneyRequirements(page, budget)).toEqual([rowText]);
-  expect(calls).toEqual(["details", ["Full evidence record", { exact: true }], ["record", "summary"], "opened", ["record", "listitem"], [budget.reportRequirements[0], { exact: true }]]);
+  expect(calls).toEqual(["details", ["summary", "Full evidence record"], ["record", "summary"], "opened", ["record", "listitem"], [budget.reportRequirements[0], { exact: true }]]);
   row.waitFor = async () => { throw Error("budget row missing"); };
   await expect(inspectJourneyRequirements(page, budget)).rejects.toThrow("budget row missing");
 });
