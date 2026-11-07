@@ -49,6 +49,7 @@ export interface ReportStage {
   warnings: string[];
   issues: string[];
   monthlyEstimateUsd?: number;
+  lineItems?: Array<{ resourceId: string; type: string; provider?: string; skuId?: string; skuLabel?: string; monthlyUsd: number }>;
 }
 
 export interface ReportEvent {
@@ -98,6 +99,8 @@ export interface ReportCheckpoint {
 }
 
 export interface RunReport {
+  /** Limits from this attempt's exact challenge identity; arithmetic uses its recorded gate total. */
+  monthlyBudgets?: Array<{ criterionId: string; label: string; limitUsd: number; remainingUsd?: number }>;
   guidedReview?: import("../challenges/learning").GuidedReview | null;
   experimentTrace?: import("./experimentTrace").ExperimentTrace;
   version: 1;

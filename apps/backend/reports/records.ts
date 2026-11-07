@@ -20,6 +20,9 @@ import { SecurityMetricsSchema } from "./securitySchema";
 const text = z.string().min(1).max(4000);
 const timestamp = z.iso.datetime({ offset: true });
 const amount = z.number().finite().nonnegative();
+const costLineItems = z.array(z.object({ resourceId: z.string().min(1).max(256), type: text,
+  provider: text.optional(), skuId: text.optional(), skuLabel: text.optional(), monthlyUsd: amount })).max(500)
+  .refine(items => new Set(items.map(item => item.resourceId)).size === items.length);
 const boundedId = z.string().min(1).max(256);
 const boundedMap = <T>(schema: z.ZodType<T>) => z.record(boundedId, schema).refine((v) => Object.keys(v).length <= 500);
 const pool = z.object({ lbId: boundedId, baseVmIds: z.array(boundedId).max(500), currentReplicas: amount.int(),
@@ -84,6 +87,15 @@ export function readRecords(value: unknown, limits: string[]) {
     const details = z.object({ warnings: z.array(text).max(500).optional(), issues: z.array(text).max(500).optional(),
       monthlyEstimate: amount.optional() }).safeParse(item.details ?? {});
     if (!details.success) limits.push(`Some details for ${item.name} are malformed and are not shown.`);
+    // Optional breakdown failures must not change the original total or its judgement.
+    let lineItems: ReportStage["lineItems"];
+    if (item.name === "CostEstimate" && item.details && typeof item.details === "object" && "lineItems" in item.details) {
+      const parsed = costLineItems.safeParse(item.details.lineItems);
+      const total = details.success ? details.data.monthlyEstimate : undefined;
+      const sum = parsed.success ? parsed.data.reduce((n, row) => n + row.monthlyUsd, 0) : NaN;
+      if (parsed.success && total !== undefined && Number.isFinite(sum) && Math.abs(sum - total) <= 0.000001) lineItems = parsed.data;
+      else limits.push("CostEstimate line items are malformed or do not match the recorded total; the breakdown is Unknown.");
+    }
     // Keep validity separate from the historical display defaults. A sanitized
     // empty issues array is not evidence of a completed, clean security scan.
     stageEvidence[item.name] = Array.isArray(row.stages) && row.stages.length === stageRows.length &&
@@ -95,7 +107,8 @@ export function readRecords(value: unknown, limits: string[]) {
       message: item.message, warnings: details.success ? details.data.warnings ?? [] : [],
       issues: details.success ? details.data.issues ?? [] : [],
       ...(details.success && item.name === "CostEstimate" && details.data.monthlyEstimate !== undefined
-        ? { monthlyEstimateUsd: details.data.monthlyEstimate } : {}) };
+        ? { monthlyEstimateUsd: details.data.monthlyEstimate } : {}),
+      ...(lineItems !== undefined ? { lineItems } : {}) };
   });
   return { input, live: live?.success ? live.data : null,
     legacyWorkload: workload?.success ? workload.data : null, stages, stageEvidence,

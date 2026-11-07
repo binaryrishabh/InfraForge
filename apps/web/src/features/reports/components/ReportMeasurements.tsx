@@ -2,6 +2,7 @@ import { DatabaseReplicationReadings } from "@/features/live/DatabaseReplication
 import { DataDeliveryReadings } from "@/features/live/DataDeliveryReadings";
 import { ServerlessReadings } from "@/features/live/ServerlessReadings";
 import { SchedulerReadings } from "@/features/live/SchedulerReadings";
+import { VmMemoryReadings } from "@/features/live/VmMemoryReadings";
 import type { RunReport } from "@infraforge/contracts/reports";
 import { formatDate, formatUsd } from "@/lib/format";
 import { HealthMark } from "@/ui/HealthMark";
@@ -15,7 +16,8 @@ import { SecurityReadings } from "@/features/canvas/components/inspector/Securit
 latest diagnostic checkpoint, labelled as such. */
 export function ReportMeasurements({ report, number }: { report: RunReport; number: number }) {
   const checkpoint = report.terminal ?? report.checkpoint;
-  const monthly = report.stages.findLast((stage) => stage.monthlyEstimateUsd !== undefined)?.monthlyEstimateUsd;
+  const cost = report.stages.findLast((stage) => stage.name === "CostEstimate" && stage.monthlyEstimateUsd !== undefined);
+  const monthly = cost?.monthlyEstimateUsd;
   return (
     <>
       {checkpoint && (
@@ -69,17 +71,39 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
               </ul>
               {checkpoint.resources.filter(r => r.database || r.databaseReplication || r.serverless || r.scheduler || r.eventBus || r.gateway || r.lbAccounting).map(r => <div key={r.id} className="mt-4"><h3 className="font-semibold">{r.id}</h3>{r.database && <DataDeliveryReadings type="Database" metrics={r} />}{r.databaseReplication && <DatabaseReplicationReadings metrics={r} />}{r.serverless && <ServerlessReadings metrics={r.serverless} />}{r.scheduler && <SchedulerReadings metrics={r.scheduler} />}{r.eventBus && <EventBusReadings metrics={r.eventBus} />}{r.gateway && <GatewayReadings metrics={r.gateway} />}{r.lbAccounting && <LbAccountingReadings metrics={r.lbAccounting} />}</div>)}
               {checkpoint.resources.filter(r => r.security).map(r => <section key={`security-${r.id}`} aria-label={`Security measurements for ${r.id}`} className="mt-4"><h3 className="font-semibold">{r.id}: security measurements</h3><SecurityReadings metrics={r.security} /></section>)}
+              {checkpoint.resources.filter(r => r.vmMemory).map(r => <section key={`memory-${r.id}`} aria-label={`Memory measurements for ${r.id}`} className="mt-4"><h3 className="font-semibold">{r.id}: memory measurements</h3><VmMemoryReadings metrics={r.vmMemory} /></section>)}
               {report.guidedReview && <a href="#guided-review" className="mt-3 inline-block text-sm font-medium text-accent underline">Back to guided review</a>}
             </div>
           )}
         </ReportSection>
       )}
-      {(monthly !== undefined || checkpoint?.accumulatedCostUsd !== undefined) && (
+      {(monthly !== undefined || checkpoint?.accumulatedCostUsd !== undefined || !!report.monthlyBudgets?.length) && (
         <ReportSection number={checkpoint ? number + 1 : number} title="Recorded cost estimates">
           <dl className="grid gap-4 sm:grid-cols-2">
             {monthly !== undefined && <div><dt className="if-eyebrow">Monthly estimate (CostEstimate gate)</dt><dd className="if-num mt-0.5 text-[17px] text-ink">{formatUsd(monthly)}</dd></div>}
             {checkpoint?.accumulatedCostUsd !== undefined && <div><dt className="if-eyebrow">Simulated cost so far</dt><dd className="if-num mt-0.5 text-[17px] text-ink">{formatUsd(checkpoint.accumulatedCostUsd, 4)}</dd><dd className="text-[11px] text-ink-3">at the {report.terminal ? "exact terminal snapshot" : "retained checkpoint"}</dd></div>}
           </dl>
+          {report.monthlyBudgets?.map(budget => <div key={budget.criterionId} className="mt-4">
+            <h3 className="font-semibold">{budget.label}</h3>
+            <dl className="mt-2 grid gap-4 sm:grid-cols-2">
+              <div><dt className="if-eyebrow">Monthly budget limit</dt><dd className="if-num">{formatUsd(budget.limitUsd)}</dd></div>
+              <div><dt className="if-eyebrow">Remaining monthly budget</dt><dd className="if-num">{budget.remainingUsd === undefined ? "Unknown" : `${budget.remainingUsd < 0 ? "-" : ""}${formatUsd(Math.abs(budget.remainingUsd))}`}</dd></div>
+            </dl>
+            <p className="mt-2 text-xs text-ink-3">Limit minus the recorded monthly estimate; a negative amount is over budget. This is a projection, not an account balance.</p>
+          </div>)}
+          {!!report.monthlyBudgets?.length && <div className="mt-4">
+            <h3 className="font-semibold">Monthly resource price line items</h3>
+            {cost?.lineItems ? <div className="overflow-x-auto"><table className="w-full text-sm">
+              <caption className="sr-only">Recorded CostEstimate line items, not current catalog prices</caption>
+              <thead className="border-b border-line-strong text-left text-xs text-ink-3"><tr>{["Resource", "Type", "Recorded size", "Monthly estimate"].map(label => <th key={label} scope="col" className="py-2 pr-4 font-medium">{label}</th>)}</tr></thead>
+              <tbody>{cost.lineItems.map(item => <tr key={item.resourceId} className="border-b border-line">
+                <th scope="row" className="py-2 pr-4 text-left font-medium">{item.resourceId}</th><td className="py-2 pr-4">{item.type}</td>
+                <td className="py-2 pr-4">{item.skuId ? <>{item.provider && `${item.provider} · `}{item.skuLabel ?? item.skuId}{item.skuLabel && ` (${item.skuId})`}</> : "Generic educational estimate"}</td>
+                <td className="if-num py-2 pr-4">{formatUsd(item.monthlyUsd)}</td>
+              </tr>)}</tbody>
+            </table></div> : <p className="mt-2 text-sm text-ink-3">Unknown: no usable resource price line items were retained.</p>}
+            <p className="mt-2 text-xs text-ink-3">Prices were retained by this run's CostEstimate gate. Catalog snapshot figures are not a quote; later size changes and runtime scaling costs are not priced here.</p>
+          </div>}
           <p className="mt-3 text-xs text-ink-3">Two different measures: a monthly projection and the simulated cost accumulated so far. Neither is a cloud bill or proof of chaos-related cost.</p>
         </ReportSection>
       )}
