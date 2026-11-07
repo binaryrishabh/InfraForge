@@ -13,7 +13,8 @@ function entries(value: unknown, path: string[]): Array<{ context: string; value
         : item && typeof item === "object" && "resourceId" in item ? String(item.resourceId)
         : item && typeof item === "object" && "criterionId" in item ? String(item.criterionId)
         : item && typeof item === "object" && "path" in item ? String(item.path)
-        : item && typeof item === "object" && "namespace" in item && "key" in item ? JSON.stringify([item.namespace, item.key]) : item && typeof item === "object" && "target" in item ? String(item.target) : id, row.context].filter(Boolean).join(" / ") })));
+        : item && typeof item === "object" && "namespace" in item && "key" in item ? JSON.stringify([item.namespace, item.key]) : item && typeof item === "object" && "target" in item ? String(item.target) : item && typeof item === "object" && "tag" in item ? String(item.tag)
+        : item && typeof item === "object" && "digest" in item ? String(item.digest) : id, row.context].filter(Boolean).join(" / ") })));
   }
   return entries((value as Record<string, unknown>)[key!], rest);
 }

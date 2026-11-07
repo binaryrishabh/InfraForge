@@ -17,6 +17,7 @@ import { CdnReadings } from "./CdnReadings";
 import { CacheReadings } from "./CacheReadings";
 import { QueueReadings } from "./QueueReadings";
 import { ObjectStorageReadings } from "./ObjectStorageReadings";
+import { StartupReadings } from "./StartupReadings";
 
 /* Final state: the exact terminal capture when one exists, otherwise the
 latest diagnostic checkpoint, labelled as such. */
@@ -99,6 +100,10 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
             ...checkpoint.resources.filter(r => r.objectStorage).map(r => r.id),
           ])].map(id => <ObjectStorageReadings key={`object-${id}`} id={id} metrics={checkpoint.resources.find(r => r.id === id)?.objectStorage} />)}
           {monitoringResources.map(r => <MonitoringReadings key={`monitor-${r.id}`} resource={r} />)}
+          {[...new Set([
+            ...((report.topology.accepted ?? report.topology.original)?.resources.filter(r => r.type === "Container Registry" || r.type === "Virtual Machine").map(r => r.id) ?? []),
+            ...checkpoint.resources.filter(r => r.startup).map(r => r.id),
+          ])].map(id => <StartupReadings key={`startup-${id}`} id={id} metrics={checkpoint.resources.find(r => r.id === id)?.startup} />)}
         </ReportSection>
       )}
       {(monthly !== undefined || checkpoint?.accumulatedCostUsd !== undefined || !!report.monthlyBudgets?.length) && (
