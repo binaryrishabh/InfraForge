@@ -19,6 +19,21 @@ export interface MonitoringMetrics {
 
 export interface ObjectStorageMetrics {
   version: 1;
+  /** Added observations are optional: historical captures must not acquire invented values. */
+  sampledAtUs?: number | null;
+  /** Valid puts reaching capacity admission; excludes precondition failures and pre-apply cancellations. */
+  puts?: number | null;
+  gets?: number | null;
+  heads?: number | null;
+  generation?: number | null;
+  objectCount?: number | null;
+  overCapacity?: boolean | null;
+  generatedResponseBodyBytes?: number | null;
+  /** Exact sparse reasons for ALL object commands, not a put-only failure population. */
+  commandReasons?: Record<string, number> | null;
+  /** Current inventory only; no content or historical versions. At most 100 rows. */
+  objects?: Array<{ namespace: string; key: string; generation: number; bytes: number }> | null;
+  omittedObjects?: number | null;
   storedBytes: number | null;
   capacityBytes: number | null;
   committedPuts: number | null;

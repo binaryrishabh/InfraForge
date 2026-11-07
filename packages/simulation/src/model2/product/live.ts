@@ -177,7 +177,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         for (const resource of deliveryResources) Object.assign(metrics[resource.id]!, dataDeliveryLive(resource, runtime, runtime.inspect(resource.id), compiled.input.resources));
       }
       for (const resource of compiled.input.resources) {
-        if (metrics[resource.id] && (resource.kind === "monitor" || resource.kind === "object-store")) Object.assign(metrics[resource.id]!, observabilityLive(resource, runtime));
+        if (metrics[resource.id] && (resource.kind === "monitor" || resource.kind === "object-store")) Object.assign(metrics[resource.id]!, observabilityLive(resource, runtime, now));
       }
       for (const resource of compiled.input.resources) {
         if (resource.kind !== "delivery-queue" || !compiled.semantic.nodes.find((n) => n.id === resource.id)?.profile.includes("canvas-async/1")) continue;

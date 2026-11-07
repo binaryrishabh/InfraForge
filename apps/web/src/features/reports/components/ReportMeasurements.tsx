@@ -13,6 +13,7 @@ import { LbAccountingReadings } from "./LbAccountingReadings";
 import { LbResilienceReadings } from "./LbResilienceReadings";
 import { SecurityReadings } from "@/features/canvas/components/inspector/SecuritySection";
 import { QueueReadings } from "./QueueReadings";
+import { ObjectStorageReadings } from "./ObjectStorageReadings";
 
 /* Final state: the exact terminal capture when one exists, otherwise the
 latest diagnostic checkpoint, labelled as such. */
@@ -79,9 +80,14 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
                 ...checkpoint.resources.filter(r => r.lbRetry || r.circuitBreaker).map(r => r.id),
               ])].map(id => { const r = checkpoint.resources.find(r => r.id === id); return <LbResilienceReadings key={`resilience-${id}`} id={id} retry={r?.lbRetry} breaker={r?.circuitBreaker} />; })}
               {checkpoint.resources.filter(r => r.vmMemory).map(r => <section key={`memory-${r.id}`} aria-label={`Memory measurements for ${r.id}`} className="mt-4"><h3 className="font-semibold">{r.id}: memory measurements</h3><VmMemoryReadings metrics={r.vmMemory} /></section>)}
+
               {report.guidedReview && <a href="#guided-review" className="mt-3 inline-block text-sm font-medium text-accent underline">Back to guided review</a>}
             </div>
           )}
+          {[...new Set([
+            ...((report.topology.accepted ?? report.topology.original)?.resources.filter(r => r.type === "Object Storage").map(r => r.id) ?? []),
+            ...checkpoint.resources.filter(r => r.objectStorage).map(r => r.id),
+          ])].map(id => <ObjectStorageReadings key={`object-${id}`} id={id} metrics={checkpoint.resources.find(r => r.id === id)?.objectStorage} />)}
         </ReportSection>
       )}
       {(monthly !== undefined || checkpoint?.accumulatedCostUsd !== undefined || !!report.monthlyBudgets?.length) && (
