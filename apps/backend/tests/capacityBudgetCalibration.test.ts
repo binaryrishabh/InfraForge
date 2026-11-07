@@ -4,7 +4,7 @@ import type { ChallengeStarter } from "@infraforge/contracts/challenges";
 import type { SimulationSnapshot } from "@infraforge/contracts/telemetry";
 import { validateInfrastructureName } from "@infraforge/domain/validation";
 import { captureRunInputs } from "../deployments/runInputs";
-import { challengeSeed, specHash } from "../challenges/registry";
+import { challengeSeed, findChallenge, specHash } from "../challenges/registry";
 import { preflight } from "../challenges/preflight";
 import { validateChallengeVersions } from "../challenges/validate";
 import { buildRunReport } from "../reports/report";
@@ -29,9 +29,10 @@ test("capacity budget: two coupled bottlenecks, three passing allocations and an
   const overBudget = size(appHeadroom, "db", dbHeadroom.resources[1]!.skuId!);
   const designs = [start, appOnly, dbOnly, underCapacity, reference, appHeadroom, dbHeadroom, overBudget];
   expect(validateInfrastructureName(d.title)).toBeNull();
-  expect(d).toMatchObject({difficulty: "advanced", engine: "2", version: 1});
+  expect(d).toMatchObject({difficulty: "advanced", engine: "2", version: 2});
   expect(d.hints).toHaveLength(3);
-  expect(validateChallengeVersions([d], {[`${d.id}@1`]: specHash(d)})).toEqual([]);
+  expect(validateChallengeVersions([findChallenge(d.id, 1)!.definition, d], {
+    [`${d.id}@1`]: findChallenge(d.id, 1)!.hash, [`${d.id}@2`]: specHash(d)})).toEqual([]);
   const control = captureRunInputs(start, d.workload, challengeSeed(d));
   for (const design of designs) {
     expect(preflight(d, design).errors).toEqual([]);

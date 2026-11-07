@@ -1,3 +1,5 @@
+import { splitTheCapacityBudgetV2 } from "./split-the-capacity-budget/v2";
+import { fitARequestInMemoryV2 } from "./fit-a-request-in-memory/v2";
 import { splitTheCapacityBudgetV1 } from "./split-the-capacity-budget/v1";
 import { diagnoseConsumerCreditV1 } from "./diagnose-consumer-credit/v1";
 import { parallelJobsForABurstV1 } from "./parallel-jobs-for-a-burst/v1";
@@ -74,6 +76,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   shareACacheFillV1,
   diagnoseConsumerCreditV1,
   fitARequestInMemoryV1,
+  fitARequestInMemoryV2,
   diagnoseQueryAdmissionV1,
   firstProductionApiV1,
   secureTheEdgeV1,
@@ -128,5 +131,6 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   oneVmOrAPoolV1,
   limitOrCapacityV1,
   splitTheCapacityBudgetV1,
+  splitTheCapacityBudgetV2,
   openAndSizeAnApiV1,
 ];
