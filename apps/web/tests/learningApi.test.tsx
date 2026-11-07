@@ -74,6 +74,22 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
     expect(lesson(scalingExercise, "apps")).toContain("Revisit the explanation.");
     expect(lesson(scalingExercise, "database")).toContain("That matches the explanation.");
     expect(lesson(scalingExercise)).toContain('href="/learn/lessons/load-balancer-policies"');
+    for (const [id, correct, anchor] of [
+      ["parallelism-and-shared-capacity", "waiting", "parallel-jobs-for-a-burst"],
+      ["duplicate-effects-and-ownership", "repeat", "leave-time-to-acknowledge"],
+      ["retry-ownership-across-layers", "six", "choose-a-retry-mitigation"],
+      ["health-checks-and-failure-scope", "scope", "check-the-missing-server"],
+    ] as const) {
+      const detail = await getLearningLesson(id);
+      expect(detail.lesson.level).toBe("advanced");
+      expect(detail.lesson.experiment).toBeNull(); expect(detail.challenge).toBeNull(); expect(detail.progress).toBeNull();
+      expect(detail.lesson.check!.correctChoiceId).toBe(correct);
+      expect(lesson(detail)).toContain(`href="/learn/lessons/${anchor}"`);
+      expect(lesson(detail, correct)).toContain("That matches the explanation.");
+      const wrong = detail.lesson.check!.choices.find(choice => choice.id !== correct)!;
+      expect(lesson(detail, wrong.id)).toContain("Revisit the explanation.");
+      for (const limitation of detail.lesson.limitations) expect(lesson(detail)).toContain(limitation.replaceAll("&", "&amp;"));
+    }
     for (const detail of proof.curriculumDetails) {
       const loaded = await getLearningLesson(detail.lesson.id);
       const markup = lesson(loaded);

@@ -4,12 +4,13 @@ import { track, lessons } from "../learning/content/async";
 import { queuedWork, queuedWorkLessons } from "../learning/content/async/queued-work";
 import { firstQueue } from "../learning/content/async/first-queue";
 import { burstWorkers } from "../learning/content/async/burst-workers";
+import { asyncReasoning } from "../learning/content/async/async-reasoning";
 import { latestChallenge } from "../challenges/registry";
 import { REFERENCE } from "./challengeHarness";
 
 test("async queued-work module retains three executable lessons with calibrated challenges and honest limitations", () => {
   expect(tracks.filter(t => t.id === "async")).toEqual([track]);
-  expect(track.modules).toEqual([firstQueue, queuedWork, burstWorkers]);
+  expect(track.modules).toEqual([firstQueue, queuedWork, burstWorkers, asyncReasoning]);
   expect(registeredLessons.filter(l => l.trackId === "async")).toEqual(lessons);
   expect(queuedWork.lessonIds).toEqual(queuedWorkLessons.map(l => l.id));
   const labs = queuedWorkLessons.filter(lesson => lesson.kind === "executable-lab");
