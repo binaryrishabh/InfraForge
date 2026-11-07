@@ -6,6 +6,7 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "keep-waiting-work@1": {challengeId: "keep-waiting-work", version: 1, hash: "e38032b569056c8d43e914fdb68aab62eb64a71869cfcb2b52c5b897fc85ed60"},
   "share-a-cache-fill@1": {challengeId: "share-a-cache-fill", version: 1, hash: "39cffc8c5eadbe309c710409abe4a0d4f3431b94c05ef9352f95596ef0ae6954"},
   "reuse-before-expiry@1": {challengeId: "reuse-before-expiry", version: 1, hash: "7eb2268b199d88bf9f961d0638bc98f28aecfac5ea08db66cff6855ba10362c0"},
+  "diagnose-consumer-credit@1": {challengeId: "diagnose-consumer-credit", version: 1, hash: "a236d0e516f6213362c7241dc1dcc309157870d403553239b71a01bdc6867f34"},
   "fit-a-request-in-memory@1": {challengeId: "fit-a-request-in-memory", version: 1, hash: "f9d6da9199e8abbc5045bcae85c2cec56d85f821ee86233d313a962be77e9763"},
   "diagnose-query-admission@1": {challengeId: "diagnose-query-admission", version: 1, hash: "af3d1ac31f9cca4078a377cc11d2c7c64a524c2bd3b16aada23829499a71aff5"},
   "cache-or-database@1": {challengeId: "cache-or-database", version: 1, hash: "7e141efce731cbf7f0c531002f8b6b8c4e82af638a63ff05bd45bb667e14c0b0"},

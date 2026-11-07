@@ -1,3 +1,4 @@
+import { diagnoseConsumerCreditV1 } from "../challenges/definitions/diagnose-consumer-credit/v1";
 import { fitARequestInMemoryV1 } from "../challenges/definitions/fit-a-request-in-memory/v1";
 import { keepWaitingWorkV1 } from "../challenges/definitions/keep-waiting-work/v1";
 import { checkTheMissingServerV1 } from "../challenges/definitions/check-the-missing-server/v1";
@@ -83,6 +84,7 @@ export const REFERENCE: Record<string, ChallengeStarter> = {
     r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, singleFlight: true}} : r)},
   "reuse-before-expiry": {...reuseBeforeExpiryV1.starter!, resources: reuseBeforeExpiryV1.starter!.resources.map(r =>
     r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, ttlSeconds: 60}} : r)},
+  "diagnose-consumer-credit": {...diagnoseConsumerCreditV1.starter!, resources: diagnoseConsumerCreditV1.starter!.resources.map(r => r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, prefetch: 16}} : r)},
   "fit-a-request-in-memory": {...fitARequestInMemoryV1.starter!, resources: fitARequestInMemoryV1.starter!.resources.map(r => r.id === "app" ? {...r, size: "large"} : r)},
   "fit-a-request-in-memory-request": {...fitARequestInMemoryV1.starter!, resources: fitARequestInMemoryV1.starter!.resources.map(r => r.id === "app" ? {...r, vmMemory: {...r.vmMemory!, requestMiB: 256}} : r)},
   "diagnose-query-admission": {...diagnoseQueryAdmissionV1.starter!, resources: diagnoseQueryAdmissionV1.starter!.resources.map(r => r.id === "db" ? {...r, dbConcurrency: {...r.dbConcurrency!, activeQueries: 4}} : r)},

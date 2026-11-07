@@ -1,3 +1,4 @@
+import { diagnoseConsumerCreditV1 } from "./diagnose-consumer-credit/v1";
 import { fitARequestInMemoryV1 } from "./fit-a-request-in-memory/v1";
 import { keepWaitingWorkV1 } from "./keep-waiting-work/v1";
 import { checkTheMissingServerV1 } from "./check-the-missing-server/v1";
@@ -67,6 +68,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   checkTheMissingServerV1,
   reuseBeforeExpiryV1,
   shareACacheFillV1,
+  diagnoseConsumerCreditV1,
   fitARequestInMemoryV1,
   diagnoseQueryAdmissionV1,
   firstProductionApiV1,
