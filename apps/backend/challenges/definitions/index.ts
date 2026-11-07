@@ -3,6 +3,7 @@ import { diagnoseConsumerCreditV1 } from "./diagnose-consumer-credit/v1";
 import { fitARequestInMemoryV1 } from "./fit-a-request-in-memory/v1";
 import { diagnoseQueryAdmissionV1 } from "./diagnose-query-admission/v1";
 import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
+import { openAndSizeAnApiV1 } from "./open-and-size-an-api/v1";
 import { firstProductionApiV1 } from "./first-production-api/v1";
 import { secureTheEdgeV1 } from "./secure-the-edge/v1";
 import { cacheMattersV1 } from "./cache-matters/v1";
@@ -117,4 +118,5 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   oneVmOrAPoolV1,
   limitOrCapacityV1,
   splitTheCapacityBudgetV1,
+  openAndSizeAnApiV1,
 ];

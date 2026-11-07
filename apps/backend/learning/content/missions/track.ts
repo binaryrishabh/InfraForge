@@ -1,9 +1,10 @@
 import type { LearningTrack } from "@infraforge/contracts/learning";
 import { firstApplications } from "./first-applications";
 import { backgroundServices } from "./background-services";
+import { guidedMissions } from "./guided-missions";
 
 export const track: LearningTrack & {availability: "available"} = {
   id: "missions", title: "Real-application missions", availability: "available",
   summary: "Combine infrastructure ideas in runnable application scenarios and state which guarantees remain unverified.",
-  modules: [firstApplications, backgroundServices],
+  modules: [guidedMissions, firstApplications, backgroundServices],
 };
