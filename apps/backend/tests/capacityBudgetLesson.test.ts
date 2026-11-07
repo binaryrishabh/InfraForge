@@ -30,7 +30,7 @@ test("capacity budget: canonical advanced module has existing prerequisites, an 
   expect(() => checkLearningAuthoring(learningContent, reviews)).toThrow(`${d.id}@2: missing challenge review`);
   const changed = {...REVIEWED_CHALLENGES, [`${d.id}@2`]: {challengeId: d.id, version: 1, hash: "0".repeat(64)}};
   expect(() => checkLearningAuthoring(learningContent, changed)).toThrow("reviewed challenge identity is unavailable or changed");
-  for (const label of ["Monthly SKU line items", "Per-resource monthly cost", "Remaining monthly budget"]) {
+  for (const label of ["Monthly SKU line items", "Per-resource monthly cost", "Invented remaining budget"]) {
     expect(learningMeasurement(label)).toBeNull();
     const bad = structuredClone(lesson); bad.experiment!.evidenceToInspect = [label];
     expect(checkLessonClaims(bad, d)).toContain(`${d.id}@2: report does not render measurement ${label}`);
@@ -49,4 +49,17 @@ test("budget lesson v2 describes saved prices while published v1 and its review 
   expect(LEARNING_REGISTRY.listLessons().filter(l => l.id === id).map(l => l.contentVersion)).toEqual([2]);
   const noOldReview = {...REVIEWED_CHALLENGES}; delete noOldReview[`${id}@1`];
   expect(() => checkLearningAuthoring(learningContent, noOldReview)).toThrow(`${id}@1: missing challenge review`);
+});
+
+test("cost labels are audited and refuse lessons whose report has no reviewed monthly budget", () => {
+  const d = definition("split-the-capacity-budget"), lesson = structuredClone(capacityBudgetsLessons[0]!);
+  for (const [label, path] of [["Monthly resource price line items", "lineItems.*.monthlyUsd"],
+    ["Remaining monthly budget", "monthlyBudgets.*.remainingUsd"]]) {
+    expect(learningMeasurement(label!)).toMatchObject({scope: "monthly", path, unit: "USD",
+      source: "apps/web/src/features/reports/components/ReportMeasurements.tsx", marker: label});
+    lesson.experiment!.evidenceToInspect = [label!];
+    expect(checkLessonClaims(lesson, d)).toEqual([]);
+    const noBudget = {...d, criteria: d.criteria.filter(c => c.kind !== "monthly-budget")};
+    expect(checkLessonClaims(lesson, noBudget).join("\n")).toContain(`report does not render measurement ${label} without a monthly-budget requirement`);
+  }
 });
