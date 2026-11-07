@@ -302,7 +302,12 @@ export function journeyLesson(id = "client-and-server") {
 
 export function selectJourney(env = {}) {
   const kind = env.JOURNEY_KIND ?? "lab";
-  if (!["lab", "lesson"].includes(kind)) throw new Error("Unknown JOURNEY_KIND. Choose: lab, lesson");
+  if (kind === "failure") {
+    if (env.JOURNEY_LAB !== undefined || env.JOURNEY_LESSON !== undefined) throw new Error("JOURNEY_FAILURE cannot be combined with JOURNEY_LAB or JOURNEY_LESSON");
+    return { kind, entry: journeyFailure(env.JOURNEY_FAILURE) };
+  }
+  if (env.JOURNEY_FAILURE !== undefined) throw new Error("JOURNEY_FAILURE requires JOURNEY_KIND=failure");
+  if (!["lab", "lesson"].includes(kind)) throw new Error("Unknown JOURNEY_KIND. Choose: lab, lesson, failure");
   if (kind === "lesson") {
     if (env.JOURNEY_LAB !== undefined) throw new Error("JOURNEY_LAB cannot be combined with JOURNEY_KIND=lesson");
     return { kind, entry: journeyLesson(env.JOURNEY_LESSON) };
@@ -492,12 +497,235 @@ export async function inspectJourneyRequirements(page, lab) {
   return details;
 }
 
+// Failure mode injects only these local API failures. The rows are expectations,
+// not observed browser results. Fake-page tests prove selectors/interception only.
+// QA: JOURNEY_KIND=failure JOURNEY_FAILURE=<id> node ../InfraForge/scripts/qa/learning-journey.mjs
+export const JOURNEY_FAILURES = [
+  { id: "lesson-list-load", flow: "list", method: "GET", path: "/learning", status: 500,
+    message: "Local QA: learning list unavailable.", alert: "Learning could not be loaded. Try again.", recovery: "Try again" },
+  { id: "lesson-open-load", flow: "lesson", method: "GET", path: "/learning/lessons/client-and-server", status: "abort",
+    alert: "This lesson could not be loaded. It may be unavailable. Try again.", recovery: "Try again" },
+  { id: "check-session-expired", flow: "check-session", method: "GET", path: "/learning", status: 401,
+    message: "Local QA: session ended.", recovery: "Sign in" },
+  { id: "run-start-refused", flow: "start", method: "POST", path: "/challenges/keep-waiting-work/attempts", status: 429,
+    message: "Local QA: no run slot is available. Try again later.", recovery: "Lock prediction and run" },
+  { id: "run-start-error", flow: "start", method: "POST", path: "/challenges/keep-waiting-work/attempts", status: 500,
+    message: "Local QA: the start could not be confirmed.", recovery: "Check Runs before trying again" },
+  { id: "run-start-session-expired", flow: "start-session", method: "POST", path: "/challenges/keep-waiting-work/attempts", status: 401,
+    message: "Local QA: session ended.", recovery: "Sign in" },
+  { id: "reload-mid-run", flow: "reload", method: null, path: null, status: null, recovery: "Start it again" },
+  { id: "browser-input-load", flow: "browser-input", method: "GET", path: /^\/deployments\/[^/]+\/browser-run$/, status: 500,
+    message: "Local QA: browser input unavailable.", alert: "The simulation has not started yet", recovery: "This page keeps trying." },
+  { id: "run-delivery-busy", flow: "delivery", method: "POST", path: /^\/deployments\/[^/]+\/submit$/, status: 429,
+    message: "Local QA: replay queue busy.", alert: "We could not confirm your run was saved", recovery: "Send again", attempts: 8 },
+];
+
+export function journeyFailure(id = "lesson-list-load") {
+  const entry = JOURNEY_FAILURES.find(entry => entry.id === id);
+  if (!entry) throw new Error(`Unknown JOURNEY_FAILURE. Choose: ${JOURNEY_FAILURES.map(entry => entry.id).join(", ")}`);
+  return entry;
+}
+
+export function localFailureApi(api = "http://localhost:3000/api") {
+  if (!/^http:\/\/localhost:\d+\/api$/.test(api)) throw new Error("failure injection only runs against a localhost API ending in /api");
+  return api;
+}
+
+// Page routes take precedence over context routes: refuse remote requests here
+// too, and use fallback (never continue) for everything we did not inject so the
+// existing context guard remains in force. OPTIONS/auth/other APIs pass through.
+export async function installJourneyFailure(page, entry, api = "http://localhost:3000/api", { armed = true } = {}) {
+  localFailureApi(api);
+  if (!JOURNEY_FAILURES.includes(entry)) throw new Error("Failure must be a registered JOURNEY_FAILURES row");
+  let enabled = armed;
+  const injected = [];
+  const injectedRequests = new Map();
+  const pendingConsole = [];
+  const matches = request => {
+    const url = new URL(request.url()), base = new URL(api);
+    const path = url.pathname.slice(base.pathname.length);
+    return url.origin === base.origin && url.pathname.startsWith(`${base.pathname}/`)
+      && request.method() === entry.method && (typeof entry.path === "string" ? path === entry.path : entry.path?.test(path));
+  };
+  const handler = async route => {
+    const request = route.request();
+    if (!isLocalJourneyRequest(request.url())) return route.abort("blockedbyclient");
+    if (!enabled || !matches(request)) return route.fallback();
+    const hit = { url: request.url(), method: request.method(), status: entry.status };
+    injected.push(hit); pendingConsole.push(hit); injectedRequests.set(request, entry.status);
+    if (entry.status === "abort") return route.abort("failed");
+    const origin = request.headers().origin;
+    return route.fulfill({ status: entry.status, contentType: "application/json", body: JSON.stringify({ message: entry.message }),
+      headers: /^http:\/\/localhost:\d+$/.test(origin ?? "")
+        ? { "access-control-allow-origin": origin, "access-control-allow-credentials": "true", vary: "Origin" } : {} });
+  };
+  await page.route("**/*", handler);
+  return {
+    injected,
+    arm() { enabled = true; },
+    release() { enabled = false; },
+    assertInjected() { if (!injected.length) throw new Error(`Failure route was not exercised: ${entry.id}`); },
+    expectedResponse(response) { return injectedRequests.has(response.request()) && injectedRequests.get(response.request()) === response.status(); },
+    expectedConsole(message) {
+      // Only Chromium's resource error for an exact injected URL/status is expected.
+      const url = message.location().url, text = message.text();
+      const at = pendingConsole.findIndex(hit => hit.url === url && (hit.status === "abort"
+        ? /^Failed to load resource: net::ERR_FAILED$/.test(text)
+        : text === `Failed to load resource: the server responded with a status of ${hit.status} (${({ 401: "Unauthorized", 429: "Too Many Requests", 500: "Internal Server Error" })[hit.status]})`));
+      if (at < 0) return false;
+      pendingConsole.splice(at, 1);
+      return true;
+    },
+    async dispose() { await page.unroute("**/*", handler); },
+  };
+}
+
+async function walkJourneyFailure(page, entry, { web, api, shots, step, signIn, observe }) {
+  const injection = await installJourneyFailure(page, entry, api, { armed: entry.flow !== "check-session" });
+  observe(injection);
+  const lesson = journeyLesson(), lab = journeyLab("keep-waiting-work");
+  const showLesson = async () => {
+    await page.goto(`${web}${lessonPath(lesson)}`, { waitUntil: "load" });
+    await waitVisible(page.getByRole("heading", { level: 1, name: lesson.title, exact: true }));
+  };
+  const retry = async () => {
+    injection.assertInjected(); injection.release();
+    await page.getByRole("button", { name: "Try again", exact: true }).click();
+  };
+  const dialog = () => page.getByRole("dialog", { name: "Predict, then run", exact: true });
+  const submit = () => dialog().getByRole("button", { name: "Lock prediction and run", exact: true });
+  const start = async () => {
+    const [response] = await Promise.all([
+      page.waitForResponse(r => r.url() === `${api}/challenges/${lab.lessonId}/attempts` && r.request().method() === "POST"),
+      submit().click(),
+    ]);
+    if (response.status() !== 201) throw new Error(`Real attempt start returned ${response.status()}`);
+    const run = (await response.json()).createdDeployment;
+    if (!run?.id) throw new Error("Real start did not return a run id");
+    return run.id;
+  };
+  try {
+    // Unlike legacy steps, failure steps stop at their first failed assertion.
+    await step(`failure: ${entry.id}`, async () => {
+      if (entry.flow === "list" || entry.flow === "lesson") {
+        await page.goto(`${web}${entry.flow === "list" ? "/learn" : lessonPath(lesson)}`, { waitUntil: "load" });
+        await waitVisible(page.getByRole("alert").filter({ hasText: entry.alert }));
+        if (entry.flow === "lesson") await waitVisible(page.getByRole("heading", { level: 1, name: "Lesson unavailable", exact: true }));
+        await page.screenshot({ path: `${shots}/${entry.id}-failure.png`, fullPage: true });
+        await retry();
+        if (entry.flow === "list") await waitVisible(page.getByRole("link", { name: lesson.title, exact: true }));
+        else await waitVisible(page.getByRole("heading", { level: 1, name: lesson.title, exact: true }));
+      } else if (entry.flow === "check-session") {
+        // Checks never POST answers. A 401 can only be observed on the next server request.
+        await showLesson();
+        for (const prerequisite of lesson.prerequisites) await waitVisible(page.getByRole("complementary", { name: "Suggested prerequisites", exact: true }).getByRole("link", { name: prerequisite.title, exact: true }));
+        injection.arm();
+        const answer = page.getByRole("group", { name: lesson.check.question, exact: true }).getByRole("radio", { name: lesson.check.correct, exact: true });
+        await answer.check(); await requireChecked(answer, "Device-local answer");
+        await waitVisible(page.getByText(SAVED_LESSON_NOTE, { exact: true }));
+        if (injection.injected.length) throw new Error("A local check unexpectedly requested the catalogue");
+        await page.goto(`${web}/learn`, { waitUntil: "load" });
+        await page.waitForURL(`${web}/signin`); injection.assertInjected(); injection.release();
+        await page.screenshot({ path: `${shots}/${entry.id}-failure.png`, fullPage: true });
+        await signIn(); await showLesson();
+        await requireChecked(page.getByRole("group", { name: lesson.check.question, exact: true }).getByRole("radio", { name: lesson.check.correct, exact: true }), "Answer after sign-in");
+        await waitVisible(page.getByText(SAVED_LESSON_NOTE, { exact: true }));
+      } else {
+        await page.goto(`${web}/learn/lessons/${lab.lessonId}`, { waitUntil: "load" });
+        await page.getByRole("button", { name: "Open challenge lab", exact: true }).click();
+        await page.waitForURL(/\/design\?design=/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Predict and run", exact: true }).click();
+        await waitVisible(dialog());
+        await answerJourneyPredictions(dialog(), lab);
+        const reasoning = "Local failure journey: keep this prediction while the request fails.";
+        await dialog().getByRole("textbox", { name: "Why do you expect this?" }).fill(reasoning);
+        if (entry.flow === "start" || entry.flow === "start-session") {
+          await submit().click();
+          if (entry.flow === "start-session") {
+            await page.waitForURL(`${web}/signin`); injection.assertInjected(); injection.release();
+            await page.screenshot({ path: `${shots}/${entry.id}-failure.png`, fullPage: true });
+            await signIn();
+            await page.goto(`${web}/learn/lessons/${lab.lessonId}`, { waitUntil: "load" });
+            await waitVisible(page.getByText("No recorded attempt is linked here. No outcome is claimed.", { exact: true }));
+          } else {
+            await waitVisible(dialog().getByRole("alert").filter({ hasText: entry.message }));
+            injection.assertInjected();
+            if (await page.getByText("Prediction locked. The attempt is starting.", { exact: true }).count()
+              || await page.getByRole("link", { name: "See the result", exact: true }).count()) throw new Error("A refused start claimed success");
+            if (await dialog().getByRole("textbox", { name: "Why do you expect this?" }).inputValue() !== reasoning) throw new Error("Failure lost prediction reasoning");
+            await requireChecked(dialog().getByRole("radio").first(), "Prediction after refusal");
+            await waitVisible(dialog().getByRole("link", { name: "Check Runs before trying again", exact: true }));
+            if (!await submit().isEnabled()) throw new Error("Refusal offered no retry");
+            await page.screenshot({ path: `${shots}/${entry.id}-failure.png`, fullPage: true });
+            await dialog().getByRole("button", { name: "Keep designing", exact: true }).click();
+            await page.goto(`${web}/learn/lessons/${lab.lessonId}`, { waitUntil: "load" });
+            await waitVisible(page.getByText("No recorded attempt is linked here. No outcome is claimed.", { exact: true }));
+          }
+        } else {
+          const workerReady = page.waitForResponse(r => r.url().startsWith(`${api}/deployments/`) && r.url().endsWith("/browser-run") && r.request().method() === "GET" && r.ok(), { timeout: 120_000 });
+          // Keep the pending observation handled if the start fails first; its
+          // rejection is still asserted below whenever start succeeds.
+          void workerReady.catch(() => {});
+          const runId = await start();
+          if (entry.flow === "browser-input") {
+            await waitVisible(page.getByText(entry.alert, { exact: true }));
+            await waitVisible(page.getByText(`${entry.message} This page keeps trying.`, { exact: true }));
+            await page.screenshot({ path: `${shots}/${entry.id}-failure.png`, fullPage: true });
+            injection.assertInjected(); injection.release();
+          }
+          if ((await workerReady).url() !== `${api}/deployments/${runId}/browser-run`) throw new Error("Browser input belongs to another run");
+          await page.waitForFunction(() => {
+            const clock = [...document.querySelectorAll("dt")].find(term => term.textContent === "Simulated")?.nextElementSibling?.textContent;
+            return /^\d{2}:\d{2}$/.test(clock ?? "") && clock !== "00:00";
+          }, null, { timeout: 60_000 });
+          await page.getByRole("radiogroup", { name: "Simulation speed", exact: true }).getByRole("radio", { name: "Pause", exact: true }).click({ timeout: 60_000 });
+          await waitVisible(page.getByRole("status").filter({ hasText: /^Simulation paused$/ }));
+          if (entry.flow === "reload") {
+            await page.reload({ waitUntil: "load" });
+            await page.goto(`${web}/home`, { waitUntil: "load" });
+            await waitVisible(page.getByText(/nothing is running and nothing was saved\. Start it again from the beginning/));
+            await waitVisible(page.getByRole("button", { name: "Start it again", exact: true }));
+            await page.screenshot({ path: `${shots}/${entry.id}-failure.png`, fullPage: true });
+            const cancelled = page.waitForResponse(r => r.url() === `${api}/deployments/${runId}/cancel` && r.request().method() === "POST");
+            await page.getByRole("button", { name: "Discard this run", exact: true }).click();
+            if (!(await cancelled).ok()) throw new Error("Lost browser run could not be discarded");
+          } else {
+            // Let the real worker finish quickly; no outcomes or evidence are fabricated.
+            await page.getByRole("radiogroup", { name: "Simulation speed", exact: true }).getByRole("radio", { name: "60×", exact: true }).click();
+            if (entry.flow === "delivery") {
+              await page.getByRole("alert").filter({ hasText: entry.alert }).waitFor({ state: "visible", timeout: 150_000 });
+              await waitVisible(page.getByText(/Server receipt and verification have not been confirmed\./));
+              if (injection.injected.length !== entry.attempts) throw new Error(`Expected ${entry.attempts} busy delivery attempts, saw ${injection.injected.length}`);
+              await waitVisible(page.getByText(/The server is busy replaying other runs\./));
+              await page.screenshot({ path: `${shots}/${entry.id}-failure.png`, fullPage: true });
+              injection.assertInjected(); injection.release();
+              await page.getByRole("button", { name: "Send again", exact: true }).click();
+            }
+            const result = page.getByRole("link", { name: "See the result", exact: true });
+            await result.waitFor({ state: "visible", timeout: 240_000 });
+            if (await result.getAttribute("href") !== `/runs/${runId}`) throw new Error("Recovery points to another run");
+            await result.click();
+            await page.waitForURL(`${web}/runs/${runId}`);
+            const record = page.locator("details").filter({ has: page.locator("summary", { hasText: "Full evidence record" }) });
+            await record.locator("summary").first().click(); // The opened record holds nested summaries; the first one is the record's own.
+            await waitVisible(record.getByRole("heading", { name: "Prediction against the record", exact: true }));
+          }
+        }
+      }
+      if (entry.path) injection.assertInjected();
+      await page.screenshot({ path: `${shots}/${entry.id}-recovered.png`, fullPage: true });
+      return { case: entry.id, injected: injection.injected.length, recovery: entry.recovery };
+    });
+  } finally { await injection.dispose(); }
+}
+
 async function runJourney() {
   const selection = selectJourney(process.env);
   const lab = selection.kind === "lab" ? selection.entry : null;
 
   const WEB = process.env.JOURNEY_WEB ?? "http://localhost:5173";
   if (!/^http:\/\/localhost:\d+$/.test(WEB)) { console.error("journey only runs against a localhost dev stack"); process.exit(2); }
+  const failureApi = selection.kind === "failure" ? localFailureApi(process.env.JOURNEY_API) : null;
   const { chromium } = createRequire(process.env.PW_DIR ? `${process.env.PW_DIR}/package.json` : `${process.cwd()}/package.json`)("playwright-core");
   const SHOTS = process.env.JOURNEY_SHOTS ?? `${process.cwd()}/learn-shots`; mkdirSync(SHOTS, { recursive: true });
 
@@ -506,12 +734,14 @@ async function runJourney() {
   // Block remote requests even if a local page redirects or references a remote asset.
   await context.route("**/*", (route) => isLocalJourneyRequest(route.request().url()) ? route.continue() : route.abort("blockedbyclient"));
   const page = await context.newPage();
+  const injections = [];
+  const expectedFailures = [];
   const problems = [];
   page.on("pageerror", (e) => problems.push(`pageerror ${page.url()} ${e.message.slice(0, 160)}`));
   // This script aborts every non-local request on purpose, so those aborts are reported separately and never fail a journey.
   const blockedRemote = [];
-  page.on("console", (m) => { if (m.type() !== "error") return; const line = `console ${page.url()} ${m.text().slice(0, 160)}`; (/ERR_BLOCKED_BY_CLIENT/.test(line) ? blockedRemote : problems).push(line); });
-  page.on("response", (r) => { if (r.status() >= 400 && !/favicon/.test(r.url())) problems.push(`HTTP ${r.status()} ${r.url().replace(WEB, "")}`); });
+  page.on("console", (m) => { if (m.type() !== "error") return; const line = `console ${page.url()} ${m.text().slice(0, 160)}`; if (selection.kind === "failure" && injections.some(i => i.expectedConsole(m))) { expectedFailures.push(line); return; } (/ERR_BLOCKED_BY_CLIENT/.test(line) ? blockedRemote : problems).push(line); });
+  page.on("response", (r) => { if (r.status() >= 400 && !/favicon/.test(r.url())) { const line = `HTTP ${r.status()} ${r.url().replace(WEB, "")}`; if (selection.kind === "failure" && injections.some(i => i.expectedResponse(r))) expectedFailures.push(line); else problems.push(line); } });
 
   const results = [];
   async function step(name, fn) {
@@ -535,6 +765,31 @@ async function runJourney() {
     await page.waitForURL(/\/home/, { timeout: 60_000 });
     return page.url().replace(WEB, "");
   });
+  if (selection.kind === "failure") {
+    try {
+      if (results.some(r => !r.ok)) throw new Error("Disposable signup failed; no failure journey was exercised");
+      await walkJourneyFailure(page, selection.entry, { web: WEB, api: failureApi, shots: SHOTS,
+        observe: injection => injections.push(injection),
+        step: async (name, fn) => { await step(name, fn); if (!results.at(-1).ok) throw new Error(results.at(-1).error); },
+        signIn: async () => {
+          await page.getByRole("textbox", { name: "Username or email", exact: true }).fill(`journey${id}`);
+          await page.getByLabel("Password", { exact: true }).fill(password);
+          await page.getByRole("button", { name: "Sign in", exact: true }).click();
+          await page.waitForURL(`${WEB}/home`, { timeout: 60_000 });
+        },
+      });
+    } catch (error) {
+      if (!results.some(r => !r.ok)) results.push({ name: "failure journey setup", ok: false, error: String(error.message) });
+    } finally {
+      console.log(JSON.stringify({ web: WEB, failure: selection.entry.id, results,
+        passed: results.filter(r => r.ok).length, failed: results.filter(r => !r.ok).length,
+        injectedRequests: injections.flatMap(i => i.injected), expectedFailures: [...new Set(expectedFailures)],
+        blockedRemote: [...new Set(blockedRemote)].length, problems: [...new Set(problems)] }, null, 1));
+      if (results.some(r => !r.ok) || problems.length) process.exitCode = 1;
+      await browser.close();
+    }
+    return;
+  }
   await step("home loads and offers a way into learning", async () => {
     await page.waitForLoadState("networkidle").catch(() => {});
     const body = await text();

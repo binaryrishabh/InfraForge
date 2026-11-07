@@ -31,5 +31,6 @@ assert.equal(comparison.available, true); assert.equal(comparison.challengeCondi
 assert.equal(comparison.designChangeReview?.count, 1);
 assert.ok(sourceReport.guidedReview?.cues.length);
 console.log(JSON.stringify({ catalog, laterCatalog, detail, laterDetail, sourceReport, improvedReport, comparison,
+  brief: { ...d, specHash: specHash(d), category: "design", latestVersion: d.version, attempts: [], workspaceDesignId: null, earlierWorkspace: null },
   design: { id: "10000000-0000-4000-8000-000000000003", userId: "alice", name: d.title,
     layout: { ...d.starter!, layoutVersion: 3 }, createdAt: source.createdAt.toISOString(), updatedAt: source.createdAt.toISOString() } }));

@@ -1,5 +1,6 @@
 import { useCapabilityAvailability } from "@/api/capabilities.api";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import { predictionResourceTypes, PREDICTION_REASONING_MAX, type ChallengeBrief, type ChallengePreflight, type PredictionQuestion } from "@infraforge/contracts/challenges";
@@ -49,6 +50,7 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [reasoning, setReasoning] = useState("");
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const workspaceVersion = useCanvasStore((s) => s.currentChallengeVersion);
   const learning = useChallengeImprovement();
@@ -68,7 +70,8 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
   );
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!answered || !valid || busy || !reviewedReady) return;
+    if (!answered || !valid || busy || submitting.current || !reviewedReady) return;
+    submitting.current = true;
     setBusy(true); setError(null);
     try {
       await startAttempt(brief, { answers, reasoning: reasoning.trim() || null }, learning && reviewed.review ? {
@@ -78,8 +81,8 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
       toast.success("Prediction locked. The attempt is starting.");
       onOpenChange(false);
     } catch (err) {
-      setError(errorMessage(err, "The attempt could not be started. Your prediction was not recorded."));
-    } finally { setBusy(false); }
+      setError(errorMessage(err, "The attempt start could not be confirmed."));
+    } finally { submitting.current = false; setBusy(false); }
   };
   return (
     <Dialog open={open} onOpenChange={onOpenChange} busy={busy} guarded size="lg" eyebrow={`Challenge · ${brief.title}`} title="Predict, then run"
@@ -113,11 +116,13 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
           <div className="flex flex-col gap-3"><h3 className="if-eyebrow">Before the fault</h3>{phases.before.map(field)}</div>
           <div className="flex flex-col gap-3"><h3 className="if-eyebrow">{brief.experiment?.postFaultObservationSeconds ? "At post-fault evaluation" : "While it is active"}</h3>{phases.during.map(field)}</div>
         </> : brief.predictions.map(field)}
+        <p className="text-xs text-ink-3">Until an attempt starts, your prediction stays only in this dialog. If your session ends, sign in and check Runs; you may need to enter it again.</p>
         <Field label="Why do you expect this?" optional hint={`${reasoning.length}/${PREDICTION_REASONING_MAX} characters. Shown next to the result.`}>
           {({ id, describedBy }) => <Textarea id={id} aria-describedby={describedBy} value={reasoning} maxLength={PREDICTION_REASONING_MAX} onChange={(e) => setReasoning(e.target.value)} rows={3} />}
         </Field>
         {!saved && <p className="text-xs text-ink-3">Unsaved canvas changes are saved to this challenge design first.</p>}
         {error && <Notice tone="fail" role="alert">{error}</Notice>}
+        {error && <p className="text-sm">A lost response can hide a started attempt. <Link className="text-accent hover:underline" to="/runs">Check Runs before trying again</Link>. Your answers stay here while this dialog remains open.</p>}
       </form></>
     </Dialog>
   );

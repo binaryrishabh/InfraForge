@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { fileURLToPath } from "node:url";
 import { JOURNEY_LABS, JOURNEY_LESSONS, acknowledgeJourneyChanges, answerJourneyPredictions, applyJourneyImprovement, changeJourneyControl, inspectJourneyRequirements, isLocalJourneyRequest, journeyLab, journeyLesson, selectJourney, walkJourneyLesson } from "../qa/learning-journey.mjs";
+import { JOURNEY_FAILURES, installJourneyFailure, journeyFailure, localFailureApi } from "../qa/learning-journey.mjs";
 
 test("the lab table has unique lesson ids, explicit controls and recorded-verdict expectations", () => {
   expect(JOURNEY_LABS.map((lab) => lab.lessonId)).toEqual([
@@ -474,6 +475,169 @@ test("lesson CLI refuses invalid selectors and remote origins before loading Pla
     [{ JOURNEY_KIND: "lesson", JOURNEY_WEB: "https://example.test:5173" }, "journey only runs against a localhost dev stack"],
   ];
   for (const [env, error] of cases) {
+    const result = Bun.spawnSync(["node", script], { env: { PATH: process.env.PATH, PW_DIR: "/missing-playwright-installation", ...env } });
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr.toString()).toContain(error);
+    expect(result.stderr.toString()).not.toContain("Cannot find module");
+  }
+});
+
+// These fake pages prove ONLY the case selectors, exact request matching and
+// interception bookkeeping. They are NOT proof that any product page behaves.
+function fakeFailureRoutes() {
+  const registrations = [], removals = [], actions = [], requests = [];
+  const page = {
+    async route(pattern, handler) { registrations.push({ pattern, handler }); },
+    async unroute(pattern, handler) { removals.push({ pattern, handler }); },
+  };
+  const request = (url, method = "GET", origin = "http://localhost:5173") => ({ url: () => url, method: () => method, headers: () => ({ origin }) });
+  return { page, registrations, removals, actions, request, requests,
+    async dispatch(url, method, origin) {
+      const current = request(url, method, origin); requests.push(current);
+      const route = { request: () => current,
+        async fallback() { actions.push({ action: "fallback" }); },
+        async abort(reason) { actions.push({ action: "abort", reason }); },
+        async fulfill(response) { actions.push({ action: "fulfill", ...response }); },
+      };
+      await registrations.at(-1).handler(route);
+      return actions.at(-1);
+    },
+  };
+}
+
+test("failure selection covers the required paths without changing default lab or lesson selection", () => {
+  expect(JOURNEY_FAILURES.map(row => row.id)).toEqual([
+    "lesson-list-load", "lesson-open-load", "check-session-expired", "run-start-refused", "run-start-error",
+    "run-start-session-expired", "reload-mid-run", "browser-input-load", "run-delivery-busy",
+  ]);
+  expect(new Set(JOURNEY_FAILURES.map(row => row.id)).size).toBe(JOURNEY_FAILURES.length);
+  expect(selectJourney({ JOURNEY_KIND: "failure" })).toEqual({ kind: "failure", entry: JOURNEY_FAILURES[0] });
+  expect(selectJourney()).toEqual({ kind: "lab", entry: journeyLab() });
+  expect(selectJourney({ JOURNEY_KIND: "lesson" })).toEqual({ kind: "lesson", entry: journeyLesson() });
+  for (const row of JOURNEY_FAILURES) {
+    expect(journeyFailure(row.id)).toBe(row);
+    expect(selectJourney({ JOURNEY_KIND: "failure", JOURNEY_FAILURE: row.id })).toEqual({ kind: "failure", entry: row });
+    expect(row.recovery.length).toBeGreaterThan(0);
+    if (row.path) expect(["abort", 500, 401, 429]).toContain(row.status);
+    else expect(row).toMatchObject({ flow: "reload", method: null, status: null, recovery: "Start it again" });
+  }
+  expect(journeyFailure("lesson-list-load")).toMatchObject({ method: "GET", path: "/learning", alert: "Learning could not be loaded. Try again.", recovery: "Try again" });
+  expect(journeyFailure("lesson-open-load")).toMatchObject({ method: "GET", path: "/learning/lessons/client-and-server", status: "abort", recovery: "Try again" });
+  expect(journeyFailure("check-session-expired")).toMatchObject({ method: "GET", path: "/learning", status: 401, recovery: "Sign in" });
+  for (const id of ["", "constructor", "../lesson-list-load", "unknown"]) expect(() => journeyFailure(id)).toThrow("Unknown JOURNEY_FAILURE");
+  expect(() => selectJourney({ JOURNEY_FAILURE: "lesson-list-load" })).toThrow("requires JOURNEY_KIND=failure");
+  for (const key of ["JOURNEY_LAB", "JOURNEY_LESSON"]) expect(() => selectJourney({ JOURNEY_KIND: "failure", [key]: "anything" })).toThrow("cannot be combined");
+});
+
+test("each registered injection matches its local API method/path and records only the injected failure", async () => {
+  for (const row of JOURNEY_FAILURES.filter(row => row.path)) {
+    const fake = fakeFailureRoutes(), injection = await installJourneyFailure(fake.page, row);
+    expect(fake.registrations[0].pattern).toBe("**/*");
+    expect(() => injection.assertInjected()).toThrow("was not exercised");
+    const path = typeof row.path === "string" ? row.path : row.flow === "delivery" ? "/deployments/run-1/submit" : "/deployments/run-1/browser-run";
+    const url = `http://localhost:3000/api${path}?version=1`;
+    const response = await fake.dispatch(url, row.method);
+    if (row.status === "abort") expect(response).toEqual({ action: "abort", reason: "failed" });
+    else {
+      expect(response).toMatchObject({ action: "fulfill", status: row.status, contentType: "application/json" });
+      expect(JSON.parse(response.body)).toEqual({ message: row.message });
+      expect(response.headers).toEqual({ "access-control-allow-origin": "http://localhost:5173", "access-control-allow-credentials": "true", vary: "Origin" });
+    }
+    expect(injection.injected).toEqual([{ url, method: row.method, status: row.status }]);
+    injection.assertInjected();
+    injection.release();
+    expect(await fake.dispatch(url, row.method)).toEqual({ action: "fallback" });
+    expect(injection.injected).toHaveLength(1);
+    await injection.dispose();
+    expect(fake.removals).toEqual(fake.registrations);
+  }
+});
+
+test("the page interceptor also refuses remote origins and preserves the context guard via fallback", async () => {
+  const fake = fakeFailureRoutes(), injection = await installJourneyFailure(fake.page, journeyFailure());
+  for (const url of ["https://localhost:3000/api/learning", "http://127.0.0.1:3000/api/learning", "http://localhost.example.test:3000/api/learning", "https://example.test/api/learning"]) {
+    expect(await fake.dispatch(url)).toEqual({ action: "abort", reason: "blockedbyclient" });
+  }
+  for (const [url, method] of [
+    ["http://localhost:3001/api/learning", "GET"], ["http://localhost:5173/api/learning", "GET"],
+    ["http://localhost:3000/apix/learning", "GET"], ["http://localhost:3000/api/learning/lessons/client-and-server", "GET"],
+    ["http://localhost:3000/api/learning/", "GET"], ["http://localhost:3000/api/auth/get-session", "GET"],
+    ["http://localhost:3000/api/learning", "POST"], ["http://localhost:3000/api/learning", "OPTIONS"],
+  ]) expect(await fake.dispatch(url, method)).toEqual({ action: "fallback" });
+  expect(injection.injected).toEqual([]);
+});
+
+test("dynamic deployment selectors do not intercept other endpoints or nested paths", async () => {
+  for (const id of ["browser-input-load", "run-delivery-busy"]) {
+    const row = journeyFailure(id), fake = fakeFailureRoutes();
+    const injection = await installJourneyFailure(fake.page, row);
+    for (const path of ["/deployments/run-1", "/deployments/run-1/report", "/deployments/run-1/cancel", "/deployments/run-1/submit/extra", "/deployments/run-1/browser-run/extra"]) {
+      expect(await fake.dispatch(`http://localhost:3000/api${path}`, row.method)).toEqual({ action: "fallback" });
+    }
+    expect(injection.injected).toEqual([]);
+  }
+});
+
+test("expiry interception can be armed after the lesson and its catalogue finish loading", async () => {
+  const fake = fakeFailureRoutes(), row = journeyFailure("check-session-expired");
+  const injection = await installJourneyFailure(fake.page, row, undefined, { armed: false });
+  const url = "http://localhost:3000/api/learning";
+  expect(await fake.dispatch(url)).toEqual({ action: "fallback" });
+  expect(injection.injected).toEqual([]);
+  injection.arm();
+  expect(await fake.dispatch(url)).toMatchObject({ action: "fulfill", status: 401 });
+  injection.assertInjected();
+  injection.release();
+  expect(await fake.dispatch(url)).toEqual({ action: "fallback" });
+});
+
+test("failure attribution requires an actually injected URL, method/status and exact resource error", async () => {
+  const fake = fakeFailureRoutes(), injection = await installJourneyFailure(fake.page, journeyFailure());
+  const url = "http://localhost:3000/api/learning";
+  const response = (value = url, status = 500, method = "GET", request = fake.requests.find(r => r.url() === value && r.method() === method) ?? fake.request(value, method)) => ({ url: () => value, status: () => status, request: () => request });
+  const message = (value = url, text = "Failed to load resource: the server responded with a status of 500 (Internal Server Error)") => ({ location: () => ({ url: value }), text: () => text });
+  expect(injection.expectedResponse(response())).toBe(false);
+  expect(injection.expectedConsole(message())).toBe(false);
+  await fake.dispatch(url);
+  expect(injection.expectedResponse(response())).toBe(true);
+  expect(injection.expectedConsole(message())).toBe(true);
+  expect(injection.expectedConsole(message())).toBe(false); // no blanket URL suppression
+  for (const other of [response(`${url}/lessons`), response(url, 401), response(url, 500, "POST")]) expect(injection.expectedResponse(other)).toBe(false);
+  for (const other of [message(`${url}/lessons`), message(url, "application crashed"), message(url, "Failed to load resource: net::ERR_FAILED")]) expect(injection.expectedConsole(other)).toBe(false);
+  injection.release();
+  await fake.dispatch(url);
+  expect(injection.expectedResponse(response(url, 500, "GET", fake.requests.at(-1)))).toBe(false); // a genuine failure after release is unexpected
+  const aborted = fakeFailureRoutes(), abortInjection = await installJourneyFailure(aborted.page, journeyFailure("lesson-open-load"));
+  const abortUrl = `${url}/lessons/client-and-server`;
+  await aborted.dispatch(abortUrl);
+  expect(abortInjection.expectedConsole(message(abortUrl, "Failed to load resource: net::ERR_FAILED"))).toBe(true);
+});
+
+test("only registered rows and explicitly local API bases can be injected", async () => {
+  expect(localFailureApi()).toBe("http://localhost:3000/api");
+  const fake = fakeFailureRoutes();
+  for (const api of ["https://localhost:3000/api", "http://localhost.example.test:3000/api", "http://localhost:3000/api/", "http://localhost:3000/api?redirect=remote", "http://user@localhost:3000/api"]) {
+    await expect(installJourneyFailure(fake.page, journeyFailure(), api)).rejects.toThrow("localhost API");
+  }
+  await expect(installJourneyFailure(fake.page, { ...journeyFailure(), path: "/auth" })).rejects.toThrow("registered");
+  expect(fake.registrations).toEqual([]);
+  await installJourneyFailure(fake.page, journeyFailure(), "http://localhost:4000/api");
+  const response = await fake.dispatch("http://localhost:4000/api/learning", "GET", "http://localhost:5555");
+  expect(response.headers["access-control-allow-origin"]).toBe("http://localhost:5555");
+  const untrusted = await fake.dispatch("http://localhost:4000/api/learning", "GET", "https://example.test");
+  expect(untrusted.headers).toEqual({});
+});
+
+test("failure CLI rejects bad selections and remote API/web origins before loading Playwright", () => {
+  const script = fileURLToPath(new URL("../qa/learning-journey.mjs", import.meta.url));
+  for (const [env, error] of [
+    [{ JOURNEY_FAILURE: "lesson-list-load" }, "requires JOURNEY_KIND=failure"],
+    [{ JOURNEY_KIND: "failure", JOURNEY_FAILURE: "unknown" }, "Unknown JOURNEY_FAILURE"],
+    [{ JOURNEY_KIND: "failure", JOURNEY_LAB: "where-does-the-time-go" }, "cannot be combined"],
+    [{ JOURNEY_KIND: "failure", JOURNEY_LESSON: "client-and-server" }, "cannot be combined"],
+    [{ JOURNEY_KIND: "failure", JOURNEY_API: "https://example.test/api" }, "localhost API"],
+    [{ JOURNEY_KIND: "failure", JOURNEY_WEB: "https://example.test:5173" }, "localhost dev stack"],
+  ]) {
     const result = Bun.spawnSync(["node", script], { env: { PATH: process.env.PATH, PW_DIR: "/missing-playwright-installation", ...env } });
     expect(result.exitCode).not.toBe(0);
     expect(result.stderr.toString()).toContain(error);
