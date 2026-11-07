@@ -122,6 +122,8 @@ export const REFERENCE: Record<string, ChallengeStarter> = {
   "one-bigger-or-two-smaller": {...oneBiggerOrTwoSmallerV1.starter!, resources: oneBiggerOrTwoSmallerV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r)},
   // Request-path labs: the one-setting fix, and the plausible change that must still fail.
   "writes-cost-more-than-reads": {...writesCostMoreThanReadsV1.starter!, resources: writesCostMoreThanReadsV1.starter!.resources.map(r => r.id === "db" ? {...r, size: "medium"} : r)},
+  // The designer offers catalog sizes, not the generic size field: the same change as a learner makes it in the Instance size control.
+  "writes-cost-more-than-reads-catalog": {...writesCostMoreThanReadsV1.starter!, resources: writesCostMoreThanReadsV1.starter!.resources.map(r => r.id === "db" ? {...r, skuId: "db.m5.large"} : r)},
   "writes-cost-more-than-reads-second-app": starter([["dns", T.DNS, 0, 0], ["lb", T.LoadBalancer, 1, 0], ["app", T.VirtualMachine, 2, 0, {size: "large"}], ["app2", T.VirtualMachine, 2, 1, {size: "large"}],
     ["db", T.Database, 3, 0, {size: "small"}]], [["dns", "lb"], ["lb", "app"], ["app", "db"], ["lb", "app2"], ["app2", "db"]]),
   "balancer-shares-turns": {...balancerSharesTurnsV1.starter!, resources: balancerSharesTurnsV1.starter!.resources.map(r => r.id === "app-a" ? {...r, skuId: "c5.large"} : r)},

@@ -18,7 +18,7 @@ export const writesCostMoreThanReadsV1: ChallengeDefinition = {
   predictions: [{id: "busiest", kind: "busiest-type", prompt: "Which resource type will have the highest CPU at second 12?"}],
   hints: ["Read the CPU of the app and the database separately in the final-state table. The busiest hop sets the pace for every request.",
     "Adding a second app server gives the app more room, but every write still goes to the one database.",
-    "Select db and choose the next larger Instance size. Keep the app, the workload and the connections unchanged."],
+    "Select db, then under Instance size choose db.m5.large, a 2 vCPU catalog size. Keep the app, the workload and the connections unchanged."],
   debrief: ["With most requests writing, the database needs more CPU time per request than it would for reads alone. The small database runs out first, so requests wait there while the app has spare CPU.",
     "A second app server, or a bigger app, leaves the database unchanged. The next larger database size adds assumed CPU cores, and the wait disappears under the same workload. The same starter handles a read-only workload at the same rate, which isolates the read/write mix as the cause.",
     "A Healthy label and a fast p95 are separate measurements: a database can read Degraded while requests still finish quickly. This exercise scores the last second only, and the model's read and write costs are educational assumptions.", MODEL_NOTE],

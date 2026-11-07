@@ -33,7 +33,7 @@ export const JOURNEY_LABS = [
     improvement: {
       stepName: "the database size is changed to db.m5.large in the designer",
       nodeSelector: '[data-resource-id="db"]', nodeText: /Database/, fallbackText: "db",
-      role: "radio", name: /^Medium\b/i, resourceId: "db", setting: "size", from: "small", to: "medium",
+      role: "radio", name: /db\.m5\.large/i, resourceId: "db", setting: "skuId", from: null, to: "db.m5.large",
     },
     expected: { starter: "Not met", improved: "Met" },
   },
