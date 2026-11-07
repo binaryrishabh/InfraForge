@@ -126,7 +126,7 @@ test("VM memory saved fields have scoped labels accepted by the report claim gat
     const accepted = structuredClone(original); accepted.experiment!.evidenceToInspect = [scoped];
     expect(checkLessonClaims(accepted, d)).toEqual([]);
     const bad = structuredClone(original); bad.experiment!.evidenceToInspect = [label!];
-    expect(checkLessonClaims(bad, d)).toContain(`${id}@1: report does not render measurement ${label}`);
+    expect(checkLessonClaims(bad, d)).toContain(`${id}@${original.contentVersion}: report does not render measurement ${label}`);
   }
   expect(Object.values(LEARNING_REPORT_MEASUREMENTS).filter(m => m.path.includes("vmMemory"))).toHaveLength(7);
 });

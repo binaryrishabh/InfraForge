@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { RunReport } from "@infraforge/contracts/reports";
-import { LEARNING_REPORT_MEASUREMENTS } from "@infraforge/contracts/learning";
+import { LEARNING_REPORT_MEASUREMENTS, evidenceLabels, type LearningLesson } from "@infraforge/contracts/learning";
 import { ReportMeasurements } from "../src/features/reports/components/ReportMeasurements";
 import { lessonRunMeasurements } from "../src/features/learning/runSummaryData";
 
@@ -15,10 +15,26 @@ test("saved VM memory: engine counters render with resource identity and scoped 
   const process = Bun.spawn([Bun.which("bun")!, "--no-env-file", resolve(import.meta.dir, "../../backend/tests/vmMemoryReport.fixture.ts")], {stdout: "pipe", stderr: "pipe"});
   const output = await new Response(process.stdout).text(), diagnostics = await new Response(process.stderr).text();
   expect(await process.exited, diagnostics).toBe(0);
-  const {reports, missing, unknown, invalid, checkpointOnly, noSnapshot} = JSON.parse(output) as {
+  const {lessons, reports, missing, unknown, invalid, checkpointOnly, noSnapshot} = JSON.parse(output) as {
+    lessons: Array<{old: LearningLesson; current: LearningLesson}>;
     reports: RunReport[]; missing: RunReport; unknown: RunReport; invalid: RunReport; checkpointOnly: RunReport; noSnapshot: RunReport;
   };
   expect(reports).toHaveLength(4); expect(labels).toHaveLength(7);
+  // The old wording describes an actual gap; the new versions name the now-rendered block.
+  expect(lessons).toHaveLength(2);
+  for (const {old, current} of lessons) {
+    expect(old.contentVersion).toBe(1); expect(current.contentVersion).toBe(2);
+    expect(old.explanation.join(" ")).toMatch(/omits the detailed memory block|does not render those detailed counters/);
+    expect(current.explanation.join(" ")).toContain("Refused allocations");
+    expect(current.explanation.join(" ")).toContain("memory measurements");
+    expect(current.limitations.join(" ")).toContain("Missing or null");
+    expect(current.limitations.join(" ")).not.toMatch(/does not display|no report renderer/);
+    expect(render(reports[0]!)).toContain("Refused allocations");
+    expect(render(reports[0]!)).toContain("memory measurements");
+  }
+  const lab = lessons.find(({current}) => current.kind === "executable-lab")!.current;
+  const memoryEvidence = lab.experiment!.evidenceToInspect!.flatMap(evidenceLabels).filter(label => label.startsWith("VM memory:"));
+  expect(memoryEvidence).toEqual(labels);
   for (const report of reports) {
     const html = render(report), m = memory(report);
     expect(html).toContain('aria-label="Memory measurements for app"');

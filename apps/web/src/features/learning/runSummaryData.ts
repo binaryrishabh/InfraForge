@@ -10,6 +10,8 @@ function entries(value: unknown, path: string[]): Array<{ context: string; value
     if (!items.length) return [{ context: "", value: undefined }];
     return items.flatMap(([id, item]) => entries(item, rest).map(row => ({ ...row,
       context: [item && typeof item === "object" && "id" in item ? String(item.id)
+        : item && typeof item === "object" && "resourceId" in item ? String(item.resourceId)
+        : item && typeof item === "object" && "criterionId" in item ? String(item.criterionId)
         : item && typeof item === "object" && "path" in item ? String(item.path) : id, row.context].filter(Boolean).join(" / ") })));
   }
   return entries((value as Record<string, unknown>)[key!], rest);
@@ -34,8 +36,11 @@ export function lessonRunMeasurements(report: RunReport, evidence: readonly stri
     const definition = learningMeasurement(label);
     if (!definition) return { label, value: "Unknown" };
     if (definition.scope === "monthly") {
-      const value = report.stages.findLast(stage => stage.monthlyEstimateUsd !== undefined)?.monthlyEstimateUsd;
-      return { label, value: recordedValue(value, definition.unit) };
+      const cost = report.stages.findLast(stage => stage.name === "CostEstimate" && stage.monthlyEstimateUsd !== undefined);
+      const rows = entries({ monthlyEstimateUsd: cost?.monthlyEstimateUsd,
+        lineItems: report.monthlyBudgets?.length ? cost?.lineItems : undefined,
+        monthlyBudgets: report.monthlyBudgets }, definition.path.split("."));
+      return { label, value: rows.map(row => `${row.context ? `${row.context}: ` : ""}${recordedValue(row.value, definition.unit)}`).join("; ") };
     }
     if (definition.scope === "traffic" || definition.scope === "snapshot") return { label,
       value: recordedValue(entries(definition.scope === "traffic" ? terminal?.traffic : terminal, definition.path.split("."))[0]?.value, definition.unit) };

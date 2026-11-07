@@ -26,8 +26,8 @@ reports through the shared measurement and requirement components.
 
 Lesson contentVersion 2 updates the cost guidance and limitations for the saved
 report. The original v1 source and review remain unchanged and registered as an
-archive; the v2 review uses the same pinned challenge definition. Current lists
-show v2, while explicit v1 lookup still returns its original text.
+archive; the v2 review uses the same pinned challenge definition. ContentVersion 3 adds the audited cost labels to evidenceToInspect. Current lists
+show v3; explicit v1 and v2 lookups still return their original text and reviews.
 
 Budget audit: the saved report renders **Monthly estimate (CostEstimate gate)**,
 retained resource price line items, the exact challenge limit and signed remaining
