@@ -1,3 +1,4 @@
+import { splitTheCapacityBudgetV1 } from "../challenges/definitions/split-the-capacity-budget/v1";
 import { diagnoseConsumerCreditV1 } from "../challenges/definitions/diagnose-consumer-credit/v1";
 import { fitARequestInMemoryV1 } from "../challenges/definitions/fit-a-request-in-memory/v1";
 import { diagnoseQueryAdmissionV1 } from "../challenges/definitions/diagnose-query-admission/v1";
@@ -72,6 +73,9 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "split-the-capacity-budget": {...splitTheCapacityBudgetV1.starter!, resources: splitTheCapacityBudgetV1.starter!.resources.map(r => ({...r, skuId: r.id === "app" ? "s-4vcpu-8gb" : "db-s-2vcpu-4gb"}))},
+  "split-the-capacity-budget-app-headroom": {...splitTheCapacityBudgetV1.starter!, resources: splitTheCapacityBudgetV1.starter!.resources.map(r => ({...r, skuId: r.id === "app" ? "s-8vcpu-16gb" : "db-s-2vcpu-4gb"}))},
+  "split-the-capacity-budget-db-headroom": {...splitTheCapacityBudgetV1.starter!, resources: splitTheCapacityBudgetV1.starter!.resources.map(r => ({...r, skuId: r.id === "app" ? "s-4vcpu-8gb" : "db-s-4vcpu-8gb"}))},
   "diagnose-consumer-credit": {...diagnoseConsumerCreditV1.starter!, resources: diagnoseConsumerCreditV1.starter!.resources.map(r => r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, prefetch: 16}} : r)},
   "fit-a-request-in-memory": {...fitARequestInMemoryV1.starter!, resources: fitARequestInMemoryV1.starter!.resources.map(r => r.id === "app" ? {...r, size: "large"} : r)},
   "fit-a-request-in-memory-request": {...fitARequestInMemoryV1.starter!, resources: fitARequestInMemoryV1.starter!.resources.map(r => r.id === "app" ? {...r, vmMemory: {...r.vmMemory!, requestMiB: 256}} : r)},
