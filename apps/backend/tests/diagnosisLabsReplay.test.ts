@@ -29,7 +29,7 @@ test("diagnose-query-admission: browser and server replay every tick, including 
       expect(metrics.database!.waiting).toBe(0); expect(metrics.database!.sessionRefused).toBe(0);
       expect(metrics.database!.queued).toBe(design === REFERENCE[d.id] ? 0 : 9);
       const database = server.evidence().data.databases.find(r => r.id === "db")!;
-      expect(database.queued).toBe(metrics.database!.queued);
+      expect(metrics.database!.queued).toBe(database.queued);
       expect(database.active.filter(query => query.phase !== "lock").length).toBe(metrics.database!.serving!);
       // Queued transactions still own sessions; connection acquisition wait itself is not asserted.
       expect(database.sessions.active).toBe(database.queued + database.active.length);
