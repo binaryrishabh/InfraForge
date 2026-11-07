@@ -2,6 +2,8 @@
 // Creates one disposable account on that local stack (generated password, never printed) and records what it saw.
 // Run on the QA box: cd ~/qa/pw && JOURNEY_LAB=where-does-the-time-go node ../InfraForge/scripts/qa/learning-journey.mjs
 // playwright-core is installed there. Omit JOURNEY_LAB to keep the original first-lab journey.
+// Reading/concept mode: JOURNEY_KIND=lesson JOURNEY_LESSON=count-waiting-jobs node ../InfraForge/scripts/qa/learning-journey.mjs
+// Choose a JOURNEY_LESSONS id below; this mode creates no challenge attempts.
 // It only ever talks to localhost and refuses any other origin.
 import { mkdirSync } from "node:fs";
 import { randomBytes } from "node:crypto";
@@ -126,10 +128,309 @@ export const JOURNEY_LABS = [
   },
 ];
 
+// Representative conceptual content, plus a reading without a check.
+// These are UI expectations pinned to authored text, never simulated results.
+export const JOURNEY_LESSONS = [
+  {
+    "lessonId": "client-and-server",
+    "title": "Client and server",
+    "kind": "conceptual-exercise",
+    "trackId": "foundations",
+    "prerequisites": [
+      {
+        "lessonId": "what-is-a-request",
+        "title": "What is a request?"
+      }
+    ],
+    "limitations": [
+      "This exercise reasons about program roles. It does not run a browser, application service or database."
+    ],
+    "check": {
+      "question": "When the notes service asks the database for text, what role does the notes service have in that exchange?",
+      "wrong": "Server: it must have the same role in every exchange.",
+      "correct": "Client: it initiates the database request.",
+      "explanation": "The service handles the browser's request, but initiates the separate database request as a client."
+    },
+    "next": {
+      "lessonId": "dns-resolution",
+      "title": "DNS: finding an address"
+    }
+  },
+  {
+    "lessonId": "count-waiting-jobs",
+    "title": "Count the waiting jobs",
+    "kind": "conceptual-exercise",
+    "trackId": "async",
+    "prerequisites": [
+      {
+        "lessonId": "why-work-waits",
+        "title": "Why work waits in a queue"
+      }
+    ],
+    "limitations": [
+      "Conceptual only: the arithmetic and lost acknowledgement are hypothetical, not recorded simulator evidence. No real queue's delivery, retention or duplicate-handling guarantee is established.",
+      "Later labs model logical messages and object effects. They do not demonstrate payments, exactly-once business actions or physical persistence."
+    ],
+    "check": {
+      "question": "Which conclusion follows from these assumptions?",
+      "wrong": "Twice the waiting room makes the worker finish four jobs each second.",
+      "correct": "Twenty jobs remain unfinished; a repeated delivery could repeat an action.",
+      "explanation": "Waiting room changes neither the worker's rate nor acknowledgement uncertainty. Forty arrivals minus twenty completions leaves twenty unfinished jobs under the stated no-loss assumptions."
+    },
+    "next": {
+      "lessonId": "keep-waiting-work",
+      "title": "Let waiting work stay"
+    }
+  },
+  {
+    "lessonId": "missing-failure-observations",
+    "title": "Name what failure evidence is missing",
+    "kind": "conceptual-exercise",
+    "trackId": "failures",
+    "prerequisites": [
+      {
+        "lessonId": "first-bottleneck",
+        "title": "Finding the first bottleneck"
+      }
+    ],
+    "limitations": [
+      "This exercise supplies no incident diagnosis. Even a matching admission counter describes modeled decisions and may include probes rather than only application callers."
+    ],
+    "check": {
+      "question": "What is the honest conclusion when the needed path counter was not recorded?",
+      "wrong": "There were zero denials.",
+      "correct": "The admission cause remains Unknown; name the missing observation.",
+      "explanation": "Missing observations cannot support a zero or a specific cause. State the limit and investigate the measurement that would distinguish explanations."
+    },
+    "next": {
+      "lessonId": "mitigation-tradeoffs",
+      "title": "Choose a mitigation with a tradeoff"
+    }
+  },
+  {
+    "lessonId": "choose-the-constrained-tier",
+    "title": "Choose the constrained tier",
+    "kind": "conceptual-exercise",
+    "trackId": "scaling",
+    "prerequisites": [
+      {
+        "lessonId": "up-or-out",
+        "title": "A bigger machine or more machines"
+      },
+      {
+        "lessonId": "database-read-and-write",
+        "title": "A database read and a write"
+      }
+    ],
+    "limitations": [
+      "Conceptual only: the busy database and unequal servers are thought experiments, not recorded simulator outcomes.",
+      "The exercise assumes independent app requests and unchanged database work. It proves no production scaling factor, automatic scaling behavior, state-sharing strategy or availability guarantee."
+    ],
+    "check": {
+      "question": "For the original shared-database case, which next experiment addresses the named constraint?",
+      "wrong": "Add an app server; shared turns automatically add database execution capacity.",
+      "correct": "Keep arrivals and apps fixed; change database capacity and compare useful completions and waiting.",
+      "explanation": "The hypothetical constraint is database execution. Changing that tier tests the diagnosis; adding app machines or waiting room does not supply database capacity. A different bottleneck may remain afterward."
+    },
+    "next": {
+      "lessonId": "load-balancer-policies",
+      "title": "What a load balancer policy decides"
+    }
+  },
+  {
+    "lessonId": "locate-the-missing-wait",
+    "title": "Locate the missing wait",
+    "kind": "conceptual-exercise",
+    "trackId": "diagnosis",
+    "prerequisites": [
+      {
+        "lessonId": "queue-ownership-and-acknowledgement",
+        "title": "Queue acceptance is not acknowledgement"
+      },
+      {
+        "lessonId": "waiting-with-spare-cpu",
+        "title": "Read latency alongside CPU"
+      },
+      {
+        "lessonId": "trace-a-saturation-cascade",
+        "title": "Trace a saturation cascade"
+      }
+    ],
+    "limitations": [
+      "This exercise has no executable experiment and asserts no simulated outcome. Spare CPU and a slow reply alone cannot prove slot exhaustion, a full transport pool, a particular downstream cause or an effective fix.",
+      "Existing worker-slot and database-pressure labs test their stated mechanisms. Reusing their results would not prove path-specific dependency holding here. A process outage and a slow dependency are distinct hypotheses; neither establishes message age or recovery time."
+    ],
+    "check": {
+      "question": "What is needed before attributing low-CPU waiting specifically to held app slots?",
+      "wrong": "A lower app CPU percentage alone",
+      "correct": "Slot occupancy and waiting phases, correlated with dependency and per-path pool measurements",
+      "explanation": "CPU and open connections describe different populations. Holding a worker slot across a dependency wait needs phase and occupancy observations; absent attribution remains Unknown."
+    },
+    "next": {
+      "lessonId": "diagnose-consumer-credit",
+      "title": "Diagnose consumer credit"
+    }
+  },
+  {
+    "lessonId": "what-is-a-request",
+    "title": "What is a request?",
+    "kind": "reading",
+    "trackId": "foundations",
+    "prerequisites": [],
+    "limitations": [
+      "This is a conceptual introduction. It does not send network traffic, measure timing or demonstrate a particular protocol."
+    ],
+    "check": null,
+    "next": {
+      "lessonId": "client-and-server",
+      "title": "Client and server"
+    }
+  }
+];
+
 export function journeyLab(id = "where-does-the-time-go") {
   const lab = JOURNEY_LABS.find((entry) => entry.lessonId === id);
   if (!lab) throw new Error(`Unknown JOURNEY_LAB. Choose: ${JOURNEY_LABS.map((entry) => entry.lessonId).join(", ")}`);
   return lab;
+}
+
+export function journeyLesson(id = "client-and-server") {
+  const lesson = JOURNEY_LESSONS.find((entry) => entry.lessonId === id);
+  if (!lesson) throw new Error(`Unknown JOURNEY_LESSON. Choose: ${JOURNEY_LESSONS.map((entry) => entry.lessonId).join(", ")}`);
+  return lesson;
+}
+
+export function selectJourney(env = {}) {
+  const kind = env.JOURNEY_KIND ?? "lab";
+  if (!["lab", "lesson"].includes(kind)) throw new Error("Unknown JOURNEY_KIND. Choose: lab, lesson");
+  if (kind === "lesson") {
+    if (env.JOURNEY_LAB !== undefined) throw new Error("JOURNEY_LAB cannot be combined with JOURNEY_KIND=lesson");
+    return { kind, entry: journeyLesson(env.JOURNEY_LESSON) };
+  }
+  if (env.JOURNEY_LESSON !== undefined) throw new Error("JOURNEY_LESSON requires JOURNEY_KIND=lesson");
+  return { kind, entry: journeyLab(env.JOURNEY_LAB) };
+}
+
+const SAVED_LESSON_NOTE = "Reading mark and check answers: saved on this device. These are personal notes, not server progress or mastery.";
+const NO_CHECK_MESSAGE = "This lesson has no check question. Try explaining the problem in your own words.";
+const lessonPath = (lesson) => `/learn/lessons/${encodeURIComponent(lesson.lessonId)}`;
+const waitVisible = (locator) => locator.waitFor({ state: "visible", timeout: 30_000 });
+
+async function requireChecked(locator, description) {
+  await waitVisible(locator);
+  if (!await locator.isChecked()) throw new Error(`${description} was not retained`);
+}
+
+async function requireReadMark(page) {
+  const mark = page.getByRole("button", { name: "Remove read mark", exact: true });
+  await waitVisible(mark);
+  if (await mark.getAttribute("aria-pressed") !== "true") throw new Error("Read mark was not retained");
+  await waitVisible(page.getByText(SAVED_LESSON_NOTE, { exact: true }));
+}
+
+async function requireNoLessonRun(page) {
+  for (const locator of [
+    page.getByRole("button", { name: "Open challenge lab", exact: true }),
+    page.getByRole("heading", { name: "Experiment", exact: true }),
+    page.getByRole("heading", { name: "Evidence to inspect", exact: true }),
+    page.getByText(/^Server activity:/),
+  ]) if (await locator.count()) throw new Error("Conceptual lesson exposes a lab or server activity claim");
+}
+
+async function requireNoCheck(page) {
+  await waitVisible(page.getByText(NO_CHECK_MESSAGE, { exact: true }));
+  if (await page.getByRole("radio").count()) throw new Error("No-check reading exposes check answers");
+}
+
+// Only public UI controls are used. No storage injection, API answers or server-progress inference.
+// `step` records browser observations in the CLI; fake-page tests exercise selectors only.
+export async function walkJourneyLesson(page, lesson, { web, shots, step }) {
+  await step("open the selected lesson from the learning list", async () => {
+    await page.goto(`${web}/learn`, { waitUntil: "load" });
+    const link = page.getByRole("link", { name: lesson.title, exact: true });
+    await waitVisible(link);
+    if (await link.getAttribute("href") !== lessonPath(lesson)) throw new Error("Learning list points to a different lesson");
+    await link.click();
+    await page.waitForURL(`${web}${lessonPath(lesson)}`, { timeout: 30_000 });
+    await waitVisible(page.getByRole("heading", { level: 1, name: lesson.title, exact: true }));
+    return { lessonId: lesson.lessonId, kind: lesson.kind };
+  });
+  await step("read the limitations and suggested prerequisites", async () => {
+    for (const name of ["Problem", "Plain explanation", "Prediction prompt", "Limitations", "Follow-up", "Check question"]) {
+      await waitVisible(page.getByRole("heading", { name, exact: true }));
+    }
+    for (const text of lesson.limitations) await waitVisible(page.getByText(text, { exact: true }));
+    const prerequisites = page.getByRole("complementary", { name: "Suggested prerequisites", exact: true });
+    await waitVisible(prerequisites.getByText("Prerequisites are advice, not locks.", { exact: true }));
+    for (const prerequisite of lesson.prerequisites) {
+      const link = prerequisites.getByRole("link", { name: prerequisite.title, exact: true });
+      await waitVisible(link);
+      if (await link.getAttribute("href") !== lessonPath(prerequisite)) throw new Error("Incorrect prerequisite link");
+    }
+    // Wait for catalog-backed follow-up links even for the reading with no prerequisites.
+    await waitVisible(page.getByRole("link", { name: `Next in track order: ${lesson.next.title}`, exact: true }));
+    if (await prerequisites.getByRole("link").count() !== lesson.prerequisites.length) throw new Error("Unexpected prerequisite links");
+    await requireNoLessonRun(page);
+    await page.screenshot({ path: `${shots}/lesson-content.png`, fullPage: true });
+    return { limitations: lesson.limitations, prerequisites: lesson.prerequisites };
+  });
+  if (lesson.check) {
+    await step("a wrong answer gives the revisit explanation", async () => {
+      const group = page.getByRole("group", { name: lesson.check.question, exact: true });
+      const wrong = group.getByRole("radio", { name: lesson.check.wrong, exact: true });
+      await wrong.check();
+      await requireChecked(wrong, "Wrong answer");
+      await waitVisible(group.getByRole("status").filter({ hasText: `Revisit the explanation. ${lesson.check.explanation}` }));
+      await waitVisible(page.getByText(SAVED_LESSON_NOTE, { exact: true }));
+      await page.screenshot({ path: `${shots}/lesson-revisit.png`, fullPage: true });
+      return { answer: lesson.check.wrong, explanation: lesson.check.explanation };
+    });
+    await step("the matching answer replaces the wrong answer and is saved on this device", async () => {
+      const group = page.getByRole("group", { name: lesson.check.question, exact: true });
+      const correct = group.getByRole("radio", { name: lesson.check.correct, exact: true });
+      await correct.check();
+      await requireChecked(correct, "Matching answer");
+      if (await group.getByRole("radio", { name: lesson.check.wrong, exact: true }).isChecked()) throw new Error("Wrong answer is still selected");
+      await waitVisible(group.getByRole("status").filter({ hasText: `That matches the explanation. ${lesson.check.explanation}` }));
+      await waitVisible(page.getByText(SAVED_LESSON_NOTE, { exact: true }));
+      await page.screenshot({ path: `${shots}/lesson-matching.png`, fullPage: true });
+      return { answer: lesson.check.correct, storage: "device-local personal note" };
+    });
+  } else {
+    await step("the reading explicitly has no check question", async () => {
+      await requireNoCheck(page);
+      return { message: NO_CHECK_MESSAGE };
+    });
+  }
+  await step("mark the lesson as read on this device", async () => {
+    await page.getByRole("button", { name: "Mark as read", exact: true }).click();
+    await requireReadMark(page);
+    return { read: true, storage: "device-local personal note" };
+  });
+  await step("reload restores the read mark and matching answer without server progress", async () => {
+    await page.reload({ waitUntil: "load" });
+    await waitVisible(page.getByRole("heading", { level: 1, name: lesson.title, exact: true }));
+    await requireReadMark(page);
+    if (lesson.check) {
+      const group = page.getByRole("group", { name: lesson.check.question, exact: true });
+      await requireChecked(group.getByRole("radio", { name: lesson.check.correct, exact: true }), "Reloaded matching answer");
+      if (await group.getByRole("radio", { name: lesson.check.wrong, exact: true }).isChecked()) throw new Error("Reload restored the wrong answer");
+      await waitVisible(group.getByRole("status").filter({ hasText: `That matches the explanation. ${lesson.check.explanation}` }));
+    } else await requireNoCheck(page);
+    await requireNoLessonRun(page);
+    await page.screenshot({ path: `${shots}/lesson-reloaded.png`, fullPage: true });
+    return { restoredReadMark: true, restoredMatchingAnswer: lesson.check ? true : null };
+  });
+  await step("follow the next lesson in track order", async () => {
+    const link = page.getByRole("link", { name: `Next in track order: ${lesson.next.title}`, exact: true });
+    await waitVisible(link);
+    if (await link.getAttribute("href") !== lessonPath(lesson.next)) throw new Error("Incorrect next lesson link");
+    await link.click();
+    await page.waitForURL(`${web}${lessonPath(lesson.next)}`, { timeout: 30_000 });
+    await waitVisible(page.getByRole("heading", { level: 1, name: lesson.next.title, exact: true }));
+    await page.screenshot({ path: `${shots}/lesson-next.png`, fullPage: true });
+    return { nextLessonId: lesson.next.lessonId };
+  });
 }
 
 export function isLocalJourneyRequest(value) {
@@ -191,7 +492,8 @@ export async function inspectJourneyRequirements(page, lab) {
 }
 
 async function runJourney() {
-  const lab = journeyLab(process.env.JOURNEY_LAB);
+  const selection = selectJourney(process.env);
+  const lab = selection.kind === "lab" ? selection.entry : null;
 
   const WEB = process.env.JOURNEY_WEB ?? "http://localhost:5173";
   if (!/^http:\/\/localhost:\d+$/.test(WEB)) { console.error("journey only runs against a localhost dev stack"); process.exit(2); }
@@ -243,6 +545,9 @@ async function runJourney() {
     await page.screenshot({ path: `${SHOTS}/1-learning.png`, fullPage: true });
     return { found: /(\d+) lessons? found/.exec(body)?.[1], mentionsRunnableLab: /runnable lab/i.test(body), tracksSeen: ["Foundations", "Scaling", "Databases", "Asynchronous", "Failures", "Missions"].filter((t) => body.includes(t)) };
   });
+  if (selection.kind === "lesson") {
+    await walkJourneyLesson(page, selection.entry, { web: WEB, shots: SHOTS, step });
+  } else {
   await step("a reading lesson renders its sections and never claims a simulated result", async () => {
     await page.goto(`${WEB}/learn/lessons/what-is-a-request`, { waitUntil: "load" });
     await page.getByRole("heading", { level: 1 }).first().waitFor({ timeout: 30_000 });
@@ -383,7 +688,9 @@ async function runJourney() {
     return { reached: [...new Set(focusable)].slice(0, 12) };
   });
 
+  }
   console.log(JSON.stringify({ web: WEB, results, passed: results.filter((r) => r.ok).length, failed: results.filter((r) => !r.ok).length, problems: [...new Set(problems)].slice(0, 12) }, null, 1));
+  if (selection.kind === "lesson" && (results.some((r) => !r.ok) || problems.length)) process.exitCode = 1;
   await browser.close();
 }
 
