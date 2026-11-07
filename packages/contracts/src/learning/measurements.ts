@@ -26,6 +26,16 @@ const memorySource = "apps/web/src/features/live/VmMemoryReadings.tsx";
 // VM memory labels name the modeled population, distinct from generic Memory %.
 
 export const LEARNING_REPORT_MEASUREMENTS = {
+  "CDN: Hits": { scope: "resource", path: "cdn.hits", resourceType: "CDN", source: "apps/web/src/features/reports/components/CdnReadings.tsx", marker: '"CDN: Hits"' },
+  "CDN: Misses": { scope: "resource", path: "cdn.misses", resourceType: "CDN", source: "apps/web/src/features/reports/components/CdnReadings.tsx", marker: '"CDN: Misses"' },
+  "CDN: Origin requests": { scope: "resource", path: "cdn.originRequests", resourceType: "CDN", source: "apps/web/src/features/reports/components/CdnReadings.tsx", marker: '"CDN: Origin requests"' },
+  "CDN: Stored fills": { scope: "resource", path: "cdn.fills", resourceType: "CDN", source: "apps/web/src/features/reports/components/CdnReadings.tsx", marker: '"CDN: Stored fills"' },
+  "CDN: Expirations": { scope: "resource", path: "cdn.expirations", resourceType: "CDN", source: "apps/web/src/features/reports/components/CdnReadings.tsx", marker: '"CDN: Expirations"' },
+  "CDN: Evictions": { scope: "resource", path: "cdn.evictions", resourceType: "CDN", source: "apps/web/src/features/reports/components/CdnReadings.tsx", marker: '"CDN: Evictions"' },
+  "CDN: Coalesced waiters": { scope: "resource", path: "cdn.coalesced", resourceType: "CDN", source: "apps/web/src/features/reports/components/CdnReadings.tsx", marker: '"CDN: Coalesced waiters"' },
+  "CDN: Purged entries": { scope: "resource", path: "cdn.purged", resourceType: "CDN", source: "apps/web/src/features/reports/components/CdnReadings.tsx", marker: '"CDN: Purged entries"' },
+  "CDN: Stale fills fenced": { scope: "resource", path: "cdn.staleFills", resourceType: "CDN", source: "apps/web/src/features/reports/components/CdnReadings.tsx", marker: '"CDN: Stale fills fenced"' },
+  "CDN: Waiter capacity refusals": { scope: "resource", path: "cdn.cdn-waiter-capacity", resourceType: "CDN", source: "apps/web/src/features/reports/components/CdnReadings.tsx", marker: '"CDN: Waiter capacity refusals"' },
   "Cache: Hits": { scope: "resource", path: "cache.hits", unit: "count", resourceType: "Cache", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Cache: Hits"' },
   "Cache: Misses": { scope: "resource", path: "cache.misses", unit: "count", resourceType: "Cache", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Cache: Misses"' },
   "Cache: Expirations": { scope: "resource", path: "cache.expirations", unit: "count", resourceType: "Cache", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Cache: Expirations"' },

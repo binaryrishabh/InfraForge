@@ -11,6 +11,7 @@ import { TrafficEvidence } from "@/features/live/TrafficEvidence";
 import { measurementId } from "../resourceFocus";
 import { LbAccountingReadings } from "./LbAccountingReadings";
 import { SecurityReadings } from "@/features/canvas/components/inspector/SecuritySection";
+import { CdnReadings } from "./CdnReadings";
 import { CacheReadings } from "./CacheReadings";
 import { QueueReadings } from "./QueueReadings";
 
@@ -73,6 +74,7 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
                 ))}
               </ul>
               {checkpoint.resources.filter(r => r.database || r.databaseReplication || r.serverless || r.scheduler || r.eventBus || r.gateway || r.lbAccounting).map(r => <div key={r.id} className="mt-4"><h3 className="font-semibold">{r.id}</h3>{r.database && <DataDeliveryReadings type="Database" metrics={r} />}{r.databaseReplication && <DatabaseReplicationReadings metrics={r} />}{r.serverless && <ServerlessReadings metrics={r.serverless} />}{r.scheduler && <SchedulerReadings metrics={r.scheduler} />}{r.eventBus && <EventBusReadings metrics={r.eventBus} />}{r.gateway && <GatewayReadings metrics={r.gateway} />}{r.lbAccounting && <LbAccountingReadings metrics={r.lbAccounting} />}</div>)}
+              {checkpoint.resources.filter(r => r.cdn || types.get(r.id) === "CDN").map(r => <CdnReadings key={`cdn-${r.id}`} resource={r} />)}
               {checkpoint.resources.filter(r => r.cache || r.applicationHelpers || ["Cache", "Virtual Machine"].includes(types.get(r.id) ?? "")).map(r => <CacheReadings key={`cache-${r.id}`} resource={r} cache={!!r.cache || types.get(r.id) === "Cache"} />)}
               {checkpoint.resources.filter(r => r.security).map(r => <section key={`security-${r.id}`} aria-label={`Security measurements for ${r.id}`} className="mt-4"><h3 className="font-semibold">{r.id}: security measurements</h3><SecurityReadings metrics={r.security} /></section>)}
               {checkpoint.resources.filter(r => r.queueWork || r.asyncQueue).map(r => <QueueReadings key={`queue-${r.id}`} resource={r} />)}
