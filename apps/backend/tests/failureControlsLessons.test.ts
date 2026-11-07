@@ -30,7 +30,7 @@ test("failure controls register six honest concepts and one reviewed lab without
     expect(Object.hasOwn(LEARNING_REPORT_MEASUREMENTS, label)).toBe(true);
   }
   const paths = Object.values(LEARNING_REPORT_MEASUREMENTS).map(m => m.path);
-  expect(paths.some(p => /coalescedWaiters|circuitBreaker|clientRetry|suppressedByReason/.test(p))).toBe(false);
+  expect(paths.some(p => /coalescedWaiters|clientRetry/.test(p))).toBe(false);
 
   const missingReview = {...learningContent, archivedLessons: [], lessons: [lab], tracks: [{...track, modules: [{...failureControls, lessonIds: [lab.id]}]}]};
   missingReview.lessons = [{...lab, prerequisites: []}];

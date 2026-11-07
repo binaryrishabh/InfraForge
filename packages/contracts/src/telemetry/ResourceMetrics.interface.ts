@@ -9,6 +9,8 @@ export interface LbRateLimitMetrics {
 export interface ResourceMetrics {
   queueWork?: import("./AsyncQueueMetrics.interface").QueueWorkMetrics;
   lbAccounting?: import("./LbAccountingMetrics.interface").LbAccountingMetrics;
+  lbRetry?: import("./LbResilienceMetrics.interface").LbRetryMetrics;
+  circuitBreaker?: import("./LbResilienceMetrics.interface").CircuitBreakerMetrics;
   gateway?: import("./GatewayMetrics.interface").GatewayMetrics;
   serverless?: import("./ServerlessMetrics.interface").ServerlessMetrics;
   scheduler?: import("./SchedulerMetrics.interface").SchedulerMetrics;

@@ -1,3 +1,4 @@
+import { testACircuitAgainV1 } from "./test-a-circuit-again/v1";
 import { diagnoseConsumerCreditV2 } from "./diagnose-consumer-credit/v2";
 import { splitTheCapacityBudgetV2 } from "./split-the-capacity-budget/v2";
 import { fitARequestInMemoryV2 } from "./fit-a-request-in-memory/v2";
@@ -135,4 +136,5 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   splitTheCapacityBudgetV1,
   splitTheCapacityBudgetV2,
   openAndSizeAnApiV1,
+  testACircuitAgainV1,
 ];

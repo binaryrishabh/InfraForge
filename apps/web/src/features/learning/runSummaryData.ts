@@ -22,6 +22,7 @@ function recordedValue(value: unknown, unit?: string): string {
   if (typeof value === "object" && "lowMs" in value && "highMs" in value) {
     return `${recordedValue(value.lowMs)}–${recordedValue(value.highMs)} ms`;
   }
+  if (typeof value === "boolean") return value ? "Yes" : "No";
   if (typeof value !== "string" && typeof value !== "number") return "Unknown";
   return `${value}${unit ? ` ${unit}` : ""}`;
 }

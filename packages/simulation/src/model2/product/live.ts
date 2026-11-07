@@ -15,6 +15,8 @@ export type LiveHealth = "healthy" | "degraded" | "saturated" | "failed" | "unkn
 export interface LiveNodeMetrics {
   queueWork?: import("@infraforge/contracts/telemetry").QueueWorkMetrics;
   lbAccounting?: import("@infraforge/contracts/telemetry").LbAccountingMetrics;
+  lbRetry?: import("@infraforge/contracts/telemetry").LbRetryMetrics;
+  circuitBreaker?: import("@infraforge/contracts/telemetry").CircuitBreakerMetrics;
   gateway?: import("@infraforge/contracts/telemetry").ResourceMetrics["gateway"];
   serverless?: import("@infraforge/contracts/telemetry").ResourceMetrics["serverless"];
   scheduler?: import("@infraforge/contracts/telemetry").ResourceMetrics["scheduler"];
@@ -125,6 +127,16 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
           metrics[node] = { ...(lb.rateLimit ? { rateLimit: lb.rateLimit } : {}), cpu: null, memory: null, connections: lb.active + lb.pending, rps: completed, errorRate: ratio(rejected, received),
             health: healthyBackends === 0 ? "failed" : rejected > 0 ? "saturated" : lb.pending > 0 ? "degraded" : "healthy" };
           if (accounting) metrics[node]!.lbAccounting = accounting;
+          // Copy only existing enhanced-policy counters. Legacy retry policies do not
+          // own reason/reservation counters, so never manufacture them from totals.
+          if ("suppressedByReason" in own && "retriesWaiting" in own) {
+            const retry = own as Balancer & Omit<NonNullable<LiveNodeMetrics["lbRetry"]>, "version" | "sampledAtUs">;
+            metrics[node]!.lbRetry = { version: 1, sampledAtUs: now, attempts: retry.attempts, retries: retry.retries,
+              retryLimited: retry.retryLimited, activeRetries: retry.activeRetries, retriesWaiting: retry.retriesWaiting,
+              suppressedByReason: { ...retry.suppressedByReason } };
+          }
+          const paths = runtime.inspectBreakers(node)?.flatMap(p => p.circuitBreaker ? [{ id: p.id, source: p.source, target: p.target, ...p.circuitBreaker }] : []);
+          if (paths?.length) metrics[node]!.circuitBreaker = { version: 1, sampledAtUs: now, paths };
           continue;
         }
         const ids = (members.get(node) ?? []).filter((id) => runtime.inspect(id) !== undefined);
