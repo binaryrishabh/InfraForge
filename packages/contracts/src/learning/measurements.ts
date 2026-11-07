@@ -21,11 +21,9 @@ const schedulerSource = "apps/web/src/features/live/SchedulerReadings.tsx";
 const functionSource = "apps/web/src/features/live/ServerlessReadings.tsx";
 const actionSource = "apps/web/src/features/reports/components/ActionTimeline.tsx";
 const dataSource = "apps/web/src/features/live/DataDeliveryReadings.tsx";
+const memorySource = "apps/web/src/features/live/VmMemoryReadings.tsx";
 
-// vmMemory.resources.* retains residentBytes, limitBytes, headroomBytes,
-// holdingRequests, activeRequests, allocationRejected and peakResidentBytes.
-// VmMemoryReadings renders them only on the live canvas, not in ReportMeasurements.
-// None is an audited saved-report label until that report actually renders it.
+// VM memory labels name the modeled population, distinct from generic Memory %.
 
 export const LEARNING_REPORT_MEASUREMENTS = {
   "Acknowledged messages": { scope: "resource", path: "queueWork.acknowledged", resourceType: "Message Queue", source: "apps/web/src/features/reports/components/QueueReadings.tsx", marker: '"Acknowledged messages"' },
@@ -42,6 +40,13 @@ export const LEARNING_REPORT_MEASUREMENTS = {
   "Requests/s": { scope: "resource", path: "rps", source: resourceSource, marker: '"Requests/s"' },
   Health: { scope: "resource", path: "health", source: resourceSource, marker: '"Health"' },
   Connections: { scope: "resource", path: "connections", source: resourceSource, marker: '"Connections"' },
+  "VM memory: Resident": { scope: "resource", path: "vmMemory.resources.*.residentBytes", unit: "bytes", resourceType: "Virtual Machine", source: memorySource, marker: '"Resident"' },
+  "VM memory: Limit": { scope: "resource", path: "vmMemory.resources.*.limitBytes", unit: "bytes", resourceType: "Virtual Machine", source: memorySource, marker: '"Limit"' },
+  "VM memory: Headroom": { scope: "resource", path: "vmMemory.resources.*.headroomBytes", unit: "bytes", resourceType: "Virtual Machine", source: memorySource, marker: '"Headroom"' },
+  "VM memory: Holding requests": { scope: "resource", path: "vmMemory.resources.*.holdingRequests", resourceType: "Virtual Machine", source: memorySource, marker: '"Holding requests"' },
+  "VM memory: Active requests": { scope: "resource", path: "vmMemory.resources.*.activeRequests", resourceType: "Virtual Machine", source: memorySource, marker: '"Active requests"' },
+  "VM memory: Refused allocations": { scope: "resource", path: "vmMemory.resources.*.allocationRejected", resourceType: "Virtual Machine", source: memorySource, marker: '"Refused allocations"' },
+  "VM memory: Peak resident": { scope: "resource", path: "vmMemory.resources.*.peakResidentBytes", unit: "bytes", resourceType: "Virtual Machine", source: memorySource, marker: '"Peak resident"' },
   "Whole run: Completed": { scope: "traffic", path: "wholeRun.completed", source: wholeSource, marker: '"Completed"' },
   "Whole run: Failed": { scope: "traffic", path: "wholeRun.failed", source: wholeSource, marker: '"Failed"' },
   "Whole run: In-flight": { scope: "traffic", path: "wholeRun.inFlight", source: wholeSource, marker: '"In-flight"' },

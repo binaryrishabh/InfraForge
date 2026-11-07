@@ -8,6 +8,24 @@ export interface ClaimException {
 }
 export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
   {
+    lesson: "open-and-size-an-api@1", field: "explanation.1",
+    text: "Select fw > Firewall policy. Change quarantine-db Priority from 0 to 20, after allow-app-db at 10. Run again with the original app. Which single requirement still fails? Compare app CPU, Whole run: Completed, Failed and In-flight.",
+    values: ["20"],
+    reason: "20 is the controlled firewall rule priority input, not a result. Source: apps/backend/tests/missionsLadderCalibration.test.ts isolates this setting and verifies caller and admission evidence.",
+  },
+  {
+    lesson: "open-and-size-an-api@1", field: "explanation.2",
+    text: "Select app > Instance size > Provider > AWS > c5.large. Combine both changes and compare with the partial report. Then restore the original rule while retaining that app size: explain why buying capacity cannot permit a blocked dependency.",
+    values: ["c5.large"],
+    reason: "c5.large is the tested app-only size input, offered by the AWS catalog in InstanceSection. Source: apps/backend/tests/missionsLadderCalibration.test.ts controlled one-setting comparisons; missionsLadderReport.test.ts verifies the inspector and saved report.",
+  },
+  {
+    lesson: "open-and-size-an-api@1", field: "explanation.3",
+    text: "Try c5.xlarge with the corrected rule as another valid design. Compare app CPU, completions and the saved Monthly estimate. Explain whether extra headroom helps this workload before moving on to the existing catalogue burst mission.",
+    values: ["c5.xlarge"],
+    reason: "c5.xlarge is the separate tested headroom input, not a promised improvement. Source: apps/backend/tests/missionsLadderCalibration.test.ts compares app CPU and unchanged caller populations; missionsLadderReport.test.ts verifies the actual offered size controls.",
+  },
+  {
     lesson: "diagnose-query-admission@1", field: "explanation.2",
     text: "Change only db Active queries from 1 to 4 and run again. Keep its db.m5.large SKU, queued-query limit, app and workload fixed. Compare both saved reports. As a near miss, restore the starter and change only db to db.m5.xlarge; explain why a lower CPU percentage can coexist with the same failures.",
     values: ["4", "db.m5.xlarge"],

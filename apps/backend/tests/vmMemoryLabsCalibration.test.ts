@@ -111,18 +111,22 @@ test("fit-a-request-in-memory: controlled size and request-memory runs pass; a s
   expect(preflight(d, invalid).valid).toBe(false);
 });
 
-test("VM memory saved fields are live-only: all seven labels stay refused by the report claim gate", () => {
+test("VM memory saved fields have scoped labels accepted by the report claim gate", () => {
   const d = definition(id), original = learningContent.lessons.find(l => l.id === id)!;
   expect(original.kind).toBe("executable-lab"); expect(checkLessonClaims(original, d)).toEqual([]);
   const reportRenderer = readFileSync(new URL("../../web/src/features/reports/components/ReportMeasurements.tsx", import.meta.url), "utf8");
-  expect(reportRenderer).not.toContain("VmMemoryReadings"); expect(reportRenderer).not.toContain("vmMemory");
+  expect(reportRenderer).toContain("<VmMemoryReadings metrics={r.vmMemory}");
   const liveRenderer = readFileSync(new URL("../../web/src/features/live/VmMemoryReadings.tsx", import.meta.url), "utf8");
   for (const [label, field] of [["Resident", "residentBytes"], ["Limit", "limitBytes"], ["Headroom", "headroomBytes"],
     ["Holding requests", "holdingRequests"], ["Active requests", "activeRequests"], ["Refused allocations", "allocationRejected"], ["Peak resident", "peakResidentBytes"]]) {
     expect(liveRenderer).toContain(`"${label}"`); expect(liveRenderer).toContain(`r.${field}`);
-    expect(learningMeasurement(label!)).toBeNull();
-    expect(Object.values(LEARNING_REPORT_MEASUREMENTS).some(m => m.path.includes("vmMemory"))).toBe(false);
+    const scoped = `VM memory: ${label}`;
+    expect(learningMeasurement(scoped)).toMatchObject({path: `vmMemory.resources.*.${field}`, resourceType: "Virtual Machine"});
+    expect(learningMeasurement(label!)).toBeNull(); // Unqualified labels remain ambiguous.
+    const accepted = structuredClone(original); accepted.experiment!.evidenceToInspect = [scoped];
+    expect(checkLessonClaims(accepted, d)).toEqual([]);
     const bad = structuredClone(original); bad.experiment!.evidenceToInspect = [label!];
     expect(checkLessonClaims(bad, d)).toContain(`${id}@1: report does not render measurement ${label}`);
   }
+  expect(Object.values(LEARNING_REPORT_MEASUREMENTS).filter(m => m.path.includes("vmMemory"))).toHaveLength(7);
 });

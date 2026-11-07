@@ -122,6 +122,15 @@ pool replica counts are not saved-report measurement labels. Numerical labs must
 explicitly say results are educational model outputs. Non-executable prose cannot
 state digits-with-units run results, including in checks and follow-ups.
 
+Saved reports also reuse `VmMemoryReadings` for retained modeled memory counters.
+The seven `VM memory:` labels identify resident bytes, limit, headroom, holding
+and active requests, refused allocations and peak resident bytes. These refer to
+authored memory assumptions, not operating-system measurements. The lesson run
+summary reads exact terminal counters only; diagnostic checkpoints do not fill
+missing terminal evidence. Missing/null values stay Unknown. Historical published
+memory lessons and challenge hints describing a live-only gap remain unchanged;
+new content versions may cite these labels.
+
 For the la7 pre-publication lab correction only, evidence guidance and limitations
 were edited in place at v1. Published reading pins, challenge definitions, reviews,
 hashes and goldens were retained. The bigger-or-smaller lab no longer mentions a
