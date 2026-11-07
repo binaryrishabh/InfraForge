@@ -24,7 +24,7 @@ export const JOURNEY_LABS = [
       nodeSelector: ".react-flow__node, [data-id]", nodeText: /Virtual Machine/, fallbackText: "app",
       role: "radio", name: /c5\.large/i, resourceId: "app", setting: "skuId", from: null, to: "c5.large",
     },
-    expected: { starter: "Not met yet", improved: "All requirements met" },
+    expected: { starter: "Not met", improved: "Met" },
   },
   {
     lessonId: "writes-cost-more-than-reads", title: /Writes cost the database more/,
@@ -35,7 +35,7 @@ export const JOURNEY_LABS = [
       nodeSelector: '[data-resource-id="db"]', nodeText: /Database/, fallbackText: "db",
       role: "radio", name: /^Medium\b/i, resourceId: "db", setting: "size", from: "small", to: "medium",
     },
-    expected: { starter: "Not met yet", improved: "All requirements met" },
+    expected: { starter: "Not met", improved: "Met" },
   },
   {
     lessonId: "balancer-shares-turns", title: /The balancer shares turns/,
@@ -46,7 +46,7 @@ export const JOURNEY_LABS = [
       nodeSelector: '[data-resource-id="app-a"]', nodeText: /Virtual Machine/, fallbackText: "app-a",
       role: "radio", name: /c5\.large/i, resourceId: "app-a", setting: "skuId", from: null, to: "c5.large",
     },
-    expected: { starter: "Not met yet", improved: "All requirements met" },
+    expected: { starter: "Not met", improved: "Met" },
   },
 ];
 
