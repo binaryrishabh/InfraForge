@@ -41,7 +41,7 @@ for (const old of [memoryIsNotCpu, fitARequestInMemory]) test(`${old.id}: latest
 test("memory lesson v2 requires both unchanged challenge identities and refuses missing or changed reviews", () => {
   const id = "fit-a-request-in-memory", latest = LEARNING_REGISTRY.findLesson(id)!;
   expect(latest.experiment!.evidenceToInspect!.flatMap(evidenceLabels).filter(label => label.startsWith("VM memory:"))).toHaveLength(7);
-  expect(checkLearningAuthoring(learningContent).archived).toBe(14);
+  expect(checkLearningAuthoring(learningContent).archived).toBe(18);
   for (const version of [1, 2]) {
     const key = `${id}@${version}`, review = REVIEWED_CHALLENGES[key]!;
     expect(review).toEqual({challengeId: id, version: 1, hash: findChallenge(id, 1)!.hash});
