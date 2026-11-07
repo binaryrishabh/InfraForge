@@ -1,3 +1,4 @@
+import { fitARequestInMemoryV1 } from "../challenges/definitions/fit-a-request-in-memory/v1";
 import { diagnoseQueryAdmissionV1 } from "../challenges/definitions/diagnose-query-admission/v1";
 import { randomUUID } from "node:crypto";
 import { RESOURCE_TYPES as T, type Resource } from "@infraforge/domain/resource";
@@ -76,6 +77,8 @@ export const REFERENCE: Record<string, ChallengeStarter> = {
     r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, singleFlight: true}} : r)},
   "reuse-before-expiry": {...reuseBeforeExpiryV1.starter!, resources: reuseBeforeExpiryV1.starter!.resources.map(r =>
     r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, ttlSeconds: 60}} : r)},
+  "fit-a-request-in-memory": {...fitARequestInMemoryV1.starter!, resources: fitARequestInMemoryV1.starter!.resources.map(r => r.id === "app" ? {...r, size: "large"} : r)},
+  "fit-a-request-in-memory-request": {...fitARequestInMemoryV1.starter!, resources: fitARequestInMemoryV1.starter!.resources.map(r => r.id === "app" ? {...r, vmMemory: {...r.vmMemory!, requestMiB: 256}} : r)},
   "diagnose-query-admission": {...diagnoseQueryAdmissionV1.starter!, resources: diagnoseQueryAdmissionV1.starter!.resources.map(r => r.id === "db" ? {...r, dbConcurrency: {...r.dbConcurrency!, activeQueries: 4}} : r)},
   "cache-or-database": starter([["app", T.VirtualMachine, 0, 0, {skuId: "c5.xlarge"}],
     ["cache", T.Cache, 1, 0, {cachePolicy: {version: 2, capacityEntries: 16}}],

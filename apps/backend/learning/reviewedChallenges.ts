@@ -4,6 +4,7 @@ export interface LearningChallengeReview { challengeId: string; version: number;
 export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeReview>> = {
   "share-a-cache-fill@1": {challengeId: "share-a-cache-fill", version: 1, hash: "39cffc8c5eadbe309c710409abe4a0d4f3431b94c05ef9352f95596ef0ae6954"},
   "reuse-before-expiry@1": {challengeId: "reuse-before-expiry", version: 1, hash: "7eb2268b199d88bf9f961d0638bc98f28aecfac5ea08db66cff6855ba10362c0"},
+  "fit-a-request-in-memory@1": {challengeId: "fit-a-request-in-memory", version: 1, hash: "f9d6da9199e8abbc5045bcae85c2cec56d85f821ee86233d313a962be77e9763"},
   "diagnose-query-admission@1": {challengeId: "diagnose-query-admission", version: 1, hash: "af3d1ac31f9cca4078a377cc11d2c7c64a524c2bd3b16aada23829499a71aff5"},
   "cache-or-database@1": {challengeId: "cache-or-database", version: 1, hash: "7e141efce731cbf7f0c531002f8b6b8c4e82af638a63ff05bd45bb667e14c0b0"},
   "one-vm-or-a-pool@1": {challengeId: "one-vm-or-a-pool", version: 1, hash: "c85cf9886ed04a2e284d20aa0de128b0ed311fd23ac0dbe668b448f7f55bec79"},

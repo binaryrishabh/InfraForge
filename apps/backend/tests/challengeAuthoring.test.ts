@@ -16,6 +16,7 @@ the next version file, register it in definitions/index.ts and pin it here. Run 
 export const PUBLISHED: Record<string, string> = {
   "share-a-cache-fill@1": "39cffc8c5eadbe309c710409abe4a0d4f3431b94c05ef9352f95596ef0ae6954",
   "reuse-before-expiry@1": "7eb2268b199d88bf9f961d0638bc98f28aecfac5ea08db66cff6855ba10362c0",
+  "fit-a-request-in-memory@1": "f9d6da9199e8abbc5045bcae85c2cec56d85f821ee86233d313a962be77e9763",
   "diagnose-query-admission@1": "af3d1ac31f9cca4078a377cc11d2c7c64a524c2bd3b16aada23829499a71aff5",
   "cache-or-database@1": "7e141efce731cbf7f0c531002f8b6b8c4e82af638a63ff05bd45bb667e14c0b0",
   "one-vm-or-a-pool@1": "c85cf9886ed04a2e284d20aa0de128b0ed311fd23ac0dbe668b448f7f55bec79",
