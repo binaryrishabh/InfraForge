@@ -1,6 +1,7 @@
 import { openAndSizeAnApiV1 } from "../challenges/definitions/open-and-size-an-api/v1";
 import { splitTheCapacityBudgetV1 } from "../challenges/definitions/split-the-capacity-budget/v1";
 import { diagnoseConsumerCreditV1 } from "../challenges/definitions/diagnose-consumer-credit/v1";
+import { diagnoseConsumerCreditV2 } from "../challenges/definitions/diagnose-consumer-credit/v2";
 import { parallelJobsForABurstV1 } from "../challenges/definitions/parallel-jobs-for-a-burst/v1";
 import { fitARequestInMemoryV1 } from "../challenges/definitions/fit-a-request-in-memory/v1";
 import { keepWaitingWorkV1 } from "../challenges/definitions/keep-waiting-work/v1";
@@ -79,6 +80,8 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "diagnose-consumer-credit-v2": {...diagnoseConsumerCreditV2.starter!, resources: diagnoseConsumerCreditV2.starter!.resources.map(r =>
+    r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, prefetch: 16}} : r)},
   "parallel-jobs-for-a-burst": {...parallelJobsForABurstV1.starter!, resources: parallelJobsForABurstV1.starter!.resources.map(r =>
     r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, concurrency: 2}} : r)},
   "keep-waiting-work": {...keepWaitingWorkV1.starter!, resources: keepWaitingWorkV1.starter!.resources.map(r =>

@@ -6,7 +6,7 @@ import { validateInfrastructureName } from "@infraforge/domain/validation";
 import { captureRunInputs } from "../deployments/runInputs";
 import { compareInputs } from "../comparison/inputs";
 import { buildRunReport } from "../reports/report";
-import { challengeSeed, specHash } from "../challenges/registry";
+import { challengeSeed, findChallenge, specHash } from "../challenges/registry";
 import { preflight } from "../challenges/preflight";
 import { recordedScenario } from "../challenges/scenario";
 import { validateChallengeVersions } from "../challenges/validate";
@@ -31,8 +31,10 @@ test("diagnose-consumer-credit: one credit change improves real saved work; long
   const restoredBuffer = structuredClone(buffer); resource(restoredBuffer, "queue").asyncQueue!.capacityMessages = 1000;
   expect(restoredBuffer).toEqual(start);
   expect(validateInfrastructureName(d.title)).toBeNull(); expect(d.hints).toHaveLength(3);
-  const pin = new RegExp(`"${id}@1": "([a-f0-9]{64})"`).exec(readFileSync(new URL("./challengeAuthoring.test.ts", import.meta.url), "utf8"))![1]!;
-  expect(specHash(d)).toBe(pin); expect(validateChallengeVersions([d], {[`${id}@1`]: pin})).toEqual([]);
+  const family = [findChallenge(id, 1)!.definition, d];
+  const pins = Object.fromEntries(family.map(version => [`${id}@${version.version}`,
+    new RegExp(`"${id}@${version.version}": "([a-f0-9]{64})"`).exec(readFileSync(new URL("./challengeAuthoring.test.ts", import.meta.url), "utf8"))![1]!]));
+  expect(specHash(d)).toBe(pins[`${id}@${d.version}`]!); expect(validateChallengeVersions(family, pins)).toEqual([]);
   const captured = captureRunInputs(start, d.workload, challengeSeed(d));
   for (const design of designs) {
     expect(preflight(d, design).errors).toEqual([]);
@@ -97,14 +99,16 @@ test("diagnose-consumer-credit: absent, stale, malformed and mismatched saved ev
   expect(buildRunReport(active).challenge!.criteria.find(c => c.id === "work")!.status).toBe("pending");
 });
 
-test("diagnose-consumer-credit: captured live age is retained without becoming an exposed saved-report measurement", () => {
+test("diagnose-consumer-credit: captured age reaches the saved report separately from queue-work requirement details", () => {
   const before = raw(rows[0]!).metrics.queue!.asyncQueue!, after = raw(rows[1]!).metrics.queue!.asyncQueue!;
   expect(before.oldestReadyAgeSeconds).toBeGreaterThan(10);
   expect(after.oldestReadyAgeSeconds).toBeNull(); // No ready population means Unknown, not zero age.
   for (const [i, report] of reports.entries()) {
     const persisted = JSON.parse(JSON.stringify(rows[i]!.terminalSnapshot)) as SimulationSnapshot;
     expect(persisted.metrics.queue!.asyncQueue).toEqual(raw(rows[i]!).metrics.queue!.asyncQueue);
-    expect(report.terminal!.resources.find(r => r.id === "queue")).not.toHaveProperty("asyncQueue");
+    const observation = persisted.metrics.queue!.asyncQueue!;
+    expect(report.terminal!.resources.find(r => r.id === "queue")!.asyncQueue).toEqual({
+      version: observation.version, readyDepth: observation.readyDepth, oldestReadyAgeSeconds: observation.oldestReadyAgeSeconds});
     expect(report.challenge!.criteria.find(c => c.id === "work")!.detail).not.toContain("age");
   }
 });
