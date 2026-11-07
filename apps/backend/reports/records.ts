@@ -16,6 +16,7 @@ import { EventBusMetricsSchema, GatewayMetricsSchema } from "./newResourceSchema
 import { DatabaseMetricsSchema, DatabaseReplicationMetricsSchema } from "./databaseSchema";
 import { QueueWorkSchema } from "./queueWorkSchema";
 import { CacheMetricsSchema, ApplicationHelperMetricsSchema } from "./cacheSchema";
+import { MonitoringMetricsSchema, MonitoringBackendSchema } from "./monitoringSchema";
 import { CdnMetricsSchema } from "./cdnSchema";
 import { SecurityMetricsSchema } from "./securitySchema";
 
@@ -39,7 +40,7 @@ const health = z.enum(["healthy", "degraded", "saturated", "failed", "unknown"])
 // Only these queue observations have a saved-report renderer. Preserve null as Unknown.
 const queueObservation = z.object({version: z.union([z.literal(1), z.literal(2)]),
   readyDepth: amount.int().max(Number.MAX_SAFE_INTEGER).nullable(), oldestReadyAgeSeconds: amount.nullable()});
-const metrics = z.object({ cdn: CdnMetricsSchema.optional(), cache: CacheMetricsSchema.optional(), applicationHelpers: ApplicationHelperMetricsSchema.optional(), asyncQueue: queueObservation.optional(), security: SecurityMetricsSchema.optional(), queueWork: QueueWorkSchema.optional(), database: DatabaseMetricsSchema.optional(), databaseReplication: DatabaseReplicationMetricsSchema.optional(), lbAccounting: LbAccountingSchema.optional(), serverless: ServerlessMetricsSchema.optional(), scheduler: SchedulerMetricsSchema.optional(), eventBus: EventBusMetricsSchema.optional(), gateway: GatewayMetricsSchema.optional(), vmMemory: VmMemorySchema.optional(), cpu: amount.max(100).nullable().optional(), memory: amount.max(100).nullable().optional(),
+const metrics = z.object({ monitoring: MonitoringMetricsSchema.optional(), monitoringBackend: MonitoringBackendSchema.optional(), cdn: CdnMetricsSchema.optional(), cache: CacheMetricsSchema.optional(), applicationHelpers: ApplicationHelperMetricsSchema.optional(), asyncQueue: queueObservation.optional(), security: SecurityMetricsSchema.optional(), queueWork: QueueWorkSchema.optional(), database: DatabaseMetricsSchema.optional(), databaseReplication: DatabaseReplicationMetricsSchema.optional(), lbAccounting: LbAccountingSchema.optional(), serverless: ServerlessMetricsSchema.optional(), scheduler: SchedulerMetricsSchema.optional(), eventBus: EventBusMetricsSchema.optional(), gateway: GatewayMetricsSchema.optional(), vmMemory: VmMemorySchema.optional(), cpu: amount.max(100).nullable().optional(), memory: amount.max(100).nullable().optional(),
   rps: amount.optional(), connections: amount.optional(), health: health.optional() });
 const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction: amount.optional(),
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).optional(), accumulatedCostUsd: amount.optional(),
