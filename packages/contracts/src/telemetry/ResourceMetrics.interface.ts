@@ -22,6 +22,7 @@ export interface ResourceMetrics {
   objectStorage?: import("./ObservabilityMetrics.interface").ObjectStorageMetrics;
   databaseReplication?: import("./DatabaseReplicationMetrics.interface").DatabaseReplicationMetrics;
   database?: import("./DataDeliveryMetrics.interface").DatabaseMetrics;
+  applicationHelpers?: import("./DataDeliveryMetrics.interface").ApplicationHelperMetrics;
   cache?: import("./DataDeliveryMetrics.interface").CacheMetrics;
   cdn?: import("./DataDeliveryMetrics.interface").CdnMetrics;
   security?: import("./SecurityMetrics.interface").SecurityMetrics;

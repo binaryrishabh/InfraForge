@@ -29,6 +29,7 @@ export interface LiveNodeMetrics {
   objectStorage?: import("@infraforge/contracts/telemetry").ObjectStorageMetrics;
   databaseReplication?: import("@infraforge/contracts/telemetry").DatabaseReplicationMetrics;
   database?: import("@infraforge/contracts/telemetry").DatabaseMetrics;
+  applicationHelpers?: import("@infraforge/contracts/telemetry").ApplicationHelperMetrics;
   cache?: import("@infraforge/contracts/telemetry").CacheMetrics;
   cdn?: import("@infraforge/contracts/telemetry").CdnMetrics;
   security?: import("@infraforge/contracts/telemetry").SecurityMetrics;
@@ -177,6 +178,17 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
       if (memory) for (const node of nodeIds) {
         const readings = memory.resources.filter(r => owner(r.id) === node);
         if (readings.length && metrics[node]) metrics[node]!.vmMemory = { version: 1, resources: readings };
+      }
+      // Projection only: preserve each helper's exact owner and target identities.
+      for (const node of nodeIds) {
+        const helpers = compiled.input.resources.filter(r => r.kind === "cache-aside").filter(r => owner(r.id) === node);
+        if (helpers.length && metrics[node]) metrics[node]!.applicationHelpers = { version: 1, helpers: helpers.map(r => {
+          const e = runtime.inspectData.application(r.id);
+          return { id: r.id, cacheId: r.cache, databaseId: r.database,
+            received: e?.received ?? null, completed: e?.completed ?? null, failed: e?.failed ?? null, live: e?.live ?? null,
+            databaseFetches: e?.databaseFetches ?? null, cacheFailures: e?.cacheFailures ?? null,
+            coalescedWaiters: e?.coalescedWaiters ?? null, fillsInProgress: e?.fillsInProgress ?? null, invalidations: e?.invalidations ?? null };
+        }) };
       }
       const deliveryResources = compiled.input.resources.filter(r => metrics[r.id] && ["relational", "cache", "cdn"].includes(r.kind));
       if (deliveryResources.length) {

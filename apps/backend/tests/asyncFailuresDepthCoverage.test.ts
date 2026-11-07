@@ -18,11 +18,11 @@ const coverage = [
   {track: "failures", concept: "dns-cache-lifetime", labs: [], limitation: "Conceptual only: saved reports omit resolver cache answers/expiry and no DNS recovery criterion exists."},
   {track: "failures", concept: "missing-failure-observations", labs: ["find-the-denying-rule", "choose-a-retry-mitigation"], limitation: "Practice diagnosis and naming missing observations, not a complete incident diagnosis or MTTR."},
   {track: "failures", concept: "mitigation-tradeoffs", labs: ["choose-a-retry-mitigation"], limitation: "Completion/latency tradeoff; no continuous recovery or availability proof."},
-  {track: "depth", concept: "concurrent-cache-misses", labs: ["share-a-cache-fill"], limitation: "Single owner and read-only key; coalescing counts are live only."},
+  {track: "depth", concept: "concurrent-cache-misses", labs: ["share-a-cache-fill"], limitation: "Single owner and read-only key; saved cache commands and helper coalescing counts are separate populations."},
   {track: "depth", concept: "retry-limits-and-budgets", labs: ["retrying-a-full-pool", "choose-a-retry-mitigation"], limitation: "Amplification only; concurrent-budget suppression remains conceptual because saved LB accounting omits it."},
   {track: "depth", concept: "circuit-breaker-boundaries", labs: [], limitation: "Conceptual only: saved report and audited labels omit path state, transitions, probes and circuit refusals."},
   {track: "depth", concept: "pool-isolation-boundaries", labs: ["budget-app-database-sessions", "bound-function-pool-pressure"], limitation: "Shared pool limits only; no tunable per-class reservation or per-class pool ownership."},
-  {track: "depth", concept: "timeout-ownership", labs: [], limitation: "Conceptual only: saved clientRetry counters have no audited lesson label and workload timeouts cannot be edited in a challenge design."},
+  {track: "depth", concept: "timeout-ownership", labs: [], limitation: "Conceptual only: saved clientRetry counters have audited labels, but workload timeouts cannot be edited in a challenge design."},
   {track: "depth", concept: "backpressure-boundaries", labs: ["keep-up-with-the-queue", "analytics-burst-buffer"], limitation: "Buffering/worker capacity only; adaptive upstream feedback is not implemented."},
 ];
 

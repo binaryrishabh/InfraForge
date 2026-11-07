@@ -5,3 +5,5 @@ import { writerFailureLessons } from "./writer-failure";
 import { dataTradeoffLessons } from "./data-tradeoffs";
 import { objectOwnershipLessons } from "./object-ownership";
 export const lessons = [...databasePressureLessons, ...cacheLifetimeLessons, ...writerFailureLessons, ...dataTradeoffLessons, ...objectOwnershipLessons];
+
+export { cacheEvidenceArchivedLessons as archivedLessons } from "./cache-evidence-archives";

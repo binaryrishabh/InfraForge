@@ -1,4 +1,6 @@
 export type * from "./report";
+export type * from "./monitoring";
+export type * from "./durations";
 export type * from "./compare";
 export type * from "./rerun";
 export * from "./experimentTrace";

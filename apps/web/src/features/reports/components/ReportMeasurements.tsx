@@ -12,6 +12,10 @@ import { measurementId } from "../resourceFocus";
 import { LbAccountingReadings } from "./LbAccountingReadings";
 import { LbResilienceReadings } from "./LbResilienceReadings";
 import { SecurityReadings } from "@/features/canvas/components/inspector/SecuritySection";
+import { DurationReadings } from "./DurationReadings";
+import { MonitoringReadings } from "./MonitoringReadings";
+import { CdnReadings } from "./CdnReadings";
+import { CacheReadings } from "./CacheReadings";
 import { QueueReadings } from "./QueueReadings";
 import { ObjectStorageReadings } from "./ObjectStorageReadings";
 import { StartupReadings } from "./StartupReadings";
@@ -21,6 +25,11 @@ latest diagnostic checkpoint, labelled as such. */
 export function ReportMeasurements({ report, number }: { report: RunReport; number: number }) {
   const checkpoint = report.terminal ?? report.checkpoint;
   const cost = report.stages.findLast((stage) => stage.name === "CostEstimate" && stage.monthlyEstimateUsd !== undefined);
+  const types = new Map((report.topology.accepted ?? report.topology.original)?.resources.map(r => [r.id, r.type]));
+  const monitoringResources = [...new Set([
+    ...[...types].filter(([, type]) => type === "Monitoring Agent").map(([id]) => id),
+    ...(checkpoint?.resources.filter(r => r.monitoring || r.monitoringBackend).map(r => r.id) ?? []),
+  ])].map(id => checkpoint?.resources.find(r => r.id === id) ?? {id});
   const monthly = cost?.monthlyEstimateUsd;
   return (
     <>
@@ -41,10 +50,10 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
             {checkpoint.metricsComputedAt ? <>Measurements computed <time dateTime={checkpoint.metricsComputedAt}>{formatDate(checkpoint.metricsComputedAt)}</time>{checkpoint.metricsTopologyRevision !== undefined && ` on topology revision ${checkpoint.metricsTopologyRevision}`}.</>
               : checkpoint.metricsComputedAt === null ? "Measurements are initialized simulator values; no engine tick had computed them." : null}
           </p>
-          {checkpoint.traffic && <div className="mt-5 min-w-0">
+          <div className="mt-5 min-w-0">
             <h3 className="text-[17px] font-semibold text-ink">Traffic outcomes</h3>
             <TrafficEvidence traffic={checkpoint.traffic} recordedAt={report.terminal ? "stop" : "checkpoint"} />
-          </div>}
+          </div>
           {checkpoint.resources.length > 0 && (
             <div className="mt-4">
               <table className="hidden w-full text-sm sm:table">
@@ -74,6 +83,8 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
                 ))}
               </ul>
               {checkpoint.resources.filter(r => r.database || r.databaseReplication || r.serverless || r.scheduler || r.eventBus || r.gateway || r.lbAccounting).map(r => <div key={r.id} className="mt-4"><h3 className="font-semibold">{r.id}</h3>{r.database && <DataDeliveryReadings type="Database" metrics={r} />}{r.databaseReplication && <DatabaseReplicationReadings metrics={r} />}{r.serverless && <ServerlessReadings metrics={r.serverless} />}{r.scheduler && <SchedulerReadings metrics={r.scheduler} />}{r.eventBus && <EventBusReadings metrics={r.eventBus} />}{r.gateway && <GatewayReadings metrics={r.gateway} />}{r.lbAccounting && <LbAccountingReadings metrics={r.lbAccounting} />}</div>)}
+              {checkpoint.resources.filter(r => r.cdn || types.get(r.id) === "CDN").map(r => <CdnReadings key={`cdn-${r.id}`} resource={r} />)}
+              {checkpoint.resources.filter(r => r.cache || r.applicationHelpers || ["Cache", "Virtual Machine"].includes(types.get(r.id) ?? "")).map(r => <CacheReadings key={`cache-${r.id}`} resource={r} cache={!!r.cache || types.get(r.id) === "Cache"} />)}
               {checkpoint.resources.filter(r => r.security).map(r => <section key={`security-${r.id}`} aria-label={`Security measurements for ${r.id}`} className="mt-4"><h3 className="font-semibold">{r.id}: security measurements</h3><SecurityReadings metrics={r.security} /></section>)}
               {checkpoint.resources.filter(r => r.queueWork || r.asyncQueue).map(r => <QueueReadings key={`queue-${r.id}`} resource={r} />)}
               {[...new Set([
@@ -89,6 +100,8 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
             ...((report.topology.accepted ?? report.topology.original)?.resources.filter(r => r.type === "Object Storage").map(r => r.id) ?? []),
             ...checkpoint.resources.filter(r => r.objectStorage).map(r => r.id),
           ])].map(id => <ObjectStorageReadings key={`object-${id}`} id={id} metrics={checkpoint.resources.find(r => r.id === id)?.objectStorage} />)}
+          <DurationReadings evidence={checkpoint.durationEvidence} />
+          {monitoringResources.map(r => <MonitoringReadings key={`monitor-${r.id}`} resource={r} />)}
           {[...new Set([
             ...((report.topology.accepted ?? report.topology.original)?.resources.filter(r => r.type === "Container Registry" || r.type === "Virtual Machine").map(r => r.id) ?? []),
             ...checkpoint.resources.filter(r => r.startup).map(r => r.id),

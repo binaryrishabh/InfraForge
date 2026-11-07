@@ -20,8 +20,8 @@ test("consumer diagnosis module: available lab and conceptual dependency exercis
   expect(LEARNING_REGISTRY.listLessons({trackId: "diagnosis", moduleId: asyncAndDependencies.id})).toEqual(asyncAndDependenciesLessons);
   expect(asyncAndDependencies.lessonIds).toEqual(asyncAndDependenciesLessons.map(l => l.id));
   expect(asyncAndDependencies.lessonIds).toEqual(["locate-the-missing-wait", "diagnose-consumer-credit"]);
-  expect(lab).toMatchObject({contentVersion: 2, kind: "executable-lab", availability: "available", experiment: {challengeId: lab.id}, check: null});
-  expect(conceptual).toMatchObject({contentVersion: 1, kind: "conceptual-exercise", availability: "available", experiment: null});
+  expect(lab).toMatchObject({contentVersion: 3, kind: "executable-lab", availability: "available", experiment: {challengeId: lab.id}, check: null});
+  expect(conceptual).toMatchObject({contentVersion: 2, kind: "conceptual-exercise", availability: "available", experiment: null});
   for (const lesson of asyncAndDependenciesLessons) {
     expect(LEARNING_REGISTRY.findLesson(lesson.id)).toEqual(lesson);
     for (const id of lesson.prerequisites) expect(LEARNING_REGISTRY.findLesson(id)).not.toBeNull();
@@ -49,8 +49,9 @@ test("consumer diagnosis: reviewed identity and every evidence label resolve to 
   expect(checkLearningAuthoring(isolated)).toMatchObject({lessons: 2, labs: 1});
 });
 
-test("consumer diagnosis: ready age is audited; worker phases and per-path waits remain unavailable", () => {
+test("consumer diagnosis: ready age is audited; worker phase durations remain unavailable while acquired path waits are audited", () => {
   const d = definition(lab.id);
+  expect(learningMeasurement("Duration: Acquired pool wait")).toMatchObject({unit: "us"});
   expect(learningMeasurement("Oldest ready message age (seconds)")).toMatchObject({path: "asyncQueue.oldestReadyAgeSeconds"});
   for (const label of ["oldestReadyAgeSeconds", "Worker phase", "Active workers", "App slot holding time", "Per-path pool wait"]) {
     expect(learningMeasurement(label)).toBeNull();

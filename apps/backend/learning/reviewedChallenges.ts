@@ -2,6 +2,7 @@
  * Keep old records. A changed challenge needs a new reviewed contentVersion. */
 export interface LearningChallengeReview { challengeId: string; version: number; hash: string }
 export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeReview>> = {
+  "keep-an-asset-cached@1": {challengeId: "keep-an-asset-cached", version: 1, hash: "3f6328645b2f62cf07f9071f08e7a4b0d8956936a684ae55166f580fd6e7db71"},
   "diagnose-consumer-credit@2": {challengeId: "diagnose-consumer-credit", version: 2, hash: "df97ca199816deccd0b3cdcdd332775946ab04e1c36ab9380b9204bbb79a9e60"},
   "analytics-burst-buffer@2": {challengeId: "analytics-burst-buffer", version: 1, hash: "b50e5b7b36b243530a74502c9bd4665ae9ebc74d1daeef70c2859456acfb91de"},
   "split-the-capacity-budget@4": {challengeId: "split-the-capacity-budget", version: 2, hash: "b31028311687a8a42cba0be3bc68c3c30e575fa68def548daf8b7be55b97dbc1"},
@@ -11,7 +12,9 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "check-the-missing-server@1": {challengeId: "check-the-missing-server", version: 1, hash: "8985ae0fdff18a9480d4f04c5141124da791b62bf81c647c6b91966ac936afe3"},
   "keep-waiting-work@1": {challengeId: "keep-waiting-work", version: 1, hash: "e38032b569056c8d43e914fdb68aab62eb64a71869cfcb2b52c5b897fc85ed60"},
   "share-a-cache-fill@1": {challengeId: "share-a-cache-fill", version: 1, hash: "39cffc8c5eadbe309c710409abe4a0d4f3431b94c05ef9352f95596ef0ae6954"},
+  "share-a-cache-fill@2": {challengeId: "share-a-cache-fill", version: 1, hash: "39cffc8c5eadbe309c710409abe4a0d4f3431b94c05ef9352f95596ef0ae6954"},
   "reuse-before-expiry@1": {challengeId: "reuse-before-expiry", version: 1, hash: "7eb2268b199d88bf9f961d0638bc98f28aecfac5ea08db66cff6855ba10362c0"},
+  "reuse-before-expiry@2": {challengeId: "reuse-before-expiry", version: 1, hash: "7eb2268b199d88bf9f961d0638bc98f28aecfac5ea08db66cff6855ba10362c0"},
   "split-the-capacity-budget@1": {challengeId: "split-the-capacity-budget", version: 1, hash: "db47968e9080943fbcc8ac3c883fb4c0a4d486f143fc94b575ca7f57e8ca82a6"},
   "split-the-capacity-budget@2": {challengeId: "split-the-capacity-budget", version: 1, hash: "db47968e9080943fbcc8ac3c883fb4c0a4d486f143fc94b575ca7f57e8ca82a6"},
   "split-the-capacity-budget@3": {challengeId: "split-the-capacity-budget", version: 1, hash: "db47968e9080943fbcc8ac3c883fb4c0a4d486f143fc94b575ca7f57e8ca82a6"},
@@ -20,6 +23,7 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "fit-a-request-in-memory@2": {challengeId: "fit-a-request-in-memory", version: 1, hash: "f9d6da9199e8abbc5045bcae85c2cec56d85f821ee86233d313a962be77e9763"},
   "diagnose-query-admission@1": {challengeId: "diagnose-query-admission", version: 1, hash: "af3d1ac31f9cca4078a377cc11d2c7c64a524c2bd3b16aada23829499a71aff5"},
   "cache-or-database@1": {challengeId: "cache-or-database", version: 1, hash: "7e141efce731cbf7f0c531002f8b6b8c4e82af638a63ff05bd45bb667e14c0b0"},
+  "cache-or-database@2": {challengeId: "cache-or-database", version: 1, hash: "7e141efce731cbf7f0c531002f8b6b8c4e82af638a63ff05bd45bb667e14c0b0"},
   "one-vm-or-a-pool@1": {challengeId: "one-vm-or-a-pool", version: 1, hash: "c85cf9886ed04a2e284d20aa0de128b0ed311fd23ac0dbe668b448f7f55bec79"},
   "limit-or-capacity@1": {challengeId: "limit-or-capacity", version: 1, hash: "48a7fce6157a217fd36abfc226be5a74d9aa453906fe2a23fb21175beed66423"},
   "route-around-a-slow-vm@1": { challengeId: "route-around-a-slow-vm", version: 1, hash: "96465260711b0f1ac74f1d62c606146c356721bde0b3843e0423d11b022a3f52" },
@@ -35,6 +39,7 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "leave-room-for-firewall-flows@1": { challengeId: "leave-room-for-firewall-flows", version: 1, hash: "492dca0578609884ed0729140e110de02cfd689831faecaa172f43eca803c705" },
   "choose-a-retry-mitigation@1": { challengeId: "choose-a-retry-mitigation", version: 1, hash: "6ca83f5bd42df0ea1f6ad09bb15d139a7b3b15abb3083a93b0e4d7e8b65ef46e" },
   "catalogue-link-flash@1": { challengeId: "catalogue-link-flash", version: 1, hash: "2d6afe745f45e31593096d34ae669138f45f2d6dadc2eff02295a71114ca7a6e" },
+  "catalogue-link-flash@2": { challengeId: "catalogue-link-flash", version: 1, hash: "2d6afe745f45e31593096d34ae669138f45f2d6dadc2eff02295a71114ca7a6e" },
   "flash-sale-order-backlog@1": { challengeId: "flash-sale-order-backlog", version: 1, hash: "c84cc970bee937a37136dd716a85724ee589fd8706b82fbd709e64de825b4093" },
   "notification-retry-storm@1": { challengeId: "notification-retry-storm", version: 1, hash: "e154e1b8a5741ba5754d9f1bb1bc95e6fb567530610563789f84aa709d2af3de" },
   "analytics-burst-buffer@1": { challengeId: "analytics-burst-buffer", version: 1, hash: "b50e5b7b36b243530a74502c9bd4665ae9ebc74d1daeef70c2859456acfb91de" },
@@ -51,4 +56,7 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "budget-for-a-partition@1": { challengeId: "budget-for-a-partition", version: 1, hash: "7b35c54cc84b3f4bc7af1e315fe55ed29b400b4395dca7fcce17a071b5e0d960" },
   "trace-a-saturation-cascade@1": { challengeId: "trace-a-saturation-cascade", version: 1, hash: "b8b8a24164dfdc70aadc52aac2b4eb75c1bb8f3e6730d7206c400de777b29f64" },
   "test-a-circuit-again@1": { challengeId: "test-a-circuit-again", version: 1, hash: "a22e969c06464f71fb91d240cc03e3a8b3418743f5287ea507b5b578fcbd0ea6" },
+  "diagnose-query-admission@2": {challengeId: "diagnose-query-admission", version: 1, hash: "af3d1ac31f9cca4078a377cc11d2c7c64a524c2bd3b16aada23829499a71aff5"},
+  "diagnose-consumer-credit@3": {challengeId: "diagnose-consumer-credit", version: 2, hash: "df97ca199816deccd0b3cdcdd332775946ab04e1c36ab9380b9204bbb79a9e60"},
+  "trace-a-saturation-cascade@2": { challengeId: "trace-a-saturation-cascade", version: 1, hash: "b8b8a24164dfdc70aadc52aac2b4eb75c1bb8f3e6730d7206c400de777b29f64" },
 };

@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { learningContent } from "../learning/content";
 import { failureControlLessons, failureControls } from "../learning/content/depth/failure-controls";
 import { track, lessons } from "../learning/content/depth";
@@ -30,7 +32,12 @@ test("failure controls register six honest concepts and one reviewed lab without
     expect(Object.hasOwn(LEARNING_REPORT_MEASUREMENTS, label)).toBe(true);
   }
   const paths = Object.values(LEARNING_REPORT_MEASUREMENTS).map(m => m.path);
-  expect(paths.some(p => /coalescedWaiters|clientRetry/.test(p))).toBe(false);
+  // These counters are audited labels now, but only because a saved-report renderer really shows them: each such label's source must contain its marker.
+  for (const m of Object.values(LEARNING_REPORT_MEASUREMENTS).filter(m => /coalescedWaiters|clientRetry/.test(m.path))) {
+    const source = readFileSync(fileURLToPath(new URL(`../../../${m.source}`, import.meta.url)), "utf8");
+    expect(source.includes(m.marker)).toBe(true);
+  }
+  expect(paths.length).toBeGreaterThan(0);
 
   const missingReview = {...learningContent, archivedLessons: [], lessons: [lab], tracks: [{...track, modules: [{...failureControls, lessonIds: [lab.id]}]}]};
   missingReview.lessons = [{...lab, prerequisites: []}];

@@ -13,8 +13,7 @@ function entries(value: unknown, path: string[]): Array<{ context: string; value
         : item && typeof item === "object" && "resourceId" in item ? String(item.resourceId)
         : item && typeof item === "object" && "criterionId" in item ? String(item.criterionId)
         : item && typeof item === "object" && "path" in item ? String(item.path)
-        : item && typeof item === "object" && "namespace" in item && "key" in item ? JSON.stringify([item.namespace, item.key])
-        : item && typeof item === "object" && "tag" in item ? String(item.tag)
+        : item && typeof item === "object" && "namespace" in item && "key" in item ? JSON.stringify([item.namespace, item.key]) : item && typeof item === "object" && "target" in item ? String(item.target) : item && typeof item === "object" && "tag" in item ? String(item.tag)
         : item && typeof item === "object" && "digest" in item ? String(item.digest) : id, row.context].filter(Boolean).join(" / ") })));
   }
   return entries((value as Record<string, unknown>)[key!], rest);
@@ -46,6 +45,9 @@ export function lessonRunMeasurements(report: RunReport, evidence: readonly stri
         monthlyBudgets: report.monthlyBudgets }, definition.path.split("."));
       return { label, value: rows.map(row => `${row.context ? `${row.context}: ` : ""}${recordedValue(row.value, definition.unit)}`).join("; ") };
     }
+    if (definition.scope === "snapshot" && definition.path.startsWith("durationEvidence.")) return {label,
+      value: entries(terminal, definition.path.split(".")).map(row =>
+        `${row.context ? `${row.context}: ` : ""}${recordedValue(row.value, definition.unit)}`).join("; ")};
     if (definition.scope === "traffic" || definition.scope === "snapshot") return { label,
       value: recordedValue(entries(definition.scope === "traffic" ? terminal?.traffic : terminal, definition.path.split("."))[0]?.value, definition.unit) };
     const ids = new Set([
