@@ -1,3 +1,4 @@
+import { keepAnAssetCachedV1 } from "./keep-an-asset-cached/v1";
 import { diagnoseConsumerCreditV2 } from "./diagnose-consumer-credit/v2";
 import { splitTheCapacityBudgetV2 } from "./split-the-capacity-budget/v2";
 import { fitARequestInMemoryV2 } from "./fit-a-request-in-memory/v2";
@@ -70,6 +71,7 @@ import { limitOrCapacityV1 } from "./limit-or-capacity/v1";
 attempts are judged by exactly the version that created them. Order sets the
 challenge list. See ../README.md for the authoring rules. */
 export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
+  keepAnAssetCachedV1,
   parallelJobsForABurstV1,
   keepWaitingWorkV1,
   checkTheMissingServerV1,

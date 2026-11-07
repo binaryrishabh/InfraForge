@@ -24,7 +24,7 @@ describe("versioned registry", () => {
   test("every challenge is listed once, at its latest version, with its category", () => {
     const listed = listLatestChallenges().map((e) => e.definition);
     expect(new Set(listed.map((d) => d.id)).size).toBe(listed.length);
-    expect(listed.map((d) => [d.id, categoryOf(d)]).filter(([, c]) => c === "resilience")).toEqual([["check-the-missing-server", "resilience"], ["share-a-cache-fill", "resilience"], ["lose-an-app-server", "resilience"], ["cache-failure", "resilience"], ["headroom-under-cpu-pressure", "resilience"], ["after-the-cache-returns", "resilience"], ["bound-retries-during-slowdown", "resilience"], ["budget-app-database-sessions", "resilience"], ["choose-a-retry-mitigation", "resilience"], ["investigate-a-pool-reset", "resilience"], ["budget-for-a-partition", "resilience"], ["one-vm-or-a-pool", "resilience"]]);
+    expect(listed.map((d) => [d.id, categoryOf(d)]).filter(([, c]) => c === "resilience")).toEqual([["keep-an-asset-cached", "resilience"], ["check-the-missing-server", "resilience"], ["share-a-cache-fill", "resilience"], ["lose-an-app-server", "resilience"], ["cache-failure", "resilience"], ["headroom-under-cpu-pressure", "resilience"], ["after-the-cache-returns", "resilience"], ["bound-retries-during-slowdown", "resilience"], ["budget-app-database-sessions", "resilience"], ["choose-a-retry-mitigation", "resilience"], ["investigate-a-pool-reset", "resilience"], ["budget-for-a-partition", "resilience"], ["one-vm-or-a-pool", "resilience"]]);
     for (const d of listed) {
       expect(validateInfrastructureName(d.title)).toBeNull();
       expect(WorkloadProfileSchema.safeParse(d.workload).success).toBe(true);

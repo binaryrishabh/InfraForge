@@ -5,6 +5,9 @@ import type { RunReport } from "@infraforge/contracts/reports";
 import { LEARNING_REPORT_MEASUREMENTS } from "@infraforge/contracts/learning";
 import { ReportMeasurements } from "../src/features/reports/components/ReportMeasurements";
 import { lessonRunMeasurements } from "../src/features/learning/runSummaryData";
+import { ChallengeDebrief } from "../src/features/challenges/components/ChallengeDebrief";
+import { MemoryRouter } from "react-router-dom";
+import type { LearningLesson } from "@infraforge/contracts/learning";
 
 const render = (report: RunReport) => renderToStaticMarkup(<ReportMeasurements report={report} number={3} />);
 test("real saved CDN reports render audited counts, windows and Unknowns", async () => {
@@ -32,4 +35,26 @@ test("real saved CDN reports render audited counts, windows and Unknowns", async
   for (const invalid of [...f.invalid, f.inventedRefusal]) expect(invalid.terminal).toBeNull();
   expect(render(f.checkpointOnly)).toContain("Latest retained simulation checkpoint");
   expect(lessonRunMeasurements(f.checkpointOnly, labels).every(r => /Unknown/.test(r.value))).toBe(true);
+});
+
+test("the first CDN lesson cites rendered real reports and generic caller requirements", async () => {
+  const child = Bun.spawn([Bun.which("bun")!, "--no-env-file", resolve(import.meta.dir, "../../backend/tests/cdnLab.fixture.ts")], {stdout: "pipe", stderr: "pipe"});
+  const [output, errors] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()]);
+  expect(await child.exited, errors).toBe(0);
+  const f = JSON.parse(output) as {lesson: LearningLesson; reports: RunReport[]};
+  expect(f.reports.map(r => r.challenge!.status)).toEqual(["not-met", "met", "not-met"]);
+  for (const report of f.reports) {
+    const html = render(report);
+    const values = lessonRunMeasurements(report, f.lesson.experiment!.evidenceToInspect!);
+    expect(values.every(row => !/Unknown/.test(row.value))).toBe(true);
+    for (const item of f.lesson.experiment!.evidenceToInspect!) for (const label of item.split(";").map(l => l.trim())) expect(html).toContain(label.replace("Whole run: ", ""));
+    const requirements = renderToStaticMarkup(<MemoryRouter><ChallengeDebrief evaluation={report.challenge!} brief={null} /></MemoryRouter>);
+    expect(requirements).toContain("Complete 60 callers without unsuccessful callers through second 32");
+    for (const c of report.challenge!.criteria) expect(requirements).toContain(c.detail);
+    expect(html).toContain("CDN: Waiter capacity refusals</dt><dd>Unknown</dd>");
+  }
+  const fixed = f.reports[1]!, html = render(fixed);
+  expect(html).toContain("<dt>CDN: Hits</dt><dd>63</dd>");
+  expect(html).toContain("<dt>CDN: Origin requests</dt><dd>1</dd>");
+  expect(lessonRunMeasurements(fixed, ["Whole run: Completed"])[0]!.value).toContain("64");
 });
