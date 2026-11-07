@@ -1,4 +1,6 @@
 import { fitARequestInMemoryV1 } from "./fit-a-request-in-memory/v1";
+import { keepWaitingWorkV1 } from "./keep-waiting-work/v1";
+import { checkTheMissingServerV1 } from "./check-the-missing-server/v1";
 import { diagnoseQueryAdmissionV1 } from "./diagnose-query-admission/v1";
 import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
 import { reuseBeforeExpiryV1 } from "./reuse-before-expiry/v1";
@@ -61,6 +63,8 @@ import { limitOrCapacityV1 } from "./limit-or-capacity/v1";
 attempts are judged by exactly the version that created them. Order sets the
 challenge list. See ../README.md for the authoring rules. */
 export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
+  keepWaitingWorkV1,
+  checkTheMissingServerV1,
   reuseBeforeExpiryV1,
   shareACacheFillV1,
   fitARequestInMemoryV1,

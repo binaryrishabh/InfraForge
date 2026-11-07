@@ -1,4 +1,6 @@
 import { fitARequestInMemoryV1 } from "../challenges/definitions/fit-a-request-in-memory/v1";
+import { keepWaitingWorkV1 } from "../challenges/definitions/keep-waiting-work/v1";
+import { checkTheMissingServerV1 } from "../challenges/definitions/check-the-missing-server/v1";
 import { diagnoseQueryAdmissionV1 } from "../challenges/definitions/diagnose-query-admission/v1";
 import { randomUUID } from "node:crypto";
 import { RESOURCE_TYPES as T, type Resource } from "@infraforge/domain/resource";
@@ -73,6 +75,10 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "keep-waiting-work": {...keepWaitingWorkV1.starter!, resources: keepWaitingWorkV1.starter!.resources.map(r =>
+    r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, retentionSeconds: 60}} : r)},
+  "check-the-missing-server": {...checkTheMissingServerV1.starter!, resources: checkTheMissingServerV1.starter!.resources.map(r =>
+    r.id === "lb" ? {...r, lbHealth: {...r.lbHealth!, intervalSeconds: 1}} : r)},
   "share-a-cache-fill": {...shareACacheFillV1.starter!, resources: shareACacheFillV1.starter!.resources.map(r =>
     r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, singleFlight: true}} : r)},
   "reuse-before-expiry": {...reuseBeforeExpiryV1.starter!, resources: reuseBeforeExpiryV1.starter!.resources.map(r =>

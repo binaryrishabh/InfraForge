@@ -28,6 +28,10 @@ const dataSource = "apps/web/src/features/live/DataDeliveryReadings.tsx";
 // None is an audited saved-report label until that report actually renders it.
 
 export const LEARNING_REPORT_MEASUREMENTS = {
+  "Acknowledged messages": { scope: "resource", path: "queueWork.acknowledged", resourceType: "Message Queue", source: "apps/web/src/features/reports/components/QueueReadings.tsx", marker: '"Acknowledged messages"' },
+  "Expired messages": { scope: "resource", path: "queueWork.expired", resourceType: "Message Queue", source: "apps/web/src/features/reports/components/QueueReadings.tsx", marker: '"Expired messages"' },
+  "Ready messages": { scope: "resource", path: "asyncQueue.readyDepth", resourceType: "Message Queue", source: "apps/web/src/features/reports/components/QueueReadings.tsx", marker: '"Ready messages"' },
+  "Oldest ready message age (seconds)": { scope: "resource", path: "asyncQueue.oldestReadyAgeSeconds", unit: "s", resourceType: "Message Queue", source: "apps/web/src/features/reports/components/QueueReadings.tsx", marker: '"Oldest ready message age (seconds)"' },
   "Offered requests/s": { scope: "traffic", path: "offeredRps", source: trafficSource, marker: "Offered requests/s" },
   "Completed requests/s": { scope: "traffic", path: "completedRps", source: trafficSource, marker: "Completed requests/s" },
   "Failed requests/s": { scope: "traffic", path: "failedRps", source: trafficSource, marker: "Failed requests/s" },

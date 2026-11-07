@@ -1,2 +1,4 @@
 export { track } from "./track";
-export { queuedWorkLessons as lessons } from "./queued-work";
+import { queuedWorkLessons } from "./queued-work";
+import { firstQueueLessons } from "./first-queue";
+export const lessons = [...firstQueueLessons, ...queuedWorkLessons];

@@ -1,2 +1,4 @@
 export { track } from "./track";
-export { incidentEvidenceLessons as lessons } from "./incident-evidence";
+import { incidentEvidenceLessons } from "./incident-evidence";
+import { firstFailureLessons } from "./first-failure";
+export const lessons = [...firstFailureLessons, ...incidentEvidenceLessons];

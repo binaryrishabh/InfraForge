@@ -31,7 +31,10 @@ const stage = z.object({ name: text, status: z.enum(["pending", "running", "comp
   message: text, startedAt: timestamp, completedAt: timestamp, details: z.unknown().optional() });
 // Model 2 records a value it does not model as null ("unknown"); reports treat it as not recorded, never as zero.
 const health = z.enum(["healthy", "degraded", "saturated", "failed", "unknown"]);
-const metrics = z.object({ security: SecurityMetricsSchema.optional(), queueWork: QueueWorkSchema.optional(), database: DatabaseMetricsSchema.optional(), databaseReplication: DatabaseReplicationMetricsSchema.optional(), lbAccounting: LbAccountingSchema.optional(), serverless: ServerlessMetricsSchema.optional(), scheduler: SchedulerMetricsSchema.optional(), eventBus: EventBusMetricsSchema.optional(), gateway: GatewayMetricsSchema.optional(), vmMemory: VmMemorySchema.optional(), cpu: amount.max(100).nullable().optional(), memory: amount.max(100).nullable().optional(),
+// Only these queue observations have a saved-report renderer. Preserve null as Unknown.
+const queueObservation = z.object({version: z.union([z.literal(1), z.literal(2)]),
+  readyDepth: amount.int().max(Number.MAX_SAFE_INTEGER).nullable(), oldestReadyAgeSeconds: amount.nullable()});
+const metrics = z.object({ asyncQueue: queueObservation.optional(), security: SecurityMetricsSchema.optional(), queueWork: QueueWorkSchema.optional(), database: DatabaseMetricsSchema.optional(), databaseReplication: DatabaseReplicationMetricsSchema.optional(), lbAccounting: LbAccountingSchema.optional(), serverless: ServerlessMetricsSchema.optional(), scheduler: SchedulerMetricsSchema.optional(), eventBus: EventBusMetricsSchema.optional(), gateway: GatewayMetricsSchema.optional(), vmMemory: VmMemorySchema.optional(), cpu: amount.max(100).nullable().optional(), memory: amount.max(100).nullable().optional(),
   rps: amount.optional(), connections: amount.optional(), health: health.optional() });
 const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction: amount.optional(),
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).optional(), accumulatedCostUsd: amount.optional(),

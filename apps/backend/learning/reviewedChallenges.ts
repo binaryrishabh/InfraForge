@@ -2,6 +2,8 @@
  * Keep old records. A changed challenge needs a new reviewed contentVersion. */
 export interface LearningChallengeReview { challengeId: string; version: number; hash: string }
 export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeReview>> = {
+  "check-the-missing-server@1": {challengeId: "check-the-missing-server", version: 1, hash: "8985ae0fdff18a9480d4f04c5141124da791b62bf81c647c6b91966ac936afe3"},
+  "keep-waiting-work@1": {challengeId: "keep-waiting-work", version: 1, hash: "e38032b569056c8d43e914fdb68aab62eb64a71869cfcb2b52c5b897fc85ed60"},
   "share-a-cache-fill@1": {challengeId: "share-a-cache-fill", version: 1, hash: "39cffc8c5eadbe309c710409abe4a0d4f3431b94c05ef9352f95596ef0ae6954"},
   "reuse-before-expiry@1": {challengeId: "reuse-before-expiry", version: 1, hash: "7eb2268b199d88bf9f961d0638bc98f28aecfac5ea08db66cff6855ba10362c0"},
   "fit-a-request-in-memory@1": {challengeId: "fit-a-request-in-memory", version: 1, hash: "f9d6da9199e8abbc5045bcae85c2cec56d85f821ee86233d313a962be77e9763"},

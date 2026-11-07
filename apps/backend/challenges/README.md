@@ -1,5 +1,30 @@
 # Authoring challenges
 
+## Beginner on-ramps
+
+`keep-waiting-work@1` changes only Message retention (seconds). The queue
+already has space and one worker keeps its fixed work and concurrency. At second
+170, extending retention from 1 to 60 seconds changes acknowledged messages from
+151 to 218 and expired messages from 79 to 0. The passing snapshot still has 11
+ready messages with oldest ready age 10.996246 seconds. Both runs accept all 230
+producer requests. This teaches message expiry rather than the capacity refusals
+in `analytics-burst-buffer` or worker optimization in `keep-up-with-the-queue`.
+Saved reports render acknowledged, expired, ready and oldest ready age; absent
+observations and the absence of an oldest ready message stay Unknown.
+
+`check-the-missing-server@1` changes only Check interval (seconds), from 60 to 1.
+Two apps already have sufficient survivor capacity. Under the same `vm-crash@1`
+script, completed callers change from 800 to 1150 and failed callers from 400 to
+50 through second 12. More survivor CPU does not repair routing to the failed
+peer. This teaches detection rather than adding headroom or another server.
+Final health and p95 match in both runs and cannot erase earlier caller failures.
+
+Both are starter challenges with beginner lessons, one-setting hidden references,
+failing near misses, refusal tests, browser/server replay proofs and real report
+rendering tests in `beginnerOnramps*`. These numbers are deterministic educational
+outputs, not provider benchmarks or availability guarantees. No engine behavior
+or previously published challenge definition changes for these labs.
+
 `share-a-cache-fill@1` changes only the cache's saved Single-flight setting. One
 read-only key and an app-owned aside expose overlapping fills during an authored
 database CPU slowdown. Calibration compares independent real runs: second-5 p95
