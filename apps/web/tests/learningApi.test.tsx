@@ -70,7 +70,9 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
       for (const id of loaded.lesson.prerequisites) expect(markup).toContain(`href="/learn/lessons/${id}"`);
       if (loaded.lesson.trackId === "foundations" || loaded.lesson.kind === "executable-lab") continue;
       expect(loaded.challenge).toBeNull(); expect(loaded.progress).toBeNull();
+      if (loaded.lesson.kind === "reading" && loaded.lesson.check === null) continue; // A reading's check is optional; a conceptual exercise's is required.
       const check = loaded.lesson.check!;
+      expect(check).not.toBeNull();
       expect(check.choices).toHaveLength(3);
       const wrong = check.choices.find(choice => choice.id !== check.correctChoiceId)!;
       expect(lesson(loaded, wrong.id)).toContain("Revisit the explanation.");
