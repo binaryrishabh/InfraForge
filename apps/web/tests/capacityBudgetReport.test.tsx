@@ -5,7 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import type { RunReport } from "@infraforge/contracts/reports";
 import { ReportMeasurements } from "../src/features/reports/components/ReportMeasurements";
 import { ChallengeDebrief } from "../src/features/challenges/components/ChallengeDebrief";
-import { LEARNING_REPORT_MEASUREMENTS } from "@infraforge/contracts/learning";
+import { LEARNING_REPORT_MEASUREMENTS, evidenceLabels, type LearningLesson } from "@infraforge/contracts/learning";
 import { lessonRunMeasurements } from "../src/features/learning/runSummaryData";
 
 const render = (report: RunReport) => renderToStaticMarkup(<MemoryRouter>
@@ -18,11 +18,19 @@ test("capacity budget: real saved reports render retained resource prices and si
   const process = Bun.spawn([Bun.which("bun")!, "--no-env-file", resolve(import.meta.dir, "../../backend/tests/capacityBudgetReport.fixture.ts")], {stdout: "pipe", stderr: "pipe"});
   const output = await new Response(process.stdout).text(), diagnostics = await new Response(process.stderr).text();
   expect(await process.exited, diagnostics).toBe(0);
-  const {reports, storedItems, missingCost, legacy, invalidItems, failedCost, duplicateCost, wrongIdentity, noBudget} = JSON.parse(output) as {
+  const {lessons, reports, storedItems, missingCost, legacy, invalidItems, failedCost, duplicateCost, wrongIdentity, noBudget} = JSON.parse(output) as {
+    lessons: LearningLesson[];
     reports: RunReport[]; storedItems: unknown; missingCost: RunReport; legacy: RunReport; invalidItems: RunReport[];
     failedCost: RunReport; duplicateCost: RunReport; wrongIdentity: RunReport; noBudget: RunReport;
   };
   expect(reports).toHaveLength(2);
+  expect(lessons.map(l => l.contentVersion)).toEqual([1, 2, 3]);
+  expect(lessons[0]!.limitations.join(" ")).toContain("omits individual SKU prices");
+  expect(lessons[1]!.experiment!.evidenceToInspect!.flatMap(evidenceLabels)).not.toContain(costLabels[1]);
+  for (const label of costLabels) {
+    expect(lessons[2]!.experiment!.evidenceToInspect!.flatMap(evidenceLabels)).toContain(label);
+    expect(lessons[2]!.explanation.join(" ")).toContain(label);
+  }
   for (const [i, report] of reports.entries()) {
     const total = report.stages.find(s => s.name === "CostEstimate")!.monthlyEstimateUsd!;
     expect(report.challenge!.challengeId).toBe("split-the-capacity-budget");

@@ -2,6 +2,7 @@
 import type { SimulationSnapshot } from "@infraforge/contracts/telemetry";
 import { buildRunReport } from "../reports/report";
 import { answers, attemptRow, definition, REFERENCE } from "./challengeHarness";
+import { findLearningLesson } from "../learning/registry";
 
 const d = definition("fit-a-request-in-memory");
 const medium = structuredClone(d.starter!); medium.resources.find(r => r.id === "app")!.size = "medium";
@@ -12,6 +13,7 @@ const raw = (row: typeof base) => row.terminalSnapshot as SimulationSnapshot;
 const reading = (row: typeof base) => raw(row).metrics.app!.vmMemory!.resources[0]!;
 const variant = (mutate: (row: typeof base) => void) => { const row = structuredClone(base); mutate(row); return buildRunReport(row); };
 console.log(JSON.stringify({
+  lessons: ["memory-is-not-cpu", d.id].map(id => ({old: findLearningLesson(id, 1), current: findLearningLesson(id)})),
   reports: rows.map(row => buildRunReport(row)),
   missing: variant(row => { delete raw(row).metrics.app!.vmMemory; }),
   unknown: variant(row => { Object.assign(reading(row), {residentBytes: null, headroomBytes: null, comparison: "unknown"}); }),

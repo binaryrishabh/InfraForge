@@ -1,6 +1,7 @@
 // Test-only bridge: render tests consume actual engine reports, never authored outcomes.
 import { answers, attemptRow, definition, REFERENCE } from "./challengeHarness";
 import { buildRunReport } from "../reports/report";
+import { findLearningLesson } from "../learning/registry";
 
 const d = definition("split-the-capacity-budget"), app = REFERENCE[`${d.id}-app-headroom`]!, db = REFERENCE[`${d.id}-db-headroom`]!;
 const over = {...app, resources: app.resources.map(r => r.id === "db" ? db.resources.find(r => r.id === "db")! : r)};
@@ -11,6 +12,7 @@ type Stage = {name: string; status: string; details: {monthlyEstimate?: unknown;
 const variant = (mutate: (row: typeof base) => void) => { const row = structuredClone(base); mutate(row); return buildRunReport(row); };
 const stage = (row: typeof base) => (row.stages as Stage[]).find(s => s.name === "CostEstimate")!;
 console.log(JSON.stringify({
+  lessons: [1, 2, 3].map(version => findLearningLesson(d.id, version)),
   reports: rows.map(row => buildRunReport(row)),
   storedItems: stage(base).details.lineItems,
   missingCost: variant(row => { row.stages = (row.stages as Stage[]).filter(s => s.name !== "CostEstimate"); }),
