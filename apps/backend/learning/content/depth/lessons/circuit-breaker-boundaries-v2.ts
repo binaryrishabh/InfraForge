@@ -15,5 +15,5 @@ export const circuitBreakerBoundariesV2: LearningLesson = {
   limitations: ["This conceptual exercise asserts no simulated result. The linked executable lab supplies its own recorded evidence and requirements.",
     "Missing historical circuit measurements stay Unknown. Totals cover the current segment across generations; they do not establish exact recovery time, continuous health or provider availability.",
     "Health checks may be half-open probes. Circuit refusals include path calls and health checks, so they are not interchangeable with unsuccessful original callers."],
-  followUp: "Open Test a circuit again and predict whether a shorter cooldown can test a still-failing path.",
+  followUp: "Open Test a circuit again and predict whether a shorter cooldown can test a path that is still failing.",
 };
