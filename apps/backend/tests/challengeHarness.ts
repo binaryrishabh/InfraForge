@@ -1,3 +1,5 @@
+import { fitARequestInMemoryV1 } from "../challenges/definitions/fit-a-request-in-memory/v1";
+import { diagnoseQueryAdmissionV1 } from "../challenges/definitions/diagnose-query-admission/v1";
 import { randomUUID } from "node:crypto";
 import { RESOURCE_TYPES as T, type Resource } from "@infraforge/domain/resource";
 import type { ChallengeDefinition, ChallengePrediction, ChallengeStarter } from "@infraforge/contracts/challenges";
@@ -75,6 +77,9 @@ export const REFERENCE: Record<string, ChallengeStarter> = {
     r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, singleFlight: true}} : r)},
   "reuse-before-expiry": {...reuseBeforeExpiryV1.starter!, resources: reuseBeforeExpiryV1.starter!.resources.map(r =>
     r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, ttlSeconds: 60}} : r)},
+  "fit-a-request-in-memory": {...fitARequestInMemoryV1.starter!, resources: fitARequestInMemoryV1.starter!.resources.map(r => r.id === "app" ? {...r, size: "large"} : r)},
+  "fit-a-request-in-memory-request": {...fitARequestInMemoryV1.starter!, resources: fitARequestInMemoryV1.starter!.resources.map(r => r.id === "app" ? {...r, vmMemory: {...r.vmMemory!, requestMiB: 256}} : r)},
+  "diagnose-query-admission": {...diagnoseQueryAdmissionV1.starter!, resources: diagnoseQueryAdmissionV1.starter!.resources.map(r => r.id === "db" ? {...r, dbConcurrency: {...r.dbConcurrency!, activeQueries: 4}} : r)},
   "cache-or-database": starter([["app", T.VirtualMachine, 0, 0, {skuId: "c5.xlarge"}],
     ["cache", T.Cache, 1, 0, {cachePolicy: {version: 2, capacityEntries: 16}}],
     ["db", T.Database, 2, 0, {size: "small", dataKeyspace: {version: 1, count: 16, accessPattern: "hot-key"}}]], [["app", "cache"], ["cache", "db"]]),
@@ -117,6 +122,8 @@ export const REFERENCE: Record<string, ChallengeStarter> = {
   "one-bigger-or-two-smaller": {...oneBiggerOrTwoSmallerV1.starter!, resources: oneBiggerOrTwoSmallerV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r)},
   // Request-path labs: the one-setting fix, and the plausible change that must still fail.
   "writes-cost-more-than-reads": {...writesCostMoreThanReadsV1.starter!, resources: writesCostMoreThanReadsV1.starter!.resources.map(r => r.id === "db" ? {...r, size: "medium"} : r)},
+  // The designer offers catalog sizes, not the generic size field: the same change as a learner makes it in the Instance size control.
+  "writes-cost-more-than-reads-catalog": {...writesCostMoreThanReadsV1.starter!, resources: writesCostMoreThanReadsV1.starter!.resources.map(r => r.id === "db" ? {...r, skuId: "db.m5.large"} : r)},
   "writes-cost-more-than-reads-second-app": starter([["dns", T.DNS, 0, 0], ["lb", T.LoadBalancer, 1, 0], ["app", T.VirtualMachine, 2, 0, {size: "large"}], ["app2", T.VirtualMachine, 2, 1, {size: "large"}],
     ["db", T.Database, 3, 0, {size: "small"}]], [["dns", "lb"], ["lb", "app"], ["app", "db"], ["lb", "app2"], ["app2", "db"]]),
   "balancer-shares-turns": {...balancerSharesTurnsV1.starter!, resources: balancerSharesTurnsV1.starter!.resources.map(r => r.id === "app-a" ? {...r, skuId: "c5.large"} : r)},

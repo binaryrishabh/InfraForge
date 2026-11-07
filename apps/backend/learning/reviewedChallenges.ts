@@ -4,6 +4,8 @@ export interface LearningChallengeReview { challengeId: string; version: number;
 export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeReview>> = {
   "share-a-cache-fill@1": {challengeId: "share-a-cache-fill", version: 1, hash: "39cffc8c5eadbe309c710409abe4a0d4f3431b94c05ef9352f95596ef0ae6954"},
   "reuse-before-expiry@1": {challengeId: "reuse-before-expiry", version: 1, hash: "7eb2268b199d88bf9f961d0638bc98f28aecfac5ea08db66cff6855ba10362c0"},
+  "fit-a-request-in-memory@1": {challengeId: "fit-a-request-in-memory", version: 1, hash: "f9d6da9199e8abbc5045bcae85c2cec56d85f821ee86233d313a962be77e9763"},
+  "diagnose-query-admission@1": {challengeId: "diagnose-query-admission", version: 1, hash: "af3d1ac31f9cca4078a377cc11d2c7c64a524c2bd3b16aada23829499a71aff5"},
   "cache-or-database@1": {challengeId: "cache-or-database", version: 1, hash: "7e141efce731cbf7f0c531002f8b6b8c4e82af638a63ff05bd45bb667e14c0b0"},
   "one-vm-or-a-pool@1": {challengeId: "one-vm-or-a-pool", version: 1, hash: "c85cf9886ed04a2e284d20aa0de128b0ed311fd23ac0dbe668b448f7f55bec79"},
   "limit-or-capacity@1": {challengeId: "limit-or-capacity", version: 1, hash: "48a7fce6157a217fd36abfc226be5a74d9aa453906fe2a23fb21175beed66423"},
@@ -29,7 +31,7 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "protect-one-api-route@1": { challengeId: "protect-one-api-route", version: 1, hash: "695b5f64876c96ff10cc0f6f37a9f74190b41a9378d92c0cc75a163ca7a509ea" },
   "queue-overlapping-jobs@1": { challengeId: "queue-overlapping-jobs", version: 1, hash: "ff340d09b24bff1c2f824e408ae3025f8bd39b7b6cec7cc9917fbcafaf6405cc" },
   "bound-function-pool-pressure@1": { challengeId: "bound-function-pool-pressure", version: 1, hash: "b58e0c704222b88d8e5d83d99dc998624c8b70f322e82d115ebd33767cd71d50" },
-  "writes-cost-more-than-reads@1": { challengeId: "writes-cost-more-than-reads", version: 1, hash: "05111fafb9ef1821ac835740cf56c38d5adec1ea93d966181d29eaf19d0507a9" },
+  "writes-cost-more-than-reads@1": { challengeId: "writes-cost-more-than-reads", version: 1, hash: "d869e00ed5a9bfde21637c6ff046a60feb6a2a5a589a3e019110ae8c759a2836" },
   "balancer-shares-turns@1": { challengeId: "balancer-shares-turns", version: 1, hash: "2cd489a91c966d7138831326bec893927e16e0a13f6d9fd9bd9935a97dc9eddc" },
   "diagnose-lost-app-capacity@1": { challengeId: "diagnose-lost-app-capacity", version: 1, hash: "c96034e934dbd75035b519f13035467cdae6eb9d8f08b921c06ad18cdb2466f2" },
   "investigate-a-pool-reset@1": { challengeId: "investigate-a-pool-reset", version: 1, hash: "ed61ae0627f3d15dcab41899f5cc80c5c54edf207c3068bdc9abe765e590500e" },

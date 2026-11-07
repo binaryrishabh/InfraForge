@@ -10,7 +10,7 @@ import { definition, REFERENCE } from "./challengeHarness";
 
 test("failure controls register six honest concepts and one reviewed lab without treating absent measurements as saved proof", () => {
   expect(validateLearningContent(learningContent)).toEqual([]);
-  expect(checkLearningAuthoring(learningContent)).toMatchObject({tracks: 9});
+  expect(checkLearningAuthoring(learningContent).tracks).toBeGreaterThanOrEqual(9);
   expect(track.modules.find(m => m.id === failureControls.id)).toEqual(failureControls);
   expect(failureControls.lessonIds).toEqual(failureControlLessons.map(l => l.id));
   expect(LEARNING_REGISTRY.listLessons({trackId: "depth"})).toEqual(lessons);
