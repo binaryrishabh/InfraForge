@@ -20,7 +20,7 @@ test("consumer diagnosis module: available lab and conceptual dependency exercis
   expect(LEARNING_REGISTRY.listLessons({trackId: "diagnosis", moduleId: asyncAndDependencies.id})).toEqual(asyncAndDependenciesLessons);
   expect(asyncAndDependencies.lessonIds).toEqual(asyncAndDependenciesLessons.map(l => l.id));
   expect(asyncAndDependencies.lessonIds).toEqual(["locate-the-missing-wait", "diagnose-consumer-credit"]);
-  expect(lab).toMatchObject({contentVersion: 1, kind: "executable-lab", availability: "available", experiment: {challengeId: lab.id}, check: null});
+  expect(lab).toMatchObject({contentVersion: 2, kind: "executable-lab", availability: "available", experiment: {challengeId: lab.id}, check: null});
   expect(conceptual).toMatchObject({contentVersion: 1, kind: "conceptual-exercise", availability: "available", experiment: null});
   for (const lesson of asyncAndDependenciesLessons) {
     expect(LEARNING_REGISTRY.findLesson(lesson.id)).toEqual(lesson);
@@ -29,14 +29,14 @@ test("consumer diagnosis module: available lab and conceptual dependency exercis
   }
   expect(lab.explanation[0]).toContain("before editing"); expect(lab.explanation[1]).toContain("diagnosis first");
   expect(lab.explanation[2]).toContain("Change only"); expect(lab.explanation[3]).toContain("wrong fix");
-  expect(lab.limitations.join(" ")).toContain("slow consumer"); expect(lab.limitations.join(" ")).toContain("live-panel");
+  expect(lab.limitations.join(" ")).toContain("slow consumer"); expect(lab.limitations.join(" ")).toContain("saved terminal reading");
   expect(conceptual.explanation.join(" ")).toContain("path-specific");
   expect(conceptual.check!.correctChoiceId).toBe("phases");
 });
 
 test("consumer diagnosis: reviewed identity and every evidence label resolve to existing saved renderers", () => {
   const d = definition(lab.id);
-  expect(REVIEWED_CHALLENGES[`${lab.id}@1`]).toEqual({challengeId: d.id, version: 1, hash: specHash(d)});
+  expect(REVIEWED_CHALLENGES[`${lab.id}@${lab.contentVersion}`]).toEqual({challengeId: d.id, version: d.version, hash: specHash(d)});
   expect(checkLessonClaims(lab, d)).toEqual([]); expect(checkLessonClaims(conceptual)).toEqual([]);
   for (const label of lab.experiment!.evidenceToInspect!.flatMap(evidenceLabels)) {
     const measurement = learningMeasurement(label)!; expect(measurement).not.toBeNull();
@@ -49,9 +49,10 @@ test("consumer diagnosis: reviewed identity and every evidence label resolve to 
   expect(checkLearningAuthoring(isolated)).toMatchObject({lessons: 2, labs: 1});
 });
 
-test("consumer diagnosis: age, worker phases and per-path waits remain unaudited; queue labels require saved requirement rendering", () => {
+test("consumer diagnosis: ready age is audited; worker phases and per-path waits remain unavailable", () => {
   const d = definition(lab.id);
-  for (const label of ["Oldest ready message age (seconds)", "oldestReadyAgeSeconds", "Worker phase", "Active workers", "App slot holding time", "Per-path pool wait"]) {
+  expect(learningMeasurement("Oldest ready message age (seconds)")).toMatchObject({path: "asyncQueue.oldestReadyAgeSeconds"});
+  for (const label of ["oldestReadyAgeSeconds", "Worker phase", "Active workers", "App slot holding time", "Per-path pool wait"]) {
     expect(learningMeasurement(label)).toBeNull();
     const bad = structuredClone(lab); bad.experiment!.evidenceToInspect = [label];
     expect(checkLessonClaims(bad, d).join("\n")).toContain(`report does not render measurement ${label}`);
@@ -59,7 +60,9 @@ test("consumer diagnosis: age, worker phases and per-path waits remain unaudited
   const noQueue = {...d, criteria: d.criteria.filter(c => c.kind !== "queue-work")};
   expect(checkLessonClaims(lab, noQueue).join("\n")).toContain("without a queue-work requirement");
   const report = readFileSync(new URL("../../web/src/features/reports/components/ReportMeasurements.tsx", import.meta.url), "utf8");
-  expect(report).not.toContain("AsyncQueueReadings"); expect(report).not.toContain("oldestReadyAgeSeconds");
+  expect(report).toContain("<QueueReadings");
+  const queue = readFileSync(new URL("../../web/src/features/reports/components/QueueReadings.tsx", import.meta.url), "utf8");
+  expect(queue).toContain('"Oldest ready message age (seconds)"'); expect(queue).toContain("observation?.oldestReadyAgeSeconds");
   const live = readFileSync(new URL("../../web/src/features/canvas/components/inspector/AsyncSection.tsx", import.meta.url), "utf8");
   expect(live).toContain('"oldestReadyAgeSeconds", "Oldest ready message age (seconds)"');
 });

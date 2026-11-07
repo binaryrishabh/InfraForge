@@ -14,7 +14,7 @@ test("missions retain four advanced labs and add an intermediate guided module w
   expect(firstApplications.lessonIds).toEqual(firstApplicationLessons.map(l => l.id)); expect(backgroundServices.lessonIds).toEqual(backgroundServiceLessons.map(l => l.id));
   expect(new Set(registered.map(l => l.id)).size).toBe(registered.length);
   for (const lesson of lessons) {
-    expect(lesson).toMatchObject({trackId: "missions", moduleId: track.modules.find(m => m.lessonIds.includes(lesson.id))!.id, contentVersion: 1, kind: "executable-lab", availability: "available"});
+    expect(lesson).toMatchObject({trackId: "missions", moduleId: track.modules.find(m => m.lessonIds.includes(lesson.id))!.id, contentVersion: lesson.id === "analytics-burst-buffer" ? 2 : 1, kind: "executable-lab", availability: "available"});
     expect(lesson.prerequisites.length).toBeGreaterThanOrEqual(2);
     expect(lesson.prerequisites.every(id => registered.some(l => l.id === id && l.trackId !== "missions"))).toBe(true);
     expect(lesson.limitations.length).toBeGreaterThan(2); expect(lesson.limitations.every(t => t.trim().length > 0)).toBe(true);
