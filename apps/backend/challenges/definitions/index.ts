@@ -1,3 +1,4 @@
+import { splitTheCapacityBudgetV1 } from "./split-the-capacity-budget/v1";
 import { diagnoseConsumerCreditV1 } from "./diagnose-consumer-credit/v1";
 import { fitARequestInMemoryV1 } from "./fit-a-request-in-memory/v1";
 import { keepWaitingWorkV1 } from "./keep-waiting-work/v1";
@@ -123,4 +124,5 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   cacheOrDatabaseV1,
   oneVmOrAPoolV1,
   limitOrCapacityV1,
+  splitTheCapacityBudgetV1,
 ];
