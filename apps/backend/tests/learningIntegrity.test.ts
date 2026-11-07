@@ -29,6 +29,8 @@ const ENTRY_REVIEWS: Record<string, { entry: string; prior: string[]; reason: st
     reason: "Design comparisons assume controlled bottleneck experiments and the foundations measurement vocabulary." },
   diagnosis: { entry: "read-before-changing", prior: ["request-journey", "response-time-and-throughput"],
     reason: "The beginner report-reading entry assumes foundations; the independent memory reading is intermediate." },
+  delivery: { entry: "keep-an-asset-cached", prior: ["request-journey", "cache-hits-and-misses"],
+    reason: "The CDN lab assumes the foundations request path and the data-track cache concept of hits and misses." },
 };
 
 // Ordinary compound words in existing follow-up prompts, not navigation ids.

@@ -71,7 +71,7 @@ test("an unrendered superseded population is refused; timeout lesson remains con
   }
   expect(LEARNING_REGISTRY.findLesson("concurrent-cache-misses")!.contentVersion).toBe(1);
   expect(learningContent.lessons.filter(l => l.id === "concurrent-cache-misses")).toHaveLength(1);
-  expect(checkLearningAuthoring(learningContent)).toMatchObject({archived: 14});
+  expect(checkLearningAuthoring(learningContent).archived).toBeGreaterThanOrEqual(14); // Later lanes archive more versions.
 });
 
 test("current affected lessons do not describe cache or timeout evidence as live-only or absent", () => {
