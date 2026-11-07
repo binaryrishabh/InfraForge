@@ -15,6 +15,7 @@ the next version file, register it in definitions/index.ts and pin it here. Run 
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
   "test-a-circuit-again@1": "a22e969c06464f71fb91d240cc03e3a8b3418743f5287ea507b5b578fcbd0ea6",
+  "keep-an-asset-cached@1": "3f6328645b2f62cf07f9071f08e7a4b0d8956936a684ae55166f580fd6e7db71",
   "diagnose-consumer-credit@2": "df97ca199816deccd0b3cdcdd332775946ab04e1c36ab9380b9204bbb79a9e60",
   "split-the-capacity-budget@2": "b31028311687a8a42cba0be3bc68c3c30e575fa68def548daf8b7be55b97dbc1",
   "fit-a-request-in-memory@2": "7add8b437cf66bebd6ed45c0db752157eb8ff095b9f3817e88723e2a015c65d0",
