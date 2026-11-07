@@ -14,6 +14,7 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
+  "reuse-before-expiry@1": "7eb2268b199d88bf9f961d0638bc98f28aecfac5ea08db66cff6855ba10362c0",
   "cache-or-database@1": "7e141efce731cbf7f0c531002f8b6b8c4e82af638a63ff05bd45bb667e14c0b0",
   "one-vm-or-a-pool@1": "c85cf9886ed04a2e284d20aa0de128b0ed311fd23ac0dbe668b448f7f55bec79",
   "limit-or-capacity@1": "48a7fce6157a217fd36abfc226be5a74d9aa453906fe2a23fb21175beed66423",
@@ -130,15 +131,27 @@ describe("challenge authoring", () => {
   test("the hidden reference designs never ship: no runtime module imports them and the image excludes tests", async () => {
     const root = join(import.meta.dir, "..");
     const offenders: string[] = [];
+    const sourceFiles: string[] = [];
+    // Bound concurrent reads so the complete packaging audit fits its original
+    // timeout on Windows too. Every discovered source still gets inspected.
+    const inspectFiles = async (files: string[], inspect: (path: string) => Promise<void>) => {
+      let next = 0;
+      await Promise.all(Array.from({length: Math.min(8, files.length)}, async () => {
+        while (next < files.length) await inspect(files[next++]!);
+      }));
+    };
     const walk = async (dir: string): Promise<void> => {
       for (const entry of await readdir(dir, { withFileTypes: true })) {
         if (["node_modules", "tests", "lib", ".turbo"].includes(entry.name)) continue;
         const path = join(dir, entry.name);
         if (entry.isDirectory()) await walk(path);
-        else if (path.endsWith(".ts") && /challengeHarness|\bREFERENCE\b/.test(await readFile(path, "utf8"))) offenders.push(path);
+        else if (path.endsWith(".ts")) sourceFiles.push(path);
       }
     };
     await walk(root);
+    await inspectFiles(sourceFiles, async path => {
+      if (/challengeHarness|\bREFERENCE\b/.test(await readFile(path, "utf8"))) offenders.push(path);
+    });
     expect(offenders).toEqual([]);
     const ignore = await readFile(join(root, "..", "..", ".dockerignore"), "utf8");
     expect(ignore).not.toMatch(/^!apps\/backend\/tests/m);
@@ -146,7 +159,7 @@ describe("challenge authoring", () => {
       const files: string[] = [];
       const list = async (dir: string): Promise<void> => { for (const e of await readdir(dir, { withFileTypes: true })) { const p = join(dir, e.name); if (e.isDirectory()) await list(p); else files.push(p); } };
       await list(join(root, "..", "web", web));
-      for (const file of files) expect(await readFile(file, "utf8")).not.toContain("challengeHarness");
+      await inspectFiles(files, async file => { expect(await readFile(file, "utf8")).not.toContain("challengeHarness"); });
     }
   });
 });

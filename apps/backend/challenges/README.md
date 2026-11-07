@@ -180,6 +180,15 @@ The criterion renders through the existing generic requirement list.
 
 ## Database labs
 
+`reuse-before-expiry@1` isolates cache lifetime from logical capacity. The
+read-only uniform working set already fits. Changing only Cache TTL reduces
+expiry-driven source reads and second-6 completed-request p95; increasing only
+logical capacity leaves the expiry behavior unchanged. All three runs use the
+same captured workload and seed. Cumulative caller outcomes are scored alongside
+terminal latency. Live cache populations are calibration evidence, not retained
+saved-report fields; the lesson names only saved latency, CPU, health and caller
+measurements. No mutable-data freshness or whole-run latency guarantee follows.
+
 `move-reads-off-the-writer@1` compares explicit primary-only and replica-preferred
 routing with unchanged capacity. Member CPU work and read-source counts show reads
 moving while primary commits continue. Aggregate CPU averages both member budgets,

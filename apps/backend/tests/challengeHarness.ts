@@ -19,6 +19,7 @@ import { afterTheCacheReturnsV2 } from "../challenges/definitions/after-the-cach
 import { createModel2Engine, type ContractBuilder } from "../simulator/model2Engine";
 import { buildModel2Contract } from "../simulator/contractBuilder";
 import { currentSecond } from "../simulator/engineView";
+import { reuseBeforeExpiryV1 } from "../challenges/definitions/reuse-before-expiry/v1";
 import { recordedScenario } from "../challenges/scenario";
 import { dueScenarioSteps } from "@infraforge/simulation/model2-run";
 import { boundRetriesDuringSlowdownV1 } from "../challenges/definitions/bound-retries-during-slowdown/v1";
@@ -69,6 +70,8 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "reuse-before-expiry": {...reuseBeforeExpiryV1.starter!, resources: reuseBeforeExpiryV1.starter!.resources.map(r =>
+    r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, ttlSeconds: 60}} : r)},
   "cache-or-database": starter([["app", T.VirtualMachine, 0, 0, {skuId: "c5.xlarge"}],
     ["cache", T.Cache, 1, 0, {cachePolicy: {version: 2, capacityEntries: 16}}],
     ["db", T.Database, 2, 0, {size: "small", dataKeyspace: {version: 1, count: 16, accessPattern: "hot-key"}}]], [["app", "cache"], ["cache", "db"]]),
