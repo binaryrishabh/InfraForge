@@ -92,6 +92,23 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
       expect(lesson(detail, wrong.id)).toContain("Revisit the explanation.");
       for (const limitation of detail.lesson.limitations) expect(lesson(detail)).toContain(limitation.replaceAll("&", "&amp;"));
     }
+    for (const [id, level, correct] of [
+      ["compare-designs-honestly", "intermediate", "window"],
+      ["passing-designs-and-budget", "advanced", "both"],
+      ["read-before-changing", "beginner", "unknown"],
+    ] as const) {
+      const detail = await getLearningLesson(id), markup = lesson(detail);
+      expect(detail.lesson.level).toBe(level);
+      expect(detail.lesson.experiment).toBeNull(); expect(detail.challenge).toBeNull(); expect(detail.progress).toBeNull();
+      expect(detail.lesson.check!.correctChoiceId).toBe(correct);
+      const escape = (text: string) => text.replaceAll("&", "&amp;").replaceAll("'", "&#x27;").replaceAll('"', "&quot;");
+      // The render helper normalizes apostrophes in React's output.
+      for (const paragraph of [...detail.lesson.explanation, ...detail.lesson.limitations]) expect(markup).toContain(escape(paragraph).replaceAll("&#x27;", "'"));
+      expect(lesson(detail, correct)).toContain("That matches the explanation.");
+      expect(lesson(detail, detail.lesson.check!.choices.find(c => c.id !== correct)!.id)).toContain("Revisit the explanation.");
+      expect(markup).toContain("device-local check, not server progress or mastery");
+      for (const forbidden of ["Evidence to inspect", "Open challenge lab", "Server activity:"]) expect(markup).not.toContain(forbidden);
+    }
     for (const detail of proof.curriculumDetails) {
       const loaded = await getLearningLesson(detail.lesson.id);
       const markup = lesson(loaded);
