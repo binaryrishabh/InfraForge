@@ -25,7 +25,7 @@ test("actual saved engine reports render exact retry and per-path circuit popula
     expect(html).toContain("Current gauges describe that instant only");
     const verify = (label: string, value: unknown) => {
       const text = value == null ? "Unknown" : typeof value === "boolean" ? value ? "Yes" : "No" : typeof value === "number" ? value.toLocaleString() : String(value);
-      expect(html).toMatch(new RegExp(`${escape(label)}<\/dt><dd[^>]*>${escape(text)}<`));
+      expect(html).toMatch(new RegExp(`${escape(label)}</dt><dd[^>]*>${escape(text)}<`));
     };
     const summary = lessonRunMeasurements(report, [...retryLabels, ...circuitLabels]);
     for (const label of retryLabels) {
@@ -50,7 +50,7 @@ test("actual saved engine reports render exact retry and per-path circuit popula
       }
     } else expect(html).toContain("Circuit paths: Unknown");
   }
-  for (const label of retryLabels) expect(render(oldRetry)).toMatch(new RegExp(`${escape(label)}<\/dt><dd[^>]*>Unknown<`));
+  for (const label of retryLabels) expect(render(oldRetry)).toMatch(new RegExp(`${escape(label)}</dt><dd[^>]*>Unknown<`));
   expect(lessonRunMeasurements(oldRetry, retryLabels).every(r => r.value === "lb: Unknown")).toBe(true);
   expect(render(oldCircuit)).toContain("Circuit paths: Unknown");
   expect(lessonRunMeasurements(oldCircuit, circuitLabels).every(r => r.value === "lb: Unknown")).toBe(true);
