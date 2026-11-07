@@ -5,3 +5,5 @@ export type * from "./compare";
 export type * from "./rerun";
 export * from "./experimentTrace";
 export type * from "./firstStack";
+
+export type { DnsEvidence } from "./dns";

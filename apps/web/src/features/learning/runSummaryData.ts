@@ -10,6 +10,7 @@ function entries(value: unknown, path: string[]): Array<{ context: string; value
     if (!items.length) return [{ context: "", value: undefined }];
     return items.flatMap(([id, item]) => entries(item, rest).map(row => ({ ...row,
       context: [item && typeof item === "object" && "id" in item ? String(item.id)
+        : item && typeof item === "object" && "name" in item ? String(item.name)
         : item && typeof item === "object" && "resourceId" in item ? String(item.resourceId)
         : item && typeof item === "object" && "criterionId" in item ? String(item.criterionId)
         : item && typeof item === "object" && "path" in item ? String(item.path)
@@ -23,6 +24,7 @@ function recordedValue(value: unknown, unit?: string): string {
   if (typeof value === "object" && "lowMs" in value && "highMs" in value) {
     return `${recordedValue(value.lowMs)}–${recordedValue(value.highMs)} ms`;
   }
+  if (typeof value === "boolean") return String(value);
   if (typeof value !== "string" && typeof value !== "number") return "Unknown";
   return `${value}${unit ? ` ${unit}` : ""}`;
 }
@@ -43,7 +45,7 @@ export function lessonRunMeasurements(report: RunReport, evidence: readonly stri
         monthlyBudgets: report.monthlyBudgets }, definition.path.split("."));
       return { label, value: rows.map(row => `${row.context ? `${row.context}: ` : ""}${recordedValue(row.value, definition.unit)}`).join("; ") };
     }
-    if (definition.scope === "snapshot" && definition.path.startsWith("durationEvidence.")) return {label,
+    if (definition.scope === "snapshot" && (definition.path.startsWith("durationEvidence.") || definition.path.startsWith("dnsEvidence."))) return {label,
       value: entries(terminal, definition.path.split(".")).map(row =>
         `${row.context ? `${row.context}: ` : ""}${recordedValue(row.value, definition.unit)}`).join("; ")};
     if (definition.scope === "traffic" || definition.scope === "snapshot") return { label,

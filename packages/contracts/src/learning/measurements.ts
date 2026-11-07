@@ -189,6 +189,21 @@ export const LEARNING_REPORT_MEASUREMENTS = {
   "Duration: Returned remote service": { scope: "snapshot", path: "durationEvidence.paths.*.reachedPhaseUs.remoteServiceUs", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: 'Duration: Returned remote service' },
   "Duration: Delivered response transport": { scope: "snapshot", path: "durationEvidence.paths.*.reachedPhaseUs.responseTransportUs", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: 'Duration: Delivered response transport' },
   "Duration: Unfinished acquisition": { scope: "snapshot", path: "durationEvidence.paths.*.unfinishedAcquisitionUs", unit: "us", source: "apps/web/src/features/reports/components/DurationReadings.tsx", marker: 'Duration: Unfinished acquisition' },
+  "DNS: Through time": { scope: "snapshot", path: "dnsEvidence.throughUs", unit: "us", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Through time" },
+  "DNS: Resolver queries": { scope: "snapshot", path: "dnsEvidence.resolvers.*.queries", unit: "count", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Resolver queries" },
+  "DNS: Cache hits": { scope: "snapshot", path: "dnsEvidence.resolvers.*.hits", unit: "count", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Cache hits" },
+  "DNS: Cache misses": { scope: "snapshot", path: "dnsEvidence.resolvers.*.misses", unit: "count", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Cache misses" },
+  "DNS: Authoritative lookups": { scope: "snapshot", path: "dnsEvidence.resolvers.*.authoritativeLookups", unit: "count", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Authoritative lookups" },
+  "DNS: Lookup failures": { scope: "snapshot", path: "dnsEvidence.resolvers.*.failures", unit: "count", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Lookup failures" },
+  "DNS: Cache fills": { scope: "snapshot", path: "dnsEvidence.resolvers.*.fills", unit: "count", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Cache fills" },
+  "DNS: Cache expirations": { scope: "snapshot", path: "dnsEvidence.resolvers.*.expirations", unit: "count", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Cache expirations" },
+  "DNS: Cache evictions": { scope: "snapshot", path: "dnsEvidence.resolvers.*.evictions", unit: "count", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Cache evictions" },
+  "DNS: Cache replacements": { scope: "snapshot", path: "dnsEvidence.resolvers.*.replaced", unit: "count", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Cache replacements" },
+  "DNS: Cached answer expiry": { scope: "snapshot", path: "dnsEvidence.resolvers.*.cache.*.expiresAt", unit: "us", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Cached answer expiry" },
+  "DNS: Cached answer generation": { scope: "snapshot", path: "dnsEvidence.resolvers.*.cache.*.answer.generation", unit: "generation", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Cached answer generation" },
+  "DNS: Cached answer success": { scope: "snapshot", path: "dnsEvidence.resolvers.*.cache.*.answer.ok", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Cached answer success" },
+  "DNS: Cached answer authority": { scope: "snapshot", path: "dnsEvidence.resolvers.*.cache.*.answer.authority", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Cached answer authority" },
+  "DNS: Cached answer reason": { scope: "snapshot", path: "dnsEvidence.resolvers.*.cache.*.answer.reason", source: "apps/web/src/features/reports/components/DnsReadings.tsx", marker: "DNS: Cached answer reason" },
 } satisfies Record<string, Measurement>;
 
 export type LearningMeasurementLabel = keyof typeof LEARNING_REPORT_MEASUREMENTS;
