@@ -3,4 +3,6 @@ import { crossResourceChoicesLessons } from "./cross-resource-choices";
 import { capacityBudgetsLessons } from "./capacity-budgets";
 import { designReasoningLessons } from "./design-reasoning";
 export const lessons = [...crossResourceChoicesLessons, ...capacityBudgetsLessons, ...designReasoningLessons];
-export { capacityBudgetsArchivedLessons as archivedLessons } from "./capacity-budgets";
+import { capacityBudgetsArchivedLessons } from "./capacity-budgets";
+import { cacheEvidenceArchivedLessons } from "./cache-evidence-archives";
+export const archivedLessons = [...capacityBudgetsArchivedLessons, ...cacheEvidenceArchivedLessons];

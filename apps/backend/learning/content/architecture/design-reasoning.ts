@@ -1,5 +1,5 @@
 import type { LearningModule } from "@infraforge/contracts/learning";
-import { compareDesignsHonestly } from "./lessons/compare-designs-honestly";
+import { compareDesignsHonestlyV2 as compareDesignsHonestly } from "./lessons/compare-designs-honestly-v2";
 import { passingDesignsAndBudget } from "./lessons/passing-designs-and-budget";
 
 export const designReasoningLessons = [compareDesignsHonestly, passingDesignsAndBudget];

@@ -1,5 +1,5 @@
 import type { LearningModule } from "@infraforge/contracts/learning";
-import { catalogueLinkFlash } from "./lessons/catalogue-link-flash";
+import { catalogueLinkFlashV2 as catalogueLinkFlash } from "./lessons/catalogue-link-flash-v2";
 import { flashSaleOrderBacklog } from "./lessons/flash-sale-order-backlog";
 
 export const firstApplicationLessons = [catalogueLinkFlash, flashSaleOrderBacklog];

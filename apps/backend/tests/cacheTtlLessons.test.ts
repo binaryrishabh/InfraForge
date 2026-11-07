@@ -12,7 +12,7 @@ test("TTL lesson uses canonical data module, existing concepts, reviewed challen
   expect(LEARNING_REGISTRY.findTrack("data")!.modules).toContainEqual(cacheLifetime);
   expect(LEARNING_REGISTRY.listLessons({trackId: "data", moduleId: cacheLifetime.id})).toEqual([lesson]);
   expect(cacheLifetime.lessonIds).toEqual([lesson.id]);
-  expect(lesson).toMatchObject({kind: "executable-lab", level: "beginner", contentVersion: 1, availability: "available", check: null});
+  expect(lesson).toMatchObject({kind: "executable-lab", level: "beginner", contentVersion: 2, availability: "available", check: null});
   expect(lesson.prerequisites.every(id => LEARNING_REGISTRY.findLesson(id)?.kind !== "executable-lab")).toBe(true);
   expect(lesson.prerequisites.every(id => LEARNING_REGISTRY.findLesson(id))).toBe(true);
   expect(lesson.limitations).toHaveLength(3); expect(lesson.followUp).toBeTruthy();
