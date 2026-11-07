@@ -63,6 +63,17 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
         }
       }
     }
+    const scaling = foundations.tracks.find(track => track.id === "scaling")!;
+    expect(scaling.modules[0]!.lessonIds).toEqual(["up-or-out", "choose-the-constrained-tier"]);
+    const scalingReading = await getLearningLesson("up-or-out");
+    expect(scalingReading).toMatchObject({lesson: {kind: "reading", level: "beginner", check: null}, challenge: null, progress: null});
+    expect(lesson(scalingReading)).toContain("Scaling out adds machines");
+    expect(lesson(scalingReading)).toContain('href="/learn/lessons/choose-the-constrained-tier"');
+    const scalingExercise = await getLearningLesson("choose-the-constrained-tier");
+    expect(scalingExercise).toMatchObject({lesson: {kind: "conceptual-exercise", level: "beginner"}, challenge: null, progress: null});
+    expect(lesson(scalingExercise, "apps")).toContain("Revisit the explanation.");
+    expect(lesson(scalingExercise, "database")).toContain("That matches the explanation.");
+    expect(lesson(scalingExercise)).toContain('href="/learn/lessons/load-balancer-policies"');
     for (const detail of proof.curriculumDetails) {
       const loaded = await getLearningLesson(detail.lesson.id);
       const markup = lesson(loaded);
@@ -70,10 +81,14 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
       for (const id of loaded.lesson.prerequisites) expect(markup).toContain(`href="/learn/lessons/${id}"`);
       if (loaded.lesson.trackId === "foundations" || loaded.lesson.kind === "executable-lab") continue;
       expect(loaded.challenge).toBeNull(); expect(loaded.progress).toBeNull();
-      if (loaded.lesson.kind === "reading" && loaded.lesson.check === null) continue; // A reading's check is optional; a conceptual exercise's is required.
+      for (const forbidden of ["Evidence to inspect", "Open challenge lab", "Server activity:"]) expect(markup).not.toContain(forbidden);
+      if (!loaded.lesson.check) {
+        expect(loaded.lesson.kind).toBe("reading");
+        expect(markup).toContain("This lesson has no check question");
+        continue;
+      }
       const check = loaded.lesson.check!;
-      expect(check).not.toBeNull();
-      expect(check.choices.length).toBeGreaterThanOrEqual(2); // The content contract allows 2 to 6 choices.
+      expect(detail.lesson.check).toEqual(check);
       const wrong = check.choices.find(choice => choice.id !== check.correctChoiceId)!;
       expect(lesson(loaded, wrong.id)).toContain("Revisit the explanation.");
       const checkedConcept = lesson(loaded, check.correctChoiceId);

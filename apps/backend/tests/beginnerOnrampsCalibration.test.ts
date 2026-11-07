@@ -13,6 +13,19 @@ import { checkLearningAuthoring } from "../learning/authoring";
 import { definition, REFERENCE, attemptRow, answers } from "./challengeHarness";
 
 const ids = ["keep-waiting-work", "check-the-missing-server"];
+test("scaling and data level by kind audit uses registered canonical lessons", () => {
+  const table = ["scaling", "data"].map(track => ({track, counts: Object.fromEntries(
+    ["beginner", "intermediate", "advanced"].map(level => [level, Object.fromEntries(
+      ["reading", "conceptual-exercise", "executable-lab"].map(kind => [kind,
+        learningContent.lessons.filter(l => l.trackId === track && l.level === level && l.kind === kind).length]))]))}));
+  for (const row of table) {
+    const registered = learningContent.tracks.find(t => t.id === row.track)!.modules.flatMap(m => m.lessonIds);
+    const canonical = learningContent.lessons.filter(l => l.trackId === row.track).map(l => l.id);
+    expect(registered.toSorted()).toEqual(canonical.toSorted());
+    expect(new Set(registered).size).toBe(registered.length);
+  }
+  console.info(JSON.stringify(table));
+});
 const resource = (s: ChallengeStarter, id: string) => s.resources.find(r => r.id === id)!;
 const raw = (row: ReturnType<typeof attemptRow>) => row.terminalSnapshot as SimulationSnapshot & {metricsTopologyRevision: number};
 const predict = (id: string) => answers(definition(id), {"overall-health": "healthy"});
