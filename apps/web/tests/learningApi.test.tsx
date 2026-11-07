@@ -86,7 +86,7 @@ test("real learning API payloads drive foundations, checks, a linked lab and Hom
         continue;
       }
       const check = loaded.lesson.check!;
-      expect(check).toEqual(detail.lesson.check);
+      expect(detail.lesson.check).toEqual(check);
       const wrong = check.choices.find(choice => choice.id !== check.correctChoiceId)!;
       expect(lesson(loaded, wrong.id)).toContain("Revisit the explanation.");
       const checkedConcept = lesson(loaded, check.correctChoiceId);
