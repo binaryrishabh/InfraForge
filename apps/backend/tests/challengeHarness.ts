@@ -1,3 +1,4 @@
+import { diagnoseQueryAdmissionV1 } from "../challenges/definitions/diagnose-query-admission/v1";
 import { randomUUID } from "node:crypto";
 import { RESOURCE_TYPES as T, type Resource } from "@infraforge/domain/resource";
 import type { ChallengeDefinition, ChallengePrediction, ChallengeStarter } from "@infraforge/contracts/challenges";
@@ -69,6 +70,7 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "diagnose-query-admission": {...diagnoseQueryAdmissionV1.starter!, resources: diagnoseQueryAdmissionV1.starter!.resources.map(r => r.id === "db" ? {...r, dbConcurrency: {...r.dbConcurrency!, activeQueries: 4}} : r)},
   "cache-or-database": starter([["app", T.VirtualMachine, 0, 0, {skuId: "c5.xlarge"}],
     ["cache", T.Cache, 1, 0, {cachePolicy: {version: 2, capacityEntries: 16}}],
     ["db", T.Database, 2, 0, {size: "small", dataKeyspace: {version: 1, count: 16, accessPattern: "hot-key"}}]], [["app", "cache"], ["cache", "db"]]),
