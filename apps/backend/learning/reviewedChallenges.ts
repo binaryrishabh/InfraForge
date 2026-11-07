@@ -50,4 +50,5 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "investigate-a-pool-reset@1": { challengeId: "investigate-a-pool-reset", version: 1, hash: "ed61ae0627f3d15dcab41899f5cc80c5c54edf207c3068bdc9abe765e590500e" },
   "budget-for-a-partition@1": { challengeId: "budget-for-a-partition", version: 1, hash: "7b35c54cc84b3f4bc7af1e315fe55ed29b400b4395dca7fcce17a071b5e0d960" },
   "trace-a-saturation-cascade@1": { challengeId: "trace-a-saturation-cascade", version: 1, hash: "b8b8a24164dfdc70aadc52aac2b4eb75c1bb8f3e6730d7206c400de777b29f64" },
+  "test-a-circuit-again@1": { challengeId: "test-a-circuit-again", version: 1, hash: "a22e969c06464f71fb91d240cc03e3a8b3418743f5287ea507b5b578fcbd0ea6" },
 };
