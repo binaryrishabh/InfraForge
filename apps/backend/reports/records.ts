@@ -9,6 +9,7 @@ import { WholeRunSchema } from "./wholeRunSchema";
 import { LatencySchema } from "./latencySchema";
 import { ClientRetryLiveSchema } from "./clientRetrySchema";
 import { VmMemorySchema } from "./vmMemorySchema";
+import { LbRetrySchema, CircuitBreakerSchema } from "./lbResilienceSchema";
 import { LbAccountingSchema } from "./lbAccountingSchema";
 import { ObjectiveSchema } from "./objectiveSchema";
 import { DeploymentChaosNames } from "@infraforge/domain/resource";
@@ -37,7 +38,7 @@ const health = z.enum(["healthy", "degraded", "saturated", "failed", "unknown"])
 // Only these queue observations have a saved-report renderer. Preserve null as Unknown.
 const queueObservation = z.object({version: z.union([z.literal(1), z.literal(2)]),
   readyDepth: amount.int().max(Number.MAX_SAFE_INTEGER).nullable(), oldestReadyAgeSeconds: amount.nullable()});
-const metrics = z.object({ asyncQueue: queueObservation.optional(), security: SecurityMetricsSchema.optional(), queueWork: QueueWorkSchema.optional(), database: DatabaseMetricsSchema.optional(), databaseReplication: DatabaseReplicationMetricsSchema.optional(), lbAccounting: LbAccountingSchema.optional(), serverless: ServerlessMetricsSchema.optional(), scheduler: SchedulerMetricsSchema.optional(), eventBus: EventBusMetricsSchema.optional(), gateway: GatewayMetricsSchema.optional(), vmMemory: VmMemorySchema.optional(), cpu: amount.max(100).nullable().optional(), memory: amount.max(100).nullable().optional(),
+const metrics = z.object({ asyncQueue: queueObservation.optional(), security: SecurityMetricsSchema.optional(), queueWork: QueueWorkSchema.optional(), database: DatabaseMetricsSchema.optional(), databaseReplication: DatabaseReplicationMetricsSchema.optional(), lbAccounting: LbAccountingSchema.optional(), lbRetry: LbRetrySchema.optional(), circuitBreaker: CircuitBreakerSchema.optional(), serverless: ServerlessMetricsSchema.optional(), scheduler: SchedulerMetricsSchema.optional(), eventBus: EventBusMetricsSchema.optional(), gateway: GatewayMetricsSchema.optional(), vmMemory: VmMemorySchema.optional(), cpu: amount.max(100).nullable().optional(), memory: amount.max(100).nullable().optional(),
   rps: amount.optional(), connections: amount.optional(), health: health.optional() });
 const checkpoint = z.object({ simulatedSeconds: amount.optional(), loadFraction: amount.optional(),
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).optional(), accumulatedCostUsd: amount.optional(),
@@ -59,6 +60,10 @@ const terminal = checkpoint.extend({ version: z.literal(1), kind: z.literal("ter
   overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]),
   metrics: boundedMap(metrics.extend({ cpu: amount.max(100).nullable(), memory: amount.max(100).nullable(), health })) });
 const unknownCostTerminal = terminal.extend({ version: z.literal(2), costCoverage: z.literal("unknown"), accumulatedCostUsd: z.undefined().optional(), burnRatePerHourUsd: z.undefined().optional() });
+const resilienceWindow = (data: {simulatedSeconds?: number}, resourceId: string, m: z.infer<typeof metrics>) =>
+  (!m.lbRetry || m.lbRetry.sampledAtUs === (data.simulatedSeconds ?? NaN) * 1_000_000) &&
+  (!m.circuitBreaker || m.circuitBreaker.sampledAtUs === (data.simulatedSeconds ?? NaN) * 1_000_000 &&
+    m.circuitBreaker.paths.every(p => p.source === resourceId));
 const terminalRecord = z.discriminatedUnion("version", [terminal, unknownCostTerminal]);
 
 export function readRecords(value: unknown, limits: string[]) {
@@ -132,7 +137,7 @@ function readCheckpoint(value: unknown, limits: string[]): ReportCheckpoint | nu
       for (const [id, value] of entries.slice(0, 500)) {
         const item = metrics.safeParse(value);
         const known = item.success ? Object.fromEntries(Object.entries(item.data).filter(([, v]) => v !== null)) : {};
-        if (item.success && Object.keys(item.data).length) resources.push({ id, ...known });
+        if (item.success && resilienceWindow(data, id, item.data) && Object.keys(item.data).length) resources.push({ id, ...known });
         else limits.push(`Checkpoint measurements for resource ${id} are malformed or empty.`);
       }
       if (entries.length > 500) limits.push("Only the first 500 checkpoint resources are shown.");
@@ -155,6 +160,6 @@ function readCheckpoint(value: unknown, limits: string[]): ReportCheckpoint | nu
 function readTerminal(value: unknown, limits: string[]): ReportCheckpoint | null {
   if (value == null) return null;
   const parsed = terminalRecord.safeParse(value);
-  if (!parsed.success) { limits.push("The terminal record is malformed; no exact final-state claim is made from it."); return null; }
+  if (!parsed.success || !Object.entries(parsed.data.metrics).every(([id, m]) => resilienceWindow(parsed.data, id, m))) { limits.push("The terminal record is malformed; no exact final-state claim is made from it."); return null; }
   return readCheckpoint(parsed.data, limits);
 }

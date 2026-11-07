@@ -10,6 +10,7 @@ import { ReportSection } from "./ReportSection";
 import { TrafficEvidence } from "@/features/live/TrafficEvidence";
 import { measurementId } from "../resourceFocus";
 import { LbAccountingReadings } from "./LbAccountingReadings";
+import { LbResilienceReadings } from "./LbResilienceReadings";
 import { SecurityReadings } from "@/features/canvas/components/inspector/SecuritySection";
 import { QueueReadings } from "./QueueReadings";
 
@@ -73,6 +74,10 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
               {checkpoint.resources.filter(r => r.database || r.databaseReplication || r.serverless || r.scheduler || r.eventBus || r.gateway || r.lbAccounting).map(r => <div key={r.id} className="mt-4"><h3 className="font-semibold">{r.id}</h3>{r.database && <DataDeliveryReadings type="Database" metrics={r} />}{r.databaseReplication && <DatabaseReplicationReadings metrics={r} />}{r.serverless && <ServerlessReadings metrics={r.serverless} />}{r.scheduler && <SchedulerReadings metrics={r.scheduler} />}{r.eventBus && <EventBusReadings metrics={r.eventBus} />}{r.gateway && <GatewayReadings metrics={r.gateway} />}{r.lbAccounting && <LbAccountingReadings metrics={r.lbAccounting} />}</div>)}
               {checkpoint.resources.filter(r => r.security).map(r => <section key={`security-${r.id}`} aria-label={`Security measurements for ${r.id}`} className="mt-4"><h3 className="font-semibold">{r.id}: security measurements</h3><SecurityReadings metrics={r.security} /></section>)}
               {checkpoint.resources.filter(r => r.queueWork || r.asyncQueue).map(r => <QueueReadings key={`queue-${r.id}`} resource={r} />)}
+              {[...new Set([
+                ...((report.topology.accepted ?? report.topology.original)?.resources.filter(r => r.type === "Load Balancer").map(r => r.id) ?? []),
+                ...checkpoint.resources.filter(r => r.lbRetry || r.circuitBreaker).map(r => r.id),
+              ])].map(id => { const r = checkpoint.resources.find(r => r.id === id); return <LbResilienceReadings key={`resilience-${id}`} id={id} retry={r?.lbRetry} breaker={r?.circuitBreaker} />; })}
               {checkpoint.resources.filter(r => r.vmMemory).map(r => <section key={`memory-${r.id}`} aria-label={`Memory measurements for ${r.id}`} className="mt-4"><h3 className="font-semibold">{r.id}: memory measurements</h3><VmMemoryReadings metrics={r.vmMemory} /></section>)}
               {report.guidedReview && <a href="#guided-review" className="mt-3 inline-block text-sm font-medium text-accent underline">Back to guided review</a>}
             </div>

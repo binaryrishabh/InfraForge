@@ -37,6 +37,7 @@ export function createProductModel2(compiled: CompiledProduct, usage?: RuntimeUs
     inspect: (id: string) => network?.inspect?.(id) ?? network?.observe(id),
     vmMemoryEvidence: () => memory?.measure(),
     lbAccounting: (id: string) => accounting?.forLb(id),
+    inspectBreakers: (id: string) => network?.inspectBreakers?.(id),
     inspectData: runtime.inspectData,
     inspectCdn: runtime.inspectCdn,
     inspectMonitor: runtime.inspectMonitor,

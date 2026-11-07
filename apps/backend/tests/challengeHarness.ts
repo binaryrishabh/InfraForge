@@ -1,3 +1,4 @@
+import { testACircuitAgainV1 } from "../challenges/definitions/test-a-circuit-again/v1";
 import { openAndSizeAnApiV1 } from "../challenges/definitions/open-and-size-an-api/v1";
 import { splitTheCapacityBudgetV1 } from "../challenges/definitions/split-the-capacity-budget/v1";
 import { diagnoseConsumerCreditV1 } from "../challenges/definitions/diagnose-consumer-credit/v1";
@@ -80,6 +81,8 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "test-a-circuit-again": {...testACircuitAgainV1.starter!, resources: testACircuitAgainV1.starter!.resources.map(r =>
+    r.id === "lb" ? {...r, circuitBreaker: {...r.circuitBreaker!, cooldownMs: 2000}} : r)},
   "diagnose-consumer-credit-v2": {...diagnoseConsumerCreditV2.starter!, resources: diagnoseConsumerCreditV2.starter!.resources.map(r =>
     r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, prefetch: 16}} : r)},
   "parallel-jobs-for-a-burst": {...parallelJobsForABurstV1.starter!, resources: parallelJobsForABurstV1.starter!.resources.map(r =>
