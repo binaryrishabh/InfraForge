@@ -2,14 +2,16 @@ import { expect, test } from "bun:test";
 import { tracks, lessons as registeredLessons } from "../learning/content";
 import { track, lessons } from "../learning/content/scaling";
 import { servingUnderLoad } from "../learning/content/scaling/serving-under-load";
+import { firstScalingChoices, firstScalingChoicesLessons } from "../learning/content/scaling/first-scaling-choices";
 import { latestChallenge } from "../challenges/registry";
 import { REFERENCE } from "./challengeHarness";
 
 test("scaling registers three executable labs with real challenges, limitations and measured evidence", () => {
   expect(tracks.filter(t => t.id === "scaling")).toEqual([track]);
-  expect(track.modules).toEqual([servingUnderLoad]);
+  expect(track.modules).toEqual([firstScalingChoices, servingUnderLoad]);
   expect(registeredLessons.filter(l => l.trackId === "scaling")).toEqual(lessons);
-  expect(servingUnderLoad.lessonIds).toEqual(lessons.map(l => l.id));
+  expect([...firstScalingChoices.lessonIds, ...servingUnderLoad.lessonIds]).toEqual(lessons.map(l => l.id));
+  expect(firstScalingChoicesLessons.map(l => l.kind)).toEqual(["reading", "conceptual-exercise"]);
   const labs = lessons.filter(lesson => lesson.kind === "executable-lab");
   expect(labs).toHaveLength(3);
   expect(new Set(registeredLessons.map(l => l.id)).size).toBe(registeredLessons.length);

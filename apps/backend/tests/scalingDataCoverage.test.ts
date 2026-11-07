@@ -14,10 +14,29 @@ const coverage = [
   {track: "data", concept: "replica-reads-and-writer-work", labs: ["move-reads-off-the-writer", "replicas-do-not-take-writes"]},
 ];
 
+// New introductions point forward to published labs without changing those labs' prerequisites.
+const onramps = [
+  {concept: "up-or-out", labs: ["one-bigger-or-two-smaller"]},
+  {concept: "choose-the-constrained-tier", labs: ["balancer-shares-turns", "route-around-a-slow-vm", "leave-room-for-a-burst"]},
+];
+// These registered lessons explicitly have no editable/scored promotion experiment.
+const conceptualOnly = ["promoting-a-replica", "promotion-and-pending-work"];
+
 test("scaling/data coverage accounts for every concept exactly once and links real canonical runnable labs", () => {
   const concepts = learningContent.lessons.filter(l => ["scaling", "data"].includes(l.trackId) && l.kind !== "executable-lab");
-  expect(coverage.map(row => row.concept).sort()).toEqual(concepts.map(l => l.id).sort());
-  expect(new Set(coverage.map(row => row.concept)).size).toBe(coverage.length);
+  const accounted = [...coverage.map(row => row.concept), ...onramps.map(row => row.concept), ...conceptualOnly];
+  expect(accounted.toSorted()).toEqual(concepts.map(l => l.id).toSorted());
+  expect(new Set(accounted).size).toBe(accounted.length);
+  for (const row of onramps) for (const id of row.labs) {
+    expect(concepts.find(l => l.id === row.concept)!.followUp).toContain(`(${id})`);
+    expect(learningContent.lessons.find(l => l.id === id)).toMatchObject({kind: "executable-lab", availability: "available"});
+  }
+  for (const id of conceptualOnly) {
+    const lesson = concepts.find(l => l.id === id)!;
+    expect(lesson).toMatchObject({trackId: "data", kind: "conceptual-exercise", experiment: null});
+    expect(lesson.limitations.join(" ")).toMatch(/Conceptual only/);
+    expect(lesson.limitations.join(" ")).toMatch(/no .*?(experiment|challenge|scored)/);
+  }
   for (const row of coverage) {
     expect(concepts.find(l => l.id === row.concept)!.trackId).toBe(row.track);
     const labs = row.labs.map(id => learningContent.lessons.find(l => l.id === id)!);

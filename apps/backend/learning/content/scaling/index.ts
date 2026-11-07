@@ -1,2 +1,4 @@
 export { track } from "./track";
-export { servingUnderLoadLessons as lessons } from "./serving-under-load";
+import { servingUnderLoadLessons } from "./serving-under-load";
+import { firstScalingChoicesLessons } from "./first-scaling-choices";
+export const lessons = [...firstScalingChoicesLessons, ...servingUnderLoadLessons];
