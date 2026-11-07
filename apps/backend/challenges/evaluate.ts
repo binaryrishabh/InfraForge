@@ -95,7 +95,7 @@ class Judge {
   scenarioCriterionProblem(c: ChallengeCriterion): string | null {
     if (isDepthCriterion(c)) return this.atEvaluation?.measurementFreshness === "current-revision" ? null : "A current evaluation measurement was not recorded.";
     const input = this.evidence.input, terminal = this.atEvaluation;
-    if (["overall-health", "no-saturation", "database-healthy", "database-connections", "terminal-p95", "survivors-unsaturated", "backend-admission-budget", "queue-work", "firewall-admission-budget"].includes(c.kind) &&
+    if (["overall-health", "no-saturation", "database-healthy", "database-connections", "terminal-p95", "survivors-unsaturated", "backend-admission-budget", "queue-work", "queue-ready-age", "firewall-admission-budget"].includes(c.kind) &&
       terminal?.measurementFreshness !== "current-revision") return "A current evaluation measurement was not recorded.";
     const finite = (n: unknown): n is number => typeof n === "number" && Number.isFinite(n) && n >= 0;
     const health = (ids: string[]) => !!terminal && ids.every(id => {
@@ -147,6 +147,7 @@ class Judge {
       case "caller-outcomes":
       case "backend-admission-budget":
       case "queue-work":
+      case "queue-ready-age":
       case "firewall-admission-budget":
         // Counter completeness and the cumulative window are checked below.
         return null;
@@ -167,7 +168,7 @@ class Judge {
     const pending = (detail: string, sources: string[]) => ({ ...base, status: this.active ? "pending" as const : "not-evaluated" as const, detail, sources });
     const decided = (met: boolean, detail: string, sources: string[]) => ({ ...base, status: met ? "met" as const : "not-met" as const, detail, sources });
     // A fixed-load latency lab uses the same captured terminal evidence as a scenario.
-    const missing = this.definition.scenario || isDepthCriterion(c) || c.kind === "caller-outcomes" || c.kind === "terminal-p95" || c.kind === "backend-admission-budget" || c.kind === "queue-work" || c.kind === "firewall-admission-budget" ? this.scenarioCriterionProblem(c) : null;
+    const missing = this.definition.scenario || isDepthCriterion(c) || c.kind === "caller-outcomes" || c.kind === "terminal-p95" || c.kind === "backend-admission-budget" || c.kind === "queue-work" || c.kind === "queue-ready-age" || c.kind === "firewall-admission-budget" ? this.scenarioCriterionProblem(c) : null;
     if (missing) return pending(missing, ["runInputs", "stages", "terminalSnapshot"]);
     const input = this.evidence.input;
     if (isDepthCriterion(c)) {
@@ -238,6 +239,23 @@ class Judge {
         const unsuccessful = w.failed + w.deadlineExceeded + w.abandoned;
         return decided(w.completed >= c.minCompleted && unsuccessful <= c.maxUnsuccessful,
           `Through second ${t.simulatedSeconds}: ${w.completed} completed (minimum ${c.minCompleted}); ${unsuccessful} unsuccessful (${w.failed} failed + ${w.deadlineExceeded} deadline exceeded + ${w.abandoned} abandoned; maximum ${c.maxUnsuccessful}); ${w.inFlight} in flight, not counted as successful or unsuccessful. This is a fixed-horizon count, not an availability guarantee.`, sources);
+      }
+      case "queue-ready-age": {
+        const t = this.atEvaluation, sources = ["terminalSnapshot.metrics.asyncQueue", "terminalSnapshot.metrics.queueWork", "runInputs.resources"];
+        if (!t || !input) return pending(this.missingMeasurement(), sources);
+        const targets = input.resources.filter(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.MessageQueue && r.asyncQueue?.enabled);
+        const rows = t.resources.filter(r => r.id === c.resourceId), q = rows[0]?.asyncQueue, parsed = QueueWorkSchema.safeParse(rows[0]?.queueWork);
+        if (targets.length !== 1 || rows.length !== 1 || !q || ![1, 2].includes(q.version) || !parsed.success || parsed.data.throughSecond !== t.simulatedSeconds ||
+          q.readyDepth === null || !Number.isSafeInteger(q.readyDepth) || q.readyDepth < 0 || q.readyDepth !== parsed.data.ready) {
+          return pending("Matching ready depth and complete queue counters for the named enabled queue at the evaluation second are required.", sources);
+        }
+        const age = q.oldestReadyAgeSeconds;
+        if (q.readyDepth === 0) {
+          if (age !== null) return pending("An empty ready population must retain Unknown age, not an invented age.", sources);
+          return decided(true, `At second ${t.simulatedSeconds}, ${c.resourceId} had 0 ready messages. Oldest ready age is Unknown because no message was ready; the ready-age requirement has no waiting message to exceed ${c.maxAgeSeconds} seconds. This does not prove all work finished.`, sources);
+        }
+        if (age === null || !Number.isFinite(age) || age < 0 || age > t.simulatedSeconds!) return pending("A valid oldest ready message age was not recorded for the nonempty ready population.", sources);
+        return decided(age <= c.maxAgeSeconds, `At second ${t.simulatedSeconds}, ${c.resourceId} had ${q.readyDepth} ready messages; oldest ready age was ${age} seconds (maximum ${c.maxAgeSeconds}). This is one sample, not a whole-run wait target or drain time.`, sources);
       }
       case "queue-work": {
         const t = this.atEvaluation;

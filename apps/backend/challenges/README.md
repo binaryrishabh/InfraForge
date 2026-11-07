@@ -394,6 +394,22 @@ retry/dead-letter-overflow exercise is not added here.
 
 ## Check
 
+`parallel-jobs-for-a-burst@1` changes only Jobs in parallel from one to two
+on an existing two-core worker. At the burst's end, second 140, the report
+compares acknowledgements and all outstanding work with broker-ready depth
+and age. Raising only prefetch is a deliberate near miss: jobs move into
+leases and ready age becomes Unknown while useful completion remains too low.
+Worker count, autoscaling and arbitrary slow-message classes are unavailable.
+
+The `queue-ready-age` requirement uses the existing optional saved `asyncQueue`
+observation plus matching `queueWork/1` ready count, current topology and the
+exact evaluation second. A nonempty ready population requires finite age
+between zero and elapsed run time. An observed zero ready count meets the
+requirement with null age explicitly; null age alone never establishes zero
+waiting. Missing, stale, inconsistent or malformed evidence stays unscored.
+This is a single sample, excluding leased jobs, not a whole-run wait target
+or backlog drain time. No engine behavior or historical definition changes.
+
 ```
 bun run check:challenges
 ```
