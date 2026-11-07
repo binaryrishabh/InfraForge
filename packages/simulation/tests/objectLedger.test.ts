@@ -66,3 +66,11 @@ test("bounded current inventory preserves exact totals and explicit omission; sh
   store.capacity(1);
   expect(metrics()).toMatchObject({storedBytes: 1134, capacityBytes: 1, overCapacity: true, generation: 111});
 });
+
+test("missing source counters and inventory remain Unknown without constructing empty or zero populations", () => {
+  const f = objectSetup("plain", 1), resource = f.compiled.input.resources.find(r => r.kind === "object-store")!;
+  const row = f.runtime.inspectObject("store")!;
+  for (const key of ["objects", "service", "puts", "generation", "overCapacity"]) Reflect.deleteProperty(row, key);
+  const m = observabilityLive(resource, {inspectObject: () => row, inspectMonitor: () => undefined}).objectStorage!;
+  expect(m).toMatchObject({objects: null, objectCount: null, omittedObjects: null, commandReasons: null, puts: null, generation: null, overCapacity: null, "object-capacity": null});
+});
