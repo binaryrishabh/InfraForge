@@ -128,7 +128,7 @@ assert.equal(expired, 2);
 reset(); answer();
 let requests = 0;
 http.defaults.adapter = async () => { requests++; throw Error("Must not request"); };
-preflight = { valid: false, errors: ["Fix the design before starting"], checks: [] };
+preflight = { valid: false, errors: ["Fix the design before starting"], checks: [], warnings: [], resourceTypes: [], experiment: null };
 await submit()(event);
 assert.equal(requests, 0); assert.match(html(), /The design cannot run yet/);
 assert.equal(elements(tree()).find(node => node.type === Button && node.props.type === "submit")!.props.disabled, true);
