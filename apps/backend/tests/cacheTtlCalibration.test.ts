@@ -60,14 +60,14 @@ test("cache TTL: controlled expiry change passes; capacity-only near miss still 
     expect(r.terminal!.resources.find(r => r.id === "db")!.cpu).toBe(live[i]!.metrics.db!.cpu!);
     expect(r.terminal!.traffic!.wholeRun!.completed).toBeGreaterThanOrEqual(5900);
     expect(r.terminal!.traffic!.wholeRun).toMatchObject({failed: 0, deadlineExceeded: 0, abandoned: 0, throughSecond: 6});
-    // Cache counters are live calibration evidence; the saved report makes no hit-ratio claim.
-    expect(r.terminal!.resources.find(r => r.id === "cache")).not.toHaveProperty("cache");
+    // Saved counters retain the same cumulative resource-owned evidence.
+    expect(r.terminal!.resources.find(r => r.id === "cache")!.cache).toEqual(counters[i]);
     const saved = {...rows[i]!, runInputs: JSON.parse(JSON.stringify(rows[i]!.runInputs)), terminalSnapshot: JSON.parse(JSON.stringify(rows[i]!.terminalSnapshot))};
     expect(buildRunReport(saved).terminal).toEqual(r.terminal);
     expect(buildRunReport(saved).challenge).toEqual(r.challenge);
     console.info(JSON.stringify({lab: d.id, design: ["starter", "TTL-only", "capacity-only"][i], second: 6,
       p95Ms: r.terminal!.traffic!.latencyMs.p95, dbCpu: live[i]!.metrics.db!.cpu,
-      callers: r.terminal!.traffic!.wholeRun, liveOnlyCache: counters[i], liveOnlyHitRatio: hitRatio(counters[i]!)}));
+      callers: r.terminal!.traffic!.wholeRun, savedCache: counters[i], savedCacheCommandHitRatio: hitRatio(counters[i]!)}));
   }
   for (const mutate of [
     (r: typeof rows[number]) => { r.terminalSnapshot = null; },

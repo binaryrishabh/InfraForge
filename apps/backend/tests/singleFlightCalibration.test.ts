@@ -54,14 +54,15 @@ test("single-flight: only joining fills relieves repeated source work; reports r
   for (const [i, report] of reports.entries()) {
     expect(report.terminal!.traffic).toEqual(live[i]!.view.traffic);
     expect(report.challenge!.predictions[0]!.actual).toBe("healthy");
-    expect(report.terminal!.resources.find(r => r.id === "cache")).not.toHaveProperty("cache");
+    expect(report.terminal!.resources.find(r => r.id === "cache")!.cache).toEqual(live[i]!.view.metrics.cache!.cache);
+    expect(report.terminal!.resources.flatMap(r => r.applicationHelpers?.helpers ?? [])[0]).toMatchObject({databaseFetches: fetches[i], coalescedWaiters: joined[i]});
     const saved = {...rows[i]!, runInputs: JSON.parse(JSON.stringify(rows[i]!.runInputs)), terminalSnapshot: JSON.parse(JSON.stringify(rows[i]!.terminalSnapshot))};
     expect(buildRunReport(saved).terminal).toEqual(report.terminal);
     expect(buildRunReport(saved).challenge).toEqual(report.challenge);
     console.info(JSON.stringify({lab: d.id, design: ["starter", "single-flight-only", "capacity-only"][i],
       p95Ms: report.terminal!.traffic!.latencyMs.p95, callers: report.terminal!.traffic!.wholeRun,
       databaseCpu: report.terminal!.resources.find(r => r.id === "db")!.cpu,
-      liveOnlyDatabaseFetches: fetches[i], liveOnlyJoinedWaiters: joined[i]}));
+      savedDatabaseFetches: fetches[i], savedJoinedWaiters: joined[i]}));
   }
   const raw = (r: typeof rows[number]) => r.terminalSnapshot as SimulationSnapshot & {metricsTopologyRevision: number};
   for (const mutate of [

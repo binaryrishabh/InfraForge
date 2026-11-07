@@ -26,6 +26,26 @@ const memorySource = "apps/web/src/features/live/VmMemoryReadings.tsx";
 // VM memory labels name the modeled population, distinct from generic Memory %.
 
 export const LEARNING_REPORT_MEASUREMENTS = {
+  "Cache: Hits": { scope: "resource", path: "cache.hits", unit: "count", resourceType: "Cache", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Cache: Hits"' },
+  "Cache: Misses": { scope: "resource", path: "cache.misses", unit: "count", resourceType: "Cache", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Cache: Misses"' },
+  "Cache: Expirations": { scope: "resource", path: "cache.expirations", unit: "count", resourceType: "Cache", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Cache: Expirations"' },
+  "Cache: Evictions": { scope: "resource", path: "cache.evictions", unit: "count", resourceType: "Cache", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Cache: Evictions"' },
+  "Cache: Targeting-helper coalesced waiters": { scope: "resource", path: "cache.coalescedWaiters", unit: "count", resourceType: "Cache", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Cache: Targeting-helper coalesced waiters"' },
+  "Application helper: Received": { scope: "resource", path: "applicationHelpers.helpers.*.received", unit: "count", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Application helper: Received"' },
+  "Application helper: Completed": { scope: "resource", path: "applicationHelpers.helpers.*.completed", unit: "count", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Application helper: Completed"' },
+  "Application helper: Failed": { scope: "resource", path: "applicationHelpers.helpers.*.failed", unit: "count", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Application helper: Failed"' },
+  "Application helper: Live requests": { scope: "resource", path: "applicationHelpers.helpers.*.live", unit: "count", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Application helper: Live requests"' },
+  "Application helper: Database fetches": { scope: "resource", path: "applicationHelpers.helpers.*.databaseFetches", unit: "count", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Application helper: Database fetches"' },
+  "Application helper: Cache failures": { scope: "resource", path: "applicationHelpers.helpers.*.cacheFailures", unit: "count", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Application helper: Cache failures"' },
+  "Application helper: Coalesced waiters": { scope: "resource", path: "applicationHelpers.helpers.*.coalescedWaiters", unit: "count", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Application helper: Coalesced waiters"' },
+  "Application helper: Fills in progress": { scope: "resource", path: "applicationHelpers.helpers.*.fillsInProgress", unit: "count", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Application helper: Fills in progress"' },
+  "Application helper: Invalidations": { scope: "resource", path: "applicationHelpers.helpers.*.invalidations", unit: "count", source: "apps/web/src/features/reports/components/CacheReadings.tsx", marker: '"Application helper: Invalidations"' },
+  "Timed-out attempts": { scope: "traffic", path: "clientRetry.attemptsTimedOut", unit: "attempts", source: trafficSource, marker: '"Timed-out attempts"' },
+  "Wasted completions": { scope: "traffic", path: "clientRetry.wastedCompletions", unit: "attempts", source: trafficSource, marker: '"Wasted completions"' },
+  "Timeout cancellations requested": { scope: "traffic", path: "clientRetry.timeoutCancellationsRequested", unit: "requests", source: trafficSource, marker: '"Timeout cancellations requested"' },
+  "Confirmed at entry": { scope: "traffic", path: "clientRetry.timeoutCancellationsConfirmed", unit: "receipts", source: trafficSource, marker: '"Confirmed at entry"' },
+  "Recovered after timeout": { scope: "traffic", path: "clientRetry.recoveredByTimeoutRetry", unit: "originals", source: trafficSource, marker: '"Recovered after timeout"' },
+
   "Acknowledged messages": { scope: "resource", path: "queueWork.acknowledged", resourceType: "Message Queue", source: "apps/web/src/features/reports/components/QueueReadings.tsx", marker: '"Acknowledged messages"' },
   "Expired messages": { scope: "resource", path: "queueWork.expired", resourceType: "Message Queue", source: "apps/web/src/features/reports/components/QueueReadings.tsx", marker: '"Expired messages"' },
   "Ready messages": { scope: "resource", path: "asyncQueue.readyDepth", resourceType: "Message Queue", source: "apps/web/src/features/reports/components/QueueReadings.tsx", marker: '"Ready messages"' },
