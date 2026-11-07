@@ -8,6 +8,12 @@ export interface ClaimException {
 }
 export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
   {
+    lesson: "diagnose-query-admission@1", field: "explanation.2",
+    text: "Change only db Active queries from 1 to 4 and run again. Keep its db.m5.large SKU, queued-query limit, app and workload fixed. Compare both saved reports. As a near miss, restore the starter and change only db to db.m5.xlarge; explain why a lower CPU percentage can coexist with the same failures.",
+    values: ["4", "db.m5.xlarge"],
+    reason: "Controlled reference input activeQueries=4 and near-miss SKU db.m5.xlarge, not observed result numbers. Source: apps/backend/tests/diagnosisLabsCalibration.test.ts one-setting comparisons.",
+  },
+  {
     lesson: "diagnose-lost-app-capacity@1", field: "explanation.2",
     text: "After verifying the diagnosis, change only fw Tracked connection limit from 1 to 8, then compare both apps' work, admissions, second-6 p95 and whole-run caller failures. Try enlarging app alone as a near miss; explain why fixing a visible symptom can leave a requirement unmet.",
     values: ["8"],

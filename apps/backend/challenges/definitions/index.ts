@@ -1,3 +1,4 @@
+import { diagnoseQueryAdmissionV1 } from "./diagnose-query-admission/v1";
 import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
 import { reuseBeforeExpiryV1 } from "./reuse-before-expiry/v1";
 import { shareACacheFillV1 } from "./share-a-cache-fill/v1";
@@ -61,6 +62,7 @@ challenge list. See ../README.md for the authoring rules. */
 export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   reuseBeforeExpiryV1,
   shareACacheFillV1,
+  diagnoseQueryAdmissionV1,
   firstProductionApiV1,
   secureTheEdgeV1,
   cacheMattersV1,

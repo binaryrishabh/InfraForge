@@ -59,6 +59,7 @@ export const LEARNING_REPORT_MEASUREMENTS = {
   "Primary CPU core-us": { scope: "resource", path: "database.readRouting.members.primary.consumedCoreUs", resourceType: "Database", source: replicationSource, marker: "m.consumedCoreUs" },
   "Replica CPU core-us": { scope: "resource", path: "database.readRouting.members.replica.consumedCoreUs", resourceType: "Database", source: replicationSource, marker: "m.consumedCoreUs" },
   "Refused session opens": { scope: "resource", path: "database.sessionRefused", resourceType: "Database", source: "apps/web/src/features/live/DataDeliveryReadings.tsx", marker: '"Refused session opens"' },
+  "Queued queries": { scope: "resource", path: "database.queued", resourceType: "Database", source: dataSource, marker: '"Queued queries"' },
   "Serving queries": { scope: "resource", path: "database.serving", resourceType: "Database", source: dataSource, marker: '"Serving queries"' },
   "Queries waiting for locks": { scope: "resource", path: "database.waiting", resourceType: "Database", source: dataSource, marker: '"Queries waiting for locks"' },
   "Connection acquisition wait": { scope: "traffic", path: "latency.typical.categories.connectionWait.meanMs", unit: "ms", source: "apps/web/src/features/live/LatencyBreakdown.tsx", marker: '"Connection acquisition wait"' },
