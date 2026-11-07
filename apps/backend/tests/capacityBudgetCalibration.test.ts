@@ -19,7 +19,7 @@ const size = (s: ChallengeStarter, id: string, skuId: string): ChallengeStarter 
 const cpu = (r: ReturnType<typeof buildRunReport>, id: string) => r.terminal!.resources.find(r => r.id === id)!.cpu!;
 const cost = (r: ReturnType<typeof buildRunReport>) => r.stages.find(s => s.name === "CostEstimate")!.monthlyEstimateUsd!;
 const status = (r: ReturnType<typeof buildRunReport>, id: string) => r.challenge!.criteria.find(c => c.id === id)!.status;
-const raw = (r: ReturnType<typeof attemptRow>) => r.terminalSnapshot as SimulationSnapshot & {metricsTopologyRevision: number};
+const raw = (r: ReturnType<typeof attemptRow>) => r.terminalSnapshot as SimulationSnapshot & {metricsTopologyRevision: number; overallHealth?: string};
 
 test("capacity budget: two coupled bottlenecks, three passing allocations and an exclusively budget-failing near miss", () => {
   const start = d.starter!;
@@ -40,7 +40,10 @@ test("capacity budget: two coupled bottlenecks, three passing allocations and an
     expect(input.catalogSnapshot).toBe(control.catalogSnapshot); expect(input.seed).toBe(control.seed);
     expect(design.connectionLines).toEqual(start.connectionLines);
     // Every priced resource has a real designer-offered SKU; no generic fallback or hidden replica multiplier.
-    for (const resource of design.resources) expect(findSku(resource.skuId!)?.category).toBe(resource.type);
+    for (const resource of design.resources) {
+      if (resource.type !== "Virtual Machine" && resource.type !== "Database") throw Error("This lab prices only catalog app and database resources.");
+      expect(findSku(resource.skuId!)?.category).toBe(resource.type);
+    }
   }
   // Each causal edge changes exactly one resource's Instance size; all other saved settings are identical.
   expect(size(appOnly, "app", start.resources[0]!.skuId!)).toEqual(start);
@@ -120,7 +123,7 @@ test("capacity budget: saved totals and generic requirement evidence are auditab
     (r: typeof row) => { raw(r).traffic!.wholeRun!.throughSecond--; },
     (r: typeof row) => { raw(r).traffic!.wholeRun!.completed = -1; },
   ]) { const bad = structuredClone(row); mutate(bad); expect(status(buildRunReport(bad), "work")).toBe("not-evaluated"); }
-  const noHealth = structuredClone(row); delete (raw(noHealth) as Partial<SimulationSnapshot>).overallHealth;
+  const noHealth = structuredClone(row); delete raw(noHealth).overallHealth;
   expect(status(buildRunReport(noHealth), "health")).toBe("not-evaluated");
   const noDesign = structuredClone(row); noDesign.runInputs = null; noDesign.liveTopology = null;
   expect(status(buildRunReport(noDesign), "sizes")).toBe("not-evaluated");
