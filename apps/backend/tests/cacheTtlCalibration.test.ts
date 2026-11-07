@@ -56,7 +56,8 @@ test("cache TTL: controlled expiry change passes; capacity-only near miss still 
   for (const [i, r] of reports.entries()) {
     expect(r.challenge!.predictions[0]!.actual).toBe("healthy");
     expect(r.terminal!.traffic).toEqual(live[i]!.traffic);
-    expect(r.terminal!.resources.find(r => r.id === "db")!.cpu).toBe(live[i]!.metrics.db!.cpu);
+    expect(live[i]!.metrics.db!.cpu).not.toBeNull();
+    expect(r.terminal!.resources.find(r => r.id === "db")!.cpu).toBe(live[i]!.metrics.db!.cpu!);
     expect(r.terminal!.traffic!.wholeRun!.completed).toBeGreaterThanOrEqual(5900);
     expect(r.terminal!.traffic!.wholeRun).toMatchObject({failed: 0, deadlineExceeded: 0, abandoned: 0, throughSecond: 6});
     // Cache counters are live calibration evidence; the saved report makes no hit-ratio claim.
