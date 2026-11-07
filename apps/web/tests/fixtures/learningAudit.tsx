@@ -127,7 +127,10 @@ for (const detail of proof.curriculumDetails) {
   kinds.add(detail.lesson.kind);
   for (const limitation of detail.lesson.limitations) assert.ok(html.includes(escaped(limitation)));
   if (detail.lesson.kind !== "executable-lab") assert.ok(!html.includes("Server activity:"));
-  if (detail.lesson.kind === "reading") detail.lesson.check ? checkedReadings++ : uncheckedReadings++;
+  if (detail.lesson.kind === "reading") {
+    if (detail.lesson.check) checkedReadings++;
+    else uncheckedReadings++;
+  }
   if (!detail.lesson.check) continue;
   let local: DeviceLessonState = { read: false, answer: null };
   const body = () => LessonBody({ detail, catalog: proof.foundations, local, storageAvailable: true,
