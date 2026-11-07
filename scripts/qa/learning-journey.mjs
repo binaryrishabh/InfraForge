@@ -517,7 +517,7 @@ export const JOURNEY_FAILURES = [
   { id: "browser-input-load", flow: "browser-input", method: "GET", path: /^\/deployments\/[^/]+\/browser-run$/, status: 500,
     message: "Local QA: browser input unavailable.", alert: "The simulation has not started yet", recovery: "This page keeps trying." },
   { id: "run-delivery-busy", flow: "delivery", method: "POST", path: /^\/deployments\/[^/]+\/submit$/, status: 429,
-    message: "Local QA: replay queue busy.", alert: "Your run has not been saved", recovery: "Send again", attempts: 8 },
+    message: "Local QA: replay queue busy.", alert: "We could not confirm your run was saved", recovery: "Send again", attempts: 8 },
 ];
 
 export function journeyFailure(id = "lesson-list-load") {
@@ -694,7 +694,7 @@ async function walkJourneyFailure(page, entry, { web, api, shots, step, signIn, 
             await page.getByRole("radiogroup", { name: "Simulation speed", exact: true }).getByRole("radio", { name: "60×", exact: true }).click();
             if (entry.flow === "delivery") {
               await page.getByRole("alert").filter({ hasText: entry.alert }).waitFor({ state: "visible", timeout: 150_000 });
-              await waitVisible(page.getByText(/It has not been verified by the server\./));
+              await waitVisible(page.getByText(/Server receipt and verification have not been confirmed\./));
               if (injection.injected.length !== entry.attempts) throw new Error(`Expected ${entry.attempts} busy delivery attempts, saw ${injection.injected.length}`);
               await waitVisible(page.getByText(/The server is busy replaying other runs\./));
               await page.screenshot({ path: `${shots}/${entry.id}-failure.png`, fullPage: true });

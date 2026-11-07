@@ -79,11 +79,11 @@ test("stopping before the first second cancels instead of submitting and records
 test("messages never call an unsent or closed run saved, and offer the right recovery", () => {
   const unsent = describeBrowserRun({ kind: "unsent", reason: "The server could not be reached." }, null)!;
   expect(unsent).toMatchObject({ tone: "fail", action: "send-again" });
-  expect(unsent.body).toContain("not been verified"); expect(unsent.title).toBe("Your run has not been saved");
+  expect(unsent.body).toContain("receipt and verification have not been confirmed"); expect(unsent.title).toBe("We could not confirm your run was saved");
   expect(describeBrowserRun({ kind: "closed", reason: "x" }, null)).toMatchObject({ tone: "fail", action: "leave" });
   expect(describeBrowserRun({ kind: "crashed", reason: "boom" }, null)!.body).toContain("Nothing from this run was saved");
   const busy = describeBrowserRun({ kind: "sending", attempt: 2, busy: true }, null)!;
-  expect(busy.body).toContain("not saved yet"); expect(busy.body).toContain("Keep this tab open");
+  expect(busy.body).toContain("receipt has not been confirmed"); expect(busy.body).toContain("Keep this tab open");
   expect(describeBrowserRun({ kind: "accepted" }, null)!.title).toBe("Received by the server");
   expect(describeBrowserRun(undefined, null)).toBeNull();
   expect(describeBrowserRun({ kind: "starting" }, null)).toBeNull();

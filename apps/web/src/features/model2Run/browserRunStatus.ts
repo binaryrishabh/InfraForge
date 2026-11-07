@@ -9,7 +9,7 @@ export type BrowserRunState =
   | { kind: "running" }
   // The finished run is being sent. "busy" means the server answered that its replay slots are full.
   | { kind: "sending"; attempt: number; busy: boolean }
-  // Every attempt failed. The run exists only in this tab and can be sent again from here.
+  // Delivery could not be confirmed. This tab retains a copy for sending again.
   | { kind: "unsent"; reason: string }
   // The server accepted the run and is replaying it for the official result.
   | { kind: "accepted" }

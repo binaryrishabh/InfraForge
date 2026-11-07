@@ -39,10 +39,10 @@ export function describeBrowserRun(state: BrowserRunState | undefined, remaining
         body: "The server closes a run that has not reached it within 30 minutes of starting, even while the simulation is paused. This run will be stopped and sent automatically shortly before then so its result is kept." };
     case "sending":
       return state.busy
-        ? { tone: "warn", title: "The server is busy", body: `The server is replaying other runs. Your finished run is kept in this tab and sent again automatically (attempt ${state.attempt} of ${MAX_ATTEMPTS}). Keep this tab open. It is not saved yet.` }
+        ? { tone: "warn", title: "The server is busy", body: `The server is replaying other runs. Your finished run is kept in this tab and sent again automatically (attempt ${state.attempt} of ${MAX_ATTEMPTS}). Keep this tab open. Server receipt has not been confirmed.` }
         : { tone: "info", title: "Sending your finished run", body: `Sending it to the server for the official replay (attempt ${state.attempt} of ${MAX_ATTEMPTS}). It is not saved until the server accepts it.` };
     case "unsent":
-      return { tone: "fail", title: "Your run has not been saved", body: `${state.reason} The finished run exists only in this tab, so keep it open. It has not been verified by the server.`, action: "send-again" };
+      return { tone: "fail", title: "We could not confirm your run was saved", body: `${state.reason} This tab still holds your finished run, so keep it open. Server receipt and verification have not been confirmed.`, action: "send-again" };
     case "closed":
       return { tone: "fail", title: "This run was not saved", body: state.reason, action: "leave" };
     case "crashed":

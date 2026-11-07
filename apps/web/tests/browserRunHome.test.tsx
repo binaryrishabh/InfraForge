@@ -21,8 +21,9 @@ test("a browser run nothing holds is described as not running, and can be starte
 
 test("a finished run this tab still holds is never described as saved and is opened to send again", () => {
   const card = describeBrowserRunCard("unsent", "Checkout", "1 min ago");
-  expect(card).toMatchObject({ title: "Your finished run has not been saved", canDiscard: false, open: "Open it and send again" });
-  expect(card.body).toContain("exists only in this tab");
+  expect(card).toMatchObject({ title: "We could not confirm your run was saved", canDiscard: false, open: "Open it and send again" });
+  expect(card.body).toContain("This tab still holds the finished run");
+  expect(card.body).not.toContain("server did not receive it");
   for (const held of ["sending", "accepted"] as const) expect(describeBrowserRunCard(held, "x", "now").body).toContain("not saved until the server accepts it");
   expect(describeBrowserRunCard("worker", "x", "now").body).toContain("closing the tab ends it without a saved result");
 });
@@ -36,7 +37,7 @@ test("Home shows the truthful card for a browser run and keeps the old card for 
   initial.runs = { r1: { kind: "unsent", reason: "The server could not be reached." } };
   let unsent: string;
   try { unsent = home("browser"); } finally { initial.runs = before; }
-  expect(unsent).toContain("Your finished run has not been saved"); expect(unsent).not.toContain("Discard this run");
+  expect(unsent).toContain("We could not confirm your run was saved"); expect(unsent).not.toContain("Discard this run");
   const server = home("live");
   expect(server).toContain("It keeps running on the server until it is stopped"); expect(server).toContain("Return to the run"); expect(server).not.toContain("Discard this run");
 });

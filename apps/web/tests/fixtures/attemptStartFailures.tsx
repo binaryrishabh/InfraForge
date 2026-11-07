@@ -51,6 +51,11 @@ const { AttemptDialog, PredictionQuestionField } = await import("../../src/featu
 const { Field } = await import("../../src/ui/Field");
 const { Button } = await import("../../src/ui/Button");
 const { ChallengeDebrief } = await import("../../src/features/challenges/components/ChallengeDebrief");
+const { BrowserRunNoticeView } = await import("../../src/features/live/BrowserRunNotice");
+const { NextStep } = await import("../../src/features/dashboard/pages/HomePage");
+const { describeBrowserRun } = await import("../../src/features/model2Run/browserRunMessages");
+const { deliver } = await import("../../src/features/model2Run/browserRunDelivery");
+const { useBrowserRunStatus } = await import("../../src/features/model2Run/browserRunStatus");
 
 type Element = React.ReactElement<Record<string, unknown>>;
 function elements(node: React.ReactNode): Element[] {
@@ -139,4 +144,39 @@ const recorded = renderToStaticMarkup(<MemoryRouter><ChallengeDebrief evaluation
 assert.match(recorded, /Your prediction/);
 assert.match(recorded, /Not every requirement was met/);
 assert.ok(recorded.includes(proof.sourceReport.challenge!.predictions[0]!.detail));
-console.log(JSON.stringify({ realDialog: true, retained: true, duplicateBlocked: true, preflightRefused: true, uncertainStart: true, realModel2Report: true }));
+
+// The server can hold the real-engine record while both submission replies and
+// status reads fail. Neither production component may conclude that it was lost.
+let serverHoldsReport = false;
+const deliveryStates: Array<Parameters<typeof describeBrowserRun>[0]> = [];
+assert.equal(await deliver({
+  send: async () => { serverHoldsReport = true; throw Error("Reply lost"); },
+  currentStatus: async () => { throw Error("Status unavailable"); },
+  sleep: async () => {}, report: state => { deliveryStates.push(state); },
+}), "unsent");
+assert.equal(serverHoldsReport, true);
+const unconfirmed = deliveryStates.at(-1)!;
+const message = describeBrowserRun(unconfirmed, null)!;
+let resend = 0;
+const notice = BrowserRunNoticeView({ message, sending: false, onSendAgain: () => { resend++; }, onLeave() {} });
+const noticeHtml = renderToStaticMarkup(notice);
+assert.match(noticeHtml, /role="alert"/);
+assert.match(noticeHtml, /We could not confirm your run was saved/);
+assert.match(noticeHtml, /Server receipt and verification have not been confirmed/);
+assert.doesNotMatch(noticeHtml, /exists only in this tab|Your run has not been saved/);
+(elements(notice).find(node => node.type === Button)!.props.onClick as () => void)();
+assert.equal(resend, 1);
+const initial = useBrowserRunStatus.getInitialState(), previous = initial.runs;
+initial.runs = { [proof.sourceReport.run.id]: unconfirmed };
+let home: string;
+try {
+  home = renderToStaticMarkup(<MemoryRouter><NextStep next={{ kind: "live", run: {
+    id: proof.sourceReport.run.id, infrastructureId: "local-design", infrastructureName: proof.sourceReport.run.infrastructureName,
+    status: "browser", resourceCount: proof.sourceReport.run.resourceCount, challengeId: proof.brief.id,
+    createdAt: proof.sourceReport.run.createdAt, updatedAt: proof.sourceReport.run.updatedAt,
+  } }} /></MemoryRouter>);
+} finally { initial.runs = previous; }
+assert.match(home, /We could not confirm your run was saved/);
+assert.match(home, /Open it and send again/);
+assert.doesNotMatch(home, /server did not receive it|exists only in this tab|Discard this run/);
+console.log(JSON.stringify({ realDialog: true, retained: true, duplicateBlocked: true, preflightRefused: true, uncertainStart: true, realModel2Report: true, unconfirmedDelivery: true }));

@@ -15,8 +15,8 @@ export interface BrowserRunCard {
 export function describeBrowserRunCard(held: HeldRun, name: string, startedAgo: string): BrowserRunCard {
   switch (held) {
     case "unsent":
-      return { eyebrow: "Not saved yet", title: "Your finished run has not been saved", canDiscard: false, open: "Open it and send again",
-        body: `“${name}” reached its end but the server did not receive it. It exists only in this tab, so keep the tab open. Open it to send it again.` };
+      return { eyebrow: "Receipt unconfirmed", title: "We could not confirm your run was saved", canDiscard: false, open: "Open it and send again",
+        body: `“${name}” reached its end, but server receipt has not been confirmed. This tab still holds the finished run, so keep it open. Open it to send it again.` };
     case "sending":
     case "accepted":
       return { eyebrow: "Sending", title: "Your run is being sent", canDiscard: false, open: "Open the run",
