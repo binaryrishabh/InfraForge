@@ -6,6 +6,8 @@ import { REFERENCE } from "./challengeHarness";
 // Every reading/concept in scope has either real runnable practice for the named
 // portion or an explicit conceptual-only boundary. A link is not full coverage.
 const coverage = [
+  {track: "async", concept: "why-work-waits", labs: ["keep-waiting-work", "keep-up-with-the-queue", "leave-time-to-acknowledge"], limitation: "Thought experiment only; later labs model logical retention, capacity and repeated object effects, not real delivery guarantees."},
+  {track: "async", concept: "count-waiting-jobs", labs: ["keep-waiting-work", "keep-up-with-the-queue", "leave-time-to-acknowledge"], limitation: "Conceptual arithmetic and acknowledgement loss; no exactly-once business action or physical persistence proof."},
   {track: "async", concept: "queue-ownership-and-acknowledgement", labs: ["keep-up-with-the-queue", "leave-time-to-acknowledge"], limitation: "Logical ownership only; no physical durability or exactly-once transaction."},
   {track: "async", concept: "fan-out-subscribers", labs: ["open-one-subscriber"], limitation: "Independent dispatch, not physical isolation or ordering."},
   {track: "failures", concept: "firewall-rule-matching", labs: ["find-the-denying-rule", "leave-room-for-firewall-flows"], limitation: "Modeled admissions include probes; exposure scan is a separate population."},
