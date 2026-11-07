@@ -8,7 +8,8 @@ import { progressAttempt, progressContent } from "../learningFixtures";
 import { readLearningAttempts, type LearningAttemptDatabase, type LearningAttemptQuery } from "../../learning/attempts";
 import type { LearningCatalog, LearningLessonDetail } from "@infraforge/contracts/learning";
 import type { LearningRun } from "../../learning/progress";
-import { definition, attemptRow, answers } from "../challengeHarness";
+import { definition, attemptRow, answers, tier } from "../challengeHarness";
+import { buildRunReport } from "../../reports/report";
 
 let sessionReads = 0;
 mock.module("../../auth/auth", () => ({ authSettings: { origins: ["http://localhost"] }, auth: { api: {
@@ -28,8 +29,10 @@ current.contentVersion = 2;
 content.archivedLessons = [historical];
 const registry = buildLearningRegistry(content);
 let rows: LearningRun[] = [], queries: LearningAttemptQuery[] = [];
+let unavailable = false;
 const database: LearningAttemptDatabase = { deployment: {
   findMany: async (query) => {
+    if (unavailable) throw Error("Attempt storage unavailable");
     queries.push(query);
     assert.equal(query.select.ownerId, true);
     assert.deepEqual(query.select.actions, { orderBy: { sequence: "asc" }, take: 501 });
@@ -67,6 +70,7 @@ try {
   assert.ok(initial.lessons.every((l) => l.id !== "draft-lab" && !("explanation" in l)));
   assert.ok(initial.tracks.every((t) => t.modules.every((m) => !m.lessonIds.includes("draft-lab"))));
   const read = await get("/lessons/intro") as LearningLessonDetail;
+  const unattemptedLab = await get("/lessons/api-lab") as LearningLessonDetail;
   assert.equal(read.progress, null); assert.equal(read.challenge, null);
   const count = queries.length;
   await get("/lessons/missing", "alice", 404);
@@ -85,6 +89,19 @@ try {
   assert.equal((await progress()).attempts, 1);
   assert.equal((await catalog()).suggestions.continue?.lessonId, "api-lab");
   const attemptedCatalog = await catalog();
+  const failedLab = await get("/lessons/api-lab") as LearningLessonDetail;
+  const failedReport = buildRunReport(failed);
+  assert.equal(failedReport.challenge?.status, "not-met");
+
+  // A real engine run stopped before evaluation, with persisted failed status.
+  // The report, not this fixture, decides which outcomes remain unknown.
+  const blockedDefinition = definition("first-production-api");
+  const blocked = { ...attemptRow(blockedDefinition, tier(2), answers(blockedDefinition, { health: "healthy", busiest: "Database" }), { stopAt: 0, status: "failed" }), ownerId: "alice" };
+  rows = [blocked];
+  const blockedLab = await get("/lessons/api-lab") as LearningLessonDetail;
+  const blockedReport = buildRunReport(blocked);
+  assert.equal(blockedReport.challenge?.status, "not-evaluated");
+  rows = [failed];
 
   // Bob's passing run cannot meet Alice's requirements or establish her comparison/lineage.
   rows.push({ ...met, ownerId: "bob" });
@@ -116,6 +133,8 @@ try {
   assert.equal((await progress()).fromEarlierVersion, true);
   assert.equal((await progress()).earlierVersionRequirementsMet, true);
   assert.ok((await catalog()).suggestions.reviewCandidates[0]?.reason.includes("current version 2"));
+  const staleCatalog = await catalog();
+  const staleLab = await get("/lessons/api-lab") as LearningLessonDetail;
   assert.equal((await progress("bob")).activity, "not-started");
   assert.ok(queries.every((q) => q.where.ownerId === "alice" || q.where.ownerId === "bob"));
 
@@ -137,6 +156,18 @@ try {
   };
   const curriculum = await foundationGet() as LearningCatalog;
   const curriculumDetails = await Promise.all(curriculum.lessons.map(lesson => foundationGet(`/lessons/${lesson.id}`)));
+  // Public routes serve current content even when an old content version is requested.
+  const superseded = await foundationGet("/lessons/split-the-capacity-budget?version=1") as LearningLessonDetail;
+  assert.equal(superseded.lesson.contentVersion, 4);
+  const missing = await get("/lessons/missing", "alice", 404);
+  const oldId = await get("/lessons/split-the-capacity-budget-v1", "alice", 404);
+  const missingIdResponse = await fetch(`${base}/lessons/`, { headers: { cookie: "fixture=alice" } });
+  assert.equal(missingIdResponse.status, 404);
+  const missingIdBody = await missingIdResponse.text();
+  unavailable = true;
+  const serverError = await get("/lessons/api-lab", "alice", 500);
+  const catalogError = await get("", "alice", 500);
+  unavailable = false;
   const routing = definition("route-around-a-slow-vm");
   publishedRows = [{ ...attemptRow(routing, routing.starter!, answers(routing, { "overall-health": "healthy" })), ownerId: "alice" }];
   const curriculumRecall = await foundationGet() as LearningCatalog;
@@ -146,7 +177,9 @@ try {
   const report = JSON.stringify({ realEngineSequence: ["not-started", "attempted", "requirements-met"], sessionReads,
     ownerScopedQueries: queries.length, authAnd404: true, earlierVersions: true, ownerIsolation: true,
     webProof: { foundations: curriculum, curriculumDetails, curriculumRecall, reading: await foundationGet("/lessons/what-is-a-request"),
-      concept: await foundationGet("/lessons/client-and-server"), attemptedCatalog, lab: detail } });
+      concept: await foundationGet("/lessons/client-and-server"), attemptedCatalog, lab: detail,
+      audit: { unattemptedLab, failedLab, failedReport, blockedLab, blockedReport, staleCatalog, staleLab, superseded,
+        missing, oldId, missingIdStatus: missingIdResponse.status, missingIdBody, serverError, catalogError } } });
   await new Promise<void>((resolve) => process.stdout.write(`${report}
 `, () => resolve()));
 } finally {
