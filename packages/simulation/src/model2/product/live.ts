@@ -6,6 +6,7 @@ import type { CompiledProduct, ProductContract, SavedProductDesign } from "./con
 import type { CausalObserver } from "../workload/causal";
 import { dataDeliveryLive } from "./dataDeliveryLive";
 import { observabilityLive } from "./observabilityLive";
+import { startupLive } from "./startupLive";
 import { clientRetryEvidence } from "../workload/clientRetryEvidence";
 
 // One simulated second at a time, projected onto the canvas nodes the person drew.
@@ -13,6 +14,7 @@ import { clientRetryEvidence } from "../workload/clientRetryEvidence";
 export type LiveValue = number | null;
 export type LiveHealth = "healthy" | "degraded" | "saturated" | "failed" | "unknown";
 export interface LiveNodeMetrics {
+  startup?: import("@infraforge/contracts/telemetry").StartupMetrics;
   queueWork?: import("@infraforge/contracts/telemetry").QueueWorkMetrics;
   lbAccounting?: import("@infraforge/contracts/telemetry").LbAccountingMetrics;
   lbRetry?: import("@infraforge/contracts/telemetry").LbRetryMetrics;
@@ -168,6 +170,10 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
           ...(pool ? { replicas: pool } : {}) };
       }
       const memory = runtime.vmMemoryEvidence();
+      for (const node of nodeIds) {
+        const startup = startupLive(compiled, runtime, node, owner, now);
+        if (startup && metrics[node]) metrics[node]!.startup = startup;
+      }
       if (memory) for (const node of nodeIds) {
         const readings = memory.resources.filter(r => owner(r.id) === node);
         if (readings.length && metrics[node]) metrics[node]!.vmMemory = { version: 1, resources: readings };
