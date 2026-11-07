@@ -7,6 +7,7 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "keep-waiting-work@1": {challengeId: "keep-waiting-work", version: 1, hash: "e38032b569056c8d43e914fdb68aab62eb64a71869cfcb2b52c5b897fc85ed60"},
   "share-a-cache-fill@1": {challengeId: "share-a-cache-fill", version: 1, hash: "39cffc8c5eadbe309c710409abe4a0d4f3431b94c05ef9352f95596ef0ae6954"},
   "reuse-before-expiry@1": {challengeId: "reuse-before-expiry", version: 1, hash: "7eb2268b199d88bf9f961d0638bc98f28aecfac5ea08db66cff6855ba10362c0"},
+  "open-and-size-an-api@1": {challengeId: "open-and-size-an-api", version: 1, hash: "e63360ab61b729141f588a3a4f9c612a14c9e195f3024cdd9e08b7df5c829cce"},
   "split-the-capacity-budget@1": {challengeId: "split-the-capacity-budget", version: 1, hash: "db47968e9080943fbcc8ac3c883fb4c0a4d486f143fc94b575ca7f57e8ca82a6"},
   "split-the-capacity-budget@2": {challengeId: "split-the-capacity-budget", version: 1, hash: "db47968e9080943fbcc8ac3c883fb4c0a4d486f143fc94b575ca7f57e8ca82a6"},
   "diagnose-consumer-credit@1": {challengeId: "diagnose-consumer-credit", version: 1, hash: "a236d0e516f6213362c7241dc1dcc309157870d403553239b71a01bdc6867f34"},

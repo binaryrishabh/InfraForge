@@ -1,3 +1,4 @@
+import { openAndSizeAnApiV1 } from "../challenges/definitions/open-and-size-an-api/v1";
 import { splitTheCapacityBudgetV1 } from "../challenges/definitions/split-the-capacity-budget/v1";
 import { diagnoseConsumerCreditV1 } from "../challenges/definitions/diagnose-consumer-credit/v1";
 import { parallelJobsForABurstV1 } from "../challenges/definitions/parallel-jobs-for-a-burst/v1";
@@ -88,6 +89,8 @@ export const REFERENCE: Record<string, ChallengeStarter> = {
     r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, singleFlight: true}} : r)},
   "reuse-before-expiry": {...reuseBeforeExpiryV1.starter!, resources: reuseBeforeExpiryV1.starter!.resources.map(r =>
     r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, ttlSeconds: 60}} : r)},
+  "open-and-size-an-api": {...openAndSizeAnApiV1.starter!, resources: openAndSizeAnApiV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.large"} : r.id === "fw" ? {...r, firewallSettings: {...r.firewallSettings!, rules: r.firewallSettings!.rules.map(rule => rule.id === "quarantine-db" ? {...rule, priority: 20} : rule)}} : r)},
+  "open-and-size-an-api-headroom": {...openAndSizeAnApiV1.starter!, resources: openAndSizeAnApiV1.starter!.resources.map(r => r.id === "app" ? {...r, skuId: "c5.xlarge"} : r.id === "fw" ? {...r, firewallSettings: {...r.firewallSettings!, rules: r.firewallSettings!.rules.map(rule => rule.id === "quarantine-db" ? {...rule, priority: 20} : rule)}} : r)},
   "split-the-capacity-budget": {...splitTheCapacityBudgetV1.starter!, resources: splitTheCapacityBudgetV1.starter!.resources.map(r => ({...r, skuId: r.id === "app" ? "s-4vcpu-8gb" : "db-s-2vcpu-4gb"}))},
   "split-the-capacity-budget-app-headroom": {...splitTheCapacityBudgetV1.starter!, resources: splitTheCapacityBudgetV1.starter!.resources.map(r => ({...r, skuId: r.id === "app" ? "s-8vcpu-16gb" : "db-s-2vcpu-4gb"}))},
   "split-the-capacity-budget-db-headroom": {...splitTheCapacityBudgetV1.starter!, resources: splitTheCapacityBudgetV1.starter!.resources.map(r => ({...r, skuId: r.id === "app" ? "s-4vcpu-8gb" : "db-s-4vcpu-8gb"}))},
