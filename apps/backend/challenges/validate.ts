@@ -44,7 +44,7 @@ const definition = z.object({
 }).strict();
 
 const CRITERIA = ["deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
-  "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work", "caller-outcomes"];
+  "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "queue-ready-age", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work", "caller-outcomes"];
 const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
 
@@ -82,6 +82,10 @@ function checkDefinition(d: ChallengeDefinition): string[] {
       if (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isSafeInteger(c.minAdmissions) || c.minAdmissions < 1 ||
         !Number.isSafeInteger(c.maxPolicyDenied) || c.maxPolicyDenied < 0 || !Number.isSafeInteger(c.maxCapacityRefused) || c.maxCapacityRefused < 0 ||
         !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.Firewall)) problems.push(`${where}: firewall-admission-budget needs Model 2, a named starter firewall and safe limits with positive minAdmissions`);
+    }
+    if (c.kind === "queue-ready-age") {
+      if (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isFinite(c.maxAgeSeconds) || c.maxAgeSeconds < 0 ||
+        !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.MessageQueue && r.asyncQueue?.enabled)) problems.push(`${where}: queue-ready-age needs Model 2, its named enabled starter queue and a finite nonnegative maxAgeSeconds`);
     }
     if (c.kind === "queue-work") {
       if (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isSafeInteger(c.minAcknowledged) || c.minAcknowledged < 1 ||

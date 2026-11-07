@@ -1,4 +1,5 @@
 import { diagnoseConsumerCreditV1 } from "../challenges/definitions/diagnose-consumer-credit/v1";
+import { parallelJobsForABurstV1 } from "../challenges/definitions/parallel-jobs-for-a-burst/v1";
 import { fitARequestInMemoryV1 } from "../challenges/definitions/fit-a-request-in-memory/v1";
 import { keepWaitingWorkV1 } from "../challenges/definitions/keep-waiting-work/v1";
 import { checkTheMissingServerV1 } from "../challenges/definitions/check-the-missing-server/v1";
@@ -76,6 +77,8 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "parallel-jobs-for-a-burst": {...parallelJobsForABurstV1.starter!, resources: parallelJobsForABurstV1.starter!.resources.map(r =>
+    r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, concurrency: 2}} : r)},
   "keep-waiting-work": {...keepWaitingWorkV1.starter!, resources: keepWaitingWorkV1.starter!.resources.map(r =>
     r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, retentionSeconds: 60}} : r)},
   "check-the-missing-server": {...checkTheMissingServerV1.starter!, resources: checkTheMissingServerV1.starter!.resources.map(r =>

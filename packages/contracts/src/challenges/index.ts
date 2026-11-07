@@ -28,6 +28,8 @@ export type ChallengeCriterion =
   | { id: string; kind: "terminal-p95"; label: string; maxMs: number }
   // Queue-owned work at the exact evaluation second; effects and deliveries are distinct.
   | { id: string; kind: "queue-work"; label: string; resourceId: string; minAcknowledged: number; maxOutstanding: number; maxRedeliveries: number }
+  // Terminal ready-message age, or a measured empty ready population (age stays Unknown).
+  | { id: string; kind: "queue-ready-age"; label: string; resourceId: string; maxAgeSeconds: number }
   // Cumulative accepted backend admissions + VM refusals across every captured LB,
   // divided by cumulative offered caller requests (all outcomes plus in-flight).
   | { id: string; kind: "backend-admission-budget"; label: string; maxPerOfferedRequest: number }

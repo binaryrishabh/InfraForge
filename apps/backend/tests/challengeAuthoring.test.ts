@@ -14,6 +14,7 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
+  "parallel-jobs-for-a-burst@1": "ebba322f2f43e7e6f3d90c5772ebf6c3ac227b25573911d352626471e2d7fe45",
   "check-the-missing-server@1": "8985ae0fdff18a9480d4f04c5141124da791b62bf81c647c6b91966ac936afe3",
   "keep-waiting-work@1": "e38032b569056c8d43e914fdb68aab62eb64a71869cfcb2b52c5b897fc85ed60",
   "share-a-cache-fill@1": "39cffc8c5eadbe309c710409abe4a0d4f3431b94c05ef9352f95596ef0ae6954",
