@@ -34,6 +34,11 @@ function expectReadings(run: ReturnType<typeof createLiveModel2>, official = run
   for (const row of official.asynchronous.objects) {
     expect(metrics[row.id]!.objectStorage).toEqual({ version: 1, storedBytes: row.storedBytes, capacityBytes: row.capacityBytes,
       committedPuts: row.committedPuts, replacedObjects: row.replacedObjects, removedObjects: row.removedObjects, deletes: row.deletes,
+      sampledAtUs: official.capture.throughUs, puts: row.puts, gets: row.gets, heads: row.heads,
+      generation: row.generation, objectCount: row.objects.length, overCapacity: row.overCapacity,
+      generatedResponseBodyBytes: row.generatedResponseBodyBytes, commandReasons: row.service.reasons,
+      objects: row.objects.slice(0, 100).map(({namespace, key, generation, bytes}) => ({namespace, key, generation, bytes})),
+      omittedObjects: Math.max(0, row.objects.length - 100),
       "object-capacity": row.service.reasons["object-capacity"] ?? null });
     expect(metrics[row.id]!.monitoring).toBeUndefined();
   }
