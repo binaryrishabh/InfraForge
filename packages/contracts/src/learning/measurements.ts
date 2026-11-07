@@ -54,6 +54,8 @@ export const LEARNING_REPORT_MEASUREMENTS = {
   Abandoned: { scope: "traffic", path: "wholeRun.abandoned", source: wholeSource, marker: '"Abandoned"' },
   "Whole run: p95 bucket": { scope: "traffic", path: "wholeRun.percentiles.p95", source: wholeSource, marker: "w.percentiles[p].highMs" },
   "Monthly estimate (CostEstimate gate)": { scope: "monthly", path: "monthlyEstimateUsd", unit: "USD", source: resourceSource, marker: "Monthly estimate (CostEstimate gate)" },
+  "Monthly resource price line items": { scope: "monthly", path: "lineItems.*.monthlyUsd", unit: "USD", source: resourceSource, marker: "Monthly resource price line items" },
+  "Remaining monthly budget": { scope: "monthly", path: "monthlyBudgets.*.remainingUsd", unit: "USD", source: resourceSource, marker: "Remaining monthly budget" },
   "Queue: originals": { scope: "resource", path: "queueWork.originals", resourceType: "Message Queue", source: queueSource, marker: "${q.originals} originals" },
   "Queue: deliveries": { scope: "resource", path: "queueWork.deliveries", resourceType: "Message Queue", source: queueSource, marker: "${q.deliveries} deliveries" },
   "Queue: completed object effects": { scope: "resource", path: "queueWork.effects", resourceType: "Message Queue", source: queueSource, marker: "${q.effects} completed object effects" },

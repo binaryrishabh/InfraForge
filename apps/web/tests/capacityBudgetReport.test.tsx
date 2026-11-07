@@ -5,21 +5,32 @@ import { MemoryRouter } from "react-router-dom";
 import type { RunReport } from "@infraforge/contracts/reports";
 import { ReportMeasurements } from "../src/features/reports/components/ReportMeasurements";
 import { ChallengeDebrief } from "../src/features/challenges/components/ChallengeDebrief";
+import { LEARNING_REPORT_MEASUREMENTS, evidenceLabels, type LearningLesson } from "@infraforge/contracts/learning";
+import { lessonRunMeasurements } from "../src/features/learning/runSummaryData";
 
 const render = (report: RunReport) => renderToStaticMarkup(<MemoryRouter>
   <ReportMeasurements report={report} number={3} />
   <ChallengeDebrief evaluation={report.challenge!} brief={null} />
 </MemoryRouter>);
+const costLabels = ["Monthly resource price line items", "Remaining monthly budget"] as const;
 
 test("capacity budget: real saved reports render retained resource prices and signed remaining budget; missing or invalid evidence stays Unknown", async () => {
   const process = Bun.spawn([Bun.which("bun")!, "--no-env-file", resolve(import.meta.dir, "../../backend/tests/capacityBudgetReport.fixture.ts")], {stdout: "pipe", stderr: "pipe"});
   const output = await new Response(process.stdout).text(), diagnostics = await new Response(process.stderr).text();
   expect(await process.exited, diagnostics).toBe(0);
-  const {reports, storedItems, missingCost, legacy, invalidItems, failedCost, duplicateCost, wrongIdentity, noBudget} = JSON.parse(output) as {
+  const {lessons, reports, storedItems, missingCost, legacy, invalidItems, failedCost, duplicateCost, wrongIdentity, noBudget} = JSON.parse(output) as {
+    lessons: LearningLesson[];
     reports: RunReport[]; storedItems: unknown; missingCost: RunReport; legacy: RunReport; invalidItems: RunReport[];
     failedCost: RunReport; duplicateCost: RunReport; wrongIdentity: RunReport; noBudget: RunReport;
   };
   expect(reports).toHaveLength(2);
+  expect(lessons.map(l => l.contentVersion)).toEqual([1, 2, 3]);
+  expect(lessons[0]!.limitations.join(" ")).toContain("omits individual SKU prices");
+  expect(lessons[1]!.experiment!.evidenceToInspect!.flatMap(evidenceLabels)).not.toContain(costLabels[1]);
+  for (const label of costLabels) {
+    expect(lessons[2]!.experiment!.evidenceToInspect!.flatMap(evidenceLabels)).toContain(label);
+    expect(lessons[2]!.explanation.join(" ")).toContain(label);
+  }
   for (const [i, report] of reports.entries()) {
     const total = report.stages.find(s => s.name === "CostEstimate")!.monthlyEstimateUsd!;
     expect(report.challenge!.challengeId).toBe("split-the-capacity-budget");
@@ -39,6 +50,16 @@ test("capacity budget: real saved reports render retained resource prices and si
     }
     expect(html).toContain(i === 0 ? "$72.00" : "-$36.00");
     expect(report.monthlyBudgets![0]).toMatchObject({limitUsd: 180, remainingUsd: i === 0 ? 72 : -36});
+    for (const label of costLabels) {
+      const measurement = LEARNING_REPORT_MEASUREMENTS[label];
+      expect(measurement.source).toBe("apps/web/src/features/reports/components/ReportMeasurements.tsx");
+      expect(html).toContain(measurement.marker);
+    }
+    expect(lessonRunMeasurements(report, costLabels)).toEqual([
+      {label: costLabels[0], value: report.stages.find(s => s.name === "CostEstimate")!.lineItems!
+        .map(item => `${item.resourceId}: ${item.monthlyUsd} USD`).join("; ")},
+      {label: costLabels[1], value: `budget: ${i === 0 ? 72 : -36} USD`},
+    ]);
   }
   expect(storedItems).toEqual(reports[0]!.stages.find(s => s.name === "CostEstimate")!.lineItems);
   for (const report of [legacy, ...invalidItems]) {
@@ -46,10 +67,12 @@ test("capacity budget: real saved reports render retained resource prices and si
     expect(report.stages.find(s => s.name === "CostEstimate")!.lineItems).toBeUndefined();
     expect(render(report)).toContain("Unknown: no usable resource price line items were retained.");
     expect(render(report)).toContain("$72.00"); // Missing breakdown does not erase a valid total.
+    expect(lessonRunMeasurements(report, costLabels).map(row => row.value)).toEqual(["Unknown", "budget: 72 USD"]);
   }
   for (const report of [missingCost, failedCost, duplicateCost]) {
     expect(report.monthlyBudgets![0].remainingUsd).toBeUndefined();
     expect(render(report)).toMatch(/Remaining monthly budget<\/dt><dd[^>]*>Unknown/);
+    expect(lessonRunMeasurements(report, [costLabels[1]])[0]!.value).toBe("budget: Unknown");
   }
   for (const report of [missingCost, failedCost]) expect(report.challenge!.criteria.find(c => c.id === "budget")!.status).toBe("not-evaluated");
   // Historical judging remains unchanged; the additive arithmetic refuses ambiguous stage identity.
@@ -60,5 +83,6 @@ test("capacity budget: real saved reports render retained resource prices and si
   for (const report of [wrongIdentity, noBudget]) {
     expect(report.monthlyBudgets).toBeUndefined();
     expect(renderToStaticMarkup(<ReportMeasurements report={report} number={3} />)).not.toContain("Remaining monthly budget");
+    expect(lessonRunMeasurements(report, costLabels).map(row => row.value)).toEqual(["Unknown", "Unknown"]);
   }
 }, 60000);
