@@ -6,7 +6,7 @@ import type { RunReport } from "@infraforge/contracts/reports";
 import { ReportContent } from "../src/features/reports/components/ReportContent";
 
 type Case = {id: string; report: RunReport};
-let cases: Case[], missing: Case[], noReadings: Case[], invalid: RunReport, checkpointOnly: RunReport, budgetOnly: RunReport;
+let cases: Case[], missing: Case[], noReadings: Case[], evidenceOnly: Case[], invalid: RunReport, checkpointOnly: RunReport, budgetOnly: RunReport;
 const render = (report: RunReport) => renderToStaticMarkup(<MemoryRouter><ReportContent loading={false} error={null} data={report} retry={() => {}} /></MemoryRouter>);
 const text = (html: string) => html.replace(/<[^>]*>/g, "");
 const headings = (html: string) => [...html.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/g)].map(m => ({level: Number(m[1]), title: text(m[2]!)}));
@@ -17,11 +17,11 @@ beforeAll(async () => {
   const child = Bun.spawn([Bun.which("bun")!, "--no-env-file", resolve(import.meta.dir, "../../backend/tests/reportPageAudit.fixture.ts")], {stdout: "pipe", stderr: "pipe"});
   const [output, errors] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()]);
   expect(await child.exited, errors).toBe(0);
-  ({cases, missing, noReadings, invalid, checkpointOnly, budgetOnly} = JSON.parse(output));
+  ({cases, missing, noReadings, evidenceOnly, invalid, checkpointOnly, budgetOnly} = JSON.parse(output));
 }, 120000);
 
 test("audit representative real saved-report pages and their full evidence record", () => {
-  expect(cases.map(c => c.id)).toEqual(["plain", "cached", "queue", "balancer", "cdn", "monitoring", "dns", "memory", "replication", "function", "scheduler", "event-bus", "gateway", "security"]);
+  expect(cases.map(c => c.id)).toEqual(["plain", "cached", "queue", "balancer", "cdn", "monitoring", "dns", "memory", "replication", "function", "scheduler", "event-bus", "gateway", "security", "startup", "registry"]);
   for (const {id, report} of cases) {
     const html = render(report), hs = headings(html);
     expect(report.terminal?.simulatedSeconds).toBe(4);
@@ -42,20 +42,23 @@ test("each representative page keeps only its expected resource sections in read
   const expected: Record<string, string[]> = {
     plain: ["Resource measurements for db", "Database measurements for db"],
     cached: ["Resource measurements for db", "Database measurements for db", "Cache and helper measurements for app", "Cache and helper measurements for cache"],
-    queue: ["Queue measurements for queue"], balancer: ["Resource measurements for lb"], cdn: ["CDN measurements for cdn"],
+    queue: ["Queue measurements for queue", "Object storage measurements for store"], balancer: ["Resource measurements for lb", "Retry and circuit measurements for lb"], cdn: ["CDN measurements for cdn", "Object storage measurements for store"],
     monitoring: ["Resource measurements for db", "Database measurements for db"],
     dns: ["DNS resolver measurements", "DNS resolver measurements for dns/resolver"],
-    memory: ["Resource measurements for lb", "Resource measurements for db", "Database measurements for db", "Memory measurements for app", "Modeled resident memory for app"],
-    replication: ["Resource measurements for lb", "Resource measurements for db", "Database measurements for db", "Database replication measurements for db"],
+    memory: ["Resource measurements for lb", "Resource measurements for db", "Database measurements for db", "Retry and circuit measurements for lb", "Memory measurements for app", "Modeled resident memory for app"],
+    replication: ["Resource measurements for lb", "Resource measurements for db", "Database measurements for db", "Database replication measurements for db", "Retry and circuit measurements for lb"],
     function: ["Resource measurements for fn", "Function measurements for fn", "Resource measurements for db", "Database measurements for db"],
     scheduler: ["Resource measurements for timer", "Scheduler measurements for timer", "Resource measurements for fn", "Function measurements for fn", "Resource measurements for db", "Database measurements for db"],
-    "event-bus": ["Resource measurements for bus", "Event bus measurements for bus", ...["app", "bus", "queue", "queue2", "worker", "worker2", "store"].map(id => `Security measurements for ${id}`), "Queue measurements for queue", "Queue measurements for queue2"],
+    "event-bus": ["Resource measurements for bus", "Event bus measurements for bus", ...["app", "bus", "queue", "queue2", "worker", "worker2", "store"].map(id => `Security measurements for ${id}`), "Queue measurements for queue", "Queue measurements for queue2", "Object storage measurements for store"],
     gateway: ["Resource measurements for gateway", "Gateway measurements for gateway"],
-    security: ["Resource measurements for lb", "Resource measurements for db", "Database measurements for db", ...["lb", "app", "db", "fw"].map(id => `Security measurements for ${id}`)],
+    security: ["Resource measurements for lb", "Resource measurements for db", "Database measurements for db", ...["lb", "app", "db", "fw"].map(id => `Security measurements for ${id}`), "Retry and circuit measurements for lb"],
+    startup: ["Resource measurements for lb", "Resource measurements for db", "Database measurements for db", "Retry and circuit measurements for lb"],
+    registry: ["Object storage measurements for store"],
   };
   for (const {id, report} of cases) {
     const names = labels(render(report)).filter(l => !l.startsWith("Duration measurements for"));
-    expect(names).toEqual(["Recorded run", "Measured caller traffic", ...expected[id]!, "Owned duration measurements", ...(id === "monitoring" ? ["Monitoring measurements for monitor"] : [])]);
+    expect(names).toEqual(["Recorded run", "Measured caller traffic", ...expected[id]!, "Owned duration measurements", ...(id === "monitoring" ? ["Monitoring measurements for monitor"] : []),
+      ...(["replication", "startup"].includes(id) ? ["Startup measurements for app"] : id === "registry" ? ["Startup measurements for registry"] : [])]);
     for (const r of report.terminal!.durationEvidence!.resources) expect(labels(render(report))).toContain(`Duration measurements for ${r.id}`);
   }
 });
@@ -70,6 +73,59 @@ test("plain and worker paths do not acquire irrelevant cache/helper sections", (
 
 test("known empty DNS captures show no phantom Unknown resolver", () => {
   for (const {report} of cases) if (report.terminal!.dnsEvidence?.resolvers.length === 0) expect(labels(render(report))).not.toContain("DNS resolver measurements");
+});
+
+test("ordinary VMs and fixed LB pools have no artifact or startup panel", () => {
+  for (const id of ["plain", "cached", "queue", "balancer", "cdn", "monitoring", "memory", "security", "gateway"]) {
+    const report = reportFor(id);
+    expect(report.terminal!.resources.some(r => r.startup)).toBe(false);
+    expect(labels(render(report)).filter(l => l.startsWith("Startup measurements for"))).toEqual([]);
+  }
+});
+
+test("incoming evidence sections retain known owners when their readings are missing", () => {
+  for (const source of [missing, noReadings]) {
+    for (const [id, name, reading] of [
+      ["queue", "Object storage measurements for store", "Object stored bytes (current)"],
+      ["cdn", "Object storage measurements for store", "Object capacity bytes (current)"],
+      ["balancer", "Retry and circuit measurements for lb", "LB retries (cumulative)"],
+      ["startup", "Startup measurements for app", "Startup sample time (us)"],
+      ["replication", "Startup measurements for app", "Startup sample time (us)"],
+      ["registry", "Startup measurements for registry", "Startup sample time (us)"],
+    ]) {
+      const html = render(reportFor(id!, source));
+      expect(labels(html)).toContain(name!);
+      expect(html).toContain(`<dt>${reading}</dt><dd class="${reading!.startsWith("Startup") ? "if-num break-all" : "if-num"}">Unknown</dd>`);
+    }
+  }
+});
+
+test("recorded evidence alone keeps each incoming section without saved topology", () => {
+  for (const {report} of evidenceOnly) {
+    expect(report.topology.accepted).toBeNull();
+    expect(report.topology.original).toBeNull();
+    const names = labels(render(report));
+    for (const r of report.terminal!.resources) {
+      if (r.startup) expect(names).toContain(`Startup measurements for ${r.id}`);
+      if (r.objectStorage) expect(names).toContain(`Object storage measurements for ${r.id}`);
+      if (r.lbRetry || r.circuitBreaker) expect(names).toContain(`Retry and circuit measurements for ${r.id}`);
+    }
+  }
+});
+
+test("new whole-page evidence panels reuse saved counts and path identities", () => {
+  const balancer = reportFor("balancer"), retry = balancer.terminal!.resources.find(r => r.id === "lb")!;
+  expect(retry.lbRetry).toBeDefined();
+  expect(retry.circuitBreaker!.paths.length).toBeGreaterThan(0);
+  const lbHtml = render(balancer);
+  expect(lbHtml).toContain(`<dt>LB retries (cumulative)</dt><dd class="if-num">${retry.lbRetry!.retries.toLocaleString()}</dd>`);
+  for (const path of retry.circuitBreaker!.paths) expect(headings(lbHtml)).toContainEqual({level: 4, title: `${path.source} → ${path.target} (${path.id})`});
+  const object = reportFor("queue").terminal!.resources.find(r => r.id === "store")!.objectStorage!;
+  expect(render(reportFor("queue"))).toContain(`<dt>Object stored bytes (current)</dt><dd class="if-num">${object.storedBytes!.toLocaleString()}</dd>`);
+  for (const id of ["startup", "registry"]) {
+    const report = reportFor(id), startup = report.terminal!.resources.find(r => r.startup)!.startup!;
+    expect(render(report)).toContain(`<dt>Startup sample time (us)</dt><dd class="if-num break-all">${startup.sampledAtUs!.toLocaleString()}</dd>`);
+  }
 });
 
 test("known empty duration owner lists do not invent an Unknown compute owner", () => {

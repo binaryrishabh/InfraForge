@@ -9,12 +9,15 @@ import { answers, attemptRow, definition, REFERENCE } from "./challengeHarness";
 import { cdnLayout, cdnWorkload } from "./cdnTtl.fixture";
 import { monitoringLayout, monitoringWorkload } from "./monitoringCadence.fixture";
 import { dnsLayout, dnsWorkload } from "./dnsDepth.fixture";
+import { scalingSessionInput } from "./scalingSessions.fixture";
+import { objectLayout, objectWorkload } from "./objectCapacity.fixture";
 
 export function reportPageAuditFixture() {
   const challenge = (id: string) => ({layout: REFERENCE[id] ?? definition(id).starter!, workload: definition(id).workload});
   const lb = challenge("retrying-a-full-pool");
   lb.layout = {...lb.layout, resources: lb.layout.resources.map(r => r.type === "Load Balancer"
     ? {...r, circuitBreaker: {enabled: true, failureThreshold: 1, cooldownMs: 100}} : r)};
+  const scaling = scalingSessionInput(3);
   const designs = [
     {id: "plain", ...challenge("split-the-capacity-budget")},
     {id: "cached", ...challenge("share-a-cache-fill")},
@@ -30,6 +33,8 @@ export function reportPageAuditFixture() {
     {id: "event-bus", ...challenge("open-one-subscriber")},
     {id: "gateway", ...challenge("protect-one-api-route")},
     {id: "security", ...challenge("find-the-denying-rule")},
+    {id: "startup", layout: scaling, workload: scaling.workloadProfile},
+    {id: "registry", layout: objectLayout("registry", 1), workload: objectWorkload("registry")},
   ];
   const cases = designs.map(({id, layout, workload}) => {
     const input = captureRunInputs(layout, workload, `page-audit-${id}`), engine = createModel2Engine(input, 4);
@@ -51,6 +56,7 @@ export function reportPageAuditFixture() {
     for (const m of Object.values(snapshot.metrics)) {
       delete m.cache; delete m.applicationHelpers; delete m.cdn; delete m.database; delete m.databaseReplication;
       delete m.queueWork; delete m.asyncQueue; delete m.monitoring; delete m.monitoringBackend;
+      delete m.startup; delete m.lbRetry; delete m.circuitBreaker; delete m.objectStorage;
     }
     delete (snapshot as Partial<typeof snapshot>).dnsEvidence; delete (snapshot as Partial<typeof snapshot>).durationEvidence;
     return {id, report: buildRunReport({...row, terminalSnapshot: snapshot})};
@@ -65,7 +71,8 @@ export function reportPageAuditFixture() {
   });
   const budgetDefinition = definition("split-the-capacity-budget");
   const budgetRow = attemptRow(budgetDefinition, REFERENCE[budgetDefinition.id]!, answers(budgetDefinition, {}), {stopAt: 4});
-  return {cases: cases.map(({id, report}) => ({id, report})), missing, noReadings,
+  const evidenceOnly = cases.map(({id, row}) => ({id, report: buildRunReport({...row, runInputs: null, liveTopology: null})}));
+  return {cases: cases.map(({id, report}) => ({id, report})), missing, noReadings, evidenceOnly,
     invalid: buildRunReport({...cached, terminalSnapshot: invalid}),
     checkpointOnly: buildRunReport({...plain, simulationState: plain.terminalSnapshot, terminalSnapshot: null}),
     budgetOnly: buildRunReport({...budgetRow, stages: [], terminalSnapshot: null}),

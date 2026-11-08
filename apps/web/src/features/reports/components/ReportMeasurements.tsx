@@ -39,6 +39,10 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
     ...[...types].filter(([, type]) => type === "Monitoring Agent").map(([id]) => id),
     ...(checkpoint?.resources.filter(r => r.monitoring || r.monitoringBackend).map(r => r.id) ?? []),
   ])].map(id => checkpoint?.resources.find(r => r.id === id) ?? {id});
+  // A positive saved CPU target identifies a scaling pool. With one base VM its
+  // startup owner is unambiguous even if historical startup readings are absent.
+  const startupOwners = Object.values(checkpoint?.pools ?? {})
+    .filter(pool => pool.targetCpu > 0 && pool.baseVmIds.length === 1).flatMap(pool => pool.baseVmIds);
   const monthly = cost?.monthlyEstimateUsd;
   return (
     <>
@@ -115,7 +119,8 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
           {hasDurations && <DurationReadings evidence={checkpoint.durationEvidence} />}
           {monitoringResources.map(r => <MonitoringReadings key={`monitor-${r.id}`} resource={r} />)}
           {[...new Set([
-            ...((report.topology.accepted ?? report.topology.original)?.resources.filter(r => r.type === "Container Registry" || r.type === "Virtual Machine").map(r => r.id) ?? []),
+            ...[...types].filter(([, type]) => type === "Container Registry").map(([id]) => id),
+            ...startupOwners,
             ...checkpoint.resources.filter(r => r.startup).map(r => r.id),
           ])].map(id => <StartupReadings key={`startup-${id}`} id={id} metrics={checkpoint.resources.find(r => r.id === id)?.startup} />)}
         </ReportSection>
