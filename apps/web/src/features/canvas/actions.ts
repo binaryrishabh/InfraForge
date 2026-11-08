@@ -118,13 +118,14 @@ export function deleteConnection(connectionId: string) {
   toast("Connection removed", { action: { label: "Undo", onClick: undo }, duration: 5000 });
 }
 
-const TRACKED = ["serverless", "scheduler", "apiGateway", "eventBus", "databaseReadRouting", "databaseReplication", "name", "skuId", "dataKeyspace", "cachePolicy", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallState", "firewallCapacity", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts"] as const;
+const TRACKED = ["serverless", "scheduler", "apiGateway", "eventBus", "databaseReadRouting", "databaseReplication", "name", "skuId", "size", "dataKeyspace", "cachePolicy", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallState", "firewallCapacity", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts"] as const;
 export function updateResource(resourceId: string, patch: Partial<Resource>) {
   const store = useCanvasStore.getState();
   if (!editable(store)) return;
   const resource = store.resources.find((r) => r.id === resourceId);
   if (!resource) return;
   const candidate = { ...resource, ...patch };
+  if (candidate.size !== undefined && !["small", "medium", "large"].includes(candidate.size)) return;
   if (lbRateLimitError(candidate.type, candidate.lbRateLimit)) return;
   if (lbAdmissionError(candidate.type, candidate.lbAdmission)) return;
   if (lbSelectionError(candidate.type, candidate.lbSelection)) return;

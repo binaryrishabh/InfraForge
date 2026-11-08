@@ -13,21 +13,21 @@ import { buildRunReport } from "../reports/report";
 import { answers, attemptRow, definition } from "./challengeHarness";
 
 const d = definition("writes-cost-more-than-reads");
-function design(size?: "small" | "medium" | "large", skuId?: string) {
+function design(size?: "small" | "medium" | "large", skuId?: string, resourceId = "db") {
   const value = structuredClone(d.starter!);
-  Object.assign(value.resources.find(r => r.id === "db")!, { size, skuId });
+  Object.assign(value.resources.find(r => r.id === resourceId)!, { size, skuId });
   return value;
 }
-function compiled(size?: "small" | "medium" | "large", skuId?: string) {
-  const input = captureRunInputs(design(size, skuId), d.workload, challengeSeed(d));
+function compiled(size?: "small" | "medium" | "large", skuId?: string, resourceId = "db") {
+  const input = captureRunInputs(design(size, skuId, resourceId), d.workload, challengeSeed(d));
   const built = buildContractFromRunInputs(input, d.evaluationSeconds);
   if ("refused" in built) throw Error(built.refused.join(" "));
   const result = compileProduct({ schema: "infraforge-saved-design/1", resources: input.resources,
     connections: input.connectionLines, workload: input.workloadProfile }, built.contract);
   if (!result.ok) throw Error(JSON.stringify(result.diagnostics));
-  const db = result.value.input.resources.find(r => r.id === "db")!;
-  if (db.kind !== "relational") throw Error("Expected database");
-  return { cores: requireKnown(db.execution.cores, "cores"), contract: built.contract };
+  const resource = result.value.input.resources.find(r => r.id === resourceId)!;
+  if (resource.kind !== "relational" && resource.kind !== "compute") throw Error("Expected sizeable resource");
+  return requireKnown(resource.kind === "compute" ? resource.cores : resource.execution.cores, "cores");
 }
 
 test("generic sizes validate, survive layout/input JSON and compile unchanged; catalog CPU wins over size", () => {
@@ -36,9 +36,11 @@ test("generic sizes validate, survive layout/input JSON and compile unchanged; c
     const input = captureRunInputs(saved, d.workload, challengeSeed(d));
     expect(readRunInputs(JSON.parse(JSON.stringify(input)))).toEqual(input);
     expect(input.resources.find(r => r.id === "db")!.size).toBe(size);
-    expect(compiled(size).cores).toBe(cores);
+    expect(compiled(size)).toBe(cores);
+    expect(compiled(size, undefined, "app")).toBe(cores);
   }
-  expect(compiled("large", "db.m5.large").cores).toBe(2);
+  expect(compiled("large", "db.m5.large")).toBe(2);
+  expect(compiled("large", "c5.large", "app")).toBe(2);
   const both = design("large", "db.m5.large");
   const described = contractFromDesign({ schema: "infraforge-saved-design/1", resources: both.resources, connections: both.connectionLines, workload: d.workload });
   if ("refused" in described) throw Error("Expected supported sizing");
