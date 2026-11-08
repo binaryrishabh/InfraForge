@@ -23,6 +23,7 @@ export interface InterventionReceipt extends InterventionRequest {
   resolvedTargetCount?: number; affectedPathCount?: number;
 }
 export interface ActionOutcome {
+  databaseIncident?: { resourceId: string; before: DatabaseIncidentSample; during?: DatabaseIncidentSample; after?: DatabaseIncidentSample };
   intervention?: InterventionReceipt; interventionEnded?: boolean;
   previousTarget?: number; appliedTarget?: number;
   previousSpeed?: number; appliedSpeed?: number;
@@ -32,6 +33,12 @@ export interface ActionOutcome {
   fromSkuId?: string | null; requestedSkuId?: string; installedSkuId?: string; online?: boolean;
   delta?: number; previousReplicaCount?: number; finalReplicaCount?: number; replicaId?: string;
   acceptedRevision?: number; appliedRevision?: number; capturedAt?: string;
+}
+export interface DatabaseIncidentSample {
+  simulatedSecond: number;
+  replication?: import("../telemetry").DatabaseReplicationMetrics;
+  completed: number | null;
+  failed: number | null;
 }
 
 export interface RunAction {

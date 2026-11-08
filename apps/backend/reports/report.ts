@@ -8,6 +8,7 @@ import { REGISTRY, type ChallengeRegistry } from "../challenges/registry";
 import { buildExperimentTrace, type StoredEvidenceSample } from "../evidence/report";
 import { guidedReview } from "../challenges/guidedReview";
 import { improvementSource } from "../challenges/improvements";
+import { verifiedScenario } from "../challenges/scenario";
 
 export interface StoredRun {
   evidenceSamples?: StoredEvidenceSample[];
@@ -78,6 +79,12 @@ export function buildRunReport(row: StoredRun, registry?: ChallengeRegistry): Ru
     interpreted: [], unknown: limits, inspectNext: [], challenge };
   if (challenge?.definitionMatches) {
     const definition = (registry ?? REGISTRY).find(challenge.challengeId, challenge.version)?.definition;
+    if (definition?.scenario?.databaseRecovery && records.input) {
+      const plan = verifiedScenario(row.challengeScenario, definition, records.input);
+      const resourceId = definition.scenario.databaseRecovery.resourceId;
+      report.databaseRecoveryPlan = {resourceId, hash: plan.recoveryPlanHash!,
+        promoteAtSecond: records.input.resources.find(r => r.id === resourceId)!.databaseRecoveryPlan!.promoteAtSecond};
+    }
     const estimate = records.stageEvidence.CostEstimate === true
       ? records.stages.find(s => s.name === "CostEstimate" && s.status === "completed")?.monthlyEstimateUsd : undefined;
     const budgets = definition?.criteria.filter(c => c.kind === "monthly-budget").map(c => {

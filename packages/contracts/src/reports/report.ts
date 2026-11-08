@@ -101,6 +101,7 @@ export interface ReportCheckpoint {
 }
 
 export interface RunReport {
+  databaseRecoveryPlan?: {resourceId: string; promoteAtSecond: number | null; hash: string};
   /** Limits from this attempt's exact challenge identity; arithmetic uses its recorded gate total. */
   monthlyBudgets?: Array<{ criterionId: string; label: string; limitUsd: number; remainingUsd?: number }>;
   guidedReview?: import("../challenges/learning").GuidedReview | null;

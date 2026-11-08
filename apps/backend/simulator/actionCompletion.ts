@@ -1,13 +1,18 @@
 import type { ActionOutcome } from "@infraforge/contracts/actions";
 import type { SimulationInstance, RunningAction } from "./instance";
+import { databaseIncidentSample } from "./databaseIncident";
 
 // A Model 2 replica change that has not settled after this many simulated seconds is reported as not observed.
 const MODEL2_POOL_SETTLE_SECONDS = 300;
 export function actionCompletion(instance: SimulationInstance, running: RunningAction):
   { status: "completed" | "failed" | "cancelled"; outcome: ActionOutcome; failureReason?: string } | null {
   const engine = instance.model2, { request, outcome } = running, now = engine.simulatedSeconds;
+  if (outcome.databaseIncident && !outcome.databaseIncident.during && now === outcome.databaseIncident.before.simulatedSecond + 1) {
+    outcome.databaseIncident.during = databaseIncidentSample(instance, outcome.databaseIncident.resourceId);
+  }
   if (request.kind === "intervention" && now >= running.endSecond!) {
-    return {status: "completed", outcome: {...outcome, interventionEnded: true}};
+    return {status: "completed", outcome: {...outcome, interventionEnded: true,
+      ...(outcome.databaseIncident ? {databaseIncident: {...outcome.databaseIncident, after: databaseIncidentSample(instance, outcome.databaseIncident.resourceId)}} : {})}};
   }
   if (request.kind === "chaos" && now >= running.endSecond!) {
     return { status: "completed" as const, outcome: { ...outcome, faultEnded: true, observedOverallHealth: engine.view().overallHealth } };

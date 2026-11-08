@@ -1,3 +1,4 @@
+import { databaseRecoveryPlanError } from "@infraforge/domain/resource";
 import { ServerlessSettingsSchema } from "./serverless.schema";
 import { serverlessError } from "@infraforge/domain/resource";
 import { SchedulerSettingsSchema } from "./scheduler.schema";
@@ -60,6 +61,7 @@ const ResourceSchema = z.object({
   vmCpuQuota: z.object({ version: z.literal(1), limitPercent: z.number().int().min(1).max(VM_CPU_LIMIT_MAX) }).strict().optional(),
   vmExecution: z.object({ version: z.literal(1), workers: z.number().int().min(1).max(VM_WORKERS_MAX).optional(), queuedRequests: z.number().int().min(0).max(VM_QUEUED_REQUESTS_MAX).optional() }).strict().optional(),
   databaseReadRouting: z.object({ version: z.literal(1), policy: z.enum(["primary-only", "replica-preferred"]) }).strict().optional(),
+  databaseRecoveryPlan: z.object({version: z.literal(1), promoteAtSecond: z.number().int().min(1).max(3599).nullable()}).strict().optional(),
   databaseReplication: z.object({ version: z.literal(1), enabled: z.literal(true), replicationDelayMs: z.number().int().min(1).max(60000), readPolicy: z.enum(["primary", "replica-preferred"]) }).strict().optional(),
   dbConcurrency: z.object({ version: z.literal(1), activeQueries: z.number().int().min(1).max(DB_ACTIVE_QUERIES_MAX).optional(), queuedQueries: z.number().int().min(0).max(DB_QUEUED_QUERIES_MAX).optional() }).strict().optional(),
   dataKeyspace: z.object({ version: z.literal(1), count: z.number().int().min(1).max(DATA_KEYSPACE_MAX), accessPattern: z.enum(["uniform", "hot-key"]).optional() }).strict().optional(),
@@ -129,6 +131,8 @@ const ResourceSchema = z.object({
   if (executionMessage) ctx.addIssue({ code: "custom", path: ["vmExecution"], message: executionMessage });
   const routingMessage = databaseReadRoutingError(resource.type, resource.databaseReadRouting, resource.databaseReplication);
   if (routingMessage) ctx.addIssue({ code: "custom", path: ["databaseReadRouting"], message: routingMessage });
+  const recoveryMessage = databaseRecoveryPlanError(resource.type, resource.databaseRecoveryPlan);
+  if (recoveryMessage) ctx.addIssue({code: "custom", path: ["databaseRecoveryPlan"], message: recoveryMessage});
   const replicationMessage = databaseReplicationError(resource.type, resource.databaseReplication);
   if (replicationMessage) ctx.addIssue({ code: "custom", path: ["databaseReplication"], message: replicationMessage });
   const dbMessage = dbConcurrencyError(resource.type, resource.dbConcurrency);

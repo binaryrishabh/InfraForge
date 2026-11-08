@@ -6,6 +6,7 @@ import { validateBusPublish } from "../eventbus/flow";
 import { LB_RATE_LIMIT_PROFILE, lbRateLimitChanges, validateLbRateLimitBindings } from "./lbRateLimit";
 import { checkClientRetry } from "./clientRetry";
 import { checkObjective } from "./objective";
+import { databaseRecoveryPlanError } from "@infraforge/domain/resource";
 import { checkCpuDynamics } from "./workloadDynamics";
 import { RESOURCE_PORTS, vmMemoryError, lbRateLimitError, firewallStateError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, dnsCachePolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
@@ -146,6 +147,10 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (routingError) error("INVALID_DB_READ_ROUTING", `resources.${r.id}.databaseReadRouting`, routingError);
       const replicationError = databaseReplicationError(r.type, r.databaseReplication);
       if (replicationError) error("INVALID_DB_REPLICATION", `resources.${r.id}.databaseReplication`, replicationError);
+      // Challenge metadata owns scheduling, not resource translation. The normal
+      // intervention compiler still owns every resulting simulation action.
+      const recoveryError = databaseRecoveryPlanError(r.type, r.databaseRecoveryPlan);
+      if (recoveryError) error("INVALID_DB_RECOVERY_PLAN", `resources.${r.id}.databaseRecoveryPlan`, recoveryError);
       const dbError = dbConcurrencyError(r.type, r.dbConcurrency);
       if (dbError) error("INVALID_DB_CONCURRENCY", `resources.${r.id}.dbConcurrency`, dbError);
       const cacheError = cachePolicyError(r.type, r.cachePolicy);
@@ -164,7 +169,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["serverless", "scheduler", "apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallState", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["databaseRecoveryPlan", "serverless", "scheduler", "apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallState", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }

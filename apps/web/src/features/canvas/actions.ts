@@ -1,3 +1,4 @@
+import { databaseRecoveryPlanError } from "@infraforge/domain/resource";
 import { serverlessError } from "@infraforge/domain/resource";
 import { schedulerError } from "@infraforge/domain/resource";
 import { apiGatewayError } from "@infraforge/domain/resource";
@@ -118,7 +119,7 @@ export function deleteConnection(connectionId: string) {
   toast("Connection removed", { action: { label: "Undo", onClick: undo }, duration: 5000 });
 }
 
-const TRACKED = ["serverless", "scheduler", "apiGateway", "eventBus", "databaseReadRouting", "databaseReplication", "name", "skuId", "size", "dataKeyspace", "cachePolicy", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallState", "firewallCapacity", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts"] as const;
+const TRACKED = ["databaseRecoveryPlan", "serverless", "scheduler", "apiGateway", "eventBus", "databaseReadRouting", "databaseReplication", "name", "skuId", "size", "dataKeyspace", "cachePolicy", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallState", "firewallCapacity", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts"] as const;
 export function updateResource(resourceId: string, patch: Partial<Resource>) {
   const store = useCanvasStore.getState();
   if (!editable(store)) return;
@@ -135,6 +136,7 @@ export function updateResource(resourceId: string, patch: Partial<Resource>) {
   if (vmExecutionError(candidate.type, candidate.vmExecution, candidate.asyncWorker?.enabled)) return;
   if (databaseReadRoutingError(candidate.type, candidate.databaseReadRouting, candidate.databaseReplication)) return;
   if (databaseReplicationError(candidate.type, candidate.databaseReplication)) return;
+  if (databaseRecoveryPlanError(candidate.type, candidate.databaseRecoveryPlan)) return;
   if (dbConcurrencyError(candidate.type, candidate.dbConcurrency)) return;
   if (apiGatewayError(candidate.type, candidate.apiGateway)) return;
   if (serverlessError(candidate.type, candidate.serverless)) return;
