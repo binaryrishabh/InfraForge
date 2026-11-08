@@ -17,10 +17,10 @@ export function CacheReadings({ resource, cache }: { resource: Resource; cache: 
     <p className="text-xs text-ink-3">Counters are cumulative counts from run start through this snapshot, including modeled internal work; they are separate from original callers and final-second requests/s. Live requests and fills in progress are current counts.</p>
     {cache && <dl>{cacheRows.map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{value(resource.cache?.version === 1 ? resource.cache[key] : undefined)}</dd></div>)}</dl>}
     {cache && <p className="text-xs text-ink-3">Targeting-helper coalesced waiters sums helpers explicitly targeting this cache. It is not a cache command count; the same waiters appear under their helper owners.</p>}
-    {helpers?.length ? helpers.map(helper => <div key={helper.id}>
+    {(helpers?.length || !cache) && (helpers?.length ? helpers.map(helper => <div key={helper.id}>
       <h4 className="font-medium">Helper {helper.id}</h4><p>Cache {helper.cacheId}; database {helper.databaseId}</p>
       <dl>{helperRows.map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{value(helper[key])}</dd></div>)}</dl>
-    </div>) : <div><p>Application helpers: Unknown</p><dl>{helperRows.map(([key, label]) => <div key={key}><dt>{label}</dt><dd>Unknown</dd></div>)}</dl></div>}
+    </div>) : <div><p>Application helpers: Unknown</p><dl>{helperRows.map(([key, label]) => <div key={key}><dt>{label}</dt><dd>Unknown</dd></div>)}</dl></div>)}
     <p className="text-xs text-ink-3">Database fetches include helper reads and writes, including failure fallback. Each helper coordinates independently. These counts prove neither a caller hit ratio nor mutable-data correctness. Missing evidence stays Unknown.</p>
   </section>;
 }

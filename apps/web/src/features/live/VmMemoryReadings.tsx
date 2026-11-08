@@ -1,10 +1,11 @@
 import type { VmMemoryMetrics, VmMemoryReading } from "@infraforge/contracts/telemetry";
 
 const bytes = (value: number | null | undefined) => value == null ? "Unknown" : `${Number((value / 1048576).toFixed(3))} MiB`;
-export function VmMemoryReadings({ metrics }: { metrics?: VmMemoryMetrics }) {
+export function VmMemoryReadings({ metrics, resourceId, headingLevel = 3 }: { metrics?: VmMemoryMetrics; resourceId?: string; headingLevel?: 3 | 4 }) {
+  const Heading = headingLevel === 4 ? "h4" : "h3";
   const readings: Array<Partial<VmMemoryReading>> = metrics?.resources ?? [{}];
-  return <section aria-label="Modeled resident memory (from your numbers)" className="min-w-0 border-b border-line px-4 py-3 text-sm">
-    <h3 className="mb-2 font-semibold">Modeled resident memory (from your numbers)</h3>
+  return <section aria-label={resourceId ? `Modeled resident memory for ${resourceId}` : "Modeled resident memory (from your numbers)"} className="min-w-0 border-b border-line px-4 py-3 text-sm">
+    <Heading className="mb-2 font-semibold">Modeled resident memory (from your numbers)</Heading>
     {readings.map((r, i) => <div key={r.id ?? i} className="min-w-0">
       {readings.length > 1 && <p className="my-2 break-all font-medium">{r.id}</p>}
       <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">{([

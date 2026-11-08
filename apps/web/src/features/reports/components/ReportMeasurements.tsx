@@ -24,6 +24,14 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
   const checkpoint = report.terminal ?? report.checkpoint;
   const cost = report.stages.findLast((stage) => stage.name === "CostEstimate" && stage.monthlyEstimateUsd !== undefined);
   const types = new Map((report.topology.accepted ?? report.topology.original)?.resources.map(r => [r.id, r.type]));
+  // The saved topology establishes relevance even when an older capture lacks a reading.
+  const resources: NonNullable<RunReport["terminal"]>["resources"] = [...new Set([...(checkpoint?.resources.map(r => r.id) ?? []), ...types.keys()])]
+    .map(id => checkpoint?.resources.find(r => r.id === id) ?? {id});
+  const hasCache = [...types.values()].includes("Cache") || resources.some(r => r.cache);
+  const hasDns = checkpoint?.dnsEvidence
+    ? !!checkpoint.dnsEvidence.resolvers.length || checkpoint.dnsEvidence.resolversOmitted > 0
+    : [...types.values()].includes("DNS");
+  const hasDurations = !!checkpoint?.durationEvidence || [...types.values()].some(type => ["Virtual Machine", "Database"].includes(type));
   const monitoringResources = [...new Set([
     ...[...types].filter(([, type]) => type === "Monitoring Agent").map(([id]) => id),
     ...(checkpoint?.resources.filter(r => r.monitoring || r.monitoringBackend).map(r => r.id) ?? []),
@@ -48,12 +56,13 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
             {checkpoint.metricsComputedAt ? <>Measurements computed <time dateTime={checkpoint.metricsComputedAt}>{formatDate(checkpoint.metricsComputedAt)}</time>{checkpoint.metricsTopologyRevision !== undefined && ` on topology revision ${checkpoint.metricsTopologyRevision}`}.</>
               : checkpoint.metricsComputedAt === null ? "Measurements are initialized simulator values; no engine tick had computed them." : null}
           </p>
-          <div className="mt-5 min-w-0">
+          {checkpoint.traffic && <div className="mt-5 min-w-0">
             <h3 className="text-[17px] font-semibold text-ink">Traffic outcomes</h3>
             <TrafficEvidence traffic={checkpoint.traffic} recordedAt={report.terminal ? "stop" : "checkpoint"} />
-          </div>
-          {checkpoint.resources.length > 0 && (
+          </div>}
+          {resources.length > 0 && (
             <div className="mt-4">
+              {checkpoint.resources.length > 0 && <>
               <table className="hidden w-full text-sm sm:table">
                 <caption className="sr-only">Recorded resource measurements; a dash means unavailable</caption>
                 <thead className="border-b border-line-strong text-left text-xs text-ink-3">
@@ -80,17 +89,18 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
                   </li>
                 ))}
               </ul>
-              {checkpoint.resources.filter(r => r.database || r.databaseReplication || r.serverless || r.scheduler || r.eventBus || r.gateway || r.lbAccounting).map(r => <div key={r.id} className="mt-4"><h3 className="font-semibold">{r.id}</h3>{r.database && <DataDeliveryReadings type="Database" metrics={r} />}{r.databaseReplication && <DatabaseReplicationReadings metrics={r} />}{r.serverless && <ServerlessReadings metrics={r.serverless} />}{r.scheduler && <SchedulerReadings metrics={r.scheduler} />}{r.eventBus && <EventBusReadings metrics={r.eventBus} />}{r.gateway && <GatewayReadings metrics={r.gateway} />}{r.lbAccounting && <LbAccountingReadings metrics={r.lbAccounting} />}</div>)}
-              {checkpoint.resources.filter(r => r.cdn || types.get(r.id) === "CDN").map(r => <CdnReadings key={`cdn-${r.id}`} resource={r} />)}
-              {checkpoint.resources.filter(r => r.cache || r.applicationHelpers || ["Cache", "Virtual Machine"].includes(types.get(r.id) ?? "")).map(r => <CacheReadings key={`cache-${r.id}`} resource={r} cache={!!r.cache || types.get(r.id) === "Cache"} />)}
+              </>}
+              {resources.filter(r => r.database || r.databaseReplication || r.serverless || r.scheduler || r.eventBus || r.gateway || r.lbAccounting || ["Database", "Serverless Function", "Scheduler", "Event Bus", "API Gateway", "Load Balancer"].includes(types.get(r.id) ?? "")).map(r => <section key={r.id} aria-label={`Resource measurements for ${r.id}`} className="mt-4"><h3 className="font-semibold">{r.id}</h3>{(r.database || types.get(r.id) === "Database") && <DataDeliveryReadings type="Database" metrics={r} resourceId={r.id} />}{r.databaseReplication && <DatabaseReplicationReadings metrics={r} resourceId={r.id} />}{(r.serverless || types.get(r.id) === "Serverless Function") && <ServerlessReadings metrics={r.serverless} resourceId={r.id} />}{(r.scheduler || types.get(r.id) === "Scheduler") && <SchedulerReadings metrics={r.scheduler} resourceId={r.id} />}{(r.eventBus || types.get(r.id) === "Event Bus") && <EventBusReadings metrics={r.eventBus} resourceId={r.id} />}{(r.gateway || types.get(r.id) === "API Gateway") && <GatewayReadings metrics={r.gateway} resourceId={r.id} />}{r.lbAccounting ? <LbAccountingReadings metrics={r.lbAccounting} /> : types.get(r.id) === "Load Balancer" && <p>Load balancer accounting: Unknown</p>}</section>)}
+              {resources.filter(r => r.cdn || types.get(r.id) === "CDN").map(r => <CdnReadings key={`cdn-${r.id}`} resource={r} />)}
+              {resources.filter(r => r.cache || r.applicationHelpers?.helpers.length || types.get(r.id) === "Cache" || (!r.applicationHelpers && hasCache && types.get(r.id) === "Virtual Machine")).map(r => <CacheReadings key={`cache-${r.id}`} resource={r} cache={!!r.cache || types.get(r.id) === "Cache"} />)}
               {checkpoint.resources.filter(r => r.security).map(r => <section key={`security-${r.id}`} aria-label={`Security measurements for ${r.id}`} className="mt-4"><h3 className="font-semibold">{r.id}: security measurements</h3><SecurityReadings metrics={r.security} /></section>)}
-              {checkpoint.resources.filter(r => r.queueWork || r.asyncQueue).map(r => <QueueReadings key={`queue-${r.id}`} resource={r} />)}
-              {checkpoint.resources.filter(r => r.vmMemory).map(r => <section key={`memory-${r.id}`} aria-label={`Memory measurements for ${r.id}`} className="mt-4"><h3 className="font-semibold">{r.id}: memory measurements</h3><VmMemoryReadings metrics={r.vmMemory} /></section>)}
+              {resources.filter(r => r.queueWork || r.asyncQueue || types.get(r.id) === "Message Queue").map(r => <QueueReadings key={`queue-${r.id}`} resource={r} />)}
+              {checkpoint.resources.filter(r => r.vmMemory).map(r => <section key={`memory-${r.id}`} aria-label={`Memory measurements for ${r.id}`} className="mt-4"><h3 className="font-semibold">{r.id}: memory measurements</h3><VmMemoryReadings metrics={r.vmMemory} resourceId={r.id} headingLevel={4} /></section>)}
               {report.guidedReview && <a href="#guided-review" className="mt-3 inline-block text-sm font-medium text-accent underline">Back to guided review</a>}
             </div>
           )}
-          <DnsReadings evidence={checkpoint.dnsEvidence} />
-          <DurationReadings evidence={checkpoint.durationEvidence} />
+          {hasDns && <DnsReadings evidence={checkpoint.dnsEvidence} />}
+          {hasDurations && <DurationReadings evidence={checkpoint.durationEvidence} />}
           {monitoringResources.map(r => <MonitoringReadings key={`monitor-${r.id}`} resource={r} />)}
         </ReportSection>
       )}
@@ -108,7 +118,7 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
             </dl>
             <p className="mt-2 text-xs text-ink-3">Limit minus the recorded monthly estimate; a negative amount is over budget. This is a projection, not an account balance.</p>
           </div>)}
-          {!!report.monthlyBudgets?.length && <div className="mt-4">
+          {(!!report.monthlyBudgets?.length || !!cost?.lineItems?.length) && <div className="mt-4">
             <h3 className="font-semibold">Monthly resource price line items</h3>
             {cost?.lineItems ? <div className="overflow-x-auto"><table className="w-full text-sm">
               <caption className="sr-only">Recorded CostEstimate line items, not current catalog prices</caption>

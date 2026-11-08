@@ -29,6 +29,11 @@ test("real DNS reports render audited values, resolver/name identity, windows, u
     for (const [label, d] of labels) {
       const source = readFileSync(resolve(import.meta.dir, "../../..", d.source), "utf8");
       expect(source).toContain(d.marker);
+      // A recorded empty cache is an empty population, not a missing cached answer.
+      if (d.path.includes(".cache.*") && e.resolvers.every(r => r.cache.length === 0 && r.cacheOmitted === 0)) {
+        expect(html).not.toContain(`<dt>${label}</dt>`);
+        continue;
+      }
       for (const v of read(e, d.path.split(".").slice(1))) {
         const value = v == null ? "Unknown" : String(v);
         expect(html).toContain(`<dt>${label}</dt><dd>${value}</dd>`);

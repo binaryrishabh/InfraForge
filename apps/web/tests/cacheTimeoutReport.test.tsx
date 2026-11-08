@@ -72,9 +72,13 @@ test("real saved timeout counts keep attempts, original callers and cancellation
     expect(html).toMatch(new RegExp(`>${timeoutLabels[i]}<\\/dt><dd>${retry[key]}<\\/dd>`));
     expect(summaries[i]!.value).toBe(`${retry[key]} ${i < 2 ? "attempts" : i === 2 ? "requests" : i === 3 ? "receipts" : "originals"}`);
   }
-  for (const report of [f.old, f.absent, f.noTraffic]) {
+  for (const report of [f.old]) {
     const legacy = render(report);
     for (const label of timeoutLabels) expect(legacy).toContain(`>${label}</dt><dd>Unknown</dd>`);
+    expect(lessonRunMeasurements(report, timeoutLabels).every(row => row.value === "Unknown")).toBe(true);
+  }
+  for (const report of [f.absent, f.noTraffic]) {
+    expect(render(report)).not.toContain('aria-label="Client retry load"');
     expect(lessonRunMeasurements(report, timeoutLabels).every(row => row.value === "Unknown")).toBe(true);
   }
   expect(LEARNING_REPORT_MEASUREMENTS).not.toHaveProperty("Superseded outcomes");

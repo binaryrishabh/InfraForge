@@ -28,7 +28,7 @@ const fields = [
   ["primaryGeneration", "Primary data generation"],
   ["replicaGeneration", "Replica data generation"],
 ] as const;
-export function DatabaseReplicationReadings({ metrics }: { metrics?: ResourceMetrics | Pick<ResourceMetrics, "database" | "databaseReplication"> }) {
+export function DatabaseReplicationReadings({ metrics, resourceId }: { resourceId?: string; metrics?: ResourceMetrics | Pick<ResourceMetrics, "database" | "databaseReplication"> }) {
   const values = metrics?.databaseReplication;
   if (!values) return null;
   const display = (key: typeof fields[number][0]) => {
@@ -38,7 +38,7 @@ export function DatabaseReplicationReadings({ metrics }: { metrics?: ResourceMet
     if (key === "replicaProcessState") return value === "unavailable" ? "Down" : value === "writer" ? "Writer" : "Replica";
     return String(value);
   };
-  return <section aria-label="Database replication measurements" className="border-b border-line px-4 py-4 text-sm">
+  return <section aria-label={`Database replication measurements${resourceId ? ` for ${resourceId}` : ""}`} className="border-b border-line px-4 py-4 text-sm">
     <p>Educational async replication. Lag is the age of the oldest unapplied commit.</p>
     <p>Regressed keys: {values.regressedKeyCount == null ? "Unknown" : values.regressedKeyCount}. Details (up to 8): {values.regressedKeys == null ? "Unknown" : values.regressedKeys.length ? values.regressedKeys.map(r => `${r.key}: ${r.primaryVersion} → ${r.promotedVersion}`).join(", ") : "None"}</p>
     {metrics?.database?.readRouting && <div>

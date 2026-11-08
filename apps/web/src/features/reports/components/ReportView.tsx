@@ -46,7 +46,7 @@ export function ReportView({ report, onStopped }: { report: RunReport; onStopped
   const kind = runKind(run);
   const eligible = !active(run.status);
   const snapshot = report.terminal ?? report.checkpoint;
-  const hasCost = report.stages.some((st) => st.monthlyEstimateUsd !== undefined) || snapshot?.accumulatedCostUsd !== undefined;
+  const hasCost = report.stages.some((st) => st.name === "CostEstimate" && st.monthlyEstimateUsd !== undefined) || snapshot?.accumulatedCostUsd !== undefined || !!report.monthlyBudgets?.length;
   // Section numbers follow only the sections this report actually shows.
   let n = 0;
   const head = { ran: ++n, observed: ++n, interpreted: report.interpreted.length ? ++n : 0, measurements: n + 1 };

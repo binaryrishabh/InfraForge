@@ -11,7 +11,7 @@ export function TrafficEvidence({ traffic, recordedAt }: { traffic?: ReportCheck
     <dl className="grid grid-cols-3 gap-2">{rows.map(([label, value]) => <div key={label}><dt className="text-xs text-ink-3">{label}</dt><dd>{value ?? "Unknown"}</dd></div>)}</dl>
     <p className="mt-2 text-xs text-ink-3">p99 = 99% of completed requests in this measured window were at or below this response time.</p>
     {traffic?.wholeRun && <WholeRunReadings wholeRun={traffic.wholeRun} recorded={recordedAt !== undefined} />}
-    {(traffic?.clientRetry || recordedAt) && <div aria-label="Client retry load" className="mt-3 border-t border-line pt-2">
+    {traffic?.clientRetry && <div aria-label="Client retry load" className="mt-3 border-t border-line pt-2">
       <p className="mb-2 font-semibold">Client retry load</p>
       <dl className="grid grid-cols-3 gap-2">{([
         ["Attempts/s", traffic?.clientRetry?.attemptRps], ["Retries issued", traffic?.clientRetry?.retriesIssued],

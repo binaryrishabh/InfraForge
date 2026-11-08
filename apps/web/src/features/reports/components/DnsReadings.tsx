@@ -13,12 +13,12 @@ export function DnsReadings({evidence: e}: {evidence?: DnsEvidence}) {
       <dt>Complete DNS timestamp</dt><dd>{value(e?.timestampComplete)}</dd>
       <dt>Omitted resolvers (count)</dt><dd>{value(e?.resolversOmitted)}</dd></dl>
     {e?.resolvers.length === 0 && <p>No resolver was recorded in this capture.</p>}
-    {(e?.resolvers.length ? e.resolvers : [null]).map((r, i) => <div key={r?.id ?? i}>
+    {(e && !e.resolversOmitted ? e.resolvers : e?.resolvers.length ? e.resolvers : [null]).map((r, i) => <section key={r?.id ?? i} aria-label={r ? `DNS resolver measurements for ${r.id}` : "Unknown DNS resolver"}>
       <h4>{r?.id ?? "Resolver: Unknown"}</h4>
       <dl>{counters.map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{value(r?.[key])}</dd></div>)}
         <dt>Omitted cache entries (count)</dt><dd>{value(r?.cacheOmitted)}</dd></dl>
       {r?.cache.length === 0 && <p>No cached answer was recorded for this resolver.</p>}
-      {(r?.cache.length ? r.cache : [null]).map((c, j) => <div key={c?.name ?? j}>
+      {(r && !r.cacheOmitted ? r.cache : r?.cache.length ? r.cache : [null]).map((c, j) => <div key={c?.name ?? j}>
         <h5>{c?.name ?? "Cached name: Unknown"}</h5>
         <dl><dt>DNS: Cached answer expiry</dt><dd>{value(c?.expiresAt)}</dd>
           <dt>DNS: Cached answer generation</dt><dd>{value(c?.answer.generation)}</dd>
@@ -28,7 +28,7 @@ export function DnsReadings({evidence: e}: {evidence?: DnsEvidence}) {
           <dt>Cached addresses</dt><dd>{c?.answer.addresses?.join(", ") ?? "Unknown"}</dd>
           <dt>Omitted addresses (count)</dt><dd>{value(c?.answer.addressesOmitted)}</dd></dl>
       </div>)}
-    </div>)}
+    </section>)}
     <p className="text-xs text-ink-3">Hits include reusable negative answers; lookup failures include negative answers. Expirations, evictions (including clear) and replacements are distinct counters, not a timestamped transition history. A missing cached generation or omitted answer is Unknown. DNS success does not establish application reachability, continuous health, failover or recovery time.</p>
   </section>;
 }

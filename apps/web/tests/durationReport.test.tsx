@@ -22,7 +22,7 @@ test("real engine duration reports render owned phases, units, population limits
       const path = d.path.split(".");
       const items = path[1] === "resources" ? e.resources : path[1] === "paths" ? e.paths : null;
       const read = (input: unknown, keys: string[]): unknown => keys.reduce((v, key) => v && typeof v === "object" ? (v as Record<string, unknown>)[key] : undefined, input);
-      const raw = items ? items.length ? items.map(item => read(item, path.slice(3))) : [null] : [read(e, path.slice(1))];
+      const raw = items ? items.map(item => read(item, path.slice(3))) : [read(e, path.slice(1))];
       for (const v of raw) {
         const value = v == null ? "Unknown" : String(v);
         expect(html).toContain(`<dt>${label}</dt><dd>${value}</dd>`);

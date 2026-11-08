@@ -40,6 +40,7 @@ test("real beginner reports render scored requirements, queue depth and age, wit
   expect(html).toContain("Oldest ready message age (seconds)</dt><dd>Unknown");
   delete resource.queueWork;
   html = renderToStaticMarkup(<ReportMeasurements report={passing} number={3} />);
-  expect(html).not.toContain("queue measurements");
+  expect(html).toContain('aria-label="Queue measurements for queue"');
+  expect(html).toContain("Acknowledged messages</dt><dd>Unknown");
   expect(readFileSync(resolve(root, "apps/web/src/features/reports/components/ReportMeasurements.tsx"), "utf8")).toContain("<QueueReadings");
 }, 120000);
