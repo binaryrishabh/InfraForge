@@ -51,10 +51,10 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
             {checkpoint.metricsComputedAt ? <>Measurements computed <time dateTime={checkpoint.metricsComputedAt}>{formatDate(checkpoint.metricsComputedAt)}</time>{checkpoint.metricsTopologyRevision !== undefined && ` on topology revision ${checkpoint.metricsTopologyRevision}`}.</>
               : checkpoint.metricsComputedAt === null ? "Measurements are initialized simulator values; no engine tick had computed them." : null}
           </p>
-          <div className="mt-5 min-w-0">
+          {checkpoint.traffic && <div className="mt-5 min-w-0">
             <h3 className="text-[17px] font-semibold text-ink">Traffic outcomes</h3>
             <TrafficEvidence traffic={checkpoint.traffic} recordedAt={report.terminal ? "stop" : "checkpoint"} />
-          </div>
+          </div>}
           {checkpoint.resources.length > 0 && (
             <div className="mt-4">
               <table className="hidden w-full text-sm sm:table">
