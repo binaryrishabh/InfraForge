@@ -3,9 +3,13 @@ import type { ActionRequest, RunAction } from "@infraforge/contracts/actions";
 import type { RunAction as StoredAction } from "../lib/generated/prisma/client";
 import { DeploymentChaosNames, INTERVENTIONS, interventionError, type InterventionRequest } from "@infraforge/domain/resource";
 import { LiveTopologySchema } from "../zod_schemas/layout.schema";
+import { DatabaseReplicationMetricsSchema } from "../reports/databaseSchema";
 
 const id = z.string().min(1).max(256);
 const amount = z.number().finite().nonnegative();
+const incidentSample = z.object({simulatedSecond: amount.int().max(3600), replication: DatabaseReplicationMetricsSchema.optional(),
+  overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).nullable().optional(),
+  completed: amount.int().nullable(), failed: amount.int().nullable()}).strict();
 const intervention = z.custom<InterventionRequest>(value => interventionError(value) === null);
 const receipt = z.object({ interventionId: id, revision: z.number().int().positive(),
   target: z.union([z.object({resourceId: id}).strict(), z.object({edgeId: id, direction: z.enum(["request", "response", "both"])}).strict()]),
@@ -14,6 +18,7 @@ const receipt = z.object({ interventionId: id, revision: z.number().int().positi
   resolvedTargetCount: z.number().int().positive().optional(), affectedPathCount: z.number().int().nonnegative().optional(),
 }).strict().refine(value => interventionError({interventionId: value.interventionId, revision: value.revision, target: value.target, parameters: value.parameters}) === null);
 const outcomeSchema = z.object({ intervention: receipt.optional(), interventionEnded: z.boolean().optional(), previousTarget: amount.optional(), appliedTarget: amount.optional(),
+  databaseIncident: z.object({resourceId: id, before: incidentSample, during: incidentSample.optional(), after: incidentSample.optional()}).strict().optional(),
   previousSpeed: amount.optional(), appliedSpeed: amount.optional(), durationSimulatedSeconds: amount.optional(),
   faultEnded: z.boolean().optional(), observedOverallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).optional(),
   baselineOverallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).optional(),

@@ -84,7 +84,8 @@ deploymentRouter.get("/:deploymentId/browser-run", async (req, res) => {
   if (run.challengeScenario != null && !scenario) throw new ConflictError("The recorded scenario is unavailable.");
   // Real seconds left before the server closes an unsent run. The browser counts down from this, not from its own clock.
   res.json({ success: true, browserRun: { input, horizonSeconds, stopAtSecond: run.evaluationStopAtSimulatedSeconds ?? horizonSeconds, lifetimeRemainingSeconds: lifetimeRemainingSeconds(run.createdAt),
-    ...(run.challengeId ? {challengeId: run.challengeId} : {}), ...(scenario ? {scenario: {version: scenario.version, visibility: scenario.visibility, steps: scenario.steps}} : {}),
+    ...(run.challengeId ? {challengeId: run.challengeId} : {}), ...(scenario ? {scenario: {version: scenario.version, visibility: scenario.visibility, steps: scenario.steps,
+      ...(scenario.databaseRecovery ? {databaseRecovery: scenario.databaseRecovery} : {})}} : {}),
     ...(plan ? { experiment: { fault: plan.fault, resourceId: plan.targetResourceId, atSimulatedSecond: plan.atSimulatedSecond } } : {}) } });
 });
 

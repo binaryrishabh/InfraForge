@@ -149,6 +149,18 @@ export const JOURNEY_LABS = [
     },
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "restore-a-database-writer", title: /Restore a database writer/,
+    prediction: "The replica needs explicit promotion; final health can hide earlier caller failures.",
+    hypothesis: "Scheduling only the promotion after second 3 should restore writer work sooner while the returning primary stays fenced.",
+    improvement: {
+      stepName: "db's approved recovery plan schedules promotion after second 3",
+      nodeSelector: '[data-resource-id="db"]', nodeText: /Database/, fallbackText: "db",
+      role: "spinbutton", name: /^Promote at simulated second$/, resourceId: "db", setting: "databaseRecoveryPlan.promoteAtSecond", from: null, to: 3,
+    },
+    reportRequirements: [/^Complete at least 110 callers; at most 30 unsuccessful$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Representative conceptual content, plus a reading without a check.

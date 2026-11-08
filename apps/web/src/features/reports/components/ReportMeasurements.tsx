@@ -1,4 +1,5 @@
 import { DatabaseReplicationReadings } from "@/features/live/DatabaseReplicationReadings";
+import { DatabaseIncidentReadings } from "./DatabaseIncidentReadings";
 import { DataDeliveryReadings } from "@/features/live/DataDeliveryReadings";
 import { ServerlessReadings } from "@/features/live/ServerlessReadings";
 import { SchedulerReadings } from "@/features/live/SchedulerReadings";
@@ -46,6 +47,7 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
   const monthly = cost?.monthlyEstimateUsd;
   return (
     <>
+      <DatabaseIncidentReadings report={report} />
       {checkpoint && (
         <ReportSection number={number} title={report.terminal ? "Exact terminal simulation snapshot" : "Latest retained simulation checkpoint"}>
           <p className="max-w-[72ch] text-ink-3">{report.terminal ? "Captured from the simulator when the run stopped. This is the exact state at the stop, within the simulation model."

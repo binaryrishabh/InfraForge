@@ -125,19 +125,36 @@ reconstructs it from that plan and establishes each durable action before advanc
 Only exact stored steps may carry the internal scenario step id; learner interventions remain
 refused. Scoring requires every exact application and end receipt plus terminal evidence.
 
-Database member failures and promotion are currently available only in Free World live runs.
-The scenario validator rejects `db-fail-primary`, `db-fail-replica` and `db-promote-replica`,
-even though the engine implements them. The saved canvas has no promotion-step or timing
-setting. Adding a step to a definition changes its authored rules; it is not a learner design
-change. A lab that requires the learner to add promotion needs a captured recovery-plan
-control and scenario support before it can meet the runnable-lab standard.
+Database member actions stay refused by legacy scenarios. A new scenario may explicitly
+opt into `databaseRecovery: {version: 1, resourceId, earliestSecond, latestSecond}`:
+one original-primary outage must span the entire promotion window, with at most one
+promotion. Replica faults are outside this contract. All existing role, availability,
+serving-path, overlap, horizon and receipt validation still applies.
 
-`tests/databasePromotionEvidence.test.ts` verifies the Free World mechanism, browser/server
-parity, saved measurements and challenge refusal. Those runs are regression evidence, not
-scored challenge attempts. The `data/writer-failure` lessons remain conceptual. Promotion
-clears the old pending-replication population; zero pending work and new writer commits do
-not alone prove preservation of earlier commits. The model does not create a second replica
-after promotion. Keep data-preservation and automatic-failover claims outside these totals.
+The designated database carries optional saved `databaseRecoveryPlan: {version: 1,
+promoteAtSecond: number | null}` metadata. Null is an intentional no-promotion plan.
+Only the new scenario consumes it; the compiler validates the metadata but it changes no
+resource execution semantics. It is one visible recovery-policy edit in the existing
+one-change review, not a capacity or topology change. Changing an authored step is still
+not a learner edit. Extra targets, invalid choices and missing plans are refused.
+
+Attempt creation resolves the saved choice into the ordinary intervention timeline and
+stores its target/choice SHA-256 hash and exact receipts in the immutable scenario JSON.
+Replay reconstructs everything from the exact definition and captured run inputs; it
+never accepts browser-authored recovery actions. Historical plans omit these fields and
+retain their original identity and rules. No live challenge intervention is enabled.
+
+For opted-in recovery runs, action outcomes retain existing database replication and
+caller measurements before application, at the next tick, and at completion. These bounded
+samples are server-owned evidence, not new simulation behavior or a continuous trace.
+Missing incident boundaries leave the attempt unscored. Missing individual measurements
+remain Unknown. `restore-a-database-writer@1` scores existing cumulative caller-outcomes;
+its tests prove the promotion, session invalidation and fencing behavior separately.
+
+`tests/databasePromotionEvidence.test.ts` remains Free World regression evidence and
+proves legacy challenge refusal. The existing `data/writer-failure` lessons remain
+conceptual. Promotion clears pending replication; zero pending work and new writer
+commits do not prove preservation. No replacement/catch-up replica is created.
 
 Use `revealed` for this slice. `debrief` is a presentation designation: a browser-executed
 script is inspectable and provides no secrecy. No hidden-reveal UI is provided.

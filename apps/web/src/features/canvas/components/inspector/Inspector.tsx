@@ -13,6 +13,7 @@ import { VmCpuQuotaSection } from "./VmCpuQuotaSection";
 import { VmExecutionSection } from "./VmExecutionSection";
 import { DatabaseReplicationSection } from "./DatabaseReplicationSection";
 import { DbPoolSection } from "./DbPoolSection";
+import { DatabaseRecoverySection } from "./DatabaseRecoverySection";
 import { DbConcurrencySection } from "./DbConcurrencySection";
 import { LbAdmissionSection } from "./LbAdmissionSection";
 import { LbSelectionSection } from "./LbSelectionSection";
@@ -78,6 +79,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
       {resource.type === "Database" && <DataKeyspaceSection key={`keyspace-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Database" && <DatabaseReplicationSection resource={resource} disabled={locked} />}
       {resource.type === "Database" && <DbPoolSection key={`db-pool-${resource.id}`} resource={resource} disabled={locked} />}
+      {resource.type === "Database" && <DatabaseRecoverySection resource={resource} disabled={locked} />}
       {resource.type === "Database" && <DbConcurrencySection key={`db-concurrency-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Firewall" && <FirewallStateSection key={`firewall-state-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "Firewall" && <FirewallCapacitySection key={`firewall-capacity-${resource.id}`} resource={resource} disabled={locked} />}

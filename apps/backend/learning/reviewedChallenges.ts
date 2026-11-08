@@ -3,6 +3,7 @@
 export interface LearningChallengeReview { challengeId: string; version: number; hash: string }
 export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeReview>> = {
   "size-the-app-database-pool@1": {challengeId: "size-the-app-database-pool", version: 1, hash: "ce8ab0399c1dcd29ca3997913d52ba30e4b311337e53a94cb809602090669194"},
+  "restore-a-database-writer@1": {challengeId: "restore-a-database-writer", version: 1, hash: "e7c0c1a217ab01ecb79dd3a490d7f3d69f526788bb99d00286f8b7be884d0c25"},
   "reuse-before-expiry@3": {challengeId: "reuse-before-expiry", version: 2, hash: "da68b973d3fe19a49afd259da61031732ca766af391c25d48cda885477d6d757"},
   "share-a-cache-fill@3": {challengeId: "share-a-cache-fill", version: 2, hash: "6a7c4943ab093d98ca6b45c013446b9cf3a97b06617d6c3ef684d7db7b894b8a"},
   "catalogue-link-flash@3": {challengeId: "catalogue-link-flash", version: 2, hash: "f9a1a680729c8914d0220645176afdaa96b59203baa0e84e675358f96dacd8a9"},

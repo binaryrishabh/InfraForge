@@ -475,6 +475,13 @@ function scenarioEvidenceProblem(plan: RecordedScenario, evidence: ChallengeEvid
   if (scripted.length !== steps.length || actions.some(a => !a.scenarioStepId && a.kind !== "speed" && a.kind !== "teardown")) return "The recorded actions do not match the complete scenario; this attempt is unscored.";
   for (const [i, step] of steps.entries()) {
     const action = scripted[i], receipt = plan.receipts[i];
+    if (plan.databaseRecovery && step.request.interventionId.startsWith("db-")) {
+      const sample = action?.outcome?.databaseIncident;
+      if (!sample || sample.resourceId !== plan.databaseRecovery.resourceId || sample.before.simulatedSecond !== step.atSecond ||
+        sample.during?.simulatedSecond !== step.atSecond + 1 || sample.after?.simulatedSecond !== action?.completedSimulatedSeconds) {
+        return `Recovery step ${step.id} is missing its retained incident boundaries; this attempt is unscored.`;
+      }
+    }
     if (!action || !receipt || action.scenarioStepId !== step.id || action.kind !== "intervention" || !sameScenarioValue(action.parameters, step.request) ||
       action.status !== "completed" || !action.appliedAt || !action.completedAt || action.appliedSimulatedSeconds !== step.atSecond ||
       action.completedSimulatedSeconds !== Math.ceil((receipt.endUs ?? receipt.atUs) / 1_000_000) || action.outcome?.interventionEnded !== true ||

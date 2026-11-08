@@ -115,9 +115,12 @@ export interface RecordedExperiment {
 export interface ChallengeScenario {
   version: 1;
   visibility: "revealed" | "debrief";
+  // Explicit opt-in: one original-primary incident and a saved promotion choice.
+  databaseRecovery?: { version: 1; resourceId: string; earliestSecond: number; latestSecond: number };
   steps: Array<{ id: string; atSecond: number; request: InterventionRequest }>;
 }
 export interface RecordedScenario extends ChallengeScenario {
+  recoveryPlanHash?: string;
   definitionHash: string;
   simulationModelVersion: "2";
   catalogSnapshot: string;

@@ -16,8 +16,12 @@ export function dueScenarioSteps(scenario: ChallengeScenario, next: number, seco
   return orderedScenarioSteps(scenario).slice(next).filter(step => step.atSecond <= second);
 }
 export function scenarioError(value: unknown, evaluationSecond: number): string | null {
-  if (!object(value) || keys(value) !== "steps,version,visibility" || value.version !== 1 || !["revealed", "debrief"].includes(value.visibility as string) ||
+  if (!object(value) || !["steps,version,visibility", "databaseRecovery,steps,version,visibility"].includes(keys(value)) || value.version !== 1 || !["revealed", "debrief"].includes(value.visibility as string) ||
     !Array.isArray(value.steps) || value.steps.length < 1 || value.steps.length > 20) return "A scenario needs version 1, visibility and 1 to 20 steps.";
+  const recovery = value.databaseRecovery;
+  if (recovery !== undefined && (!object(recovery) || keys(recovery) !== "earliestSecond,latestSecond,resourceId,version" || recovery.version !== 1 ||
+    typeof recovery.resourceId !== "string" || !/^[A-Za-z0-9_-]{1,64}$/.test(recovery.resourceId) || !Number.isSafeInteger(recovery.earliestSecond) ||
+    !Number.isSafeInteger(recovery.latestSecond) || Number(recovery.earliestSecond) < 2 || Number(recovery.latestSecond) < Number(recovery.earliestSecond) || Number(recovery.latestSecond) >= evaluationSecond - 1)) return "Recovery plans need an exact target and a bounded promotion window before evaluation.";
   const ids = new Set<string>();
   for (const step of value.steps) {
     if (!object(step) || keys(step) !== "atSecond,id,request" || typeof step.id !== "string" || !/^[a-z0-9-]{1,64}$/.test(step.id) || ids.has(step.id) ||
@@ -26,10 +30,20 @@ export function scenarioError(value: unknown, evaluationSecond: number): string 
     const error = interventionError(step.request, {remainingSeconds: evaluationSecond - Number(step.atSecond) - 1});
     if (error) return error;
     const request = step.request as ChallengeScenario["steps"][number]["request"];
-    if (request.interventionId === "db-promote-replica") return "Database promotion is available only in Free World live runs.";
-    if (request.interventionId === "db-fail-primary" || request.interventionId === "db-fail-replica") return "Database member outages are available only in Free World live runs.";
+    if (request.interventionId.startsWith("db-")) {
+      if (!object(recovery)) return "Database member outages and promotion are available only in Free World live runs without a challenge recovery plan.";
+      if (!("resourceId" in request.target) || request.target.resourceId !== recovery.resourceId || request.interventionId === "db-fail-replica") return "Recovery steps must target the declared original primary and its surviving replica.";
+      if (request.interventionId === "db-promote-replica" && (Number(step.atSecond) < Number(recovery.earliestSecond) || Number(step.atSecond) > Number(recovery.latestSecond))) return "Promotion must be inside the challenge recovery window.";
+    }
     const duration = Number(request.parameters.duration ?? 0);
     if (Number(step.atSecond) + duration >= evaluationSecond) return "Scenario effects must end before evaluation.";
+  }
+  if (object(recovery)) {
+    const steps = value.steps as ChallengeScenario["steps"];
+    const failures = steps.filter(s => s.request.interventionId === "db-fail-primary");
+    if (failures.length !== 1 || failures[0]!.atSecond >= Number(recovery.earliestSecond) ||
+      failures[0]!.atSecond + Number(failures[0]!.request.parameters.duration) <= Number(recovery.latestSecond) ||
+      steps.filter(s => s.request.interventionId === "db-promote-replica").length > 1) return "Recovery requires one primary outage spanning the entire promotion window and at most one promotion.";
   }
   return null;
 }
