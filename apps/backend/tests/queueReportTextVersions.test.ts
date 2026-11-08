@@ -154,7 +154,9 @@ test("saved report renders real ready depth and age while absent or empty age re
   expect(markup[1]).toContain("<dt>Ready messages</dt><dd>0</dd>");
   for (const index of [1, 2]) expect(markup[index]).toContain("<dt>Oldest ready message age (seconds)</dt><dd>Unknown</dd>");
   expect(markup[2]).toContain("<dt>Ready messages</dt><dd>Unknown</dd>");
-  expect(markup[3]).not.toContain("Queue measurements for queue");
+  // A queue that exists in the design still gets its section; with neither counter recorded the readings are Unknown, never hidden or zero.
+  expect(markup[3]).toContain("Queue measurements for queue");
+  expect(markup[3]).toContain("<dt>Ready messages</dt><dd>Unknown</dd>");
   // The queue-work requirement still omits age; it is a separate report reading.
   expect(before.challenge!.criteria.find(c => c.id === "work")!.detail).not.toContain("age");
 });

@@ -1,9 +1,10 @@
 import { expect, test } from "bun:test";
 import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
-import { latestChallenge, specHash } from "../challenges/registry";
+import { findChallenge, specHash } from "../challenges/registry";
 import { validateChallengeVersions } from "../challenges/validate";
 
-const copy = (id = "cache-or-database") => structuredClone(latestChallenge(id)!.definition);
+// Version 1 of the family: a lone v1 satisfies the version-sequence rule, so later published versions do not affect these cache checks.
+const copy = (id = "cache-or-database") => structuredClone(findChallenge(id, 1)!.definition);
 const check = (d: ChallengeDefinition) => validateChallengeVersions([d], {[`${d.id}@${d.version}`]: specHash(d)});
 
 test("successful validation cannot hide in-place nested starter or criterion changes", () => {

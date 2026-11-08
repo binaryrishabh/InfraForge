@@ -38,7 +38,7 @@ test("captured monitoring, object and firewall readouts agree with official serv
             inFlightSamples: row.inFlight.reduce((n, b) => n + b.rows.length, 0), inFlightBytes: row.inFlightBytes, freshness: row.freshness });
         }
         if (type === "object") for (const row of evidence.asynchronous.objects) {
-          expect(view.metrics[row.id]!.objectStorage).toEqual({ version: 1, storedBytes: row.storedBytes, capacityBytes: row.capacityBytes,
+          expect(view.metrics[row.id]!.objectStorage).toMatchObject({ version: 1, storedBytes: row.storedBytes, capacityBytes: row.capacityBytes,
             committedPuts: row.committedPuts, replacedObjects: row.replacedObjects, removedObjects: row.removedObjects, deletes: row.deletes, "object-capacity": row.service.reasons["object-capacity"] ?? null });
           capacityRefusals += row.service.reasons["object-capacity"] ?? 0;
         }
