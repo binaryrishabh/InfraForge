@@ -37,7 +37,7 @@ test("real saved cache and helper evidence renders exact counts with separate ow
     }
   }
   for (const {old, current} of f.lessons) {
-    expect(old.contentVersion).toBe(1); expect(current.contentVersion).toBe(2);
+    expect(old.contentVersion).toBe(1); expect(current.contentVersion).toBe(3);
     const newLabels = current.experiment!.evidenceToInspect!.flatMap(evidenceLabels).filter(l => l.startsWith("Cache:") || l.startsWith("Application helper:"));
     expect(newLabels).toContain("Application helper: Database fetches");
     for (const label of newLabels) expect(render(f.reports[1]!)).toContain(`<dt>${label}</dt>`);
@@ -72,14 +72,11 @@ test("real saved timeout counts keep attempts, original callers and cancellation
     expect(html).toMatch(new RegExp(`>${timeoutLabels[i]}<\\/dt><dd>${retry[key]}<\\/dd>`));
     expect(summaries[i]!.value).toBe(`${retry[key]} ${i < 2 ? "attempts" : i === 2 ? "requests" : i === 3 ? "receipts" : "originals"}`);
   }
-  for (const report of [f.old]) {
-    const legacy = render(report);
-    for (const label of timeoutLabels) expect(legacy).toContain(`>${label}</dt><dd>Unknown</dd>`);
-    expect(lessonRunMeasurements(report, timeoutLabels).every(row => row.value === "Unknown")).toBe(true);
-  }
-  for (const report of [f.absent, f.noTraffic]) {
-    expect(render(report)).not.toContain('aria-label="Client retry load"');
-    expect(lessonRunMeasurements(report, timeoutLabels).every(row => row.value === "Unknown")).toBe(true);
-  }
+  // Client retry data without timeout counters shows them as Unknown. Without client retry data (or without traffic) the page shows no timeout rows; lesson summaries still say Unknown.
+  const legacy = render(f.old);
+  for (const label of timeoutLabels) expect(legacy).toContain(`>${label}</dt><dd>Unknown</dd>`);
+  for (const report of [f.old, f.absent, f.noTraffic]) expect(lessonRunMeasurements(report, timeoutLabels).every(row => row.value === "Unknown")).toBe(true);
+  for (const report of [f.absent, f.noTraffic]) for (const label of timeoutLabels) expect(render(report)).not.toContain(`>${label}</dt>`);
+  expect(render(f.noTraffic)).not.toContain("Traffic outcomes");
   expect(LEARNING_REPORT_MEASUREMENTS).not.toHaveProperty("Superseded outcomes");
 }, 60000);

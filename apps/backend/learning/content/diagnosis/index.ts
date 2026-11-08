@@ -7,4 +7,5 @@ export const lessons = [...admissionDiagnosisLessons, ...memoryAdmissionLessons,
 import { memoryAdmissionArchivedLessons } from "./memory-admission";
 import { asyncAndDependenciesArchivedLessons } from "./async-and-dependencies";
 import { admissionDiagnosisArchivedLessons } from "./admission-diagnosis";
-export const archivedLessons = [...admissionDiagnosisArchivedLessons, ...memoryAdmissionArchivedLessons, ...asyncAndDependenciesArchivedLessons];
+import { reportFirstArchivedLessons } from "./report-first";
+export const archivedLessons = [...reportFirstArchivedLessons, ...admissionDiagnosisArchivedLessons, ...memoryAdmissionArchivedLessons, ...asyncAndDependenciesArchivedLessons];

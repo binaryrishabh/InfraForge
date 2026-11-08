@@ -26,6 +26,7 @@ export interface NetworkContext {
   reachable(path: string): boolean;
   observe(id: string): unknown;
   inspect?(id: string): unknown;
+  inspectBreakers?(source: string): ReturnType<ReturnType<typeof pathTransport>["measure"]>[];
   setAvailable(id: string, alive: boolean): void;
   abortOwned(id: string): void;
   retireOwner?(id: string): void;
@@ -77,6 +78,8 @@ export function createNetworkRuntime(authored: NetworkInput, extension?: Network
     extension?.install?.(kernel, trace.emit, context);
     const links = new Map(input.links.map((l) => [l.id, networkLink(l, kernel, trace.emit, extension?.usage)]));
     const paths = new Map<string, ReturnType<typeof pathTransport>>();
+    // Observer-only reads of existing machines; no trace/history copy or state changes.
+    context.inspectBreakers = source => input.paths.filter(p => p.source === source && p.circuitBreaker).map(p => paths.get(JSON.stringify([p.source, p.target]))!.measure());
     context.invalidateSessions = (target, ids) => {
       const sessions = new Set(ids); let invalidated = 0;
       for (const p of input.paths) if (p.target === target) invalidated += paths.get(JSON.stringify([p.source, p.target]))!.invalidateSessions(sessions);

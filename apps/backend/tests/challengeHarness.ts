@@ -1,3 +1,4 @@
+import { testACircuitAgainV1 } from "../challenges/definitions/test-a-circuit-again/v1";
 import { keepAnAssetCachedV1 } from "../challenges/definitions/keep-an-asset-cached/v1";
 import { openAndSizeAnApiV1 } from "../challenges/definitions/open-and-size-an-api/v1";
 import { splitTheCapacityBudgetV1 } from "../challenges/definitions/split-the-capacity-budget/v1";
@@ -81,6 +82,8 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "test-a-circuit-again": {...testACircuitAgainV1.starter!, resources: testACircuitAgainV1.starter!.resources.map(r =>
+    r.id === "lb" ? {...r, circuitBreaker: {...r.circuitBreaker!, cooldownMs: 2000}} : r)},
   "keep-an-asset-cached": {...keepAnAssetCachedV1.starter!, resources: keepAnAssetCachedV1.starter!.resources.map(r =>
     r.id === "cdn" ? {...r, cdnCachePolicy: {version: 1, ttlSeconds: 60}} : r)},
   "diagnose-consumer-credit-v2": {...diagnoseConsumerCreditV2.starter!, resources: diagnoseConsumerCreditV2.starter!.resources.map(r =>
@@ -251,3 +254,9 @@ export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, p
     ...(scenario ? {challengeScenario: scenario} : {}) };
   return row;
 }
+
+// The text-only versions retain the exact hidden reference designs.
+REFERENCE["reuse-before-expiry-v2"] = REFERENCE["reuse-before-expiry"]!;
+REFERENCE["share-a-cache-fill-v2"] = REFERENCE["share-a-cache-fill"]!;
+REFERENCE["catalogue-link-flash-v2"] = REFERENCE["catalogue-link-flash"]!;
+REFERENCE["cache-or-database-v2"] = REFERENCE["cache-or-database"]!;

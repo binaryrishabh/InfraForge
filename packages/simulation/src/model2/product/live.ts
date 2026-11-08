@@ -6,6 +6,7 @@ import type { CompiledProduct, ProductContract, SavedProductDesign } from "./con
 import type { CausalObserver } from "../workload/causal";
 import { dataDeliveryLive } from "./dataDeliveryLive";
 import { observabilityLive } from "./observabilityLive";
+import { startupLive } from "./startupLive";
 import { clientRetryEvidence } from "../workload/clientRetryEvidence";
 
 // One simulated second at a time, projected onto the canvas nodes the person drew.
@@ -13,8 +14,11 @@ import { clientRetryEvidence } from "../workload/clientRetryEvidence";
 export type LiveValue = number | null;
 export type LiveHealth = "healthy" | "degraded" | "saturated" | "failed" | "unknown";
 export interface LiveNodeMetrics {
+  startup?: import("@infraforge/contracts/telemetry").StartupMetrics;
   queueWork?: import("@infraforge/contracts/telemetry").QueueWorkMetrics;
   lbAccounting?: import("@infraforge/contracts/telemetry").LbAccountingMetrics;
+  lbRetry?: import("@infraforge/contracts/telemetry").LbRetryMetrics;
+  circuitBreaker?: import("@infraforge/contracts/telemetry").CircuitBreakerMetrics;
   gateway?: import("@infraforge/contracts/telemetry").ResourceMetrics["gateway"];
   serverless?: import("@infraforge/contracts/telemetry").ResourceMetrics["serverless"];
   scheduler?: import("@infraforge/contracts/telemetry").ResourceMetrics["scheduler"];
@@ -125,6 +129,16 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
           metrics[node] = { ...(lb.rateLimit ? { rateLimit: lb.rateLimit } : {}), cpu: null, memory: null, connections: lb.active + lb.pending, rps: completed, errorRate: ratio(rejected, received),
             health: healthyBackends === 0 ? "failed" : rejected > 0 ? "saturated" : lb.pending > 0 ? "degraded" : "healthy" };
           if (accounting) metrics[node]!.lbAccounting = accounting;
+          // Copy only existing enhanced-policy counters. Legacy retry policies do not
+          // own reason/reservation counters, so never manufacture them from totals.
+          if ("suppressedByReason" in own && "retriesWaiting" in own) {
+            const retry = own as Balancer & Omit<NonNullable<LiveNodeMetrics["lbRetry"]>, "version" | "sampledAtUs">;
+            metrics[node]!.lbRetry = { version: 1, sampledAtUs: now, attempts: retry.attempts, retries: retry.retries,
+              retryLimited: retry.retryLimited, activeRetries: retry.activeRetries, retriesWaiting: retry.retriesWaiting,
+              suppressedByReason: { ...retry.suppressedByReason } };
+          }
+          const paths = runtime.inspectBreakers(node)?.flatMap(p => p.circuitBreaker ? [{ id: p.id, source: p.source, target: p.target, ...p.circuitBreaker }] : []);
+          if (paths?.length) metrics[node]!.circuitBreaker = { version: 1, sampledAtUs: now, paths };
           continue;
         }
         const ids = (members.get(node) ?? []).filter((id) => runtime.inspect(id) !== undefined);
@@ -157,6 +171,10 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
           ...(pool ? { replicas: pool } : {}) };
       }
       const memory = runtime.vmMemoryEvidence();
+      for (const node of nodeIds) {
+        const startup = startupLive(compiled, runtime, node, owner, now);
+        if (startup && metrics[node]) metrics[node]!.startup = startup;
+      }
       if (memory) for (const node of nodeIds) {
         const readings = memory.resources.filter(r => owner(r.id) === node);
         if (readings.length && metrics[node]) metrics[node]!.vmMemory = { version: 1, resources: readings };
@@ -177,7 +195,7 @@ export function createLiveModel2(compiled: CompiledProduct, nodeIds: string[]) {
         for (const resource of deliveryResources) Object.assign(metrics[resource.id]!, dataDeliveryLive(resource, runtime, runtime.inspect(resource.id), compiled.input.resources));
       }
       for (const resource of compiled.input.resources) {
-        if (metrics[resource.id] && (resource.kind === "monitor" || resource.kind === "object-store")) Object.assign(metrics[resource.id]!, observabilityLive(resource, runtime));
+        if (metrics[resource.id] && (resource.kind === "monitor" || resource.kind === "object-store")) Object.assign(metrics[resource.id]!, observabilityLive(resource, runtime, now));
       }
       for (const resource of compiled.input.resources) {
         if (resource.kind !== "delivery-queue" || !compiled.semantic.nodes.find((n) => n.id === resource.id)?.profile.includes("canvas-async/1")) continue;

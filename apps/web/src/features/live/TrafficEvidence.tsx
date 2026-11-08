@@ -17,11 +17,14 @@ export function TrafficEvidence({ traffic, recordedAt }: { traffic?: ReportCheck
         ["Attempts/s", traffic?.clientRetry?.attemptRps], ["Retries issued", traffic?.clientRetry?.retriesIssued],
         ["Recovered", traffic?.clientRetry?.recovered], ["Exhausted", traffic?.clientRetry?.exhausted],
         ["Gave up (deadline)", traffic?.clientRetry?.givenUp], ["Load factor", traffic?.clientRetry?.extraLoadFactor?.toFixed(2).replace(/\.?0+$/, "")],
-        ["Timed-out attempts", traffic?.clientRetry?.attemptsTimedOut], ["Wasted completions", traffic?.clientRetry?.wastedCompletions],
-        ["Timeout cancellations requested", traffic?.clientRetry?.timeoutCancellationsRequested], ["Confirmed at entry", traffic?.clientRetry?.timeoutCancellationsConfirmed],
-        ["Recovered after timeout", traffic?.clientRetry?.recoveredByTimeoutRetry],
+        // Live views show timeout rows only once the engine reports them; saved reports always show them, as Unknown when not recorded.
+        ...(traffic.clientRetry.attemptsTimedOut === undefined && !recordedAt ? [] : [
+          ["Timed-out attempts", traffic?.clientRetry?.attemptsTimedOut], ["Wasted completions", traffic?.clientRetry?.wastedCompletions],
+          ["Timeout cancellations requested", traffic?.clientRetry?.timeoutCancellationsRequested], ["Confirmed at entry", traffic?.clientRetry?.timeoutCancellationsConfirmed],
+          ["Recovered after timeout", traffic?.clientRetry?.recoveredByTimeoutRetry],
+        ]),
       ] as const).map(([label, value]) => <div key={label}><dt className="text-xs text-ink-3">{label}</dt><dd>{value ?? "Unknown"}</dd></div>)}</dl>
-      <p className="mt-2 text-xs text-ink-3">{recordedAt && <>Attempts/s: last measured second. {recordedAt === "stop" ? "Counters and load factor: whole run." : "From run start through this checkpoint: counters and load factor."} </>}Offered requests/s counts originals. Attempts include retries. Retry counters are cumulative; response time includes retry delays. Timed-out attempts and wasted completions count attempts, not original callers. Cancellations requested count requests at the entry boundary; confirmed counts receipts there, not downstream effects. Recovered after timeout counts original callers. Missing counters are Unknown.</p>
+      <p className="mt-2 text-xs text-ink-3">{recordedAt && <>Attempts/s: last measured second. {recordedAt === "stop" ? "Counters and load factor: whole run." : "From run start through this checkpoint: counters and load factor."} </>}Offered requests/s counts originals. Attempts include retries. Retry counters are cumulative; response time includes retry delays.{(traffic.clientRetry.attemptsTimedOut !== undefined || recordedAt) && " Timed-out attempts and wasted completions count attempts, not original callers. Cancellations requested count requests at the entry boundary; confirmed counts receipts there, not downstream effects. Recovered after timeout counts original callers. Missing counters are Unknown."}</p>
     </div>}
     {traffic?.latency && <>{recordedAt && <p className="mt-3 text-xs text-ink-3">Latency composition: last measured second{recordedAt === "checkpoint" ? " at this checkpoint" : " before the run stopped"}.</p>}<LatencyBreakdown latency={traffic.latency} /></>}
     {traffic?.objective && <>{recordedAt && <p className="mt-3 text-xs text-ink-3">{recordedAt === "stop" ? "Service objective: whole run." : "From run start through this checkpoint: service objective."}</p>}<ObjectiveReadings objective={traffic.objective} /></>}

@@ -1,5 +1,5 @@
 import type { LearningModule } from "@infraforge/contracts/learning";
-import { cacheOrDatabaseV2 as cacheOrDatabase } from "./lessons/cache-or-database-v2";
+import { cacheOrDatabaseV3 as cacheOrDatabase } from "./lessons/cache-or-database-v3";
 import { oneVmOrAPool } from "./lessons/one-vm-or-a-pool";
 import { limitOrCapacity } from "./lessons/limit-or-capacity";
 

@@ -37,7 +37,7 @@ test("real DNS reports render audited values, resolver/name identity, windows, u
       for (const v of read(e, d.path.split(".").slice(1))) {
         const value = v == null ? "Unknown" : String(v);
         expect(html).toContain(`<dt>${label}</dt><dd>${value}</dd>`);
-        if (r.terminal) expect(lessonRunMeasurements(r, [label])[0]!.value).toContain(value);
+        if (r.terminal) expect(lessonRunMeasurements(r, [label])[0]!.value).toContain(typeof v === "boolean" ? (v ? "Yes" : "No") : value); // Lesson summaries show booleans as Yes/No.
       }
     }
     for (const resolver of e.resolvers) {

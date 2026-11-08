@@ -63,12 +63,13 @@ for (const family of [
   {id, version: 2, changed: ["contentVersion", "explanation.3", "experiment.evidenceToInspect.4", "limitations.1", "followUp"]},
   {id: "analytics-burst-buffer", version: 1, changed: ["contentVersion", "explanation.1"]},
 ]) test(`${family.id}: new lesson content corrects only report text and keeps archived lookups and reviews`, () => {
-  const latest = LEARNING_REGISTRY.findLesson(family.id)!, prior = LEARNING_REGISTRY.findLesson(family.id, 1)!;
+  const latest = LEARNING_REGISTRY.findLesson(family.id, 2)!, prior = LEARNING_REGISTRY.findLesson(family.id, 1)!; // Explicit v2: a later version may be current.
   expect(latest.contentVersion).toBe(2); expect(prior.contentVersion).toBe(1);
   expect(differences(prior, latest)).toEqual(family.changed);
   expect(learningContent.archivedLessons).toContainEqual(prior);
-  expect(LEARNING_REGISTRY.listLessons({challengeId: family.id})).toEqual([latest]);
-  expect(LEARNING_REGISTRY.findLesson(family.id, 3)).toBeNull();
+  const current = LEARNING_REGISTRY.listLessons({challengeId: family.id});
+  expect(current).toHaveLength(1); expect(current[0]!.contentVersion).toBeGreaterThanOrEqual(2); // Exactly one current lesson, v2 or later.
+  expect(LEARNING_REGISTRY.findLesson(family.id, 99)).toBeNull(); // Unknown versions resolve to nothing (later lanes may have published v3).
   expect(REVIEWED_CHALLENGES[`${family.id}@1`]).toEqual({challengeId: family.id, version: 1, hash: findChallenge(family.id, 1)!.hash});
   const key = `${family.id}@2`, entry = findChallenge(family.id, family.version)!;
   expect(REVIEWED_CHALLENGES[key]).toEqual({challengeId: family.id, version: family.version, hash: entry.hash});
@@ -90,7 +91,7 @@ for (const family of [
 
 test("consumer credit v2 refuses a stale lesson review", () => {
   expect(() => checkLearningAuthoring(learningContent, {...REVIEWED_CHALLENGES,
-    [`${id}@2`]: REVIEWED_CHALLENGES[`${id}@1`]!})).toThrow("moved since contentVersion");
+    [`${id}@${LEARNING_REGISTRY.findLesson(id)!.contentVersion}`]: REVIEWED_CHALLENGES[`${id}@1`]!})).toThrow("moved since contentVersion");
 });
 
 const near = structuredClone(current.starter!);
