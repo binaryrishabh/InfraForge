@@ -26,7 +26,7 @@ test("failure controls register six honest concepts and one reviewed lab without
   const lab = failureControlLessons.find(l => l.kind === "executable-lab")!;
   expect(lab).toMatchObject({id: "share-a-cache-fill", level: "advanced", check: null});
   const d = definition(lab.experiment!.challengeId);
-  expect(d).toMatchObject({engine: "2", version: 1, difficulty: "advanced"});
+  expect(d).toMatchObject({engine: "2", version: 2, difficulty: "advanced"});
   expect(d.hints).toHaveLength(3); expect(REFERENCE[d.id]).toBeDefined();
   for (const label of lab.experiment!.evidenceToInspect!.flatMap(evidenceLabels)) {
     expect(Object.hasOwn(LEARNING_REPORT_MEASUREMENTS, label)).toBe(true);

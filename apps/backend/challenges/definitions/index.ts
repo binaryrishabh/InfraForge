@@ -1,3 +1,7 @@
+import { reuseBeforeExpiryV2 } from "./reuse-before-expiry/v2";
+import { shareACacheFillV2 } from "./share-a-cache-fill/v2";
+import { catalogueLinkFlashV2 } from "./catalogue-link-flash/v2";
+import { cacheOrDatabaseV2 } from "./cache-or-database/v2";
 import { testACircuitAgainV1 } from "./test-a-circuit-again/v1";
 import { keepAnAssetCachedV1 } from "./keep-an-asset-cached/v1";
 import { diagnoseConsumerCreditV2 } from "./diagnose-consumer-credit/v2";
@@ -77,7 +81,9 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   keepWaitingWorkV1,
   checkTheMissingServerV1,
   reuseBeforeExpiryV1,
+  reuseBeforeExpiryV2,
   shareACacheFillV1,
+  shareACacheFillV2,
   diagnoseConsumerCreditV1,
   diagnoseConsumerCreditV2,
   fitARequestInMemoryV1,
@@ -120,6 +126,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   leaveRoomForFirewallFlowsV1,
   chooseARetryMitigationV1,
   catalogueLinkFlashV1,
+  catalogueLinkFlashV2,
   flashSaleOrderBacklogV1,
   protectOneApiRouteV1,
   queueOverlappingJobsV1,
@@ -133,6 +140,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   budgetForAPartitionV1,
   traceASaturationCascadeV1,
   cacheOrDatabaseV1,
+  cacheOrDatabaseV2,
   oneVmOrAPoolV1,
   limitOrCapacityV1,
   splitTheCapacityBudgetV1,

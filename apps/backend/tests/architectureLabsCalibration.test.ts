@@ -4,7 +4,7 @@ import type { ChallengeDefinition, ChallengeStarter } from "@infraforge/contract
 import type { SimulationSnapshot } from "@infraforge/contracts/telemetry";
 import { validateInfrastructureName } from "@infraforge/domain/validation";
 import { buildRunReport } from "../reports/report";
-import { buildRegistry, challengeSeed, specHash } from "../challenges/registry";
+import { buildRegistry, challengeSeed, findChallenge, specHash } from "../challenges/registry";
 import { validateChallengeVersions } from "../challenges/validate";
 import { preflight } from "../challenges/preflight";
 import { captureRunInputs } from "../deployments/runInputs";
@@ -27,8 +27,13 @@ for (const [index, id] of ids.entries()) test(`${id}: two valid architectures, c
     near.resources = near.resources.filter(r => r.id !== "peer2"); near.connectionLines = near.connectionLines.filter(e => e.sourceId !== "peer2" && e.targetId !== "peer2");
   } else resource(near, "readApp").vmExecution!.workers = 2;
   const published = readFileSync(new URL("./challengeAuthoring.test.ts", import.meta.url), "utf8");
-  const hash = new RegExp(`"${id}@1": "([a-f0-9]{64})"`).exec(published)?.[1];
-  expect(specHash(d)).toBe(hash!); expect(validateChallengeVersions([d], {[`${id}@1`]: hash!})).toEqual([]);
+  const versions = Array.from({length: d.version}, (_, i) => findChallenge(id, i + 1)!.definition);
+  const pins = Object.fromEntries(versions.map(version => {
+    const key = `${id}@${version.version}`;
+    return [key, new RegExp(`"${key}": "([a-f0-9]{64})"`).exec(published)?.[1]!];
+  }));
+  const pin = pins[`${id}@${d.version}`]; expect(pin).toBeDefined();
+  expect(specHash(d)).toBe(pin!); expect(validateChallengeVersions(versions, pins)).toEqual([]);
   expect(validateInfrastructureName(d.title)).toBeNull(); expect(d.difficulty).toBe("core");
   const designs = [start, fixed, alternative, near];
   const input = captureRunInputs(start, d.workload, challengeSeed(d));
@@ -129,7 +134,7 @@ for (const [index, id] of ids.entries()) test(`${id}: two valid architectures, c
     const work = d.criteria.find(c => c.kind === "caller-outcomes")!;
     for (const patch of [{minCompleted: 0}, {minCompleted: Number.MAX_SAFE_INTEGER + 1}, {maxUnsuccessful: -1}, {maxUnsuccessful: 0.5}]) {
       const bad = {...d, criteria: [{...work, ...patch}]};
-      expect(validateChallengeVersions([bad], {[`${d.id}@1`]: specHash(bad)}).some(p => p.includes("caller-outcomes"))).toBe(true);
+      expect(validateChallengeVersions([bad], {[`${d.id}@${d.version}`]: specHash(bad)}).some(p => p.includes("caller-outcomes"))).toBe(true);
     }
   }
   console.info(JSON.stringify({lab: id, variants: reports.map((r,i) => ({variant: ["starter", "reference", "alternative", "near-miss"][i], status: r.challenge!.status,
