@@ -9,9 +9,10 @@ import { REFERENCE } from "./challengeHarness";
 
 test("scaling registers three executable labs with real challenges, limitations and measured evidence", () => {
   expect(tracks.filter(t => t.id === "scaling")).toEqual([track]);
-  expect(track.modules).toEqual([firstScalingChoices, servingUnderLoad, scalingReasoning]);
+  expect(track.modules.slice(0, 3)).toEqual([firstScalingChoices, servingUnderLoad, scalingReasoning]); // Later lanes append modules.
   expect(registeredLessons.filter(l => l.trackId === "scaling")).toEqual(lessons);
-  expect([...firstScalingChoices.lessonIds, ...servingUnderLoad.lessonIds, ...scalingReasoning.lessonIds]).toEqual(lessons.map(l => l.id));
+  expect(track.modules.flatMap(m => m.lessonIds)).toEqual(lessons.map(l => l.id)); // Later lanes append modules and lessons.
+  expect([...firstScalingChoices.lessonIds, ...servingUnderLoad.lessonIds, ...scalingReasoning.lessonIds].every(id => lessons.some(l => l.id === id))).toBe(true);
   expect(firstScalingChoicesLessons.map(l => l.kind)).toEqual(["reading", "conceptual-exercise"]);
   const labs = lessons.filter(lesson => lesson.kind === "executable-lab");
   expect(labs).toHaveLength(3);

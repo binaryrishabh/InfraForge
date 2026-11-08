@@ -52,7 +52,7 @@ test("advanced data and scaling reasoning is discoverable with bounded checks, e
       expect(() => checkLearningAuthoring(bad)).toThrow();
     }
   }
-  expect(learningContent.lessons.filter(l => l.trackId === "data" && l.level === "advanced").map(l => l.id)).toEqual([anchors[0]!.id]);
+  expect(learningContent.lessons.filter(l => l.trackId === "data" && l.level === "advanced").map(l => l.id)).toContain(anchors[0]!.id); // Later lanes add advanced data lessons.
   expect(learningContent.lessons.filter(l => l.trackId === "scaling" && l.level === "advanced").map(l => l.id)).toEqual(["retrying-a-full-pool", anchors[1]!.id]);
 });
 
