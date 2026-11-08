@@ -3,3 +3,6 @@ import { incidentEvidenceLessons } from "./incident-evidence";
 import { firstFailureLessons } from "./first-failure";
 import { failureReasoningLessons } from "./failure-reasoning";
 export const lessons = [...firstFailureLessons, ...incidentEvidenceLessons, ...failureReasoningLessons];
+
+import { dnsCacheLifetime as originalDnsCacheLifetime } from "./lessons/dns-cache-lifetime";
+export const archivedLessons = [originalDnsCacheLifetime];

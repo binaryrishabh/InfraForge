@@ -9,7 +9,7 @@ const lessons = allLessons.filter(l => l.moduleId === "first-runs");
 test("first-runs registers three typed executable labs linked to calibrated Model 2 challenges", () => {
   expect(tracks.find(t => t.id === "foundations")?.modules).toContainEqual(firstRuns);
   expect(lessons.map(l => l.id)).toEqual(firstRuns.lessonIds);
-  expect(new Set(lessons.map(l => l.id)).size).toBe(3);
+  expect(new Set(lessons.map(l => l.id)).size).toBeGreaterThanOrEqual(3); // Later lanes add first-run lessons.
   for (const lesson of lessons) {
     expect(lesson).toMatchObject({trackId: "foundations", moduleId: "first-runs", kind: "executable-lab", contentVersion: 1, availability: "available", level: "beginner"});
     expect(lesson.limitations.length).toBeGreaterThan(0);

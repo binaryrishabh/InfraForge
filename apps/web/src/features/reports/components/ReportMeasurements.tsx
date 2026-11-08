@@ -12,6 +12,7 @@ import { measurementId } from "../resourceFocus";
 import { LbAccountingReadings } from "./LbAccountingReadings";
 import { LbResilienceReadings } from "./LbResilienceReadings";
 import { SecurityReadings } from "@/features/canvas/components/inspector/SecuritySection";
+import { DnsReadings } from "./DnsReadings";
 import { DurationReadings } from "./DurationReadings";
 import { MonitoringReadings } from "./MonitoringReadings";
 import { CdnReadings } from "./CdnReadings";
@@ -50,10 +51,10 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
             {checkpoint.metricsComputedAt ? <>Measurements computed <time dateTime={checkpoint.metricsComputedAt}>{formatDate(checkpoint.metricsComputedAt)}</time>{checkpoint.metricsTopologyRevision !== undefined && ` on topology revision ${checkpoint.metricsTopologyRevision}`}.</>
               : checkpoint.metricsComputedAt === null ? "Measurements are initialized simulator values; no engine tick had computed them." : null}
           </p>
-          <div className="mt-5 min-w-0">
+          {checkpoint.traffic && <div className="mt-5 min-w-0">
             <h3 className="text-[17px] font-semibold text-ink">Traffic outcomes</h3>
             <TrafficEvidence traffic={checkpoint.traffic} recordedAt={report.terminal ? "stop" : "checkpoint"} />
-          </div>
+          </div>}
           {checkpoint.resources.length > 0 && (
             <div className="mt-4">
               <table className="hidden w-full text-sm sm:table">
@@ -100,6 +101,7 @@ export function ReportMeasurements({ report, number }: { report: RunReport; numb
             ...((report.topology.accepted ?? report.topology.original)?.resources.filter(r => r.type === "Object Storage").map(r => r.id) ?? []),
             ...checkpoint.resources.filter(r => r.objectStorage).map(r => r.id),
           ])].map(id => <ObjectStorageReadings key={`object-${id}`} id={id} metrics={checkpoint.resources.find(r => r.id === id)?.objectStorage} />)}
+          <DnsReadings evidence={checkpoint.dnsEvidence} />
           <DurationReadings evidence={checkpoint.durationEvidence} />
           {monitoringResources.map(r => <MonitoringReadings key={`monitor-${r.id}`} resource={r} />)}
           {[...new Set([

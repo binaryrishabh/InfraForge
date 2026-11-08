@@ -1,6 +1,6 @@
 import type { LearningModule } from "@infraforge/contracts/learning";
 import { firewallRuleMatching } from "./lessons/firewall-rule-matching";
-import { dnsCacheLifetime } from "./lessons/dns-cache-lifetime";
+import { dnsCacheLifetime } from "./lessons/dns-cache-lifetime-v2";
 import { missingFailureObservations } from "./lessons/missing-failure-observations";
 import { mitigationTradeoffs } from "./lessons/mitigation-tradeoffs";
 import { findTheDenyingRule } from "./lessons/find-the-denying-rule";
