@@ -14,8 +14,8 @@ import { pathToFileURL } from "node:url";
 // improvement control, and expected recorded verdict text (expectations, never results).
 // Add labs here, reusing the shared steps below. Separate JOURNEY_SHOTS
 // directories keep each lab's screenshots. The first row preserves the original choices.
-// The database row uses the catalog size db.m5.large (2 vCPU), the inspector's equivalent of the lab's generic small -> medium
-// (1 -> 2 cores); the inspector has no generic-size control. The run decides whether it really meets the requirements.
+// The original database row keeps its catalog choice. A separate journeyId exercises
+// generic small -> medium on the same lesson. The run decides whether each meets the requirements.
 export const JOURNEY_LABS = [
   {
     lessonId: "where-does-the-time-go", title: /Where does the time go\?/,
@@ -123,6 +123,18 @@ export const JOURNEY_LABS = [
           role: "radio", name: /c5\.large/i, resourceId: "app", setting: "skuId", from: null, to: "c5.large",
         },
       ],
+    },
+    expected: { starter: "Not met", improved: "Met" },
+  },
+  {
+    journeyId: "writes-cost-more-than-reads-generic",
+    lessonId: "writes-cost-more-than-reads", title: /Writes cost the database more/,
+    prediction: "The write-heavy mix asks the database for more CPU work than the app.",
+    hypothesis: "Changing only the database from Generic Small to Generic Medium adds one assumed core, so its queue should shrink and p95 should fall.",
+    improvement: {
+      stepName: "the database size is changed to Generic Medium in the designer",
+      nodeSelector: '[data-resource-id="db"]', nodeText: /Database/, fallbackText: "db",
+      role: "radio", name: /^Generic Medium\b/, resourceId: "db", setting: "size", from: "small", to: "medium",
     },
     expected: { starter: "Not met", improved: "Met" },
   },
@@ -289,8 +301,8 @@ export const JOURNEY_LESSONS = [
 ];
 
 export function journeyLab(id = "where-does-the-time-go") {
-  const lab = JOURNEY_LABS.find((entry) => entry.lessonId === id);
-  if (!lab) throw new Error(`Unknown JOURNEY_LAB. Choose: ${JOURNEY_LABS.map((entry) => entry.lessonId).join(", ")}`);
+  const lab = JOURNEY_LABS.find((entry) => (entry.journeyId ?? entry.lessonId) === id);
+  if (!lab) throw new Error(`Unknown JOURNEY_LAB. Choose: ${JOURNEY_LABS.map((entry) => entry.journeyId ?? entry.lessonId).join(", ")}`);
   return lab;
 }
 

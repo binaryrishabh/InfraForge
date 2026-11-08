@@ -3,12 +3,13 @@ import { fileURLToPath } from "node:url";
 import { JOURNEY_LABS, JOURNEY_LESSONS, acknowledgeJourneyChanges, answerJourneyPredictions, applyJourneyImprovement, changeJourneyControl, inspectJourneyRequirements, isLocalJourneyRequest, journeyLab, journeyLesson, selectJourney, walkJourneyLesson } from "../qa/learning-journey.mjs";
 import { JOURNEY_FAILURES, installJourneyFailure, journeyFailure, localFailureApi } from "../qa/learning-journey.mjs";
 
-test("the lab table has unique lesson ids, explicit controls and recorded-verdict expectations", () => {
-  expect(JOURNEY_LABS.map((lab) => lab.lessonId)).toEqual([
+test("the lab table has unique journey ids, explicit controls and recorded-verdict expectations", () => {
+  expect(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).toEqual([
     "where-does-the-time-go", "writes-cost-more-than-reads", "balancer-shares-turns",
     "keep-waiting-work", "check-the-missing-server", "parallel-jobs-for-a-burst", "split-the-capacity-budget", "open-and-size-an-api",
+    "writes-cost-more-than-reads-generic",
   ]);
-  expect(new Set(JOURNEY_LABS.map((lab) => lab.lessonId)).size).toBe(JOURNEY_LABS.length);
+  expect(new Set(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).size).toBe(JOURNEY_LABS.length);
   for (const lab of JOURNEY_LABS) {
     expect(lab.lessonId).toMatch(/^[a-z]+(?:-[a-z]+)*$/);
     expect(lab.title).toBeInstanceOf(RegExp);
@@ -43,7 +44,7 @@ test("database resizing and balancing target the intended resource and setting",
   const db = journeyLab("writes-cost-more-than-reads").improvement;
   expect([db.resourceId, db.setting, db.from, db.to]).toEqual(["db", "skuId", null, "db.m5.large"]);
   expect(db.nodeSelector).toBe('[data-resource-id="db"]');
-  expect(db.name.test("db.m5.large - 2 vCPU / 8 GB")).toBe(true); // The inspector offers catalog sizes, not the generic size field.
+  expect(db.name.test("db.m5.large - 2 vCPU / 8 GB")).toBe(true); // Keep the original catalog journey.
   expect(db.name.test("db.m5.xlarge")).toBe(false); // Neighbouring sizes in the list never count.
   const app = journeyLab("balancer-shares-turns").improvement;
   expect([app.resourceId, app.setting, app.from, app.to]).toEqual(["app-a", "skuId", null, "c5.large"]);
@@ -97,6 +98,22 @@ test("a missing database size control fails rather than checking a substitute", 
   const missing = fakePage({ controlMissing: true });
   await expect(changeJourneyControl(missing.page, journeyLab("writes-cost-more-than-reads").improvement)).rejects.toThrow("requested control is missing");
   expect(missing.calls).toEqual(['[data-resource-id="db"]', ["radio", "db\\.m5\\.large"]]);
+});
+
+test("the generic database journey selects Medium on the same lesson and refuses a missing control", async () => {
+  const lab = journeyLab("writes-cost-more-than-reads-generic"), edit = lab.improvement;
+  expect(lab.lessonId).toBe("writes-cost-more-than-reads");
+  expect([edit.resourceId, edit.setting, edit.from, edit.to]).toEqual(["db", "size", "small", "medium"]);
+  expect(edit.name.test("Generic Medium 2 assumed cores · 4 GB assumed memory")).toBe(true);
+  for (const label of ["Generic Small", "Generic Large", "db.m5.large", "Other Generic Medium"]) expect(edit.name.test(label)).toBe(false);
+  const fake = fakePage();
+  expect(await applyJourneyImprovement(fake.page, edit)).toBe(true);
+  expect(fake.calls).toEqual(['[data-resource-id="db"]', ["radio", "^Generic Medium\\b"], "checked"]);
+  const missing = fakePage({ controlMissing: true });
+  await expect(changeJourneyControl(missing.page, edit)).rejects.toThrow("requested control is missing");
+  expect(missing.calls).toEqual(['[data-resource-id="db"]', ["radio", "^Generic Medium\\b"]]);
+  expect(journeyLab("writes-cost-more-than-reads").improvement.to).toBe("db.m5.large");
+  expect(selectJourney({ JOURNEY_LAB: lab.journeyId })).toEqual({ kind: "lab", entry: lab });
 });
 
 test("the original three radio edits keep their selectors, check action and boolean detail", async () => {
@@ -382,7 +399,7 @@ test("the lesson matrix samples five conceptual tracks and one no-check reading"
 test("selection defaults to the unchanged lab path and explicitly selects lesson mode", () => {
   expect(selectJourney()).toEqual({ kind: "lab", entry: journeyLab() });
   expect(selectJourney({ JOURNEY_KIND: "lesson" })).toEqual({ kind: "lesson", entry: journeyLesson() });
-  for (const lab of JOURNEY_LABS) expect(selectJourney({ JOURNEY_LAB: lab.lessonId })).toEqual({ kind: "lab", entry: lab });
+  for (const lab of JOURNEY_LABS) expect(selectJourney({ JOURNEY_LAB: lab.journeyId ?? lab.lessonId })).toEqual({ kind: "lab", entry: lab });
   for (const lesson of JOURNEY_LESSONS) expect(selectJourney({ JOURNEY_KIND: "lesson", JOURNEY_LESSON: lesson.lessonId })).toEqual({ kind: "lesson", entry: lesson });
   for (const id of ["", "constructor", "../client-and-server", "unknown"]) expect(() => journeyLesson(id)).toThrow("Unknown JOURNEY_LESSON");
   for (const kind of ["", "reading", "constructor"]) expect(() => selectJourney({ JOURNEY_KIND: kind })).toThrow("Unknown JOURNEY_KIND");
