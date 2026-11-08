@@ -58,7 +58,7 @@ test("small to medium changes real database outcomes; saved reports retain input
   const reports = [small, medium].map(value => {
     const row = attemptRow(d, value, answers(d, { "busiest-type": "Database" }));
     const stored = JSON.parse(JSON.stringify(row.runInputs));
-    expect(readRecords({ ...row, runInputs: stored }, []).input).toEqual(row.runInputs);
+    expect(readRecords({ ...row, runInputs: stored }, []).input).toEqual(readRunInputs(row.runInputs));
     const report = buildRunReport({ ...row, runInputs: stored });
     // Existing report summary omits generic size; retained runInputs are authoritative.
     expect(report.topology.original!.resources.find(r => r.id === "db")).not.toHaveProperty("size");

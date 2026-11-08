@@ -81,13 +81,11 @@ test("saveDesign sends generic size and installDesign reloads the returned JSON 
   useAuthStore.setState({ user: { id: "sizing-owner", name: "Owner", username: null, email: "sizing@infraforge.test", emailVerified: true, createdAt: new Date(0).toISOString() }, status: "authenticated" });
   state().loadLayout([db], [], "saved", "Notes");
   choose("Generic Medium");
-  let savedLayout: unknown;
-  const write = spyOn(http, "put").mockImplementation(async (_url, body) => {
-    savedLayout = JSON.parse(JSON.stringify(body));
-    return { data: { updatedInfrastructure: { id: "saved", name: "Notes", layout: (savedLayout as { layout: unknown }).layout } } };
-  });
+  const response = JSON.parse(JSON.stringify({ id: "saved", name: "Notes", layout: { resources: [{ ...db, size: "medium" }], connectionLines: [], layoutVersion: 3 } }));
+  const write = spyOn(http, "put").mockResolvedValue({ data: { updatedInfrastructure: response } });
   try {
     const saved = await saveDesign();
+    const savedLayout: unknown = JSON.parse(JSON.stringify(write.mock.calls[0]![1]));
     expect(savedLayout).toEqual({ layout: { resources: [{ ...db, size: "medium" }], connectionLines: [], layoutVersion: 3 } });
     state().clearCanvas(); installDesign(saved!);
     expect(state().resources).toEqual([{ ...db, size: "medium" }]);
