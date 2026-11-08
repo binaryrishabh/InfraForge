@@ -16,6 +16,6 @@ export const restoreADatabaseWriter: LearningLesson = {
     "The model invalidates sessions and connections and requires fresh sessions after promotion. It does not model DNS endpoint changes or a real driver's reconnect timing and policy.",
     "There is one replica, no automatic promotion and no replacement or catch-up replica topology. This experiment cannot prove application correctness or preservation of every acknowledged write.",
     "Incident measurements are retained boundary samples, not a continuous trace. Missing values are Unknown; zero pending replication is not a substitute for recorded loss evidence."],
-  followUp: "Use the saved reports to explain why a late promotion can leave the final writer correct while still missing the caller-outcome requirement.",
+  followUp: "Use the saved reports to explain why a late promotion can leave the final writer correct while still missing the caller outcome requirement.",
   check: null,
 };
