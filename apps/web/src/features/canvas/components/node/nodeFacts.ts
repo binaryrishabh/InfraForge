@@ -7,7 +7,7 @@ export function declaredCapacity(resource: Resource) {
     const sizing = modeledResourceSizing(resource);
     return { value: sizing?.cores ?? null, unit: sizing?.cores === 1 ? "modeled CPU core" : "modeled CPU cores" };
   }
-  return { value: CAPACITY[resource.type]?.rps ?? null, unit: resource.type === RESOURCE_TYPES.Database ? "qps" : "rps" };
+  return { value: CAPACITY[resource.type]?.rps ?? null, unit: "rps" };
 }
 
 // Bar colour follows the model's thresholds; the number is always printed beside it.
