@@ -36,6 +36,7 @@ export interface ActionOutcome {
 }
 export interface DatabaseIncidentSample {
   simulatedSecond: number;
+  overallHealth?: "healthy" | "degraded" | "saturated" | "critical" | null;
   replication?: import("../telemetry").DatabaseReplicationMetrics;
   completed: number | null;
   failed: number | null;

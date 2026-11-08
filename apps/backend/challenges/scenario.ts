@@ -19,7 +19,8 @@ export function recordedScenario(definition: ChallengeDefinition, input: RunInpu
     if (choice.promoteAtSecond !== null) scenario.steps.push({id: "learner-promotion", atSecond: choice.promoteAtSecond,
       request: {interventionId: "db-promote-replica", revision: 1, target: {resourceId: target.id}, parameters: {}}});
     scenario.steps.sort((a, b) => a.atSecond - b.atSecond);
-    recoveryPlanHash = createHash("sha256").update(JSON.stringify({version: 1, targetResourceId: target.id, plan: choice})).digest("hex");
+    recoveryPlanHash = createHash("sha256").update(JSON.stringify({version: 1, targetResourceId: target.id,
+      plan: {version: choice.version, promoteAtSecond: choice.promoteAtSecond}})).digest("hex");
   }
   const plan: RecordedScenario = {...scenario, ...(recoveryPlanHash === undefined ? {} : {recoveryPlanHash}), definitionHash: specHash(definition), simulationModelVersion: "2", catalogSnapshot: input.catalogSnapshot,
     adapterProfiles: [...(input.adapterProfiles ?? [])], receipts: compileScenario(scenario, input, definition.evaluationSeconds)};

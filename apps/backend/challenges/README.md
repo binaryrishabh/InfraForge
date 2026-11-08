@@ -68,7 +68,7 @@ every authored field, so an attempt always records the exact rules it ran under.
 - **A published version never changes and is never removed.** Old attempts are judged by it forever.
 - To change anything, add `v<n+1>.ts`, register it and pin its hash in
   `tests/challengeAuthoring.test.ts`. The list shows the latest version; old reports keep theirs.
-- Versions run 1, 2, 3â€¦ without gaps. Seeds are per version (`challenge:<id>:v<n>`).
+- Versions run 1, 2, 3… without gaps. Seeds are per version (`challenge:<id>:v<n>`).
 
 A new version is required for any change to: workload, evaluation second, criteria, prediction
 questions, the starter, the experiment, hints, debrief, story, objective, title or summary. Spelling
@@ -96,7 +96,7 @@ An optional `experiment` makes a resilience challenge: one fault InfraForge appl
 - `atSimulatedSecond`: no earlier than the end of the 60-second ramp.
 - Without `postFaultObservationSeconds`, `evaluationSeconds` stays the fault's last active tick
   (`at + model duration`). Existing published definitions omit the property and stay unchanged.
-- New exercises may explicitly author `postFaultObservationSeconds` (integer 1â€“60). Evaluation
+- New exercises may explicitly author `postFaultObservationSeconds` (integer 1–60). Evaluation
   must equal `at + model duration + observation`. The whole inclusive trace must still fit
   `max(0, at - 30)` through evaluation in **121 points**; some fault durations allow less than 60.
   The run already stores the immutable evaluation stop, plan and definition hash; no schema
@@ -190,7 +190,7 @@ its hidden one-change reference passes, and its 106 samples fit the existing bou
 
 `after-the-cache-returns@2` combines cache recovery and per-instance pool pressure in Model 2.
 Its authored workload is 600 requests/s (90% reads, 10% writes), with a fourfold burst at seconds
-120â€“140. The cache crashes at 105, ends its crash at 135 plus one microsecond and restarts at
+120–140. The cache crashes at 105, ends its crash at 135 plus one microsecond and restarts at
 136 plus one microsecond; 137 is its first available sample. Evaluation at 137 deliberately
 observes the ongoing burst after the cache returns, rather than scoring an already idle database.
 The identical no-fault control scales out too, but cache hits keep its database Healthy with spare
@@ -200,7 +200,7 @@ The burst crosses the app's 20% CPU target: eight replicas can grow to 24, takin
 sessions from 80 to beyond the database's unchanged 85-session limit. The DB-tier-only reference
 adds both CPU capacity and session headroom; capping replicas alone does not fix database CPU.
 Health samples use interval CPU and recent errors (including session refusals); idle sessions
-alone do not imply saturation. The starter has live/queued work at 137â€“140, drains at 141 and is Healthy at 142. The unchanged
+alone do not imply saturation. The starter has live/queued work at 137–140, drains at 141 and is Healthy at 142. The unchanged
 statement/transaction deadlines are authored 1s/2s, statement CPU costs 1ms/read and 2ms/write,
 cache deadlines 10ms, and caller concurrency 512. These are educational assumptions, not provider
 defaults or performance guarantees. No retry policy is enabled. `cache-failure@1` stays retired.

@@ -18,6 +18,7 @@ export function DatabaseIncidentReadings({report}: {report: RunReport}) {
         return <section key={phase} aria-label={`${action.scenarioStepId ?? action.id}: ${phase}`}>
           <p>{phase === "before" ? "Before action" : phase === "during" ? "First sample after action" : "At action completion"}: {sample ? `second ${sample.simulatedSecond}` : "Unknown"}.</p>
           <p>Completed callers: {sample?.completed ?? "Unknown"}; failed callers: {sample?.failed ?? "Unknown"}.</p>
+          <p>Overall health sample: {sample?.overallHealth ?? "Unknown"}.</p>
           {sample?.replication ? <DatabaseReplicationReadings metrics={{databaseReplication: sample.replication}} resourceId={incident.resourceId} /> : <p>Database replication: Unknown</p>}
         </section>;
       })}

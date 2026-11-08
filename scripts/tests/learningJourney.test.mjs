@@ -7,7 +7,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
   expect(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).toEqual([
     "where-does-the-time-go", "writes-cost-more-than-reads", "balancer-shares-turns",
     "keep-waiting-work", "check-the-missing-server", "parallel-jobs-for-a-burst", "split-the-capacity-budget", "open-and-size-an-api",
-    "writes-cost-more-than-reads-generic",
+    "writes-cost-more-than-reads-generic", "restore-a-database-writer",
   ]);
   expect(new Set(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).size).toBe(JOURNEY_LABS.length);
   for (const lab of JOURNEY_LABS) {
@@ -660,4 +660,16 @@ test("failure CLI rejects bad selections and remote API/web origins before loadi
     expect(result.stderr.toString()).toContain(error);
     expect(result.stderr.toString()).not.toContain("Cannot find module");
   }
+});
+
+
+test("database incident journey performs the saved promotion change through the labelled control", async () => {
+  const lab = journeyLab("restore-a-database-writer"), edit = lab.improvement;
+  expect([edit.resourceId, edit.setting, edit.from, edit.to]).toEqual(["db", "databaseRecoveryPlan.promoteAtSecond", null, 3]);
+  const fake = fakePage();
+  expect(await applyJourneyImprovement(fake.page, edit)).toEqual([{resourceId: "db", setting: "databaseRecoveryPlan.promoteAtSecond", value: "3"}]);
+  expect(fake.calls).toEqual(['[data-resource-id="db"]', ["spinbutton", "^Promote at simulated second$"], ["filled", "3"]]);
+  expect(lab.reportRequirements[0].test("Complete at least 110 callers; at most 30 unsuccessful")).toBe(true);
+  await expect(applyJourneyImprovement(fakePage({controlMissing: true}).page, edit)).rejects.toThrow("requested control is missing");
+  await expect(applyJourneyImprovement(fakePage({storedValue: "8"}).page, edit)).rejects.toThrow("did not retain");
 });

@@ -43,13 +43,14 @@ test("one saved promotion choice changes real incident outcomes, with a failing 
     expect(report.terminal!.traffic!.wholeRun).toMatchObject({throughSecond: 14, inFlight: 0, deadlineExceeded: 0, abandoned: 0});
     expect(report.databaseRecoveryPlan?.hash).toMatch(/^[a-f0-9]{64}$/);
     const failure = report.actions[0]!.outcome!.databaseIncident!;
-    expect(failure.before).toMatchObject({simulatedSecond: 2, completed: 20, failed: 0, replication: {currentWriter: "primary", primaryCommittedWrites: 20}});
+    expect(failure.before).toMatchObject({simulatedSecond: 2, overallHealth: "healthy", completed: 20, failed: 0, replication: {currentWriter: "primary", primaryCommittedWrites: 20}});
     expect(failure.during).toMatchObject({simulatedSecond: 3, completed: 20, failed: 10, replication: {currentWriter: "none", primaryProcessState: "unavailable", replicaProcessState: "available", failedWritesWithoutWriter: 10}});
     expect(failure.after?.simulatedSecond).toBe(11);
     expect(failure.after?.replication?.currentWriter).toBe(i ? "replica" : "primary");
     if (i) {
       expect(failure.after?.replication).toMatchObject({primaryProcessState: "fenced", primaryRole: "fenced", replicaRole: "writer", writerEpoch: 2});
-      expect(db(report)).toMatchObject({currentWriter: "replica", primaryProcessState: "fenced", primaryCommittedWrites: 20, promotionCount: 1, sessionInvalidations: 2, connectionInvalidations: 2});
+      expect(db(report)).toMatchObject({currentWriter: "replica", primaryProcessState: "fenced", primaryCommittedWrites: 20, promotionCount: 1,
+        writerEpoch: 2, primaryEpoch: 1, replicaEpoch: 2, sessionInvalidations: 2, connectionInvalidations: 2});
       const promotion = report.actions[1]!.outcome!.databaseIncident!;
       expect(promotion.before.replication?.currentWriter).toBe("none");
       expect(promotion.after?.replication?.currentWriter).toBe("replica");

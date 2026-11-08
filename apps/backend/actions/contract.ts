@@ -8,6 +8,7 @@ import { DatabaseReplicationMetricsSchema } from "../reports/databaseSchema";
 const id = z.string().min(1).max(256);
 const amount = z.number().finite().nonnegative();
 const incidentSample = z.object({simulatedSecond: amount.int().max(3600), replication: DatabaseReplicationMetricsSchema.optional(),
+  overallHealth: z.enum(["healthy", "degraded", "saturated", "critical"]).nullable().optional(),
   completed: amount.int().nullable(), failed: amount.int().nullable()}).strict();
 const intervention = z.custom<InterventionRequest>(value => interventionError(value) === null);
 const receipt = z.object({ interventionId: id, revision: z.number().int().positive(),
