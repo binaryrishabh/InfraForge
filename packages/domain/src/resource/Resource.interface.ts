@@ -41,6 +41,8 @@ export interface Resource {
   cdnCachePolicy?: CdnCachePolicy;
   monitoringPolicy?: MonitoringPolicy;
   dbConcurrency?: DbConcurrency;
+  /** Maximum connections per application replica and database path; absent uses 10. */
+  dbPoolMaxConnections?: number;
   vmExecution?: VmExecution;
   vmCpuQuota?: VmCpuQuota;
   vmMemory?: VmMemory;

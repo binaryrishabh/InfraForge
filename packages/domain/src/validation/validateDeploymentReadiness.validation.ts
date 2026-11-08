@@ -21,6 +21,7 @@ import { vmCpuQuotaError } from "../resource/VmCpuQuota.interface";
 import { vmExecutionError } from "../resource/VmExecution.interface";
 import { databaseReadRoutingError } from "../resource/DatabaseReadRouting.interface";
 import { databaseReplicationError } from "../resource/DatabaseReplication.interface";
+import { dbPoolError } from "../resource/DbPool.interface";
 import { dbConcurrencyError } from "../resource/DbConcurrency.interface";
 import { lbAdmissionError } from "../resource/LbAdmission.interface";
 import { lbSelectionError } from "../resource/LbSelection.interface";
@@ -85,6 +86,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
         if (routingMessage) errors.push(`${resource.id}: ${routingMessage}`);
         const replicationMessage = databaseReplicationError(resource.type, resource.databaseReplication);
         if (replicationMessage) errors.push(`${resource.id}: ${replicationMessage}`);
+        const poolMessage = dbPoolError(resource.type, resource.dbPoolMaxConnections);
+        if (poolMessage) errors.push(`${resource.id}: ${poolMessage}`);
         const concurrencyMessage = dbConcurrencyError(resource.type, resource.dbConcurrency);
         if (concurrencyMessage) errors.push(`${resource.id}: ${concurrencyMessage}`);
         const rateLimitMessage = lbRateLimitError(resource.type, resource.lbRateLimit);

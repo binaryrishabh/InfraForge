@@ -7,7 +7,7 @@ import { LB_RATE_LIMIT_PROFILE, lbRateLimitChanges, validateLbRateLimitBindings 
 import { checkClientRetry } from "./clientRetry";
 import { checkObjective } from "./objective";
 import { checkCpuDynamics } from "./workloadDynamics";
-import { RESOURCE_PORTS, vmMemoryError, lbRateLimitError, firewallStateError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, dnsCachePolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, dbPoolError, vmMemoryError, lbRateLimitError, firewallStateError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, dnsCachePolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -46,6 +46,7 @@ import { VM_CPU_QUOTA_PROFILE, vmCpuQuotaChanges, validateVmCpuQuotaBindings } f
 import { VM_EXECUTION_PROFILE, vmExecutionChanges, validateVmExecutionBindings } from "./vmExecution";
 import { validateDatabaseReadRoutingProfile, validateDatabaseReadRoutingBindings } from "./databaseReadRouting";
 import { validateDatabaseReplicationProfile, validateDatabaseReplicationBindings } from "./databaseReplication";
+import { DB_POOL_PROFILE, dbPoolChanges, validateDbPoolBindings } from "./dbPool";
 import { DB_CONCURRENCY_PROFILE, dbConcurrencyChanges, validateDbConcurrencyBindings } from "./dbConcurrency";
 import { LB_SELECTION_PROFILE, lbSelectionChanges, validateLbSelectionBindings } from "./lbSelection";
 import { LB_HEALTH_PROFILE, lbHealthChanges, validateLbHealthBindings } from "./lbHealth";
@@ -93,6 +94,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (vmMemoryChanges(design.resources) !== contract.version.includes(`/${VM_MEMORY_PROFILE}`)) error("VM_MEMORY_VERSION", "version", "Modeled memory requires its explicit vm-memory/1 contract version and matching saved intent");
     if (vmCpuQuotaChanges(design.resources) !== contract.version.includes(`/${VM_CPU_QUOTA_PROFILE}`)) error("VM_CPU_QUOTA_VERSION", "version", "Application CPU quota requires its explicit vm-cpu-quota/1 contract version and matching saved intent");
     if (vmExecutionChanges(design.resources) !== contract.version.includes(`/${VM_EXECUTION_PROFILE}`)) error("VM_EXECUTION_VERSION", "version", "VM execution requires its explicit vm-execution/1 contract version and matching saved intent");
+    if (dbPoolChanges(design.resources) !== contract.version.includes(`/${DB_POOL_PROFILE}`)) error("DB_POOL_VERSION", "version", "Application database connections requires its captured pool profile and matching saved intent");
     if (dbConcurrencyChanges(design.resources) !== contract.version.includes(`/${DB_CONCURRENCY_PROFILE}`)) error("DB_CONCURRENCY_VERSION", "version", "Database concurrency requires its explicit data-db-concurrency/1 contract version and matching saved intent");
     if (lbSelectionChanges(design.resources) !== contract.version.includes(`/${LB_SELECTION_PROFILE}`)) error("LB_SELECTION_VERSION", "version", "Load balancer selection requires lb-selection/1 and matching saved intent");
     if (lbHealthChanges(design.resources) !== contract.version.includes(`/${LB_HEALTH_PROFILE}`)) error("LB_HEALTH_VERSION", "version", "Load balancer health requires its explicit lb-health/1 contract version and matching saved intent");
@@ -146,6 +148,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (routingError) error("INVALID_DB_READ_ROUTING", `resources.${r.id}.databaseReadRouting`, routingError);
       const replicationError = databaseReplicationError(r.type, r.databaseReplication);
       if (replicationError) error("INVALID_DB_REPLICATION", `resources.${r.id}.databaseReplication`, replicationError);
+      const poolError = dbPoolError(r.type, r.dbPoolMaxConnections);
+      if (poolError) error("INVALID_DB_POOL", `resources.${r.id}.dbPoolMaxConnections`, poolError);
       const dbError = dbConcurrencyError(r.type, r.dbConcurrency);
       if (dbError) error("INVALID_DB_CONCURRENCY", `resources.${r.id}.dbConcurrency`, dbError);
       const cacheError = cachePolicyError(r.type, r.cachePolicy);
@@ -164,7 +168,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["serverless", "scheduler", "apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallState", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["serverless", "scheduler", "apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallState", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbPoolMaxConnections", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -419,6 +423,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateGatewayBindings(design.resources, design.connections, runtime);
     validateDatabaseReadRoutingBindings(design.resources, runtime);
     validateDatabaseReplicationBindings(design.resources, runtime);
+    validateDbPoolBindings(design.resources, runtime);
     validateDbConcurrencyBindings(design.resources, runtime);
     validateLbRateLimitBindings(design.resources, runtime);
     validateLbAdmissionBindings(design.resources, runtime);
