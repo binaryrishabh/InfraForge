@@ -110,7 +110,7 @@ function choose(label: string) {
 test("instance radios name generic cores and advertised catalog vCPU, default to small and lock natively", () => {
   for (const type of ["Database", "Virtual Machine"] as const) {
     const html = renderToStaticMarkup(<InstanceSection resource={{ ...db, type, size: undefined }} disabled={false} />);
-    for (const text of ["Generic Small", "Generic Medium", "Generic Large", "1 modeled CPU core", "2 modeled CPU cores", "4 modeled CPU cores", "advertised vCPU", "Choosing one replaces the other", "same educational monthly estimate"]) expect(html).toContain(text);
+    for (const text of ["Generic Small", "Generic Medium", "Generic Large", "1 modeled CPU core", "2 modeled CPU cores", "4 modeled CPU cores", "advertised vCPU", "A catalog size overrides a generic size", "same educational monthly estimate"]) expect(html).toContain(text);
     expect(html).toContain('<legend class="sr-only">Instance size</legend>');
     expect(html.match(/type="radio"[^>]*checked=""/g)).toHaveLength(1);
     // Native labelled radios share a group, providing Tab/arrow/Space operation.
@@ -130,9 +130,9 @@ test("radio edits replace SKU or generic size, preserve the design, and undo/red
   choose("Generic Large"); expect(state().resources[0]!.size).toBe("large");
   // Read the actual catalog label so this test exercises the same option, without owning catalog copy.
   choose(findSku("db.m5.large")!.label);
-  expect(state().resources[0]).toEqual({ ...db, size: undefined, skuId: "db.m5.large" });
+  expect(state().resources[0]).toEqual({ ...db, size: "large", skuId: "db.m5.large" }); // Only skuId changed: one change for the one-change guard.
   // Existing history coalesces consecutive edits to the same fields.
-  undo(); expect(state().resources[0]).toEqual({ ...db, size: "small", skuId: undefined });
+  undo(); expect(state().resources[0]).toEqual({ ...db, size: "large", skuId: undefined });
   redo(); choose("Generic Small");
   expect(state().resources[0]).toEqual({ ...db, size: "small", skuId: undefined });
   useCanvasStore.setState({ liveLocked: true }); choose("Generic Medium");
@@ -173,4 +173,15 @@ test("saveDesign sends generic size and installDesign reloads the returned JSON 
     const reloaded = renderToStaticMarkup(<InstanceSection resource={state().resources[0]!} disabled={false} />);
     expect(reloaded).toMatch(/checked=""\/><span[^>]*><span[^>]*>Generic Medium/);
   } finally { write.mockRestore(); }
+});
+
+test("one inspector choice changes exactly one saved field, so the one-change guard counts one change", () => {
+  const changedKeys = (before: Resource, after: Resource) => (Object.keys({ ...before, ...after }) as (keyof Resource)[])
+    .filter(key => JSON.stringify(before[key]) !== JSON.stringify(after[key]));
+  state().loadLayout([db], [], "saved", "Notes");
+  choose(findSku("db.m5.large")!.label);
+  expect(changedKeys(db, state().resources[0]!)).toEqual(["skuId"]); // The catalog size already overrides size, which is kept.
+  state().loadLayout([db], [], "saved", "Notes");
+  choose("Generic Medium");
+  expect(changedKeys(db, state().resources[0]!)).toEqual(["size"]);
 });
