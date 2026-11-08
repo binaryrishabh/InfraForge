@@ -31,8 +31,6 @@ const ENTRY_REVIEWS: Record<string, { entry: string; prior: string[]; reason: st
     reason: "The beginner report-reading entry assumes foundations; the independent memory reading is intermediate." },
   delivery: { entry: "keep-an-asset-cached", prior: ["request-journey", "cache-hits-and-misses"],
     reason: "The CDN lab assumes the foundations request path and the data-track cache concept of hits and misses." },
-  observability: { entry: "monitoring-loss-and-freshness", prior: [],
-    reason: "The track has one intermediate concept with no prerequisites and no beginner monitoring lesson yet; this is a known editorial gap, not an independent beginner start." },
 };
 
 // Ordinary compound words in existing follow-up prompts, not navigation ids.

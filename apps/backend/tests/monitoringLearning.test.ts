@@ -1,12 +1,53 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { LEARNING_REPORT_MEASUREMENTS } from "@infraforge/contracts/learning";
 import { learningContent } from "../learning/content";
-import { monitoringLossAndFreshness } from "../learning/content/observability/lessons/monitoring-loss-and-freshness";
+import { monitoringLossAndFreshnessV2 as monitoringLossAndFreshness } from "../learning/content/observability/lessons/monitoring-loss-and-freshness-v2";
+import { LEARNING_REGISTRY } from "../learning/registry";
 import { checkLearningAuthoring } from "../learning/authoring";
 import { validateLearningContent } from "../learning/validate";
 import { checkLessonClaims } from "../learning/claims";
 import { REGISTRY } from "../challenges/registry";
+
+test("observability offers two independent beginner entries before its versioned intermediate concept", () => {
+  const lessons = LEARNING_REGISTRY.listLessons({ trackId: "observability" });
+  expect(lessons.map(l => [l.id, l.level, l.kind])).toEqual([
+    ["what-is-monitoring", "beginner", "reading"],
+    ["missing-readings-are-unknown", "beginner", "conceptual-exercise"],
+    ["monitoring-loss-and-freshness", "intermediate", "conceptual-exercise"],
+  ]);
+  expect(LEARNING_REGISTRY.findModule("observability", "monitoring-ownership")!.lessonIds).toEqual(lessons.map(l => l.id));
+  for (const entry of lessons.slice(0, 2)) {
+    expect(entry.prerequisites).toEqual([]);
+    expect(entry.experiment).toBeNull();
+    expect(checkLessonClaims(entry)).toEqual([]);
+    const unsupported = structuredClone(learningContent);
+    unsupported.lessons.find(l => l.id === entry.id)!.followUp = "The recorded run completed 99 requests/second.";
+    expect(() => checkLearningAuthoring(unsupported)).toThrow("digits-with-units result claim");
+  }
+  const old = LEARNING_REGISTRY.findLesson("monitoring-loss-and-freshness", 1)!;
+  expect(createHash("sha256").update(JSON.stringify(old)).digest("hex")).toBe("cc961dba9f931697124a5edfa0af42c8ebce09612ad3cdb8c326d5501e0358ca");
+  expect(lessons[2]).toEqual({ ...old, contentVersion: 2, prerequisites: ["missing-readings-are-unknown"] });
+  expect(LEARNING_REGISTRY.findLesson(old.id, 3)).toBeNull();
+  expect(lessons.filter(l => l.id === old.id)).toHaveLength(1);
+});
+
+test("beginner monitoring vocabulary uses existing saved-report labels and the check preserves missing evidence", () => {
+  const reading = LEARNING_REGISTRY.findLesson("what-is-monitoring")!;
+  const exercise = LEARNING_REGISTRY.findLesson("missing-readings-are-unknown")!;
+  const prose = reading.explanation.join(" ");
+  for (const label of ["Monitoring: Generated samples", "Monitoring: Buffered samples", "Monitoring backend: Received samples",
+    "Monitoring: Collection age", "Monitoring backend: Measurement age", "Monitoring: Collection freshness state"]) {
+    expect([...reading.explanation, ...exercise.explanation].join(" ")).toContain(label);
+    expect(LEARNING_REPORT_MEASUREMENTS).toHaveProperty(label);
+  }
+  expect(prose).toContain("Unknown means the saved reading is missing; zero means a recorded value of zero");
+  expect(exercise.check!.correctChoiceId).toBe("unknown");
+  expect(exercise.check!.choices.map(c => c.id)).toEqual(["zero", "failed", "unknown"]);
+  expect(exercise.check!.explanation).toContain("Unknown is not a measured zero or a failure verdict");
+  expect(exercise.followUp).toContain("(monitoring-loss-and-freshness)");
+});
 
 test("monitoring lesson is a checked conceptual exercise and refuses invented run claims", () => {
   const l = monitoringLossAndFreshness;

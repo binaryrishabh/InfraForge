@@ -1,2 +1,2 @@
 export { track } from "./track";
-export { lessons } from "./monitoring-ownership";
+export { lessons, archivedLessons } from "./monitoring-ownership";
