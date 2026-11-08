@@ -14,6 +14,7 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
+  "size-the-app-database-pool@1": "ce8ab0399c1dcd29ca3997913d52ba30e4b311337e53a94cb809602090669194",
   "reuse-before-expiry@2": "da68b973d3fe19a49afd259da61031732ca766af391c25d48cda885477d6d757",
   "share-a-cache-fill@2": "6a7c4943ab093d98ca6b45c013446b9cf3a97b06617d6c3ef684d7db7b894b8a",
   "catalogue-link-flash@2": "f9a1a680729c8914d0220645176afdaa96b59203baa0e84e675358f96dacd8a9",

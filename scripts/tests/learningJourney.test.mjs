@@ -7,7 +7,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
   expect(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).toEqual([
     "where-does-the-time-go", "writes-cost-more-than-reads", "balancer-shares-turns",
     "keep-waiting-work", "check-the-missing-server", "parallel-jobs-for-a-burst", "split-the-capacity-budget", "open-and-size-an-api",
-    "writes-cost-more-than-reads-generic",
+    "writes-cost-more-than-reads-generic", "size-the-app-database-pool",
   ]);
   expect(new Set(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).size).toBe(JOURNEY_LABS.length);
   for (const lab of JOURNEY_LABS) {
@@ -660,4 +660,18 @@ test("failure CLI rejects bad selections and remote API/web origins before loadi
     expect(result.stderr.toString()).toContain(error);
     expect(result.stderr.toString()).not.toContain("Cannot find module");
   }
+});
+
+
+test("application database pool journey fills the exact numeric control and refuses missing or unretained values", async () => {
+  const lab = journeyLab("size-the-app-database-pool"), edit = lab.improvement;
+  expect([edit.resourceId, edit.setting, edit.from, edit.to]).toEqual(["db", "dbPoolMaxConnections", 1, 2]);
+  expect(edit.name.test("Application database connections")).toBe(true);
+  for (const name of ["Active queries", "Queued queries", "Connections"]) expect(edit.name.test(name)).toBe(false);
+  const fake = fakePage();
+  expect(await applyJourneyImprovement(fake.page, edit)).toEqual([{resourceId: "db", setting: "dbPoolMaxConnections", value: "2"}]);
+  expect(fake.calls).toEqual(['[data-resource-id="db"]', ["spinbutton", "^Application database connections$"], ["filled", "2"]]);
+  await expect(applyJourneyImprovement(fakePage({controlMissing: true}).page, edit)).rejects.toThrow("requested control is missing");
+  await expect(applyJourneyImprovement(fakePage({storedValue: "1"}).page, {controls: [edit]})).rejects.toThrow("Journey control did not retain");
+  expect(selectJourney({JOURNEY_LAB: lab.lessonId})).toEqual({kind: "lab", entry: lab});
 });

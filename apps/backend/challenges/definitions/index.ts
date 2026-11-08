@@ -1,3 +1,4 @@
+import { sizeTheAppDatabasePoolV1 } from "./size-the-app-database-pool/v1";
 import { reuseBeforeExpiryV2 } from "./reuse-before-expiry/v2";
 import { shareACacheFillV2 } from "./share-a-cache-fill/v2";
 import { catalogueLinkFlashV2 } from "./catalogue-link-flash/v2";
@@ -76,6 +77,7 @@ import { limitOrCapacityV1 } from "./limit-or-capacity/v1";
 attempts are judged by exactly the version that created them. Order sets the
 challenge list. See ../README.md for the authoring rules. */
 export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
+  sizeTheAppDatabasePoolV1,
   keepAnAssetCachedV1,
   parallelJobsForABurstV1,
   keepWaitingWorkV1,

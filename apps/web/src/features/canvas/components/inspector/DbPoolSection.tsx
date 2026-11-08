@@ -1,14 +1,10 @@
 import { useState } from "react";
-import { DB_POOL_MAX_CONNECTIONS, dbPoolError, type Resource } from "@infraforge/domain/resource";
+import { DB_POOL_MAX_CONNECTIONS, type Resource } from "@infraforge/domain/resource";
 import { Field, Input } from "@/ui/Field";
 import { updateResource } from "../../actions";
 import { InspectorSection } from "./InspectorSection";
+import { parseDbPool } from "./dbPoolInput";
 
-export function parseDbPool(text: string) {
-  const value = text === "" ? undefined : Number(text);
-  const error = text !== "" && text.trim() === "" ? "Enter a whole number from 1 to 512, or leave blank for 10." : dbPoolError("Database", value);
-  return { value, error };
-}
 export function DbPoolSection({ resource, disabled }: { resource: Resource; disabled: boolean }) {
   const saved = resource.dbPoolMaxConnections;
   const [draft, setDraft] = useState({ saved, text: saved === undefined ? "" : String(saved) });

@@ -138,6 +138,17 @@ export const JOURNEY_LABS = [
     },
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "size-the-app-database-pool", title: /Size the app database pool/,
+    prediction: "The database can stay Healthy while the application waits for its transport pool.",
+    hypothesis: "Two application database connections should reduce acquired pool wait and caller failures while the same CPUs have spare capacity.",
+    improvement: {
+      stepName: "db's Application database connections is changed from 1 to 2",
+      nodeSelector: '[data-resource-id="db"]', nodeText: /Database/, fallbackText: "db",
+      role: "spinbutton", name: /^Application database connections$/, resourceId: "db", setting: "dbPoolMaxConnections", from: 1, to: 2,
+    },
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Representative conceptual content, plus a reading without a check.

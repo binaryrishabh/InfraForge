@@ -1,3 +1,4 @@
+import { sizeTheAppDatabasePoolV1 } from "../challenges/definitions/size-the-app-database-pool/v1";
 import { testACircuitAgainV1 } from "../challenges/definitions/test-a-circuit-again/v1";
 import { keepAnAssetCachedV1 } from "../challenges/definitions/keep-an-asset-cached/v1";
 import { openAndSizeAnApiV1 } from "../challenges/definitions/open-and-size-an-api/v1";
@@ -82,6 +83,7 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "size-the-app-database-pool": {...sizeTheAppDatabasePoolV1.starter!, resources: sizeTheAppDatabasePoolV1.starter!.resources.map(r => r.id === "db" ? {...r, dbPoolMaxConnections: 2} : r)},
   "test-a-circuit-again": {...testACircuitAgainV1.starter!, resources: testACircuitAgainV1.starter!.resources.map(r =>
     r.id === "lb" ? {...r, circuitBreaker: {...r.circuitBreaker!, cooldownMs: 2000}} : r)},
   "keep-an-asset-cached": {...keepAnAssetCachedV1.starter!, resources: keepAnAssetCachedV1.starter!.resources.map(r =>

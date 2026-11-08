@@ -12,7 +12,7 @@ for (const pin of pins) test(`unset pool preserves published input/contract/comp
  const s = structuredClone(d.starter!); for (const r of s.resources) r.dbPoolMaxConnections = undefined;
  const input = captureRunInputs(s, d.workload, `challenge:${d.id}:v${d.version}`);
  const design = {schema: "infraforge-saved-design/1" as const, resources: input.resources, connections: input.connectionLines, workload: input.workloadProfile};
- const b = contractFromDesign(design, {adapterProfiles: input.adapterProfiles}); if ("refused" in b) throw Error(JSON.stringify(b.refused));
+ const b = contractFromDesign(design, {adapterProfiles: input.adapterProfiles ?? []}); if ("refused" in b) throw Error(JSON.stringify(b.refused));
  const contract = withRunLength(b.contract, 1, input.seed), c = compileProduct(design, contract); if (!c.ok) throw Error(JSON.stringify(c.diagnostics));
  const live = createLiveModel2(c.value, input.resources.map(r => r.id)); live.advanceSecond();
  expect([hash(input), hash(contract), hash(c.value), hash(b.assumptions), hash(live.evidence()), hash(live.project())]).toEqual(pin.hashes);
