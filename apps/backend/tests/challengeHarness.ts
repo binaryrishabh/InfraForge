@@ -254,3 +254,9 @@ export function attemptRow(def: ChallengeDefinition, design: ChallengeStarter, p
     ...(scenario ? {challengeScenario: scenario} : {}) };
   return row;
 }
+
+// The text-only versions retain the exact hidden reference designs.
+REFERENCE["reuse-before-expiry-v2"] = REFERENCE["reuse-before-expiry"]!;
+REFERENCE["share-a-cache-fill-v2"] = REFERENCE["share-a-cache-fill"]!;
+REFERENCE["catalogue-link-flash-v2"] = REFERENCE["catalogue-link-flash"]!;
+REFERENCE["cache-or-database-v2"] = REFERENCE["cache-or-database"]!;

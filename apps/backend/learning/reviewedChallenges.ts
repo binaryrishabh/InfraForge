@@ -2,6 +2,10 @@
  * Keep old records. A changed challenge needs a new reviewed contentVersion. */
 export interface LearningChallengeReview { challengeId: string; version: number; hash: string }
 export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeReview>> = {
+  "reuse-before-expiry@3": {challengeId: "reuse-before-expiry", version: 2, hash: "da68b973d3fe19a49afd259da61031732ca766af391c25d48cda885477d6d757"},
+  "share-a-cache-fill@3": {challengeId: "share-a-cache-fill", version: 2, hash: "6a7c4943ab093d98ca6b45c013446b9cf3a97b06617d6c3ef684d7db7b894b8a"},
+  "catalogue-link-flash@3": {challengeId: "catalogue-link-flash", version: 2, hash: "f9a1a680729c8914d0220645176afdaa96b59203baa0e84e675358f96dacd8a9"},
+  "cache-or-database@3": {challengeId: "cache-or-database", version: 2, hash: "e58d912ba4273d541df9f4af2891aedba4607f8f66017e403f9d6d062ae570cc"},
   "keep-an-asset-cached@1": {challengeId: "keep-an-asset-cached", version: 1, hash: "3f6328645b2f62cf07f9071f08e7a4b0d8956936a684ae55166f580fd6e7db71"},
   "diagnose-consumer-credit@2": {challengeId: "diagnose-consumer-credit", version: 2, hash: "df97ca199816deccd0b3cdcdd332775946ab04e1c36ab9380b9204bbb79a9e60"},
   "analytics-burst-buffer@2": {challengeId: "analytics-burst-buffer", version: 1, hash: "b50e5b7b36b243530a74502c9bd4665ae9ebc74d1daeef70c2859456acfb91de"},

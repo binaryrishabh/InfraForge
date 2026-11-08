@@ -40,10 +40,11 @@ for (const [file, hash] of originals) test(`cache/timeout refresh preserves sour
   const id = file.split("/").at(-1)!.replace(".ts", "");
   const old = LEARNING_REGISTRY.findLesson(id, 1)!;
   const current = LEARNING_REGISTRY.findLesson(id)!;
-  expect(old.contentVersion).toBe(1); expect(current.contentVersion).toBe(2);
+  const version = current.kind === "executable-lab" ? 3 : 2;
+  expect(old.contentVersion).toBe(1); expect(current.contentVersion).toBe(version);
   expect(learningContent.archivedLessons).toContainEqual(old);
   expect(LEARNING_REGISTRY.listLessons({trackId: current.trackId, moduleId: current.moduleId})
-    .filter(l => l.id === id).map(l => l.contentVersion)).toEqual([2]);
+    .filter(l => l.id === id).map(l => l.contentVersion)).toEqual([version]);
   expect(current.limitations.join(" ")).toContain("Unknown");
   if (current.kind === "executable-lab") {
     const labels = current.experiment.evidenceToInspect!.flatMap(evidenceLabels);
