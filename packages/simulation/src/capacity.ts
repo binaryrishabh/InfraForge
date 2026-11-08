@@ -1,4 +1,15 @@
-import { RESOURCE_TYPES, type ResourceType } from "@infraforge/domain/resource";
+import { findSku } from "@infraforge/catalog";
+import { RESOURCE_TYPES, type Resource, type ResourceType } from "@infraforge/domain/resource";
+
+// Model 2 educational sizing, shared by the compiler and design cards. Catalog
+// vCPU labels size assumed cores; burst credits/baseline throttling are not modeled.
+// This is CPU sizing, not a workload-independent RPS/QPS or provider guarantee.
+export function modeledResourceSizing(resource: Pick<Resource, "type" | "skuId" | "size">) {
+  const sku = resource.skuId ? findSku(resource.skuId) : undefined;
+  if (resource.skuId && (!sku || sku.category !== resource.type)) return null;
+  const scale = { small: 1, medium: 2, large: 4 }[resource.size ?? "small"];
+  return { cores: sku?.vCpu ?? scale, memoryGb: sku?.ramGb ?? scale * 2 };
+}
 
 // Generic fallback capacity for resources WITHOUT a selected SKU.
 export const CAPACITY: Partial<Record<ResourceType, { rps: number; source: string }>> = {

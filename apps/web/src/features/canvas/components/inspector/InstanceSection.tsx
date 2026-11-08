@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { findSku, skusFor } from "@infraforge/catalog";
 import { PROVIDERS, type ProviderId, type SkuCategory } from "@infraforge/catalog/types";
-import { CAPACITY } from "@infraforge/simulation/capacity";
+import { modeledResourceSizing } from "@infraforge/simulation/capacity";
 import { SIMULATION_CONSTANTS } from "@infraforge/simulation/tuning";
 import { RESOURCE_TYPES, type Resource } from "@infraforge/domain/resource";
 import { Segmented } from "@/ui/Segmented";
@@ -9,20 +9,21 @@ import { cx } from "@/ui/cx";
 import { updateResource } from "../../actions";
 import { InspectorSection } from "./InspectorSection";
 
-/* Catalog sizes change capacity and the monthly estimate. "Generic" uses the
-model's default capacity for the type. */
+/* Generic retains the saved small/medium/large size; an omitted size uses small. */
 export function InstanceSection({ resource, disabled }: { resource: Resource; disabled: boolean }) {
   const vm = resource.type === RESOURCE_TYPES.VirtualMachine;
   const [provider, setProvider] = useState<ProviderId>(() => (resource.skuId && findSku(resource.skuId)?.provider) || "aws");
   const category: SkuCategory = vm ? "Virtual Machine" : "Database";
-  const perCpu = vm ? SIMULATION_CONSTANTS.RPS_PER_VCPU : SIMULATION_CONSTANTS.QPS_PER_VCPU;
-  const unit = vm ? "rps" : "qps";
-  const options = [{ id: "", label: "Generic", detail: `${CAPACITY[resource.type]?.rps ?? "Unknown"} ${unit}${vm ? "" : ` · ${SIMULATION_CONSTANTS.MAX_DB_CONNECTIONS} connections`}`, price: null as number | null },
+  const cpu = (skuId?: string) => {
+    const sizing = modeledResourceSizing({ ...resource, skuId });
+    return sizing ? `${sizing.cores} modeled CPU ${sizing.cores === 1 ? "core" : "cores"}` : "Unknown";
+  };
+  const options = [{ id: "", label: "Generic", detail: `${cpu()}${vm ? "" : ` · ${SIMULATION_CONSTANTS.MAX_DB_CONNECTIONS} connections`}`, price: null as number | null },
     ...skusFor(provider, category).map((sku) => ({ id: sku.skuId, label: sku.label, price: sku.monthlyPriceUsd,
-      detail: `${Math.round(sku.vCpu * sku.baselineFactor * perCpu)} ${unit}${sku.maxConnections !== undefined ? ` · ${sku.maxConnections} connections` : ""}` }))];
+      detail: `${cpu(sku.skuId)}${sku.maxConnections !== undefined ? ` · ${sku.maxConnections} connections` : ""}` }))];
   const name = `sku-${resource.id}`;
   return (
-    <InspectorSection title="Instance size" hint="Changes capacity and the monthly estimate.">
+    <InspectorSection title="Instance size" hint="Educational model sizing. Throughput depends on workload and limits. Burst credits and baseline throttling are not simulated.">
       <Segmented label="Provider" size="sm" value={provider} onChange={setProvider} disabled={disabled}
         options={(Object.keys(PROVIDERS) as ProviderId[]).map((id) => ({ value: id, label: id === "aws" ? "AWS" : "DigitalOcean" }))} />
       <fieldset className="mt-3" disabled={disabled}>

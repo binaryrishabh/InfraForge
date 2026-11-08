@@ -14,6 +14,7 @@ import { arrivalVersion, compileCpuDynamics } from "./workloadDynamics";
 import type { AdapterProfile } from "@infraforge/contracts/run-inputs";
 import { clientRetryError, workloadDynamicsError, workloadObjectiveError } from "@infraforge/domain/workload";
 import { findSku, CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog";
+import { modeledResourceSizing } from "../../capacity";
 import { RESOURCE_PORTS, vmMemoryError, lbRateLimitError, firewallStateError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, dnsCachePolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError, type Resource } from "@infraforge/domain/resource";
 import type { Quantity, Unit } from "../../reality/quantity";
 import type { ComputeResource } from "../compute/contracts";
@@ -240,8 +241,8 @@ export function contractFromDesign(saved: SavedProductDesign, history?: { failur
     const capabilities: ProductContract["capabilities"] = [];
     const cores = new Map<string, number>(), memory = new Map<string, number>();
     for (const r of resources) {
-      const sku = r.skuId ? findSku(r.skuId)! : undefined, scale = { small: 1, medium: 2, large: 4 }[r.size ?? "small"];
-      cores.set(r.id, sku?.vCpu ?? scale); memory.set(r.id, sku?.ramGb ?? scale * 2);
+      const sku = r.skuId ? findSku(r.skuId)! : undefined, sizing = modeledResourceSizing(r)!;
+      cores.set(r.id, sizing.cores); memory.set(r.id, sizing.memoryGb);
       note(`${r.id}.sizing`, { cores: cores.get(r.id), memoryGb: memory.get(r.id) }, "profile", sku ? "Catalog CPU and memory labels size this assumed profile; they do not establish effective capacity." : "Small, medium and large assume one, two and four cores with two GB per core; an omitted size uses small.");
       if (sku) {
         // Advertised CPU counts only; execution capacity below remains an explicit assumption.

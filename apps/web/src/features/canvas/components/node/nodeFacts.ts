@@ -1,12 +1,12 @@
-import { findSku } from "@infraforge/catalog";
-import { CAPACITY } from "@infraforge/simulation/capacity";
+import { CAPACITY, modeledResourceSizing } from "@infraforge/simulation/capacity";
 import { SIMULATION_CONSTANTS } from "@infraforge/simulation/tuning";
 import { RESOURCE_TYPES, type Resource } from "@infraforge/domain/resource";
 
 export function declaredCapacity(resource: Resource) {
-  const sku = resource.skuId ? findSku(resource.skuId) : undefined;
-  const vm = resource.type === RESOURCE_TYPES.VirtualMachine;
-  if (sku) return { value: Math.round(sku.vCpu * sku.baselineFactor * (vm ? SIMULATION_CONSTANTS.RPS_PER_VCPU : SIMULATION_CONSTANTS.QPS_PER_VCPU)), unit: vm ? "rps" : "qps" };
+  if (resource.type === RESOURCE_TYPES.VirtualMachine || resource.type === RESOURCE_TYPES.Database) {
+    const sizing = modeledResourceSizing(resource);
+    return { value: sizing?.cores ?? null, unit: sizing?.cores === 1 ? "modeled CPU core" : "modeled CPU cores" };
+  }
   return { value: CAPACITY[resource.type]?.rps ?? null, unit: resource.type === RESOURCE_TYPES.Database ? "qps" : "rps" };
 }
 
