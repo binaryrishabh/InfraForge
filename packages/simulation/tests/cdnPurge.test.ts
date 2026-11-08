@@ -10,7 +10,8 @@ import { withTimeline } from "../src/model2/product/timeline";
 import { createProductModel2 } from "../src/model2/product/run";
 import { DeploymentChaosNames } from "@infraforge/domain/resource";
 
-// Captured on untouched e62351897483398a2d81ca0ded7adf339e02dab4; LF-normalized, never regenerate.
+// Captured on untouched e62351897483398a2d81ca0ded7adf339e02dab4; LF-normalized.
+// Keep the base pins; the reviewed additive live-view exception is documented below.
 test("CDN run without actions retains base contract, compiled, assumptions, evidence and live bytes", () => {
   const f = cdnSetup(); f.runtime.advanceTo(12_000_000);
   expect([hash(f.contract), hash(f.compiled), hash(f.assumptions), hash(f.runtime.evidence())]).toEqual([
@@ -18,7 +19,21 @@ test("CDN run without actions retains base contract, compiled, assumptions, evid
     "602a492a3379d76595bc1e52bdfcd8c377a96a67646ecc61190bb894cf7479bf", "1e8be45dede42f6f7d9d2a3b8b4eb2e3d5104a3c5877aea78e12e21f97d55263"]);
   const run = createModel2Run(purgeInput(), 12); for (let s = 0; s < 12; s++) run.advance();
   expect(hash(run.evidence())).toBe("f4e16886b88e55677a2d6a7f9551bccac145b2200c032ace0c0bb4cc0433f428");
-  expect(hash(run.view())).toBe("91c56710cb7293a94a13d0da5f29a2cf1f6b92925f0739964da9738951b331f7");
+  const view = run.view();
+  // LB28 reconstructed e623518 and compared every JSON path and retained key order.
+  // ADDITIVE: LB25 object ledger (a576d95) adds only metrics.store.objectStorage:
+  // .sampledAtUs, .puts, .gets, .heads, .generation, .objectCount, .overCapacity,
+  // .generatedResponseBodyBytes, .commandReasons, .objects, .omittedObjects;
+  // .objects[0] has .namespace, .key, .generation, .bytes. No other path differs.
+  // The origin is an actual object-store; the CDN acquires no object-ledger keys.
+  expect(hash(view)).toBe("ab8aeca66061c5716b709f92753f87dc3b91f580d2b7e9a7476d2d89169e49e4");
+  const historical = structuredClone(view);
+  for (const key of ["sampledAtUs", "puts", "gets", "heads", "generation", "objectCount", "overCapacity",
+    "generatedResponseBodyBytes", "commandReasons", "objects", "omittedObjects"]) {
+    expect(Reflect.deleteProperty(historical.metrics.store!.objectStorage!, key)).toBe(true);
+  }
+  // Removing exactly the reviewed additions must recover every original byte.
+  expect(hash(historical)).toBe("91c56710cb7293a94a13d0da5f29a2cf1f6b92925f0739964da9738951b331f7");
 });
 
 test("live purge removes every warm entry at the receipt microsecond, then misses, refills and hits", () => {
