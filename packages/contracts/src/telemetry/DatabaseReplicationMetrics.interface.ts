@@ -1,7 +1,7 @@
 export interface DatabaseReplicationMetrics {
   version: 1;
   currentWriter: "primary" | "replica" | "none" | null;
-  primaryProcessState?: "available" | "unavailable" | "fenced" | null;
+  primaryProcessState?: "available" | "unavailable" | "fenced" | "replica" | null;
   replicaProcessState?: "available" | "unavailable" | "writer" | null;
   sessionInvalidations?: number | null;
   connectionInvalidations?: number | null;
@@ -11,7 +11,7 @@ export interface DatabaseReplicationMetrics {
   writerEpoch: number | null;
   primaryEpoch: number | null;
   replicaEpoch: number | null;
-  primaryRole: "writer" | "fenced" | null;
+  primaryRole: "writer" | "fenced" | "replica" | null;
   replicaRole: "replica" | "writer" | null;
   fencedWriteRejections: number | null;
   fencedReplicationRejections: number | null;
@@ -31,4 +31,5 @@ export interface DatabaseReplicationMetrics {
   oldestPendingAgeMs: number | null;
   primaryGeneration: number | null;
   replicaGeneration: number | null;
+  rejoin?: import("./DatabaseRejoinMetrics.interface").DatabaseRejoinMetrics | null;
 }

@@ -62,7 +62,7 @@ const ResourceSchema = z.object({
   vmExecution: z.object({ version: z.literal(1), workers: z.number().int().min(1).max(VM_WORKERS_MAX).optional(), queuedRequests: z.number().int().min(0).max(VM_QUEUED_REQUESTS_MAX).optional() }).strict().optional(),
   databaseReadRouting: z.object({ version: z.literal(1), policy: z.enum(["primary-only", "replica-preferred"]) }).strict().optional(),
   databaseRecoveryPlan: z.object({version: z.literal(1), promoteAtSecond: z.number().int().min(1).max(3599).nullable()}).strict().optional(),
-  databaseReplication: z.object({ version: z.literal(1), enabled: z.literal(true), replicationDelayMs: z.number().int().min(1).max(60000), readPolicy: z.enum(["primary", "replica-preferred"]) }).strict().optional(),
+  databaseReplication: z.object({ version: z.literal(1), enabled: z.literal(true), replicationDelayMs: z.number().int().min(1).max(60000), readPolicy: z.enum(["primary", "replica-preferred"]), rejoin: z.literal("snapshot-replay/1").optional() }).strict().optional(),
   dbPoolMaxConnections: z.number().int().min(1).max(512).optional(),
   dbConcurrency: z.object({ version: z.literal(1), activeQueries: z.number().int().min(1).max(DB_ACTIVE_QUERIES_MAX).optional(), queuedQueries: z.number().int().min(0).max(DB_QUEUED_QUERIES_MAX).optional() }).strict().optional(),
   dataKeyspace: z.object({ version: z.literal(1), count: z.number().int().min(1).max(DATA_KEYSPACE_MAX), accessPattern: z.enum(["uniform", "hot-key"]).optional() }).strict().optional(),

@@ -36,5 +36,6 @@ export function databaseReplicationLive(value: Evidence): DatabaseReplicationMet
     regressedKeys: value?.regressedKeys.slice(0, 8).map(row => ({ ...row })) ?? null,
     fencedWriteRejections: value?.fencedWriteRejections ?? null,
     fencedReplicationRejections: value?.fencedReplicationRejections ?? null,
+    ...(value && "rejoin" in value ? { rejoin: value.rejoin == null ? null : { ...value.rejoin } } : {}),
   };
 }
