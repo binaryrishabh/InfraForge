@@ -9,4 +9,5 @@ export const lessons = [...databasePressureLessons, ...cacheLifetimeLessons, ...
 
 import { cacheEvidenceArchivedLessons } from "./cache-evidence-archives";
 import { connectionPoolBudgets } from "./lessons/connection-pool-budgets";
-export const archivedLessons = [...cacheEvidenceArchivedLessons, connectionPoolBudgets];
+import { promotingAReplica } from "./lessons/promoting-a-replica";
+export const archivedLessons = [...cacheEvidenceArchivedLessons, connectionPoolBudgets, promotingAReplica];
