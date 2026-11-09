@@ -7,4 +7,6 @@ import { dataTradeoffLessons } from "./data-tradeoffs";
 import { objectOwnershipLessons } from "./object-ownership";
 export const lessons = [...databasePressureLessons, ...cacheLifetimeLessons, ...writerFailureLessons, ...dataTradeoffLessons, ...objectOwnershipLessons, ...databaseIncidentLessons];
 
-export { cacheEvidenceArchivedLessons as archivedLessons } from "./cache-evidence-archives";
+import { cacheEvidenceArchivedLessons } from "./cache-evidence-archives";
+import { connectionPoolBudgets } from "./lessons/connection-pool-budgets";
+export const archivedLessons = [...cacheEvidenceArchivedLessons, connectionPoolBudgets];
