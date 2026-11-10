@@ -261,6 +261,20 @@ JOURNEY_LABS.push({
   expected: {starter: "Not met", improved: "Met"},
 });
 
+// JOURNEY_LAB=keep-a-function-warm JOURNEY_SHOTS=./nx13-shots node ../InfraForge/scripts/qa/learning-journey.mjs
+JOURNEY_LABS.push({
+  lessonId: "keep-a-function-warm", title: /Keep a function warm/,
+  prediction: "Overall health stays Healthy even though each sparse call pays cold initialization.",
+  hypothesis: "Diagnosis: idle instances expire before the next sparse call. Increasing only idle expiry should preserve a warm instance and reduce cold starts; more concurrency alone cannot prevent expiry.",
+  improvement: {
+    stepName: "fn's Warm instance idle expiry (ms) changes from 100 to 5000",
+    nodeSelector: '[data-resource-id="fn"]', nodeText: /Serverless Function/, fallbackText: "fn",
+    role: "spinbutton", name: /^Warm instance idle expiry \(ms\)$/, resourceId: "fn", setting: "serverless.idleExpiryMs", from: 100, to: 5000,
+  },
+  reportRequirements: [/^Complete 7 invocations with at most 2 cold starts and no unsuccessful invocations$/],
+  expected: {starter: "Not met", improved: "Met"},
+});
+
 // Representative conceptual content, plus a reading without a check.
 // These are UI expectations pinned to authored text, never simulated results.
 export const JOURNEY_LESSONS = [

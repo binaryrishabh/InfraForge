@@ -13,10 +13,11 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "object-bytes-versus-app-cpu",
     "restore-safe-redundancy",
     "resolve-after-publication",
-    "hold-slots-on-a-slow-call",
-    "admit-a-replica-image",
     "scale-on-delivered-samples",
     "isolate-route-credits",
+    "hold-slots-on-a-slow-call",
+    "admit-a-replica-image",
+    "keep-a-function-warm",
   ]);
   expect(new Set(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).size).toBe(JOURNEY_LABS.length);
   for (const lab of JOURNEY_LABS) {
