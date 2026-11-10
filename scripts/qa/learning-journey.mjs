@@ -268,6 +268,18 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^At most 90 origin requests by second 60 with a TTL of one second or less$/],
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "sample-often-enough", title: /Sample often enough/,
+    prediction: "The service can stay Healthy while the backend's measurements are old.",
+    hypothesis: "Changing only the collection interval should make backend measurements fresh; exporting faster cannot.",
+    improvement: {
+      stepName: "monitor's Collect every (seconds) is changed from 20 to 2",
+      nodeSelector: '[data-resource-id="monitor"]', nodeText: /Monitoring Agent/, fallbackText: "monitor",
+      role: "spinbutton", name: /^Collect every \(seconds\)$/, resourceId: "monitor", setting: "monitoringPolicy.collectionIntervalSeconds", from: 20, to: 2,
+    },
+    reportRequirements: [/^Receive 60 samples without drops or duplicates; backend ages at most 6 seconds$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Edge admission: JOURNEY_LAB=shed-load-at-the-edge JOURNEY_SHOTS=/tmp/shed-load node ../InfraForge/scripts/qa/learning-journey.mjs

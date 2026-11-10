@@ -7,6 +7,7 @@ import { holdSlotsOnASlowCallV1 } from "../challenges/definitions/hold-slots-on-
 import { admitAReplicaImageV1 } from "../challenges/definitions/admit-a-replica-image/v1";
 import { restoreSafeRedundancyV1 } from "../challenges/definitions/restore-safe-redundancy/v1";
 import { shareOneOriginFetchV1 } from "../challenges/definitions/share-one-origin-fetch/v1";
+import { sampleOftenEnoughV1 } from "../challenges/definitions/sample-often-enough/v1";
 import { keepFailedEventsV1 } from "../challenges/definitions/keep-failed-events/v1";
 import { redriveAfterTheFixV1 } from "../challenges/definitions/redrive-after-the-fix/v1";
 import { scaleOnDeliveredSamplesV1 } from "../challenges/definitions/scale-on-delivered-samples/v1";
@@ -107,6 +108,7 @@ export const REFERENCE: Record<string, ChallengeStarter> = {
   "admit-a-replica-image": {...admitAReplicaImageV1.starter!, resources: admitAReplicaImageV1.starter!.resources.map(r => r.id === "app" ? {...r, artifactCachePolicy: {version: 1, capacityBytes: 4096}} : r)},
   "restore-safe-redundancy": {...restoreSafeRedundancyV1.starter!, resources: restoreSafeRedundancyV1.starter!.resources.map(r => r.id === "db" ? {...r, databaseReplication: {...r.databaseReplication!, rejoin: "snapshot-replay/1"}} : r)},
   "share-one-origin-fetch": {...shareOneOriginFetchV1.starter!, resources: shareOneOriginFetchV1.starter!.resources.map(r => r.id === "cdn" ? {...r, cdnCachePolicy: {version: 2 as const, ttlSeconds: 1, coalesce: true}} : r)},
+  "sample-often-enough": {...sampleOftenEnoughV1.starter!, resources: sampleOftenEnoughV1.starter!.resources.map(r => r.id === "monitor" ? {...r, monitoringPolicy: {...r.monitoringPolicy!, collectionIntervalSeconds: 2} as typeof r.monitoringPolicy} : r)},
   "keep-failed-events": {...keepFailedEventsV1.starter!, resources: keepFailedEventsV1.starter!.resources.map(r => r.id === "bus" ? {...r, eventBus: {...r.eventBus!, deadLetterCapacity: 100}} : r)},
   "redrive-after-the-fix": {...redriveAfterTheFixV1.starter!, resources: redriveAfterTheFixV1.starter!.resources.map(r => r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, redriveAtSecond: 45}} : r)},
   "scale-on-delivered-samples": {...scaleOnDeliveredSamplesV1.starter!, resources: scaleOnDeliveredSamplesV1.starter!.resources.map(r => r.id === "monitor" ? {...r, monitoringPolicy: {version: 1 as const, collectionIntervalSeconds: 2, exportIntervalSeconds: 2}} : r)},
