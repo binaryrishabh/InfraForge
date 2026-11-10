@@ -18,5 +18,5 @@ export const holdSlotsOnASlowCall: LearningLesson = {
     "Parallel jobs run inside one VM; worker count and autoscaling are unavailable here. A fixed-second sample proves no continuous behaviour, ordering, durability or exactly-once effects.",
     "A larger worker size adds cores only; it does not change how many jobs may wait at once in this model."],
   check: null,
-  followUp: "Cite the starter, improved and larger worker near miss reports. Explain why CPU stayed low while the queue grew, and what a real service would also need (timeouts, limits on the outside call).",
+  followUp: "Cite the starter, improved and larger worker near miss reports. Explain why CPU stayed low while the queue grew, and what a real service would also need (timeouts, limits on the outside call). Compare parallel-jobs-for-a-burst, where the limit is spare CPU cores rather than time spent waiting.",
 };
