@@ -2,7 +2,7 @@ import type { LearningLesson } from "@infraforge/contracts/learning";
 export const keepAFunctionWarm: LearningLesson = {
   id: "keep-a-function-warm", contentVersion: 1, trackId: "depth", moduleId: "function-retention",
   title: "Keep a function warm", summary: "Separate idle-instance retention from concurrency under sparse calls.",
-  kind: "executable-lab", level: "intermediate", availability: "available", prerequisites: ["bound-function-pool-pressure"],
+  kind: "executable-lab", level: "intermediate", availability: "available", prerequisites: ["response-time-and-throughput"],
   problem: ["Every sparse function call succeeds, yet the function repeatedly pays cold initialization. More concurrent invocations might sound useful, but no calls overlap."],
   explanation: ["Predict final overall health, run the starter unchanged and keep its report. Inspect Completed invocations, Cold starts, Warm starts, Idle instances expired, Initialization time (us), throttles and peak instances. Record what Healthy leaves unexplained. Function CPU is Unknown.",
     "Start an improvement from the saved starter with a hypothesis. Select fn and change only Warm instance idle expiry (ms) from 100 to the longer value in the challenge hint. Keep concurrency, initialization, body duration, timeout, database and workload unchanged. Review exactly one change, run, then compare the saved requirements and function evidence.",

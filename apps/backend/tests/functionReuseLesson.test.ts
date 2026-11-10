@@ -12,6 +12,7 @@ test("warm function lesson has its own module, measured evidence and reviewed ch
   expect(() => checkLearningAuthoring(learningContent)).not.toThrow();
   const lesson = LEARNING_REGISTRY.findLesson("keep-a-function-warm")!;
   expect(lesson).toMatchObject({kind: "executable-lab", moduleId: "function-retention", experiment: {challengeId: "keep-a-function-warm"}, check: null});
+  expect(lesson.prerequisites).toContain("response-time-and-throughput");
   expect(lesson.experiment!.evidenceToInspect).toContain("Cold starts; Warm starts; Idle instances expired");
   expect(lesson.explanation.join(" ")).toContain("Review exactly one change");
   expect(lesson.limitations.join(" ")).toContain("not a claim that a cloud provider exposes exact retention");
