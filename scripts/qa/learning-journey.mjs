@@ -173,6 +173,18 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^Receive 128 samples without drops or duplicates; backend ages at most 10 seconds$/],
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "object-bytes-versus-app-cpu", title: /Object bytes versus app CPU/,
+    prediction: "The starter should record Critical health because the store refuses puts while producer CPU has spare capacity.",
+    hypothesis: "Changing only stored data capacity from 1 to 4 MiB should admit checked puts and remove caller failures; background jobs can still wait.",
+    improvement: {
+      stepName: "store's Stored data capacity (MiB) is changed from 1 to 4",
+      nodeSelector: '[data-resource-id="store"]', nodeText: /Object Storage/, fallbackText: "store",
+      role: "spinbutton", name: /^Stored data capacity \(MiB\)$/, resourceId: "store", setting: "objectStoragePolicy.capacityMiB", from: 1, to: 4,
+    },
+    reportRequirements: [/^Complete at least 1100 callers; no unsuccessful callers$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Representative conceptual content, plus a reading without a check.

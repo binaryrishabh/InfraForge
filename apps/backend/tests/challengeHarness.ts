@@ -1,4 +1,5 @@
 import { moveMonitoringSamplesV1 } from "../challenges/definitions/move-monitoring-samples/v1";
+import { objectBytesVersusAppCpuV1 } from "../challenges/definitions/object-bytes-versus-app-cpu/v1";
 import { sizeTheAppDatabasePoolV1 } from "../challenges/definitions/size-the-app-database-pool/v1";
 import { restoreADatabaseWriterV1 } from "../challenges/definitions/restore-a-database-writer/v1";
 import { testACircuitAgainV1 } from "../challenges/definitions/test-a-circuit-again/v1";
@@ -86,6 +87,7 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
   "move-monitoring-samples": {...moveMonitoringSamplesV1.starter!, resources: moveMonitoringSamplesV1.starter!.resources.map(r => r.id === "monitor" ? {...r, monitoringPolicy: {...r.monitoringPolicy!, batchSamples: 16}} : r)},
+  "object-bytes-versus-app-cpu": {...objectBytesVersusAppCpuV1.starter!, resources: objectBytesVersusAppCpuV1.starter!.resources.map(r => r.id === "store" ? {...r, objectStoragePolicy: {version: 1, capacityMiB: 4}} : r)},
   "size-the-app-database-pool": {...sizeTheAppDatabasePoolV1.starter!, resources: sizeTheAppDatabasePoolV1.starter!.resources.map(r => r.id === "db" ? {...r, dbPoolMaxConnections: 2} : r)},
   "restore-a-database-writer": {...restoreADatabaseWriterV1.starter!, resources: restoreADatabaseWriterV1.starter!.resources.map(r => r.id === "db" ? {...r, databaseRecoveryPlan: {version: 1, promoteAtSecond: 3}} : r)},
   "test-a-circuit-again": {...testACircuitAgainV1.starter!, resources: testACircuitAgainV1.starter!.resources.map(r =>
