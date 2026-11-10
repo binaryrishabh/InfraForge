@@ -18,5 +18,5 @@ export const boundReplicaStaleness: LearningLesson = {
     "Stale-read counters are cumulative, include health probes and describe modeled row versions. They establish no application consistency, read-your-writes or availability guarantee.",
     "A final-second p95 and a fixed-second sample prove no whole-run latency target or continuous behaviour."],
   check: null,
-  followUp: "Cite the starter, improved and read-from-the-writer near miss reports. Explain why the near miss fixed freshness but not capacity. Then compare move-reads-off-the-writer, where moving reads was the whole fix.",
+  followUp: "Cite the starter, the improved run and the near miss that reads from the writer. Explain why the near miss fixed freshness but not capacity. Then compare move-reads-off-the-writer, where moving reads was the whole fix.",
 };
