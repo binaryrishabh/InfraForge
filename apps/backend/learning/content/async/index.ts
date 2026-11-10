@@ -4,4 +4,5 @@ import { firstQueueLessons } from "./first-queue";
 import { burstWorkerLessons } from "./burst-workers";
 import { heldCapacityLessons } from "./held-capacity";
 import { asyncReasoningLessons } from "./async-reasoning";
-export const lessons = [...firstQueueLessons, ...queuedWorkLessons, ...burstWorkerLessons, ...asyncReasoningLessons, ...heldCapacityLessons];
+import { deadLetterRecoveryLessons } from "./dead-letter-recovery";
+export const lessons = [...firstQueueLessons, ...queuedWorkLessons, ...burstWorkerLessons, ...asyncReasoningLessons, ...heldCapacityLessons, ...deadLetterRecoveryLessons];

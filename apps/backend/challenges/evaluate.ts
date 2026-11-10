@@ -17,6 +17,7 @@ import { orderedScenarioSteps } from "@infraforge/simulation/model2-run";
 import { QueueWorkSchema } from "../reports/queueWorkSchema";
 import { WholeRunSchema } from "../reports/wholeRunSchema";
 import { SecurityMetricsSchema } from "../reports/securitySchema";
+import { evaluateBusDeadLetters } from "./busCriterion";
 import { evaluatePoolInService } from "./poolCriterion";
 import { isDepthCriterion, evaluateDepthCriterion } from "./depthCriteria";
 import { evaluateMonitoringDelivery } from "./monitoringCriterion";
@@ -158,6 +159,7 @@ class Judge {
       case "caller-outcomes":
       case "monitoring-delivery":
       case "pool-in-service":
+      case "bus-dead-letters":
       case "backend-admission-budget":
       case "queue-work":
       case "queue-ready-age":
@@ -190,6 +192,13 @@ class Judge {
         return {...base, status: "not-evaluated", detail: "An unchanged captured topology and matching terminal revision are required.", sources: ["runInputs", "liveTopology", "topologyRevision", "terminalSnapshot.topologyRevision"]};
       }
       const result = evaluateMonitoringDelivery(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds, this.active);
+      return {...base, status: result.met === undefined ? "not-evaluated" : result.met ? "met" : "not-met", detail: result.detail, sources: result.sources};
+    }
+    if (c.kind === "bus-dead-letters") {
+      if (this.evidence.topologyUnchanged !== true || this.atEvaluation?.topologyRevision !== this.evidence.topologyRevision) {
+        return {...base, status: "not-evaluated", detail: "An unchanged captured topology and matching terminal revision are required.", sources: ["runInputs", "liveTopology", "topologyRevision", "terminalSnapshot.topologyRevision"]};
+      }
+      const result = evaluateBusDeadLetters(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds, this.active);
       return {...base, status: result.met === undefined ? "not-evaluated" : result.met ? "met" : "not-met", detail: result.detail, sources: result.sources};
     }
     if (c.kind === "pool-in-service") {
@@ -302,7 +311,7 @@ class Judge {
         const q = parsed.data;
         const outstanding = q.ready + q.inFlight + q.scheduled;
         return decided(q.acknowledged >= c.minAcknowledged && outstanding <= c.maxOutstanding && q.redeliveries <= c.maxRedeliveries,
-          `Through second ${q.throughSecond}, ${c.resourceId}: ${q.originals} originals, ${q.deliveries} deliveries, ${q.effects} completed object effects, ${q.acknowledged} acknowledged (minimum ${c.minAcknowledged}); ${outstanding} outstanding (${q.ready} ready + ${q.inFlight} in flight + ${q.scheduled} scheduled; maximum ${c.maxOutstanding}); ${q.redeliveries} redeliveries (maximum ${c.maxRedeliveries}), ${q.deadLettered} dead-lettered, ${q.discarded} discarded, ${q.expired} expired. Effects are separate from acknowledgements.`, sources);
+          `Through second ${q.throughSecond}, ${c.resourceId}: ${q.originals} originals, ${q.deliveries} deliveries, ${q.effects} completed object effects, ${q.acknowledged} acknowledged (minimum ${c.minAcknowledged}); ${outstanding} outstanding (${q.ready} ready + ${q.inFlight} in flight + ${q.scheduled} scheduled; maximum ${c.maxOutstanding}); ${q.redeliveries} redeliveries (maximum ${c.maxRedeliveries}), ${q.deadLettered} dead-lettered, ${q.discarded} discarded, ${q.expired} expired${q.redriven === undefined ? "" : `, ${q.redriven} redriven`}. Effects are separate from acknowledgements.`, sources);
       }
       case "backend-admission-budget": {
         const t = this.atEvaluation, whole = t?.traffic?.wholeRun;

@@ -232,8 +232,44 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^Complete at least 45 reads with no upstream failures$/, /^Complete at least 45 writes with no upstream failures$/],
     expected: {starter: "Not met", improved: "Met"},
   },
+  {
+    lessonId: "redrive-after-the-fix", title: /Redrive after the fix/,
+    prediction: "The queue should finish with many messages still dead-lettered because the redrive runs before the repair.",
+    hypothesis: "Changing only the redrive second to after the repair should let redriven messages succeed; raising the delivery limit alone cannot.",
+    improvement: {
+      stepName: "queue's Redrive dead-lettered messages at second is changed from 20 to 45",
+      nodeSelector: '[data-resource-id="queue"]', nodeText: /Message Queue/, fallbackText: "queue",
+      role: "spinbutton", name: /^Redrive dead-lettered messages at second$/, resourceId: "queue", setting: "asyncQueue.redriveAtSecond", from: 20, to: 45,
+    },
+    reportRequirements: [/^Acknowledge 700; at most 10 outstanding by second 90$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
+  {
+    lessonId: "keep-failed-events", title: /Keep failed events/,
+    prediction: "Most failed events should be discarded because the bus's dead-letter list is tiny.",
+    hypothesis: "Changing only the dead-letter list size should keep the failed events; more delivery attempts cannot.",
+    improvement: {
+      stepName: "bus's Dead letters per subscription is changed from 5 to 100",
+      nodeSelector: '[data-resource-id="bus"]', nodeText: /Event Bus/, fallbackText: "bus",
+      role: "spinbutton", name: /^Dead letters per subscription$/, resourceId: "bus", setting: "eventBus.deadLetterCapacity", from: 5, to: 100,
+    },
+    reportRequirements: [/^Keep at least 50 failed events and discard none by second 30$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
+// Edge admission: JOURNEY_LAB=shed-load-at-the-edge JOURNEY_SHOTS=/tmp/shed-load node ../InfraForge/scripts/qa/learning-journey.mjs
+JOURNEY_LABS.push({
+  lessonId: "shed-load-at-the-edge", title: /Shed load at the edge/,
+  prediction: "A busy app that finishes some callers is still critical: most fail and the final-second tail is long.",
+  hypothesis: "Diagnosis: the balancer admits nearly all demand, so the excess waits in the saturated app and the final-second p95 is long. Lowering only Active requests should refuse the excess at the balancer and shorten the tail while completions stay about the same.",
+  improvement: {
+    stepName: "lb's Active requests is changed from 1024 to 16",
+    nodeSelector: '[data-resource-id="lb"]', nodeText: /Load Balancer/, fallbackText: "lb",
+    role: "spinbutton", name: /^Active requests$/, resourceId: "lb", setting: "lbAdmission.maxActive", from: 1024, to: 16,
+  },
+  expected: {starter: "Not met", improved: "Met"},
+});
 // Held capacity: run the full retained learning loop against the local QA stack.
 // JOURNEY_LAB=hold-slots-on-a-slow-call JOURNEY_SHOTS=/tmp/hold-slots node ../InfraForge/scripts/qa/learning-journey.mjs
 JOURNEY_LABS.push({

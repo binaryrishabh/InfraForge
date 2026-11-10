@@ -17,10 +17,10 @@ const fields: Record<string, string[]> = {
   monitor: ["targets", "backend", "operation", "interval", "exportInterval", "freshFor", "sampleBytes", "bufferBytes", "bufferSamples", "batchSamples", "attempts"],
   "telemetry-backend": ["samples"],
   "object-store": ["profile", "capacity", "initial"],
-  "delivery-queue": ["profile", "capacityMessages", "capacityBytes", "lease", "retention", "maxAttempts", "dlqMessages", "dlqBytes", "deduplicatePublishes", "consumers"],
+  "delivery-queue": ["profile", "capacityMessages", "capacityBytes", "lease", "retention", "maxAttempts", "dlqMessages", "dlqBytes", "deduplicatePublishes", "redriveAt", "consumers"],
 };
 fields["async-publisher"] = ["execution", "broker", "store", "namespace", "objectBytes", "messageBytes", "delay", "publishAttempts"];
-fields["async-worker"] = ["execution", "broker", "store", "database", "databaseOperation", "databaseKey", "namespace", "concurrency", "prefetch", "pollInterval", "cpu", "blockingWait", "ackDelay", "resultBytes", "idempotency", "poisonKeys"];
+fields["async-worker"] = ["execution", "broker", "store", "database", "databaseOperation", "databaseKey", "namespace", "concurrency", "prefetch", "pollInterval", "cpu", "blockingWait", "ackDelay", "resultBytes", "idempotency", "poisonKeys", "repairAt"];
 const commandKinds = new Set(["api-gateway", "event-bus", "dns-authority", "dns-resolver", "cdn", "registry", "artifact-client", "monitor", "telemetry-backend", "object-store", "delivery-queue"]);
 export function validateMaterializedSemantics(input: SystemsInput, edges: SemanticSpec["edges"], explicitListeners: ReadonlySet<string> = new Set()) {
   const resources = new Map(input.resources.map((r) => [r.id, r]));

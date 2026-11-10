@@ -6,7 +6,7 @@ export type { CommandConfig, ServiceDemand, MessageBody } from "../messaging/con
 export interface BrokerConfig extends CommandConfig {
   id: string; kind: "delivery-queue"; profile: "visibility-work-queue/1";
   capacityMessages: Quantity<"count">; capacityBytes: Quantity<"bytes">; lease: Quantity<"us">; retention: Quantity<"us">; maxAttempts: Quantity<"count">;
-  dlqMessages: Quantity<"count">; dlqBytes: Quantity<"bytes">; deduplicatePublishes: boolean;
+  dlqMessages: Quantity<"count">; dlqBytes: Quantity<"bytes">; deduplicatePublishes: boolean; redriveAt?: Quantity<"us">;
   consumers: Array<{ id: string; credit: Quantity<"count"> }>;
 }
 export interface ObjectRow { namespace: string; key: string; generation: number; bytes: number; content: string }
@@ -15,7 +15,7 @@ export interface PublisherConfig { id: string; kind: "async-publisher"; executio
 export interface WorkerConfig {
   id: string; kind: "async-worker"; execution: ComputeResource; broker: string; store: string; database?: string; databaseOperation: string; databaseKey: string; namespace: string;
   concurrency: Quantity<"count">; prefetch: Quantity<"count">; pollInterval: Quantity<"us">; cpu: Quantity<"cpu-us">; blockingWait: Quantity<"us">; ackDelay: Quantity<"us">; resultBytes: Quantity<"bytes">;
-  idempotency: "none" | "object-if-absent"; poisonKeys: string[];
+  idempotency: "none" | "object-if-absent"; poisonKeys: string[]; repairAt?: Quantity<"us">;
 }
 export type AsyncResource = import("../serverless/contracts").ServerlessConfig | import("../scheduled/contracts").SchedulerConfig | import("../gateway/contracts").GatewayConfig | BrokerConfig | ObjectConfig | PublisherConfig | WorkerConfig | import("../eventbus/contracts").EventBusConfig;
 export type AsyncIntervention = { id: string; target: string; at: Quantity<"us">; duration: Quantity<"us"> } & ({ kind: "consumer-state"; available: boolean } | { kind: "object-access"; reads: boolean; writes: boolean } | { kind: "object-capacity"; bytes: Quantity<"bytes"> });
