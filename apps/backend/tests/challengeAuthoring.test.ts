@@ -14,6 +14,7 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
+  "open-the-forwarding-gate@1": "2de1e51858aa980eb93333a201adbc4d3689dbec836e48620ed6f8f87d51c131",
   "keep-a-function-warm@1": "efda13d2be6bb0bdbbddcafa04651a1da0bd71a8e0d8cd1f72cf991b987a6d17",
   "isolate-route-credits@1": "ff684b4d4f574fef8ef9c1e4c08ca028c292ab089fb947dcd39331b479e70da4",
   "resolve-after-publication@1": "20590c51974fbf82a58914cc82fae9d3e34a29bc92b2293f15461ee70524c681",
