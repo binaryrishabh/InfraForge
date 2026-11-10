@@ -2,6 +2,7 @@
  * Keep old records. A changed challenge needs a new reviewed contentVersion. */
 export interface LearningChallengeReview { challengeId: string; version: number; hash: string }
 export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeReview>> = {
+  "isolate-route-credits@1": {challengeId: "isolate-route-credits", version: 1, hash: "ff684b4d4f574fef8ef9c1e4c08ca028c292ab089fb947dcd39331b479e70da4"},
   "resolve-after-publication@1": {challengeId: "resolve-after-publication", version: 1, hash: "20590c51974fbf82a58914cc82fae9d3e34a29bc92b2293f15461ee70524c681"},
   "restore-safe-redundancy@1": {challengeId: "restore-safe-redundancy", version: 1, hash: "631057be87e06eeea7a3a98f9d8afac0463dd5b8f9eb885c7a392e5b20290f19"},
   "move-monitoring-samples@1": {challengeId: "move-monitoring-samples", version: 1, hash: "51393acc5853e12455a28fef35ee2de6195836e77d7311e2d3765df614f3f82a"},

@@ -208,6 +208,18 @@ export const JOURNEY_LABS = [
     },
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "isolate-route-credits", title: /Isolate route credits/,
+    prediction: "Overall health stays Critical because read callers are deliberately throttled despite low CPU.",
+    hypothesis: "Separate route buckets stop reads spending write credits, increasing write completions while increasing the aggregate quota.",
+    improvement: {
+      stepName: "gateway quota scope changes from shared to per-route",
+      nodeSelector: '[data-resource-id="gateway"]', nodeText: /API Gateway/, fallbackText: "gateway",
+      role: "combobox", name: /^Quota scope$/, resourceId: "gateway", setting: "gatewayQuota.scope", from: "shared", to: "per-route",
+    },
+    reportRequirements: [/^Complete at least 45 reads with no upstream failures$/, /^Complete at least 45 writes with no upstream failures$/],
+    expected: {starter: "Not met", improved: "Met"},
+  },
 ];
 
 // Representative conceptual content, plus a reading without a check.

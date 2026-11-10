@@ -1,3 +1,4 @@
+import { isolateRouteCreditsV1 } from "../challenges/definitions/isolate-route-credits/v1";
 import { resolveAfterPublicationV1 } from "../challenges/definitions/resolve-after-publication/v1";
 import { restoreSafeRedundancyV1 } from "../challenges/definitions/restore-safe-redundancy/v1";
 import { moveMonitoringSamplesV1 } from "../challenges/definitions/move-monitoring-samples/v1";
@@ -88,6 +89,7 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "isolate-route-credits": {...isolateRouteCreditsV1.starter!, resources: isolateRouteCreditsV1.starter!.resources.map(r => r.id === "gateway" ? {...r, gatewayQuota: {...r.gatewayQuota!, scope: "per-route"}} : r)},
   "resolve-after-publication": {...resolveAfterPublicationV1.starter!, resources: resolveAfterPublicationV1.starter!.resources.map(r => r.id === "dns" ? {...r, dnsCachePolicy: {version: 1, maxTtlSeconds: 1}} : r)},
   "restore-safe-redundancy": {...restoreSafeRedundancyV1.starter!, resources: restoreSafeRedundancyV1.starter!.resources.map(r => r.id === "db" ? {...r, databaseReplication: {...r.databaseReplication!, rejoin: "snapshot-replay/1"}} : r)},
   "move-monitoring-samples": {...moveMonitoringSamplesV1.starter!, resources: moveMonitoringSamplesV1.starter!.resources.map(r => r.id === "monitor" ? {...r, monitoringPolicy: {...r.monitoringPolicy!, batchSamples: 16}} : r)},

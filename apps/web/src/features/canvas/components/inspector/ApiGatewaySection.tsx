@@ -3,6 +3,7 @@ import { Field, Input } from "@/ui/Field";
 import { updateResource } from "../../actions";
 import { useCanvasStore } from "../../store/canvasStore";
 import { InspectorSection } from "./InspectorSection";
+import { GatewayQuotaSection } from "./GatewayQuotaSection";
 const fields = [["maxRequestBytes", "Maximum request bytes", 0, 1048576], ["maxInFlight", "Outstanding requests", 1, 10000], ["upstreamTimeoutMs", "Request timeout (ms)", 1, 60000]] as const;
 export function ApiGatewaySection({ resource, disabled }: { resource: Resource; disabled: boolean }) {
   const connections = useCanvasStore(s => s.connectionLines).filter(e => e.sourceId === resource.id);
@@ -12,8 +13,7 @@ export function ApiGatewaySection({ resource, disabled }: { resource: Resource; 
   const add = () => { let n = 1; while (routes.some(r => r.id === `route-${n}`)) n++; update({ routes: [...routes, { id: `route-${n}`, edge: connections[0]!.id, path: `/route-${n}`, method: "ANY" }] }); };
   return <InspectorSection title="Gateway routes">
     {fields.map(([key, label, min, max]) => <Field key={key} label={label}>{({ id }) => <Input id={id} type="number" step={1} min={min} max={max} disabled={disabled} placeholder={String(defaults[key])} value={settings?.[key] ?? ""} onChange={e => update({ [key]: e.target.value === "" ? undefined : Number(e.target.value) })} />}</Field>)}
-    <label>Quota scope <select aria-label="Quota scope" disabled={disabled} value={resource.gatewayQuota?.scope ?? "legacy"} onChange={e => updateResource(resource.id, {gatewayQuota: e.target.value === "legacy" ? undefined : {version: 1, scope: e.target.value as "shared" | "per-route"}})}><option value="legacy">Independent route budgets</option><option value="shared">Shared across routes</option><option value="per-route">Separate for each route</option></select></label>
-    {resource.gatewayQuota && <p>Quota scope requires two or more explicit routes with equal burst and refill budgets. Each scope uses those saved budgets; shared scope owns one bucket.</p>}
+    <GatewayQuotaSection resource={resource} disabled={disabled}/>
     <fieldset disabled={disabled}>
       {routes.map((r, i) => <div key={r.id} className="mt-3">
         <Field label={`Path ${r.id}`}>{({ id }) => <Input id={id} maxLength={256} value={r.path} onChange={e => route(i, { path: e.target.value })} />}</Field>

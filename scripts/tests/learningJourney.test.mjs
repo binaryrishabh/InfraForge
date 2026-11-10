@@ -13,6 +13,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "object-bytes-versus-app-cpu",
     "restore-safe-redundancy",
     "resolve-after-publication",
+    "isolate-route-credits",
   ]);
   expect(new Set(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).size).toBe(JOURNEY_LABS.length);
   for (const lab of JOURNEY_LABS) {
@@ -43,6 +44,17 @@ test("omitting JOURNEY_LAB preserves the original first lab's choices", () => {
   expect(lab.improvement.fallbackText).toBe("app");
   expect(lab.improvement.name.source).toBe("c5\\.large");
   expect(lab.improvement.stepName).toBe("the app's instance size is changed to c5.large in the designer");
+});
+
+test("quota journey selects only the saved scope and refuses missing or unretained controls",async()=>{
+  const lab=journeyLab("isolate-route-credits"),edit=lab.improvement,fake=fakePage();
+  expect([edit.resourceId,edit.setting,edit.from,edit.to]).toEqual(["gateway","gatewayQuota.scope","shared","per-route"]);
+  expect(edit.name.test("Quota scope")).toBe(true);expect(edit.name.test("Other quota scope")).toBe(false);
+  expect(await applyJourneyImprovement(fake.page,edit)).toEqual([{resourceId:"gateway",setting:"gatewayQuota.scope",value:"per-route"}]);
+  expect(fake.calls).toEqual(['[data-resource-id="gateway"]',["combobox","^Quota scope$"],["selected","per-route"]]);
+  await expect(applyJourneyImprovement(fakePage({controlMissing:true}).page,edit)).rejects.toThrow("requested control is missing");
+  await expect(applyJourneyImprovement(fakePage({storedValue:"shared"}).page,edit)).rejects.toThrow("did not retain");
+  expect(lab.reportRequirements[1].test("Complete at least 45 writes with no upstream failures")).toBe(true);
 });
 
 test("database resizing and balancing target the intended resource and setting", () => {

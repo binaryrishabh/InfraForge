@@ -1,3 +1,4 @@
+import { isolateRouteCreditsV1 } from "./isolate-route-credits/v1";
 import { resolveAfterPublicationV1 } from "./resolve-after-publication/v1";
 import { restoreSafeRedundancyV1 } from "./restore-safe-redundancy/v1";
 import { moveMonitoringSamplesV1 } from "./move-monitoring-samples/v1";
@@ -82,6 +83,7 @@ import { limitOrCapacityV1 } from "./limit-or-capacity/v1";
 attempts are judged by exactly the version that created them. Order sets the
 challenge list. See ../README.md for the authoring rules. */
 export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
+  isolateRouteCreditsV1,
   resolveAfterPublicationV1,
   restoreSafeRedundancyV1,
   moveMonitoringSamplesV1,
