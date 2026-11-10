@@ -13,7 +13,7 @@ test("save/live/captured replay/comparison preserve the single byte-admission se
   expect(artifactCachePolicyError("Database", undefined)).toBeUndefined();
   const inputs = [256, 4096, Number.MAX_SAFE_INTEGER].map(capacity => {
     const layout = artifactLayout(capacity);
-    for (const schema of [LayoutSchema, LiveTopologySchema]) expect(schema.parse(layout).resources).toEqual(layout.resources);
+    for (const schema of [LayoutSchema, LiveTopologySchema]) expect(schema.parse(layout).resources).toEqual(layout.resources as never);
     expect(validateDeploymentReadiness(layout.resources, layout.connectionLines).errors).toEqual([]);
     const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(layout, artifactWorkload, "artifact-capture"))));
     expect(input.resources).toEqual(layout.resources); expect(input.adapterProfiles).toContain("artifact-cache/1");

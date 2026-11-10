@@ -18,8 +18,8 @@ test("artifact admission: one capacity edit creates usable later capacity; a Max
   const inputs = designs.map(s => captureRunInputs(s, d.workload, challengeSeed(d)));
   for (const s of designs) expect(preflight(d, s).errors).toEqual([]);
   for (const i of [1, 2]) expect(reviewDesignChanges(inputs[0]!, inputs[i]!)).toMatchObject({classification: "one-change", count: 1});
-  expect(reviewDesignChanges(inputs[0]!, inputs[1]!).differences.reconfigured[0]!.fields[0]!.field).toBe("artifactCachePolicy");
-  expect(reviewDesignChanges(inputs[0]!, inputs[2]!).differences.reconfigured[0]!.fields[0]!.field).toBe("autoscaling.maxReplicas");
+  expect(reviewDesignChanges(inputs[0]!, inputs[1]!).differences!.reconfigured[0]!.fields[0]!.field).toBe("artifactCachePolicy");
+  expect(reviewDesignChanges(inputs[0]!, inputs[2]!).differences!.reconfigured[0]!.fields[0]!.field).toBe("autoscaling.maxReplicas");
   const restored = structuredClone(designs[1]!); restored.resources.find(r => r.id === "app")!.artifactCachePolicy!.capacityBytes = 256;
   expect(restored).toEqual(designs[0]!);
   const restoredNear = structuredClone(designs[2]!); restoredNear.resources.find(r => r.id === "app")!.autoscaling!.maxReplicas = 2;

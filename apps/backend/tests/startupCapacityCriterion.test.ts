@@ -11,7 +11,7 @@ test("startup criterion refuses absent, omitted, stale, malformed and contradict
   const startup = (r: typeof good) => raw(r).metrics.app!.startup!, controller = (r: typeof good) => startup(r).controllers![0]!, cold = (r: typeof good) => controller(r).replicas![1]!;
   const changes: Array<(r: typeof good) => void> = [
     r => {r.runInputs = null;}, r => {r.terminalSnapshot = null;}, r => {r.runtimeActive = true;}, r => {r.topologyRevision++;},
-    r => {raw(r).simulatedSeconds--;}, r => {raw(r).metricsTopologyRevision = -1;},
+    r => {raw(r).simulatedSeconds--;}, r => {(raw(r) as {metricsTopologyRevision?: number}).metricsTopologyRevision = -1;},
     r => {delete raw(r).metrics.app!.startup;}, r => {startup(r).sampledAtUs = null;}, r => {startup(r).sampledAtUs!--;},
     r => {startup(r).controllers = null;}, r => {startup(r).omittedControllers = 1;}, r => {startup(r).omittedControllers = null;},
     r => {controller(r).id = "other";}, r => {controller(r).replicas!.pop();}, r => {controller(r).omittedReplicas = 1;},
