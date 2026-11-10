@@ -49,7 +49,7 @@ test("active forwarding admits spare backend capacity; a bigger waiting queue le
     expect(callers[i]!.completed + callers[i]!.failed + callers[i]!.inFlight).toBe(1800);
     const row = rows[i]!, saved = {...row, runInputs: JSON.parse(JSON.stringify(row.runInputs)), terminalSnapshot: JSON.parse(JSON.stringify(row.terminalSnapshot))};
     expect(buildRunReport(saved).terminal).toEqual(report.terminal); expect(buildRunReport(saved).challenge).toEqual(report.challenge);
-    expect(improvementSource(row, d.id).input).toEqual(inputs[i]!);
+    expect(inputs[i]!).toEqual(improvementSource(row, d.id).input);
   }
   const latency = reports[0]!.terminal!.traffic!.latency!;
   expect(latency.typical!.categories.loadBalancerPending!.meanMs!).toBeGreaterThan(90);
