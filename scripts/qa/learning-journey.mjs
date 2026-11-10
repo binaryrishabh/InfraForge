@@ -256,6 +256,18 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^Keep at least 50 failed events and discard none by second 30$/],
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "share-one-origin-fetch", title: /Share one origin fetch/,
+    prediction: "Callers complete either way, but the origin gets extra requests every time the object expires.",
+    hypothesis: "Turning on coalescing alone should cut origin requests; a longer TTL would also but breaks the freshness requirement.",
+    improvement: {
+      stepName: "cdn's Coalesce concurrent misses is turned on",
+      nodeSelector: '[data-resource-id="cdn"]', nodeText: /CDN/, fallbackText: "cdn",
+      role: "switch", name: /^Coalesce concurrent misses$/, resourceId: "cdn", setting: "cdnCachePolicy.coalesce", from: false, to: true,
+    },
+    reportRequirements: [/^At most 90 origin requests by second 60 with a TTL of one second or less$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Edge admission: JOURNEY_LAB=shed-load-at-the-edge JOURNEY_SHOTS=/tmp/shed-load node ../InfraForge/scripts/qa/learning-journey.mjs
@@ -642,7 +654,7 @@ export function isLocalJourneyRequest(value) {
 }
 
 export async function changeJourneyControl(page, improvement) {
-  if (!["radio", "spinbutton", "combobox"].includes(improvement.role)) throw new Error(`Unsupported journey control role: ${improvement.role}`);
+  if (!["radio", "spinbutton", "combobox", "switch"].includes(improvement.role)) throw new Error(`Unsupported journey control role: ${improvement.role}`);
   await page.locator(improvement.nodeSelector).filter({ hasText: improvement.nodeText }).first().click({ timeout: 20_000 }).catch(async () => {
     await page.getByText(improvement.fallbackText, { exact: true }).first().click();
   });
@@ -651,6 +663,7 @@ export async function changeJourneyControl(page, improvement) {
   await size.waitFor({ timeout: 20_000 });
   if (improvement.role === "spinbutton") await size.fill(String(improvement.to));
   else if (improvement.role === "combobox") await size.selectOption(String(improvement.to));
+  else if (improvement.role === "switch") { if (!(await size.isChecked())) await size.click(); }
   else await size.check();
   return size;
 }
@@ -659,9 +672,10 @@ export async function applyJourneyImprovement(page, improvement) {
   const chosen = [];
   for (const edit of improvement.controls ?? [improvement]) {
     const control = await changeJourneyControl(page, edit);
-    const value = edit.role === "radio" ? await control.isChecked() : await control.inputValue();
+    const flag = edit.role === "radio" || edit.role === "switch";
+    const value = flag ? await control.isChecked() : await control.inputValue();
     if (!improvement.controls && edit.role === "radio") return value;
-    if (value !== (edit.role === "radio" ? true : String(edit.to))) throw new Error(`Journey control did not retain ${edit.resourceId}.${edit.setting}`);
+    if (value !== (flag ? true : String(edit.to))) throw new Error(`Journey control did not retain ${edit.resourceId}.${edit.setting}`);
     chosen.push({ resourceId: edit.resourceId, setting: edit.setting, value });
   }
   return chosen;
