@@ -7,7 +7,7 @@ import { apiGatewayError } from "@infraforge/domain/resource";
 import { eventBusError } from "@infraforge/domain/resource";
 import { lbRateLimitError, LB_RATE_BURST_MAX, LB_RATE_MIN_RPS, LB_RATE_MAX_RPS } from "@infraforge/domain/resource";
 import * as z from "zod";
-import { dnsPublicationError, artifactCachePolicyError, ARTIFACT_CACHE_MAX_BYTES, autoscalingSignalError, AUTOSCALING_FRESH_MAX_SECONDS, dbPoolError, firewallStateError, firewallCapacityError, FIREWALL_IDLE_SECONDS_MAX, FIREWALL_FLOW_CAPACITY_MAX, objectStoragePolicyError, OBJECT_STORAGE_CAPACITY_MAX_MIB, dnsCachePolicyError, DNS_CACHE_MAX_TTL_SECONDS, monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT_MAX_ATTEMPTS, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmMemoryError, VM_MEMORY_MAX_MIB, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbSelectionError, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { gatewayQuotaError, dnsPublicationError, artifactCachePolicyError, ARTIFACT_CACHE_MAX_BYTES, autoscalingSignalError, AUTOSCALING_FRESH_MAX_SECONDS, dbPoolError, firewallStateError, firewallCapacityError, FIREWALL_IDLE_SECONDS_MAX, FIREWALL_FLOW_CAPACITY_MAX, objectStoragePolicyError, OBJECT_STORAGE_CAPACITY_MAX_MIB, dnsCachePolicyError, DNS_CACHE_MAX_TTL_SECONDS, monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT_MAX_ATTEMPTS, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmMemoryError, VM_MEMORY_MAX_MIB, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbSelectionError, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -49,6 +49,7 @@ const ResourceSchema = z.object({
     z.object({ version: z.literal(1), collectionIntervalSeconds: z.number().int().min(1).max(MONITORING_CADENCE_MAX_SECONDS).optional(), exportIntervalSeconds: z.number().int().min(1).max(MONITORING_CADENCE_MAX_SECONDS).optional() }).strict(),
     z.object({ version: z.literal(2), collectionIntervalSeconds: z.number().int().min(1).max(MONITORING_CADENCE_MAX_SECONDS).optional(), exportIntervalSeconds: z.number().int().min(1).max(MONITORING_CADENCE_MAX_SECONDS).optional(), bufferSamples: z.number().int().min(1).max(MONITORING_BUFFER_MAX_SAMPLES), batchSamples: z.number().int().min(1).max(MONITORING_BUFFER_MAX_SAMPLES), exportAttempts: z.number().int().min(1).max(MONITORING_EXPORT_MAX_ATTEMPTS) }).strict(),
   ]).optional(),
+  gatewayQuota: z.object({version: z.literal(1), scope: z.enum(["shared", "per-route"])}).strict().optional(),
   dnsPublication: z.object({version: z.literal(1), initialRecord: z.literal("absent")}).strict().optional(),
   dnsCachePolicy: z.object({ version: z.literal(1), maxTtlSeconds: z.number().int().min(1).max(DNS_CACHE_MAX_TTL_SECONDS) }).strict().optional(),
   cdnCachePolicy: z.union([
@@ -117,6 +118,8 @@ const ResourceSchema = z.object({
   if (objectMessage) ctx.addIssue({ code: "custom", path: ["objectStoragePolicy"], message: objectMessage });
   const monitoringMessage = monitoringPolicyError(resource.type, resource.monitoringPolicy);
   if (monitoringMessage) ctx.addIssue({ code: "custom", path: ["monitoringPolicy"], message: monitoringMessage });
+  const gatewayQuotaMessage = gatewayQuotaError(resource.type, resource.gatewayQuota, resource.apiGateway);
+  if (gatewayQuotaMessage) ctx.addIssue({code: "custom", path: ["gatewayQuota"], message: gatewayQuotaMessage});
   const publicationMessage = dnsPublicationError(resource.type, resource.dnsPublication);
   if (publicationMessage) ctx.addIssue({code: "custom", path: ["dnsPublication"], message: publicationMessage});
   const dnsMessage = dnsCachePolicyError(resource.type, resource.dnsCachePolicy);

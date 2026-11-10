@@ -1,5 +1,6 @@
 import { SERVERLESS_PROFILE, serverlessIntent, validateServerlessBindings } from "../serverless/product";
 import { SCHEDULER_PROFILE, schedulerIntent, validateSchedulerBindings } from "../scheduled/product";
+import { validateGatewayQuotaProfile, validateGatewayQuotaBindings } from "./gatewayQuota";
 import { API_GATEWAY_PROFILE, gatewayIntent, validateGatewayBindings } from "../gateway/product";
 import { EVENT_BUS_PROFILE, eventBusIntent, validateEventBusBindings } from "../eventbus/product";
 import { validateBusPublish } from "../eventbus/flow";
@@ -85,6 +86,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateMonitoringBufferProfile(design.resources, contract);
     validateCdnCoalescingProfile(design.resources, contract);
     validateDnsPublicationProfile(design.resources, contract);
+    validateGatewayQuotaProfile(design.resources, contract);
     if (dnsCacheChanges(design.resources) !== contract.version.includes(`/${DNS_CACHE_PROFILE}`)) error("DNS_CACHE_VERSION", "version", "Resolver cache requires its dns-cache/1 contract version and matching saved intent");
     if (cdnTtlChanges(design.resources) !== contract.version.includes(`/${CDN_TTL_PROFILE}`)) error("CDN_TTL_VERSION", "version", "CDN TTL requires its explicit cdn-ttl/1 contract version and matching saved intent");
     if (multiKey(design.resources) && !contract.version.includes(`/${KEYSPACE_PROFILE}`)) error("KEYSPACE_VERSION", "version", "Multi-key intent requires its explicit data-keyspace/1 contract version");
@@ -181,7 +183,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["databaseRecoveryPlan", "serverless", "scheduler", "apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dnsPublication", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "artifactCachePolicy", "firewallState", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbPoolMaxConnections", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["gatewayQuota", "databaseRecoveryPlan", "serverless", "scheduler", "apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dnsPublication", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "artifactCachePolicy", "firewallState", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbPoolMaxConnections", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -437,6 +439,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateSchedulerBindings(design.resources, design.connections, runtime);
     validateEventBusBindings(design.resources, design.connections, runtime);
     validateGatewayBindings(design.resources, design.connections, runtime);
+    validateGatewayQuotaBindings(design.resources, runtime);
     validateDatabaseReadRoutingBindings(design.resources, runtime);
     validateDatabaseReplicationBindings(design.resources, runtime);
     validateDbPoolBindings(design.resources, runtime);

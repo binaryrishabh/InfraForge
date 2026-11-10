@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GatewayQuotaSchema } from "./gatewayQuotaSchema";
 const count = z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);
 const id = z.string().min(1).max(256);
 const deliveryAccounting = z.object({ attempts: count, failedAttempts: count, exhausted: count }).strict();
@@ -14,7 +15,8 @@ export const EventBusMetricsSchema = z.object({ version: z.literal(1), accepted:
 });
 const outcomes = z.object({ matched: count, overloaded: count, completed: count, gatewayFailed: count, upstreamFailed: count, timedOut: count, cancelled: count, pending: count, settled: count, totalDurationUs: count, maxDurationUs: count }).strict();
 const route = z.object({ id, target: id, path: z.string().min(1).max(256), method: z.enum(["GET", "POST", "ANY"]), received: count, admitted: count, rejected: count, tokens: count, capacity: count.max(10000), outcomes: outcomes.optional() }).strict();
-export const GatewayMetricsSchema = z.object({ version: z.literal(1), received: count, admitted: count, completed: count, invalid: count, missingRoute: count, throttled: count, overloaded: count, gatewayFailed: count, upstreamFailed: count, timedOut: count, cancelled: count, pending: count, routes: z.array(route).min(1).max(16) }).strict().superRefine((g, ctx) => {
+export const GatewayMetricsSchema = z.object({ version: z.literal(1), quota: GatewayQuotaSchema.optional(), received: count, admitted: count, completed: count, invalid: count, missingRoute: count, throttled: count, overloaded: count, gatewayFailed: count, upstreamFailed: count, timedOut: count, cancelled: count, pending: count, routes: z.array(route).min(1).max(16) }).strict().superRefine((g, ctx) => {
+  if (g.quota && (g.routes.length < 2 || g.routes.some(r => r.capacity !== g.routes[0]!.capacity || (g.quota!.scope === "shared" && r.tokens !== g.routes[0]!.tokens)))) ctx.addIssue({code: "custom", message: "Quota scope requires equal budgets and shared credit readings"});
   if (new Set(g.routes.map(r => r.id)).size !== g.routes.length || g.received !== g.admitted + g.invalid + g.missingRoute + g.throttled + g.overloaded || g.admitted !== g.completed + g.pending + g.gatewayFailed + g.upstreamFailed + g.timedOut + g.cancelled || g.routes.reduce((n, r) => n + r.admitted, 0) !== g.admitted || g.routes.reduce((n, r) => n + r.rejected, 0) !== g.throttled || g.routes.some(r => r.received !== r.admitted + r.rejected || r.tokens > r.capacity)) ctx.addIssue({ code: "custom", message: "Inconsistent gateway ownership or budget counters" });
   for (const r of g.routes) {
     const o = r.outcomes;

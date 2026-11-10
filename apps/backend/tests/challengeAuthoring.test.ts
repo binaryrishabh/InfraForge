@@ -14,6 +14,7 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
+  "isolate-route-credits@1": "ff684b4d4f574fef8ef9c1e4c08ca028c292ab089fb947dcd39331b479e70da4",
   "resolve-after-publication@1": "20590c51974fbf82a58914cc82fae9d3e34a29bc92b2293f15461ee70524c681",
   "admit-a-replica-image@1": "ec9613f8a77d364e3a163a0cf230ed905d2e725a3c0db9bda1b5e635b9c8b96f",
   "restore-safe-redundancy@1": "631057be87e06eeea7a3a98f9d8afac0463dd5b8f9eb885c7a392e5b20290f19",

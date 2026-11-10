@@ -41,6 +41,7 @@ export * from "./EventBus.interface";
 export * from "./Scheduler.interface";
 export * from "./Serverless.interface";
 export * from "./ApiGateway.interface";
+export * from "./GatewayQuota.interface";
 export { databaseRecoveryPlanError, type DatabaseRecoveryPlan } from "./DatabaseRecoveryPlan.interface";
 
 export * from "./ArtifactCachePolicy.interface";

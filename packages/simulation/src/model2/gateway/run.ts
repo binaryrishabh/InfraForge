@@ -1,6 +1,6 @@
 import { requireKnown } from "../../reality/quantity";
 import { commandService } from "../async/commands";
-import { tokenBucketState, takeToken, projectTokens } from "../composition/token-bucket-core";
+import { gatewayQuotaBuckets } from "./quota";
 import type { Deliver } from "../compute/run";
 import type { EventKernel } from "../time";
 import type { Invocation, Receipt, RemoteCompletion } from "../workload/contracts";
@@ -10,7 +10,8 @@ import type { GatewayConfig, GatewayReply, GatewayRequest } from "./contracts";
 
 export function apiGateway(config: GatewayConfig, clock: EventKernel, send: Deliver) {
   const maxInFlight = requireKnown(config.maxInFlight, "count"), maxBytes = requireKnown(config.maxRequestBytes, "bytes"), timeout = requireKnown(config.upstreamTimeout, "us");
-  const routes = config.routes.map(route => ({ ...route, outcomes: { matched: 0, overloaded: 0, completed: 0, gatewayFailed: 0, upstreamFailed: 0, timedOut: 0, cancelled: 0, pending: 0, settled: 0, totalDurationUs: 0, maxDurationUs: 0 }, state: tokenBucketState(requireKnown(route.burst, "count"), requireKnown(route.burst, "count"), 1, requireKnown(route.refillEvery, "us"), clock.now) }));
+  const buckets = gatewayQuotaBuckets(config, clock);
+  const routes = config.routes.map((route, index) => ({ ...route, outcomes: { matched: 0, overloaded: 0, completed: 0, gatewayFailed: 0, upstreamFailed: 0, timedOut: 0, cancelled: 0, pending: 0, settled: 0, totalDurationUs: 0, maxDurationUs: 0 }, index }));
   const live = new Map<string, () => void>();
   const service = commandService(config.id, config, clock, () => ({ ok: true }));
   let received = 0, admitted = 0, completed = 0, invalid = 0, missingRoute = 0, throttled = 0, overloaded = 0, gatewayFailed = 0, upstreamFailed = 0, timedOut = 0, cancelled = 0, paused = false;
@@ -21,7 +22,7 @@ export function apiGateway(config: GatewayConfig, clock: EventKernel, send: Deli
     respond(work, done, { ok: false, status, reason, ...(route ? { route } : {}) });
     return { admitted: false, state: () => "finished", cancel: () => "already-finished" };
   };
-  const evidence = () => ({ id: config.id, received, admitted, completed, invalid, missingRoute, throttled, overloaded, gatewayFailed, upstreamFailed, timedOut, cancelled, pending: live.size, routes: routes.map(r => ({ id: r.id, target: r.target, path: r.path, method: r.method, ...projectTokens(r.state, clock.now) })), events: events.map(e => ({ ...e })), omitted, service: service.evidence(), authentication: "Unknown; no authentication model", physicalTiming: "Unknown; authored logical command demand only" });
+  const evidence = () => ({ ...(config.quota ? {quota: {...config.quota}} : {}), id: config.id, received, admitted, completed, invalid, missingRoute, throttled, overloaded, gatewayFailed, upstreamFailed, timedOut, cancelled, pending: live.size, routes: routes.map(r => ({ id: r.id, target: r.target, path: r.path, method: r.method, ...buckets.reading(r.index) })), events: events.map(e => ({ ...e })), omitted, service: service.evidence(), authentication: "Unknown; no authentication model", physicalTiming: "Unknown; authored logical command demand only" });
   return {
     accept(work: Invocation, done: RemoteCompletion): Receipt {
       received++;
@@ -32,8 +33,7 @@ export function apiGateway(config: GatewayConfig, clock: EventKernel, send: Deli
       if (!route) { missingRoute++; return refusal(work, done, 404, "missing-route"); }
       route.outcomes.matched++;
       if (paused || live.size >= maxInFlight || live.has(work.callId)) { overloaded++; route.outcomes.overloaded++; return refusal(work, done, 503, "gateway-capacity", route.id); }
-      const token = takeToken(route.state, clock.now); route.state = token.state;
-      if (!token.admitted) { throttled++; return refusal(work, done, 429, "route-throttled", route.id); }
+      if (!buckets.take(route.index)) { throttled++; return refusal(work, done, 429, "route-throttled", route.id); }
       admitted++; route.outcomes.pending++; const startedAt = clock.now;
       let terminal = false, receipt: Receipt | undefined, cancelDispatch: (() => boolean) | undefined;
       const finish = (reply: GatewayReply, cause?: Cause, cancel = false) => {
