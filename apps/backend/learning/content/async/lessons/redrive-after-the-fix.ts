@@ -15,6 +15,6 @@ export const redriveAfterTheFix: LearningLesson = {
   limitations: ["Results are educational model outputs. The repair second and redrive second are authored inputs, not measured recovery times, and the bad share is an assumed input.",
     "A redrive here returns every dead-lettered message once. Ordering, selective replay, duplicate effects of replay outside the modeled result write, alerting and real queue products are not modeled.",
     "Callers and the producer path are not judged. A reading missing from the report stays Unknown."],
-  followUp: "Cite the starter, the redrive that moved after the repair and the near miss that only raised the delivery limit. Explain why replay is only useful once the next delivery can succeed.",
+  followUp: "Cite the starter, the redrive that moved after the repair and the near miss that only raised the delivery limit. Explain why replay is only useful once the next delivery can succeed. Compare keep-failed-events, where the failed list itself is too small to hold the evidence.",
   check: null,
 };

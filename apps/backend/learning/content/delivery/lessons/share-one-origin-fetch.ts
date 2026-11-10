@@ -15,6 +15,6 @@ export const shareOneOriginFetch: LearningLesson = {
   limitations: ["Results are educational model outputs with an assumed large object and request rate, not provider benchmarks or CDN tuning advice.",
     "Callers are served in every variant, so no user-impact claim is made. Geographic edges, purge propagation and stale serving are not modeled.",
     "A reading missing from the report stays Unknown."],
-  followUp: "Cite the starter, the coalescing change and the near miss that only enlarged the origin store. Explain why more origin capacity does not remove duplicate fetches.",
+  followUp: "Cite the starter, the coalescing change and the near miss that only enlarged the origin store. Explain why more origin capacity does not remove duplicate fetches. Compare share-a-cache-fill, the same single shared fetch at a cache.",
   check: null,
 };

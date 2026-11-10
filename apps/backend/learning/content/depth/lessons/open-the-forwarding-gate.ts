@@ -14,6 +14,6 @@ export const openTheForwardingGate: LearningLesson = {
     "LB CPU and memory are Unknown. Queue counters are cumulative waits rather than current queue depth; backend counters count attempts. They overlap and do not form a conserved caller population.",
     "The fixed-horizon caller counts include separate in-flight work. A final health or latency sample does not prove a whole-run latency target, continuous health, production availability or a steady-state maximum.",
     "Opening admission is useful here because downstream capacity is spare. It is not a universal tuning rule: an overloaded backend may need bounded admission, service capacity or less offered work instead. No retries, autoscaling, outlier ejection or connection draining are exercised."],
-  followUp: "Use the saved caller and LB counters to explain why Active requests helped while Queued requests did not. Name the downstream evidence you would inspect before raising admission under a heavier workload.",
+  followUp: "Use the saved caller and LB counters to explain why Active requests helped while Queued requests did not. Name the downstream evidence you would inspect before raising admission under a heavier workload. Then compare shed-load-at-the-edge, where the same Active requests setting is too high and the cost is refused callers instead of serialized capacity.",
   check: null,
 };

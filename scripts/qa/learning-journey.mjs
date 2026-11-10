@@ -295,6 +295,18 @@ export const JOURNEY_LABS = [
   },
 ];
 
+// Replica freshness: JOURNEY_LAB=bound-replica-staleness JOURNEY_SHOTS=/tmp/bound-staleness node ../InfraForge/scripts/qa/learning-journey.mjs
+JOURNEY_LABS.push({
+  lessonId: "bound-replica-staleness", title: /Bound replica staleness/,
+  prediction: "The database can look healthy and fast while many reads are stale because the replica applies commits 1000 ms late.",
+  hypothesis: "Diagnosis: reads use the replica, which applies commits 1000 ms after the writer, so many reads miss recent commits. Shortening only the modeled replication delay should cut stale reads while the replica keeps carrying the reads.",
+  improvement: {
+    stepName: "db's Modeled replication delay is changed from 1000 to 10",
+    nodeSelector: '[data-resource-id="db"]', nodeText: /Database/, fallbackText: "db",
+    role: "spinbutton", name: /^Modeled replication delay/, resourceId: "db", setting: "databaseReplication.replicationDelayMs", from: 1000, to: 10,
+  },
+  expected: {starter: "Not met", improved: "Met"},
+});
 // Cache working set: JOURNEY_LAB=fit-the-working-set JOURNEY_SHOTS=/tmp/fit-working-set node ../InfraForge/scripts/qa/learning-journey.mjs
 JOURNEY_LABS.push({
   lessonId: "fit-the-working-set", title: /Fit the working set/,

@@ -18,5 +18,5 @@ export const fitTheWorkingSet: LearningLesson = {
     "Cache counters count cache commands, not a caller hit ratio. The workload has no writes, invalidation or freshness requirement, and uniform key choice is the only pattern used here.",
     "A final-second p95 and fixed-second sample prove no whole-run latency target, consistency or availability guarantee."],
   check: null,
-  followUp: "Cite the starter, improved and TTL near miss reports. Explain how evictions and expirations differ, and when a larger cache stops helping.",
+  followUp: "Cite the starter, improved and TTL near miss reports. Explain how evictions and expirations differ, and when a larger cache stops helping. Then compare reuse-before-expiry (the keys fit and expiry is the limit) and catalogue-link-flash (a few hot keys).",
 };
