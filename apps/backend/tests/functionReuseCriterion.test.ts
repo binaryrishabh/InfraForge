@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import type { SimulationSnapshot } from "@infraforge/contracts/telemetry";
+import type { captureSnapshot } from "../simulator/snapshot";
 import { evaluateFunctionReuse } from "../challenges/functionReuseCriterion";
 import { validateChallengeVersions } from "../challenges/validate";
 import { specHash } from "../challenges/registry";
@@ -7,7 +7,7 @@ import { buildRunReport } from "../reports/report";
 import { functionReuseLabFixture } from "./functionReuseLab.fixture";
 
 test("function reuse refuses missing, stale, contradictory and foreign evidence", () => {
-  const {d, rows} = functionReuseLabFixture(), good = rows[1]!, raw = (r: typeof good) => r.terminalSnapshot as SimulationSnapshot;
+  const {d, rows} = functionReuseLabFixture(), good = rows[1]!, raw = (r: typeof good) => r.terminalSnapshot as ReturnType<typeof captureSnapshot>;
   const f = (r: typeof good) => raw(r).metrics.fn!.serverless!;
   const changes: Array<(r: typeof good) => void> = [
     r => {r.runInputs = null;}, r => {r.terminalSnapshot = null;}, r => {r.runtimeActive = true;}, r => {r.topologyRevision++;},
