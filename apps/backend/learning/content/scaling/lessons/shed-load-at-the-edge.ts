@@ -12,7 +12,7 @@ export const shedLoadAtTheEdge: LearningLesson = {
     "Run again. The app still finishes about the same number of requests, but the excess is refused at the balancer and the admitted requests finish quickly, so the final-second p95 drops. More callers are refused; that is the cost, and the requirement allows it explicitly.",
     "As a near miss, restore the starter and choose a larger app. More capacity completes more callers, yet at this demand the queue still forms and the tail stays above the requirement. Compare both pairs in the saved reports."],
   experiment: {challengeId: "shed-load-at-the-edge", prediction: "What overall health will the starter record at second 10? Only the health choice is scored; explain whether serving some callers slowly makes a design healthy.",
-    evidenceToInspect: ["CPU; Whole run: Completed; Whole run: Failed; Whole run: In-flight", "Completed-request p95 in the final second"]},
+    evidenceToInspect: ["CPU; Whole run: Completed; Whole run: Failed; Whole run: In-flight", "p95"]},
   limitations: [
     "Results are educational model outputs, not cloud benchmarks. Admission limits are authored inputs, not provider defaults.",
     "Refusing excess demand chooses who waits; it adds no capacity and no availability guarantee. Clients that retry or back off are not modeled here.",
