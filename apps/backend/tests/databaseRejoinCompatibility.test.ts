@@ -11,7 +11,9 @@ import { buildContractFromRunInputs, compileProduct } from "@infraforge/simulati
 const hash = (v: unknown) => createHash("sha256").update(JSON.stringify(v).replaceAll("\r\n", "\n")).digest("hex");
 // Captured on untouched 8cdc20e5 before NX1 engine edits. Never regenerate to fix a failure.
 test("all published identities and unmarked scenario plans retain their original bytes", () => {
-  expect(CHALLENGE_VERSIONS.map(d => [d.id, d.version, specHash(d)])).toEqual(pins.identities);
+  // Later labs add identities; every identity published at the base keeps its exact hash.
+  const published = new Set(pins.identities.map((i: unknown[]) => `${i[0]}@${i[1]}`));
+  expect(CHALLENGE_VERSIONS.filter(d => published.has(`${d.id}@${d.version}`)).map(d => [d.id, d.version, specHash(d)])).toEqual(pins.identities);
   expect(CHALLENGE_VERSIONS.filter(d => d.scenario).map(d => {
     const input = captureRunInputs(d.starter!, d.workload, challengeSeed(d));
     return [d.id, hash(recordedScenario(d, input))];

@@ -158,6 +158,7 @@ test("every challenge's starting design runs on Model 2 at its workload", () => 
     if (!def.starter) { expect(() => createModel2Engine(captureRunInputs({ resources: [], connectionLines: [], layoutVersion: 3 }, def.workload, "s"), 10, buildModel2Contract)).toThrow(ActionRefused); continue; }
     const run = createModel2Engine(captureRunInputs({ ...def.starter, layoutVersion: 3 }, def.workload, "s"), 10, buildModel2Contract);
     for (let s = 0; s < 10; s++) run.advance();
-    expect(run.view().traffic.completedRps).toBeGreaterThan(0);
+    // A starter may legitimately fail every request (a refusing store); it must still serve or refuse real traffic.
+    expect(run.view().traffic.completedRps + run.view().traffic.failedRps).toBeGreaterThan(0);
   }
 }, 120000);

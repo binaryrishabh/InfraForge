@@ -61,7 +61,8 @@ test("reasoning lessons are reachable, bounded, checked and refuse fabricated re
   }
   // Appended modules preserve the original lab ordering and published lessons.
   expect(LEARNING_REGISTRY.findTrack("architecture")!.modules.map(m => m.id)).toEqual(["cross-resource-choices", "capacity-budgets", "design-reasoning"]);
-  expect(LEARNING_REGISTRY.findTrack("diagnosis")!.modules.map(m => m.id)).toEqual(["admission-diagnosis", "memory-admission", "async-and-dependencies", "report-first"]);
+  // Later modules may be added; the original ones keep their order.
+  expect(LEARNING_REGISTRY.findTrack("diagnosis")!.modules.map(m => m.id).filter(id => id !== "application-pools")).toEqual(["admission-diagnosis", "memory-admission", "async-and-dependencies", "report-first"]);
 });
 
 async function renderReports(reports: RunReport[]) {
