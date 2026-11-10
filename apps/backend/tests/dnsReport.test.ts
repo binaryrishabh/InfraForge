@@ -72,13 +72,13 @@ test("capture bounds resolvers, cached names and addresses with explicit omitted
   expect(source.systems.resolvers).toHaveLength(70);
 });
 
-test("claim gate accepts audited DNS labels, refuses invented transition time and no DNS intervention is exposed", () => {
+test("claim gate accepts audited DNS labels, refuses invented transition time and unsupported DNS updates refuse", () => {
   const lesson = structuredClone(findLearningLesson("diagnose-query-admission")!);
   lesson.experiment!.evidenceToInspect = ["DNS: Cache hits; DNS: Cached answer generation; DNS: Cached answer expiry"];
   expect(checkLessonClaims(lesson, definition("diagnose-query-admission"))).toEqual([]);
   lesson.experiment!.evidenceToInspect.push("DNS: Record change recovery time");
   expect(checkLessonClaims(lesson, definition("diagnose-query-admission")).join(" ")).toContain("report does not render measurement DNS: Record change recovery time");
-  expect(INTERVENTIONS.some(d => /dns|record/i.test(d.id))).toBe(false);
+  expect(INTERVENTIONS.filter(d => /dns|record/i.test(d.id)).map(d => d.id)).toEqual(["dns-publish-entry"]);
   const request = {interventionId: "dns-record", revision: 1, target: {resourceId: "dns"}, parameters: {}};
   expect(interventionError(request)).toContain("INTERVENTION_REVISION");
   expect(scenarioError({version: 1, visibility: "revealed", steps: [{id: "update", atSecond: 1, request}]}, 4)).toContain("INTERVENTION_REVISION");

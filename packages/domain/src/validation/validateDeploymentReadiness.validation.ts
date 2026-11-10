@@ -14,6 +14,7 @@ import { firewallStateError } from "../resource/FirewallState.interface";
 import { firewallCapacityError } from "../resource/FirewallCapacity.interface";
 import { objectStoragePolicyError } from "../resource/ObjectStoragePolicy.interface";
 import { monitoringPolicyError } from "../resource/MonitoringPolicy.interface";
+import { dnsPublicationError } from "../resource/DnsPublication.interface";
 import { dnsCachePolicyError } from "../resource/DnsCachePolicy.interface";
 import { cdnCachePolicyError } from "../resource/CdnCachePolicy.interface";
 import { vmMemoryError } from "../resource/VmMemory.interface";
@@ -68,6 +69,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
         if (objectMessage) errors.push(`${resource.id}: ${objectMessage}`);
         const monitoringMessage = monitoringPolicyError(resource.type, resource.monitoringPolicy);
         if (monitoringMessage) errors.push(`${resource.id}: ${monitoringMessage}`);
+        const publicationMessage = dnsPublicationError(resource.type, resource.dnsPublication);
+        if (publicationMessage) errors.push(publicationMessage);
         const dnsMessage = dnsCachePolicyError(resource.type, resource.dnsCachePolicy);
         if (dnsMessage) errors.push(`${resource.id}: ${dnsMessage}`);
         const cdnMessage = cdnCachePolicyError(resource.type, resource.cdnCachePolicy);
@@ -123,7 +126,7 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
     }
     for (const resource of resources) {
         if (!connectedIds.has(resource.id) && !(resources.length === 1 && resource.type === RESOURCE_TYPES.VirtualMachine)) {
-            errors.push(`${resource.id} is isolated — connect it or remove it`);
+            errors.push(`${resource.id} is isolated â€” connect it or remove it`);
         }
     }
     const topology = computeTopology(resources, connections);

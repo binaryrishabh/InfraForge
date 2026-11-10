@@ -1,3 +1,4 @@
+import { DnsPublicationReadings } from "./DnsPublicationReadings";
 import type { DnsEvidence } from "@infraforge/contracts/reports";
 
 const value = (n: number | boolean | string | null | undefined) => n == null ? "Unknown" : String(n);
@@ -9,6 +10,7 @@ export function DnsReadings({evidence: e}: {evidence?: DnsEvidence}) {
   return <section aria-label="DNS resolver measurements" className="mt-4 text-sm">
     <h3 className="font-semibold">DNS resolver measurements</h3>
     <p className="text-xs text-ink-3">Counters are cumulative from run start through the recorded boundary (counts). Cache rows are current at that boundary. Times are absolute simulated microseconds (us) from run start, not remaining lifetimes.</p>
+    <DnsPublicationReadings publication={e?.publication} />
     <dl><dt>DNS: Through time</dt><dd>{value(e?.throughUs)}</dd>
       <dt>Complete DNS timestamp</dt><dd>{value(e?.timestampComplete)}</dd>
       <dt>Omitted resolvers (count)</dt><dd>{value(e?.resolversOmitted)}</dd></dl>

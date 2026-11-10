@@ -35,6 +35,7 @@ import { validateObjectCapacityProfile, validateObjectCapacityBindings } from ".
 import { validateMonitoringBufferProfile, validateMonitoringBufferBindings } from "./monitoringBuffer";
 import { validateMonitoringCadenceProfile, validateMonitoringCadenceBindings } from "./monitoringCadence";
 import { validateCdnCoalescingProfile, validateCdnCoalescingBindings } from "./cdnCoalescing";
+import { validateDnsPublicationProfile, validateDnsPublicationBindings } from "./dnsPublication";
 import { DNS_CACHE_PROFILE, dnsCacheChanges, validateDnsCacheBindings } from "./dnsCache";
 import { CDN_TTL_PROFILE, cdnTtlChanges, validateCdnTtlBindings } from "./cdnTtl";
 import { CACHE_POLICY_PROFILE, cachePolicyChanges, validateCachePolicyBindings } from "./cachePolicy";
@@ -79,6 +80,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateMonitoringCadenceProfile(design.resources, contract);
     validateMonitoringBufferProfile(design.resources, contract);
     validateCdnCoalescingProfile(design.resources, contract);
+    validateDnsPublicationProfile(design.resources, contract);
     if (dnsCacheChanges(design.resources) !== contract.version.includes(`/${DNS_CACHE_PROFILE}`)) error("DNS_CACHE_VERSION", "version", "Resolver cache requires its dns-cache/1 contract version and matching saved intent");
     if (cdnTtlChanges(design.resources) !== contract.version.includes(`/${CDN_TTL_PROFILE}`)) error("CDN_TTL_VERSION", "version", "CDN TTL requires its explicit cdn-ttl/1 contract version and matching saved intent");
     if (multiKey(design.resources) && !contract.version.includes(`/${KEYSPACE_PROFILE}`)) error("KEYSPACE_VERSION", "version", "Multi-key intent requires its explicit data-keyspace/1 contract version");
@@ -173,7 +175,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["databaseRecoveryPlan", "serverless", "scheduler", "apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallState", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbPoolMaxConnections", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["databaseRecoveryPlan", "serverless", "scheduler", "apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dnsPublication", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallState", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbPoolMaxConnections", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -410,6 +412,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateFirewallCapacityBindings(design.resources, runtime);
     validateObjectCapacityBindings(design.resources, runtime);
     validateDnsCacheBindings(design.resources, runtime);
+    validateDnsPublicationBindings(design.resources, runtime);
     validateCdnTtlBindings(design.resources, runtime);
     validateMonitoringCadenceBindings(design.resources, runtime);
     validateMonitoringBufferBindings(design.resources, runtime);

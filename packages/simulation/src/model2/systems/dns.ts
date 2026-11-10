@@ -12,6 +12,7 @@ export const dnsName = (name: string) => name.toLowerCase().replace(/\.$/, "");
 export const validDnsName = (name: string) => typeof name === "string" && name.length <= SYSTEM_LIMITS.nameCharacters && /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\.?$/i.test(name) && dnsName(name).split(".").every((label) => label.length > 0 && label.length <= 63);
 export function dnsAuthority(config: AuthorityConfig, kernel: EventKernel) {
   const records = new Map(config.records.map((r) => [dnsName(r.name), copy(r)])); let queries = 0, negative = 0, updates = 0;
+  let publishedAtUs: number | null = null;
   const service = commandService(config.id, config, kernel, (work): DnsReply => {
     const request = work.message?.request as { kind: string; name: string } | undefined;
     if (!request || !validDnsName(request.name)) return { ok: false, reason: "invalid-dns-query", name: "", authority: config.id };
@@ -19,16 +20,17 @@ export function dnsAuthority(config: AuthorityConfig, kernel: EventKernel) {
     const r = records.get(name); if (!r) { negative++; return { ok: false, reason: "nxdomain", name, authority: config.id, expiresAt: kernel.now + requireKnown(config.negativeTtl, "us") }; }
     return { ok: true, name, addresses: [...r.addresses], generation: r.generation, authority: config.id, expiresAt: kernel.now + requireKnown(r.ttl, "us") };
   });
-  return { ...service, update(record: AddressRecord) { const name = dnsName(record.name), previous = records.get(name); if (previous && record.generation <= previous.generation) throw Error("DNS generation must advance"); if (!previous && records.size >= SYSTEM_LIMITS.entries) throw Error("DNS record budget"); records.set(name, copy(record)); updates++; }, evidence: () => ({ id: config.id, queries, negative, updates, records: [...records.values()].map((r) => copy(r)), service: service.evidence() }) };
+  return { ...service, update(record: AddressRecord) { const name = dnsName(record.name), previous = records.get(name); if (previous && record.generation <= previous.generation) throw Error("DNS generation must advance"); if (!previous && records.size >= SYSTEM_LIMITS.entries) throw Error("DNS record budget"); records.set(name, copy(record)); updates++; if (config.publication) publishedAtUs = kernel.now; }, evidence: () => ({ id: config.id, queries, negative, updates, ...(config.publication ? {publication: {version: 1 as const, initialRecord: "absent" as const, name: config.publication.record.name, publishedAtUs}} : {}), records: [...records.values()].map((r) => copy(r)), service: service.evidence() }) };
 }
 export function dnsResolver(config: ResolverConfig, kernel: EventKernel, send: Deliver) {
   const cache = new Map<string, { reply: DnsReply; expires: number; cancel(): boolean }>();
+  let negativeHits = 0, firstSuccessfulResolutionAtUs: number | null = null;
   let queries = 0, hits = 0, misses = 0, upstream = 0, failures = 0, fills = 0, expirations = 0, evictions = 0, replaced = 0;
   const remove = (key: string) => { const e = cache.get(key); if (e) { e.cancel(); cache.delete(key); } };
   const service = systemService(config.id, config, kernel, (work, done) => {
     const request = work.message?.request as { kind: string; name: string }; if (!request || !validDnsName(request.name)) { done({ ok: false, reason: "invalid-dns-query" }); return; }
     const name = dnsName(request.name); queries++; const cached = cache.get(name);
-    if (cached && cached.expires > kernel.now) { hits++; cache.delete(name); cache.set(name, cached); done(copy(cached.reply)); return; }
+    if (cached && cached.expires > kernel.now) { hits++; if (!cached.reply.ok && cached.reply.reason === "nxdomain") negativeHits++; cache.delete(name); cache.set(name, cached); done(copy(cached.reply)); return; }
     misses++; upstream++; const ask = messageClient(work, send);
     const receipt = ask<DnsReply>(config.authority, { kind: "resolve", name }, (reply, outcome) => {
       if (!reply || (outcome !== "completed" && reply.reason !== "nxdomain")) { failures++; done({ ok: false, reason: "authority-unavailable" }); return; }
@@ -42,8 +44,9 @@ export function dnsResolver(config: ResolverConfig, kernel: EventKernel, send: D
         const entry = { reply: copy(answer), expires: answer.expiresAt, cancel: () => false };
         entry.cancel = kernel.schedule(entry.expires, 0, JSON.stringify(["dns-expire", config.id, name, fills]), () => { if (cache.get(name) === entry) { cache.delete(name); expirations++; } }); cache.set(name, entry); fills++;
       }
+      if (answer.ok && firstSuccessfulResolutionAtUs === null) firstSuccessfulResolutionAtUs = kernel.now;
       done(answer);
     }); return () => { receipt.cancel(); };
   });
-  return { ...service, clear() { for (const name of [...cache.keys()]) { remove(name); evictions++; } }, peek(name: string) { const entry = cache.get(dnsName(name)); return entry && entry.expires > kernel.now ? copy(entry.reply) : undefined; }, evidence: () => ({ id: config.id, queries, hits, misses, authoritativeLookups: upstream, failures, fills, expirations, evictions, replaced, cache: [...cache.entries()].map(([name, e]) => ({ name, expiresAt: e.expires, answer: copy(e.reply) })), service: service.serviceEvidence() }) };
+  return { ...service, clear() { for (const name of [...cache.keys()]) { remove(name); evictions++; } }, peek(name: string) { const entry = cache.get(dnsName(name)); return entry && entry.expires > kernel.now ? copy(entry.reply) : undefined; }, evidence: () => ({ id: config.id, ...(config.publicationEvidence ? {negativeHits, firstSuccessfulResolutionAtUs} : {}), queries, hits, misses, authoritativeLookups: upstream, failures, fills, expirations, evictions, replaced, cache: [...cache.entries()].map(([name, e]) => ({ name, expiresAt: e.expires, answer: copy(e.reply) })), service: service.serviceEvidence() }) };
 }

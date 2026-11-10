@@ -3,6 +3,7 @@ import type { ChallengeScenario } from "@infraforge/contracts/challenges";
 import { compileProduct } from "./compiler";
 import { withTimeline } from "./timeline";
 import { buildContractFromRunInputs, type CapturedModel2Input } from "./runContract";
+import { publicationBinding } from "./dnsPublication";
 import { rateRows } from "../workload/arrivals";
 import type { SystemsInput } from "../systems/contracts";
 
@@ -61,7 +62,9 @@ export function compileScenario(scenario: ChallengeScenario, input: CapturedMode
   const {resources, paths} = servingPath(compiled.value.input);
   for (const [i, step] of orderedScenarioSteps(scenario).entries()) {
     const receipt = compiled.value.interventionReceipts![i]!;
-    const active = "resourceId" in step.request.target && step.request.interventionId !== "deny-port"
+    const active = step.request.interventionId === "dns-publish-entry" && "resourceId" in step.request.target
+      ? paths.has(publicationBinding(compiled.value.input, step.request.target.resourceId).path)
+      : "resourceId" in step.request.target && step.request.interventionId !== "deny-port"
       ? receipt.resolvedTargets.some(id => resources.has(id))
       : receipt.affectedPaths.some(id => paths.has(id));
     if (!active) throw Error(`Scenario step ${step.id} must stay on the captured serving path for an offered operation.`);

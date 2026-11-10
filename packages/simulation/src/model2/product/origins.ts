@@ -16,6 +16,7 @@ export function numericOrigins(input: SystemsInput, pools: CompiledPool[], contr
     if (path.startsWith("input.limits")) return { origin: "policy", sources: [path.replace("input.", "contract.") + ": explicit executor budget, no infrastructure capacity claim"] };
     const p = /^pools\.(\d+)\.profile(.*)$/.exec(path); if (p) return { origin: "user-authored", sources: [`contract.nodes.${pools[+p[1]!]!.id}.controller${p[2]}`] };
     if (path.startsWith("input.profiles")) return { origin: "application-profile", sources: [path.replace("input.profiles", "contract.application.demands")] };
+    if (/^input.systems.interventions.\d+.record.generation$/.test(path) && input.systems.interventions[Number(path.split(".")[3])]?.kind === "dns-record") return {origin: "derived", sources: ["dns-publish-entry@1: existing owned record template generation + 1; single publication"]};
     if (path.startsWith("input.systems.commands")) return { origin: "user-authored", sources: [path.replace("input.systems.commands", "contract.commands")] };
     throw Error(`Anonymous compiler number has no origin: ${path}`);
   };

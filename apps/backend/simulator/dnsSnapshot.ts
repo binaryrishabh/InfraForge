@@ -1,10 +1,11 @@
+import { dnsPublicationSnapshot, type PublicationSource } from "./dnsPublicationSnapshot";
 import type { DnsEvidence } from "@infraforge/contracts/reports";
 import { DnsEvidenceSchema } from "../reports/dnsSchema";
 
 /** Copy only resolver-owned evidence. Internal engine runs use the same read boundary. */
 interface Source {
   capture: {throughUs: number; timestampComplete?: boolean};
-  systems: {resolvers: Array<{
+  systems: PublicationSource & {resolvers: Array<{
     id: string; queries: number; hits: number; misses: number; authoritativeLookups: number;
     failures: number; fills: number; expirations: number; evictions: number; replaced: number;
     cache: Array<{name: string; expiresAt: number; answer: {ok: boolean; name: string; authority: string;
@@ -13,7 +14,7 @@ interface Source {
 }
 export function dnsSnapshot(e: Source): DnsEvidence {
   return DnsEvidenceSchema.parse({version: 1, fromUs: 0, throughUs: e.capture.throughUs,
-    timestampComplete: e.capture.timestampComplete ?? null,
+    timestampComplete: e.capture.timestampComplete ?? null, ...dnsPublicationSnapshot(e.systems),
     resolvers: e.systems.resolvers.slice(0, 64).map(r => ({id: r.id,
       queries: r.queries, hits: r.hits, misses: r.misses, authoritativeLookups: r.authoritativeLookups,
       failures: r.failures, fills: r.fills, expirations: r.expirations, evictions: r.evictions, replaced: r.replaced,

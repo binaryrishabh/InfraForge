@@ -5,6 +5,7 @@ import { compileFaults } from "./faults";
 import type { SystemsInput } from "../systems/contracts";
 import type { derivedLedger } from "./provenance";
 import { requireKnown } from "../../reality/quantity";
+import { publicationBinding } from "./dnsPublication";
 const SECOND = 1_000_000;
 // Only declared primary mechanism roles and already materialized directed paths are selectable.
 // Fixed roles stay fixed; a lifecycle-controlled role cannot silently select a new generation.
@@ -16,7 +17,11 @@ export function resolveIntervention(design: SavedProductDesign, contract: Produc
   if ("resourceId" in target) {
     const spec = contract.nodes[target.resourceId], resource = design.resources.find(r => r.id === target.resourceId);
     const role = spec?.resources.find(r => r.role === spec.primary), material = input.resources.find(r => r.id === target.resourceId);
-    if (d.id === "deny-port") {
+    if (d.id === "dns-publish-entry") {
+      if (resource?.type !== "DNS" || !resource.dnsPublication || role?.config.kind !== "dns-authority" || spec?.controller) throw Error("INTERVENTION_ROLE: initially absent fixed DNS authority required");
+      publicationBinding(input, resource.id);
+      resolvedTargets = [resource.id];
+    } else if (d.id === "deny-port") {
       if (!resource || resource.type !== "Firewall" || !spec?.firewall || spec.controller || !input.systems.firewalls.some(f => f.id === resource.id)) throw Error("INTERVENTION_ROLE: fixed firewall policy required");
       resolvedTargets = [resource.id];
     } else {
@@ -41,7 +46,7 @@ export function resolveIntervention(design: SavedProductDesign, contract: Produc
     resolvedTargets = d.id === "pool-reset" ? paths.map(p => p.id).sort() : [...new Set(paths.flatMap(p => target.direction === "both" ? [...p.request, ...p.response] : p[target.direction]))].sort();
     if (!resolvedTargets.length || resolvedTargets.some(id => !(d.id === "pool-reset" ? input.paths : input.links).some(l => l.id === id))) throw Error("INTERVENTION_PATH: edge has no materialized transport links");
   }
-  const affectedPaths = input.paths.filter(p => d.id === "deny-port" ? input.systems.connections.some(c => c.path === p.id && requireKnown(c.port, "count") === Number(request.parameters.port) && c.firewalls.some(id => resolvedTargets.includes(id))) : d.id === "pool-reset" ? resolvedTargets.includes(p.id) : [...p.request, ...p.response].some(id => resolvedTargets.includes(id))).map(p => p.id).sort();
+  const affectedPaths = input.paths.filter(p => d.id === "dns-publish-entry" ? p.id === publicationBinding(input, resolvedTargets[0]!).path : d.id === "deny-port" ? input.systems.connections.some(c => c.path === p.id && requireKnown(c.port, "count") === Number(request.parameters.port) && c.firewalls.some(id => resolvedTargets.includes(id))) : d.id === "pool-reset" ? resolvedTargets.includes(p.id) : [...p.request, ...p.response].some(id => resolvedTargets.includes(id))).map(p => p.id).sort();
   if (resolvedTargets.length > 2048 || affectedPaths.length > 2048) throw Error("INTERVENTION_BUDGET: resolved blast radius exceeds receipt budget");
   return {interventionId: d.id, revision: d.revision, target, ...(authoredBaseline === undefined ? {} : {authoredBaseline}), resolvedTargets, affectedPaths};
 }
@@ -113,7 +118,12 @@ export function compileInterventions(design: SavedProductDesign, contract: Produ
     const at = q("at", row.atUs, "us"), duration = durationUs === undefined ? undefined : q("duration", durationUs, "us");
     for (const target of option.resolvedTargets) {
       const common = {id: `${row.id}:${target}`, at, target};
-      if (kind === "deny-port") {
+      if (kind === "dns-publish-entry") {
+        const {record} = publicationBinding(input, target);
+        if (input.systems.interventions.some(i => i.kind === "dns-record" && i.target === target)) throw Error("INTERVENTION_OVERLAP: only one DNS publication is allowed");
+        input.systems.interventions.push({...common, kind: "dns-record", record: {...record, addresses: [...record.addresses], generation: record.generation + 1}});
+      }
+      else if (kind === "deny-port") {
         const baseline = input.systems.firewalls.find(f => f.id === target)!;
         if (baseline.rules.some(r => requireKnown(r.priority, "count") < 0) || input.systems.interventions.some(i => i.kind === "firewall-rules" && i.target === target && !receipts.some(r => i.id === `${r.actionId}:${target}:start` || i.id === `${r.actionId}:${target}:restore`))) throw Error("INTERVENTION_OVERLAP: ambiguous saved policy update");
         const ruleId = `intervention:${row.id}:deny-port`;

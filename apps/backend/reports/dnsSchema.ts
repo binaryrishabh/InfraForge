@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DnsPublicationEvidenceSchema } from "./dnsPublicationSchema";
 
 const amount = z.number().finite().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const count = amount.int();
@@ -16,5 +17,5 @@ const resolver = z.object({id,
   cache: z.array(entry).max(64), cacheOmitted: count,
 }).strict().refine(r => new Set(r.cache.map(c => c.name)).size === r.cache.length, "Cached names must be unique per resolver");
 export const DnsEvidenceSchema = z.object({version: z.literal(1), fromUs: z.literal(0), throughUs: amount,
-  timestampComplete: z.boolean().nullable(), resolvers: z.array(resolver).max(64), resolversOmitted: count,
-}).strict().refine(e => new Set(e.resolvers.map(r => r.id)).size === e.resolvers.length, "Resolver identities must be unique");
+  publication: DnsPublicationEvidenceSchema.optional(), timestampComplete: z.boolean().nullable(), resolvers: z.array(resolver).max(64), resolversOmitted: count,
+}).strict().refine(e => !e.publication || [e.publication.publishedAtUs, e.publication.firstSuccessfulResolutionAtUs].every(t => t === null || t <= e.throughUs), "DNS publication observation exceeds capture boundary").refine(e => new Set(e.resolvers.map(r => r.id)).size === e.resolvers.length, "Resolver identities must be unique");
