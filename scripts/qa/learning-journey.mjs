@@ -185,6 +185,18 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^Complete at least 1100 callers; no unsuccessful callers$/],
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "restore-safe-redundancy", title: /Restore safe redundancy/,
+    prediction: "Service can finish Healthy while the returning old primary stays fenced and redundancy remains missing.",
+    hypothesis: "Changing only Old-primary catch-up to snapshot and ordered replay should restore a caught-up replica while preserving the promoted writer and earlier recorded loss.",
+    improvement: {
+      stepName: "db's Old-primary catch-up enables snapshot and ordered replay",
+      nodeSelector: '[data-resource-id="db"]', nodeText: /Database/, fallbackText: "db",
+      role: "combobox", name: /^Old-primary catch-up$/, resourceId: "db", setting: "databaseReplication.rejoin", from: null, to: "snapshot-replay/1",
+    },
+    reportRequirements: [/^At second 64, returned replica caught up with exactly one promoted writer$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Representative conceptual content, plus a reading without a check.
@@ -505,7 +517,7 @@ export function isLocalJourneyRequest(value) {
 }
 
 export async function changeJourneyControl(page, improvement) {
-  if (!["radio", "spinbutton"].includes(improvement.role)) throw new Error(`Unsupported journey control role: ${improvement.role}`);
+  if (!["radio", "spinbutton", "combobox"].includes(improvement.role)) throw new Error(`Unsupported journey control role: ${improvement.role}`);
   await page.locator(improvement.nodeSelector).filter({ hasText: improvement.nodeText }).first().click({ timeout: 20_000 }).catch(async () => {
     await page.getByText(improvement.fallbackText, { exact: true }).first().click();
   });
@@ -513,6 +525,7 @@ export async function changeJourneyControl(page, improvement) {
   const size = scope.getByRole(improvement.role, { name: improvement.name }).first();
   await size.waitFor({ timeout: 20_000 });
   if (improvement.role === "spinbutton") await size.fill(String(improvement.to));
+  else if (improvement.role === "combobox") await size.selectOption(String(improvement.to));
   else await size.check();
   return size;
 }
@@ -521,9 +534,9 @@ export async function applyJourneyImprovement(page, improvement) {
   const chosen = [];
   for (const edit of improvement.controls ?? [improvement]) {
     const control = await changeJourneyControl(page, edit);
-    const value = edit.role === "spinbutton" ? await control.inputValue() : await control.isChecked();
+    const value = edit.role === "radio" ? await control.isChecked() : await control.inputValue();
     if (!improvement.controls && edit.role === "radio") return value;
-    if (value !== (edit.role === "spinbutton" ? String(edit.to) : true)) throw new Error(`Journey control did not retain ${edit.resourceId}.${edit.setting}`);
+    if (value !== (edit.role === "radio" ? true : String(edit.to))) throw new Error(`Journey control did not retain ${edit.resourceId}.${edit.setting}`);
     chosen.push({ resourceId: edit.resourceId, setting: edit.setting, value });
   }
   return chosen;

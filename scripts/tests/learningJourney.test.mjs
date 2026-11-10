@@ -11,6 +11,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "restore-a-database-writer",
     "move-monitoring-samples",
     "object-bytes-versus-app-cpu",
+    "restore-safe-redundancy",
   ]);
   expect(new Set(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).size).toBe(JOURNEY_LABS.length);
   for (const lab of JOURNEY_LABS) {
@@ -23,7 +24,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
       expect(control.nodeSelector.trim().length).toBeGreaterThan(0);
       expect(control.nodeText).toBeInstanceOf(RegExp);
       expect(control.fallbackText).toBe(control.resourceId);
-      expect(["radio", "spinbutton"]).toContain(control.role);
+      expect(["radio", "spinbutton", "combobox"]).toContain(control.role);
       expect(control.name).toBeInstanceOf(RegExp);
     }
     expect(lab.expected).toEqual({ starter: "Not met", improved: "Met" });
@@ -64,6 +65,7 @@ function fakePage({ nodeMissing = false, controlMissing = false, groupMissing = 
     async waitFor() { if (controlMissing || scopeMissing) throw new Error("requested control is missing"); },
     async check() { calls.push("checked"); },
     async fill(value) { calls.push(["filled", value]); filled = value; },
+    async selectOption(value) { calls.push(["selected", value]); filled = value; },
     async inputValue() { return storedValue ?? filled; },
     async isChecked() { return true; },
   };
