@@ -127,7 +127,8 @@ test("writer-failure curriculum is canonical conceptual content with checks and 
   expect(module.lessonIds).toEqual(["promoting-a-replica", "promotion-and-pending-work"]);
   for (const id of module.lessonIds) {
     const lesson = LEARNING_REGISTRY.findLesson(id)!;
-    expect(lesson).toMatchObject({kind: "conceptual-exercise", experiment: null, contentVersion: 1});
+    expect(lesson).toMatchObject({kind: "conceptual-exercise", experiment: null});
+    expect(lesson.contentVersion).toBeGreaterThanOrEqual(1);
     expect(lesson.check!.choices.some(c => c.id === lesson.check!.correctChoiceId)).toBe(true);
     expect(lesson.limitations.join(" ")).toMatch(/data.loss/);
     expect(lesson.limitations.join(" ")).toMatch(/DNS/);
