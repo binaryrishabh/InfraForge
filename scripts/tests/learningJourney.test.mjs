@@ -25,6 +25,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "share-one-origin-fetch",
     "sample-often-enough",
     "trace-a-slowdown-cascade",
+    "trace-a-burst-backlog",
     "hold-slots-on-a-slow-call",
     "admit-a-replica-image",
     "keep-a-function-warm",

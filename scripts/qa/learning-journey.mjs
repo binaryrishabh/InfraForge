@@ -293,6 +293,18 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^Complete 1980 callers with at most 20 unsuccessful through second 10$/],
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "trace-a-burst-backlog", title: /Trace a burst backlog/,
+    prediction: "Overall health can look Healthy at the end even though uploads failed during the burst.",
+    hypothesis: "Changing only the queue's message capacity should keep the burst's events; a bigger worker or more parallel jobs cannot.",
+    improvement: {
+      stepName: "queue's Queue capacity (messages) is changed from 100 to 500",
+      nodeSelector: '[data-resource-id="queue"]', nodeText: /Message Queue/, fallbackText: "queue",
+      role: "spinbutton", name: /^Queue capacity \(messages\)$/, resourceId: "queue", setting: "asyncQueue.capacityMessages", from: 100, to: 500,
+    },
+    reportRequirements: [/^Complete 1340 uploads with at most 20 unsuccessful through second 240$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Rate limit: JOURNEY_LAB=set-the-limit-above-the-peak JOURNEY_SHOTS=/tmp/rate-limit node ../InfraForge/scripts/qa/learning-journey.mjs
