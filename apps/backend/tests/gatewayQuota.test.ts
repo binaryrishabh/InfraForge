@@ -30,7 +30,7 @@ test("saved quota scope spends shared credits once while route counters retain t
 });
 
 test("quota capture and compiler refuse wrong ownership, unequal budgets, malformed settings and replay drift", () => {
-  for (const setting of [null, {}, {version: 2, scope: "shared"}, {version: 1, scope: "global"}, {version: 1, scope: "shared", fairness: true}]) {
+  for (const setting of [null, {}, {version: 2, scope: "shared"}, {version: 1, scope: "global"}, {version: 1, scope: ["shared"]}, {version: 1, scope: "shared", fairness: true}]) {
     const layout = quotaLayout(); Object.assign(layout.resources[0]!, {gatewayQuota: setting});
     expect(LayoutSchema.safeParse(layout).success).toBe(false);
     expect(gatewayQuotaError("API Gateway", setting, layout.resources[0]!.apiGateway)).toBeDefined();
