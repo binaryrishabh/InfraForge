@@ -20,6 +20,7 @@ export const PUBLISHED: Record<string, string> = {
   "hold-slots-on-a-slow-call@1": "036d8abb5a6686413bd159e24fef657814fa7ff98d7a3e43c0f614941e404112",
   "admit-a-replica-image@1": "ec9613f8a77d364e3a163a0cf230ed905d2e725a3c0db9bda1b5e635b9c8b96f",
   "restore-safe-redundancy@1": "631057be87e06eeea7a3a98f9d8afac0463dd5b8f9eb885c7a392e5b20290f19",
+  "share-one-origin-fetch@1": "da2e68a7f5743e4e955f39397eaffcbd7b0fea580583e628ff8372bcdd281223",
   "keep-failed-events@1": "4b85902f6b9e78e6b0c255c1de97f842c8d5b05e499e744fe7e755755f35877c",
   "redrive-after-the-fix@1": "8551be9f25d932fb776959b09fbba4ecf2ee7cae01bc775cc028061a97a605b8",
   "scale-on-delivered-samples@1": "cac34337c223d3317df087d258d96d8861e0446b866041290a026108de6dc539",
