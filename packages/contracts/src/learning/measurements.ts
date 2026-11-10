@@ -244,6 +244,8 @@ export const LEARNING_REPORT_MEASUREMENTS = {
   "Delivered to queue": { scope: "resource", path: "eventBus.subscriptions.*.delivered", resourceType: "Event Bus", source: "apps/web/src/features/live/EventBusReadings.tsx", marker: "Delivered to queue" },
   "Retries": { scope: "resource", path: "eventBus.subscriptions.*.retried", resourceType: "Event Bus", source: "apps/web/src/features/live/EventBusReadings.tsx", marker: "Retries" },
   "Failed attempts": { scope: "resource", path: "eventBus.subscriptions.*.deliveryAccounting.failedAttempts", resourceType: "Event Bus", source: "apps/web/src/features/live/EventBusReadings.tsx", marker: "Failed attempts" },
+  "Dead letters": { scope: "resource", path: "eventBus.subscriptions.*.deadLettered", resourceType: "Event Bus", source: "apps/web/src/features/live/EventBusReadings.tsx", marker: "Dead letters" },
+  "Dead-letter overflow discards": { scope: "resource", path: "eventBus.subscriptions.*.deadLetterOverflow", resourceType: "Event Bus", source: "apps/web/src/features/live/EventBusReadings.tsx", marker: "Dead-letter overflow discards" },
   "Exhausted deliveries": { scope: "resource", path: "eventBus.subscriptions.*.deliveryAccounting.exhausted", resourceType: "Event Bus", source: "apps/web/src/features/live/EventBusReadings.tsx", marker: "Exhausted deliveries" },
   "Quota scope": {scope: "resource", path: "gateway.quota.scope", resourceType: "API Gateway", source: gatewaySource, marker: "Quota scope"},
   "Gateway route: Completed": {scope: "resource", path: "gateway.routes.*.outcomes.completed", resourceType: "API Gateway", source: gatewaySource, marker: "<dt>Completed</dt>"},

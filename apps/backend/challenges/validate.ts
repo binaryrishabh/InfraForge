@@ -44,7 +44,7 @@ const definition = z.object({
   scenario: z.unknown().optional(),
 }).strict();
 
-const CRITERIA = ["function-reuse", "startup-capacity", "database-redundancy", "monitoring-delivery", "pool-in-service", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
+const CRITERIA = ["function-reuse", "startup-capacity", "database-redundancy", "monitoring-delivery", "pool-in-service", "bus-dead-letters", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
   "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "queue-ready-age", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work", "caller-outcomes"];
 const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
@@ -96,6 +96,8 @@ function checkDefinition(d: ChallengeDefinition): string[] {
         problems.push(`${where}: monitoring-delivery needs Model 2, a named monitor/backend and connected targets, positive safe floors and a nonnegative safe age ceiling`);
       }
     }
+    if (c.kind === "bus-dead-letters" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isSafeInteger(c.minDeadLettered) || c.minDeadLettered < 1 ||
+      !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.EventBus))) problems.push(`${where}: bus-dead-letters needs Model 2, its named starter event bus and a positive floor`);
     if (c.kind === "pool-in-service" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isSafeInteger(c.minInService) || c.minInService < 1 ||
       !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.VirtualMachine && r.autoscaling?.enabled && r.autoscaling.signal !== undefined && r.autoscaling.maxReplicas! >= c.minInService))) {
       problems.push(`${where}: pool-in-service needs Model 2, its named autoscaled starter app server with a delivered-sample signal and a reachable positive floor`);
