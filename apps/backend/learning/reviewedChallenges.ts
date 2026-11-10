@@ -4,6 +4,7 @@ export interface LearningChallengeReview { challengeId: string; version: number;
 export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeReview>> = {
   "isolate-route-credits@1": {challengeId: "isolate-route-credits", version: 1, hash: "ff684b4d4f574fef8ef9c1e4c08ca028c292ab089fb947dcd39331b479e70da4"},
   "resolve-after-publication@1": {challengeId: "resolve-after-publication", version: 1, hash: "20590c51974fbf82a58914cc82fae9d3e34a29bc92b2293f15461ee70524c681"},
+  "hold-slots-on-a-slow-call@1": {challengeId: "hold-slots-on-a-slow-call", version: 1, hash: "036d8abb5a6686413bd159e24fef657814fa7ff98d7a3e43c0f614941e404112"},
   "admit-a-replica-image@1": {challengeId: "admit-a-replica-image", version: 1, hash: "ec9613f8a77d364e3a163a0cf230ed905d2e725a3c0db9bda1b5e635b9c8b96f"},
   "restore-safe-redundancy@1": {challengeId: "restore-safe-redundancy", version: 1, hash: "631057be87e06eeea7a3a98f9d8afac0463dd5b8f9eb885c7a392e5b20290f19"},
   "scale-on-delivered-samples@1": {challengeId: "scale-on-delivered-samples", version: 1, hash: "cac34337c223d3317df087d258d96d8861e0446b866041290a026108de6dc539"},

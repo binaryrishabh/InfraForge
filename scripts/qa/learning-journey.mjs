@@ -234,8 +234,20 @@ export const JOURNEY_LABS = [
   },
 ];
 
-// Artifact admission: run the full retained learning loop against the local QA stack.
-// JOURNEY_LAB=admit-a-replica-image JOURNEY_SHOTS=/tmp/artifact-admission node ../InfraForge/scripts/qa/learning-journey.mjs
+// Held capacity: run the full retained learning loop against the local QA stack.
+// JOURNEY_LAB=hold-slots-on-a-slow-call JOURNEY_SHOTS=/tmp/hold-slots node ../InfraForge/scripts/qa/learning-journey.mjs
+JOURNEY_LABS.push({
+  lessonId: "hold-slots-on-a-slow-call", title: /Hold slots on a slow call/,
+  prediction: "Low worker CPU does not mean the worker keeps up: one job at a time holds its slot during a 450 ms external wait and the backlog grows.",
+  hypothesis: "Diagnosis: worker CPU is low but each job holds its only parallel slot about 500 ms, so about two jobs a second finish against four arriving. Increasing only Jobs in parallel should raise acknowledgements and cut outstanding work.",
+  improvement: {
+    stepName: "worker's Jobs in parallel is changed from 1 to 4",
+    nodeSelector: '[data-resource-id="worker"]', nodeText: /Virtual Machine/, fallbackText: "worker",
+    role: "spinbutton", name: /^Jobs in parallel$/, resourceId: "worker", setting: "asyncWorker.concurrency", from: 1, to: 4,
+  },
+  expected: {starter: "Not met", improved: "Met"},
+});
+// Artifact admission: JOURNEY_LAB=admit-a-replica-image JOURNEY_SHOTS=/tmp/artifact-admission node ../InfraForge/scripts/qa/learning-journey.mjs
 JOURNEY_LABS.push({
   lessonId: "admit-a-replica-image", title: /Admit a replica image/,
   prediction: "The initial app can stay Healthy while app#1/image refuses its required 1024-byte layer in a 256-byte cache.",

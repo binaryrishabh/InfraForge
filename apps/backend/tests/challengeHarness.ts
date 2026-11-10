@@ -1,5 +1,6 @@
 import { isolateRouteCreditsV1 } from "../challenges/definitions/isolate-route-credits/v1";
 import { resolveAfterPublicationV1 } from "../challenges/definitions/resolve-after-publication/v1";
+import { holdSlotsOnASlowCallV1 } from "../challenges/definitions/hold-slots-on-a-slow-call/v1";
 import { admitAReplicaImageV1 } from "../challenges/definitions/admit-a-replica-image/v1";
 import { restoreSafeRedundancyV1 } from "../challenges/definitions/restore-safe-redundancy/v1";
 import { scaleOnDeliveredSamplesV1 } from "../challenges/definitions/scale-on-delivered-samples/v1";
@@ -93,6 +94,7 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 export const REFERENCE: Record<string, ChallengeStarter> = {
   "isolate-route-credits": {...isolateRouteCreditsV1.starter!, resources: isolateRouteCreditsV1.starter!.resources.map(r => r.id === "gateway" ? {...r, gatewayQuota: {...r.gatewayQuota!, scope: "per-route"}} : r)},
   "resolve-after-publication": {...resolveAfterPublicationV1.starter!, resources: resolveAfterPublicationV1.starter!.resources.map(r => r.id === "dns" ? {...r, dnsCachePolicy: {version: 1, maxTtlSeconds: 1}} : r)},
+  "hold-slots-on-a-slow-call": {...holdSlotsOnASlowCallV1.starter!, resources: holdSlotsOnASlowCallV1.starter!.resources.map(r => r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, concurrency: 4}} : r)},
   "admit-a-replica-image": {...admitAReplicaImageV1.starter!, resources: admitAReplicaImageV1.starter!.resources.map(r => r.id === "app" ? {...r, artifactCachePolicy: {version: 1, capacityBytes: 4096}} : r)},
   "restore-safe-redundancy": {...restoreSafeRedundancyV1.starter!, resources: restoreSafeRedundancyV1.starter!.resources.map(r => r.id === "db" ? {...r, databaseReplication: {...r.databaseReplication!, rejoin: "snapshot-replay/1"}} : r)},
   "scale-on-delivered-samples": {...scaleOnDeliveredSamplesV1.starter!, resources: scaleOnDeliveredSamplesV1.starter!.resources.map(r => r.id === "monitor" ? {...r, monitoringPolicy: {version: 1 as const, collectionIntervalSeconds: 2, exportIntervalSeconds: 2}} : r)},

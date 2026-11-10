@@ -43,6 +43,7 @@ import { DNS_CACHE_PROFILE, dnsCacheChanges, validateDnsCacheBindings } from "./
 import { CDN_TTL_PROFILE, cdnTtlChanges, validateCdnTtlBindings } from "./cdnTtl";
 import { CACHE_POLICY_PROFILE, cachePolicyChanges, validateCachePolicyBindings } from "./cachePolicy";
 import { CACHE_CAPACITY_PROFILE, cacheCapacityChanges, validateCacheCapacityBindings } from "./cacheCapacity";
+import { WORKER_WAIT_PROFILE, workerWaitChanges, validateWorkerWaitBindings } from "./workerWait";
 import { QUEUE_ACK_DELAY_PROFILE, queueAckDelayChanges, validateQueueAckDelayBindings } from "./queueAckDelay";
 import { QUEUE_IDEMPOTENCY_PROFILE, queueIdempotencyChanges, resultWritePolicy, validateQueueIdempotencyBindings } from "./queueIdempotency";
 import { QUEUE_CAPACITY_PROFILE, queueCapacityChanges, validateQueueCapacityBindings } from "./queueCapacity";
@@ -93,6 +94,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (hotKey(design.resources) !== contract.version.includes(`/${HOT_KEY_PROFILE}`)) error("HOT_KEY_VERSION", "version", "Hot-key intent requires its explicit data-hot-key/1 contract version and matching saved intent");
     if (cachePolicyChanges(design.resources) !== contract.version.includes(`/${CACHE_POLICY_PROFILE}`)) error("CACHE_POLICY_VERSION", "version", "Changed cache intent requires its explicit data-cache-policy/1 contract version and matching saved intent");
     if (cacheCapacityChanges(design.resources) !== contract.version.includes(`/${CACHE_CAPACITY_PROFILE}`)) error("CACHE_CAPACITY_VERSION", "version", "Logical cache capacity requires its explicit data-cache-capacity/1 contract version and matching saved intent");
+    if (workerWaitChanges(design.resources) !== contract.version.includes(`/${WORKER_WAIT_PROFILE}`)) error("WORKER_WAIT_VERSION", "version", "External worker wait requires worker-wait/1 and matching saved intent");
     if (queueAckDelayChanges(design.resources) !== contract.version.includes(`/${QUEUE_ACK_DELAY_PROFILE}`)) error("QUEUE_ACK_DELAY_VERSION", "version", "Acknowledgement delay requires queue-ack-delay/1 and matching saved intent");
     if (queueIdempotencyChanges(design.resources) !== contract.version.includes(`/${QUEUE_IDEMPOTENCY_PROFILE}`)) error("QUEUE_IDEMPOTENCY_VERSION", "version", "Idempotent result writes require the explicit queue-idempotency/1 contract version and matching saved intent");
     if (gatewayIntent(design.resources) !== contract.version.includes(`/${API_GATEWAY_PROFILE}`)) error("GATEWAY_VERSION", "version", "Gateway requires its captured version and matching intent");
@@ -433,6 +435,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateVmCpuQuotaBindings(design.resources, runtime);
     validateVmExecutionBindings(design.resources, runtime);
     validateQueueAckDelayBindings(design.resources, runtime);
+    validateWorkerWaitBindings(design.resources, runtime);
     validateQueueIdempotencyBindings(design.resources, runtime);
     validateQueueCapacityBindings(design.resources, runtime);
     validateServerlessBindings(design.resources, design.connections, runtime);

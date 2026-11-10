@@ -1,5 +1,6 @@
 import { isolateRouteCreditsV1 } from "./isolate-route-credits/v1";
 import { resolveAfterPublicationV1 } from "./resolve-after-publication/v1";
+import { holdSlotsOnASlowCallV1 } from "./hold-slots-on-a-slow-call/v1";
 import { admitAReplicaImageV1 } from "./admit-a-replica-image/v1";
 import { restoreSafeRedundancyV1 } from "./restore-safe-redundancy/v1";
 import { scaleOnDeliveredSamplesV1 } from "./scale-on-delivered-samples/v1";
@@ -88,6 +89,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   isolateRouteCreditsV1,
   resolveAfterPublicationV1,
   admitAReplicaImageV1,
+  holdSlotsOnASlowCallV1,
   restoreSafeRedundancyV1,
   moveMonitoringSamplesV1,
   scaleOnDeliveredSamplesV1,
