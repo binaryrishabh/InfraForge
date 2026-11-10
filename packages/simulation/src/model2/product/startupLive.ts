@@ -1,4 +1,5 @@
 import type { StartupMetrics, StartupClient, StartupRegistry, StartupController } from "@infraforge/contracts/telemetry";
+import { requireKnown } from "../../reality/quantity";
 import type { CompiledProduct } from "./contracts";
 import type { createProductModel2 } from "./run";
 
@@ -23,7 +24,9 @@ export function startupLive(compiled: CompiledProduct, source: Source, node: str
   });
   const clients: StartupClient[] = clientIds.slice(0, 100).map(id => {
     const c = source.inspectArtifactClient(id);
-    return {id, cachedBytes: c?.cachedBytes ?? null, pulledBytes: c?.pulledBytes ?? null, reusedLayers: c?.reusedLayers ?? null, failures: c?.failures ?? null,
+    const config = compiled.input.resources.find(r => r.id === id);
+    const capacity = compiled.semantic.nodes.find(r => r.id === node)?.profile.split("/").some((v, i, parts) => v === "artifact-cache" && parts[i + 1] === "1");
+    return {id, ...(capacity && config?.kind === "artifact-client" ? {capacityBytes: requireKnown(config.cacheBytes, "bytes")} : {}), cachedBytes: c?.cachedBytes ?? null, pulledBytes: c?.pulledBytes ?? null, reusedLayers: c?.reusedLayers ?? null, failures: c?.failures ?? null,
       cache: retain(c?.cache), omittedCache: omitted(c?.cache),
       replicas: retain(c?.replicas)?.map(r => ({id: r.id, target: r.target, reference: r.reference, state: r.state, attempts: r.attempts,
         artifactReadyAtUs: r.readyAt, resolvedDigest: r.resolvedDigest, requiredLayers: retain(r.requiredLayers), omittedLayers: omitted(r.requiredLayers)})) ?? null,

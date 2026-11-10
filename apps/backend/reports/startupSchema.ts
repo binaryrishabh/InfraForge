@@ -11,7 +11,7 @@ const registry = z.object({id: text, uploads: n, deduplicated: n, manifestWrites
   generatedResponseBodyBytes: n, blobBytes: n, blobs: rows(layer), omittedBlobs: n,
   manifests: rows(layer.extend({layers: rows(layer), omittedLayers: n})), omittedManifests: n,
   tags: rows(z.object({tag: text, digest}).strict()), omittedTags: n}).strict();
-const client = z.object({id: text, cachedBytes: n, pulledBytes: n, reusedLayers: n, failures: n, cache: rows(layer), omittedCache: n,
+const client = z.object({id: text, capacityBytes: count.min(1).nullable().optional(), cachedBytes: n, pulledBytes: n, reusedLayers: n, failures: n, cache: rows(layer), omittedCache: n,
   replicas: rows(z.object({id: text, target: t, reference: t, state: z.enum(["pending", "pulling", "failed", "running"]).nullable().optional(),
     attempts: n, artifactReadyAtUs: n, resolvedDigest: d, requiredLayers: rows(layer), omittedLayers: n}).strict()), omittedReplicas: n, events, omittedEvents: n}).strict();
 const controller = z.object({id: text, desired: n, inService: n, evaluations: n, missingMeasurements: n, identityBudgetExhausted: n,
@@ -39,6 +39,7 @@ export const StartupSchema = z.object({version: z.literal(1), sampledAtUs: n,
   }
   for (const c of m.clients ?? []) {
     unique(c.cache, b => b.digest); unique(c.replicas, r => r.id); bytes(c.cache, c.cachedBytes, c.omittedCache);
+    if (c.capacityBytes != null && c.cachedBytes != null && c.cachedBytes > c.capacityBytes) refuse();
     for (const r of c.replicas ?? []) time(r.artifactReadyAtUs);
     for (const e of c.events ?? []) time(e.at);
   }

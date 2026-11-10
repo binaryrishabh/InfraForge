@@ -1,7 +1,7 @@
-import type { Resource, AutoscalingPolicy } from "@infraforge/domain/resource";
+import { ARTIFACT_CACHE_HELP, ARTIFACT_CACHE_MAX_BYTES, type Resource, type AutoscalingPolicy } from "@infraforge/domain/resource";
 import { SIMULATION_CONSTANTS } from "@infraforge/simulation/tuning";
 import { Switch } from "@/ui/Switch";
-import { Field, Select } from "@/ui/Field";
+import { Field, Input, Select } from "@/ui/Field";
 import { updateResource } from "../../actions";
 import { InspectorSection } from "./InspectorSection";
 
@@ -17,7 +17,7 @@ export function AutoscalingSection({ resource, disabled }: { resource: Resource;
   const commit = (patch: Partial<AutoscalingPolicy>) => {
     const next = { ...policy, ...patch };
     if (next.minReplicas !== undefined && next.maxReplicas !== undefined && next.maxReplicas < next.minReplicas) next.maxReplicas = next.minReplicas;
-    updateResource(resource.id, { autoscaling: next });
+    updateResource(resource.id, { autoscaling: next, ...(next.enabled === false ? { artifactCachePolicy: undefined } : {}) });
   };
   const toNumber = (value: string) => (value === "auto" ? undefined : Number(value));
   return (
@@ -48,6 +48,10 @@ export function AutoscalingSection({ resource, disabled }: { resource: Resource;
               </Select>
             )}</Field>
           </div>
+          {resource.type === "Virtual Machine" && <Field label="Artifact cache capacity (bytes)" hint={ARTIFACT_CACHE_HELP}>{({ id, describedBy }) => <Input
+            id={id} aria-describedby={describedBy} type="number" min={1} max={ARTIFACT_CACHE_MAX_BYTES} step={1}
+            value={resource.artifactCachePolicy?.capacityBytes ?? ""} placeholder="Resource profile" disabled={disabled}
+            onChange={event => updateResource(resource.id, { artifactCachePolicy: event.target.value === "" ? undefined : { version: 1, capacityBytes: Number(event.target.value) } })} />}</Field>}
           <p className="text-xs leading-relaxed text-ink-3">
             The maximum is capped at {A.DEFAULT_MAX_CAP}. Model 2 starts the minimum number of instances and uses it as the scale-down floor.
           </p>

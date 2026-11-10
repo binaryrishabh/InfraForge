@@ -26,6 +26,7 @@ const memorySource = "apps/web/src/features/live/VmMemoryReadings.tsx";
 // VM memory labels name the modeled population, distinct from generic Memory %.
 
 export const LEARNING_REPORT_MEASUREMENTS = {
+  "Artifact cache capacity (bytes)": { scope: "resource", path: "startup.clients.*.capacityBytes", source: "apps/web/src/features/reports/components/StartupReadings.tsx", marker: "Artifact cache capacity (bytes)" },
   "Current writer": {scope:"resource",path:"databaseReplication.currentWriter",resourceType:"Database",source:replicationSource,marker:'"Current writer"'},
   "Original primary role": {scope:"resource",path:"databaseReplication.primaryRole",resourceType:"Database",source:replicationSource,marker:'"Original primary role"'},
   "Replica role": {scope:"resource",path:"databaseReplication.replicaRole",resourceType:"Database",source:replicationSource,marker:'"Replica role"'},
