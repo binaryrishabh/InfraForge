@@ -13,9 +13,9 @@ const capture = (wait: number | undefined) => {
   return captureRunInputs(s, d.workload, challengeSeed(d));
 };
 test("external wait is optional, bounded and captured as worker-wait/1 only when saved", () => {
-  expect(capture(undefined).adapterProfiles).not.toContain("worker-wait/1");
-  expect(capture(0).adapterProfiles).toContain("worker-wait/1");
-  expect(capture(450).adapterProfiles.filter(p => p === "worker-wait/1")).toHaveLength(1);
+  expect(capture(undefined).adapterProfiles!).not.toContain("worker-wait/1");
+  expect(capture(0).adapterProfiles!).toContain("worker-wait/1");
+  expect(capture(450).adapterProfiles!.filter(p => p === "worker-wait/1")).toHaveLength(1);
   for (const bad of [-1, 60001, 1.5, NaN, Infinity]) expect(asyncSettingsError("Virtual Machine", undefined, {enabled: true, concurrency: 1, prefetch: 1, cpuMsPerJob: 50, externalWaitMs: bad})).toBeDefined();
   expect(asyncSettingsError("Virtual Machine", undefined, {enabled: true, concurrency: 1, prefetch: 1, cpuMsPerJob: 50, externalWaitMs: 60000})).toBeUndefined();
   const layout = {resources: d.starter!.resources, connectionLines: d.starter!.connectionLines};
