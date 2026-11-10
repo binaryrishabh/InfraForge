@@ -1,4 +1,5 @@
 import type { ResourceMetrics } from "@infraforge/contracts/telemetry";
+import { DatabaseRejoinReadings } from "./DatabaseRejoinReadings";
 
 const fields = [
   ["primaryProcessState", "Primary"],
@@ -34,7 +35,7 @@ export function DatabaseReplicationReadings({ metrics, resourceId }: { resourceI
   const display = (key: typeof fields[number][0]) => {
     const value = values[key];
     if (value == null) return "Unknown";
-    if (key === "primaryProcessState") return value === "unavailable" ? "Down" : value === "fenced" ? "Fenced" : values.primaryRole === "writer" ? "Writer" : "Available";
+    if (key === "primaryProcessState") return value === "unavailable" ? "Down" : value === "fenced" ? "Fenced" : value === "replica" ? "Replica" : values.primaryRole === "writer" ? "Writer" : "Available";
     if (key === "replicaProcessState") return value === "unavailable" ? "Down" : value === "writer" ? "Writer" : "Replica";
     return String(value);
   };
@@ -46,5 +47,6 @@ export function DatabaseReplicationReadings({ metrics, resourceId }: { resourceI
       <dl>{(["primary", "replica"] as const).map(member => { const m = metrics.database!.readRouting!.members[member]; return <div key={member}><dt>{member} sessions / active / queued</dt><dd>{m.sessions} / {m.active} / {m.queued}; session refusals {m.sessionRefused}, query refusals {m.queryRefused}; CPU {m.consumedCoreUs} core-us</dd></div>; })}</dl>
     </div>}
     <dl>{fields.map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{display(key)}</dd></div>)}</dl>
+    <DatabaseRejoinReadings values={values.rejoin} />
   </section>;
 }

@@ -12,8 +12,10 @@ import { databaseLayout, databaseWorkload, promoteRequest } from "./databaseRepl
 
 // Free World regression evidence only. These live actions are not an authored
 // challenge script, a published lab or a learner-editable challenge solution.
-export function promotionInput(delay = 1) {
-  return captureRunInputs(databaseLayout(delay, "primary"), {...databaseWorkload, readWriteRatio: 0}, "lb14-promotion");
+export function promotionInput(delay = 1, rejoin = false) {
+  const layout = databaseLayout(delay, "primary");
+  if (rejoin) layout.resources.find(r => r.id === "db")!.databaseReplication!.rejoin = "snapshot-replay/1";
+  return captureRunInputs(layout, {...databaseWorkload, readWriteRatio: 0}, "lb14-promotion");
 }
 export function promotionActions(promoteAt: number | null, outage: "primary" | "replica" = "primary") {
   const actions: Array<{atSecond: number; request: ActionRequest}> = [
@@ -22,8 +24,8 @@ export function promotionActions(promoteAt: number | null, outage: "primary" | "
   if (promoteAt !== null) actions.push({atSecond: promoteAt, request: promoteRequest});
   return actions;
 }
-export function promotionRun(promoteAt: number | null, delay = 1, outage: "primary" | "replica" = "primary") {
-  const input = promotionInput(delay), run = createModel2Engine(input, 8);
+export function promotionRun(promoteAt: number | null, delay = 1, outage: "primary" | "replica" = "primary", rejoin = false) {
+  const input = promotionInput(delay, rejoin), run = createModel2Engine(input, 8);
   const instance: SimulationInstance = {model2: run, tickCount: 0, pendingLogs: [], speed: 1, lastCheckpointAt: 0,
     accumulatedCostUsd: 0, topology: input, topologyRevision: 0, actions: new Map(), acknowledge: null,
     metricsComputedAt: null, metricsTopologyRevision: 0};

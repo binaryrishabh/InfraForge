@@ -1,5 +1,6 @@
 import type { DatabaseReplication, DatabaseReadRouting } from "@infraforge/domain/resource";
 import type { EventClock } from "../time";
+import { databaseRejoin } from "./rejoin";
 
 type Row = { version: number; bytes: number };
 type PrimaryProcessState = "available" | "unavailable" | "fenced";
@@ -16,6 +17,8 @@ export function databaseReplica(config: DatabaseReplication, id: string, clock: 
   let crashRestore: { primary: PrimaryProcessState; replica: ReplicaProcessState } | undefined;
   let primaryReads = 0, replicaReads = 0, freshReplicaReads = 0, staleReplicaReads = 0;
   let writerEpoch = 1, fencedWriteRejections = 0, fencedReplicationRejections = 0;
+  let rejoin: ReturnType<typeof databaseRejoin> | undefined;
+  const updateRejoin = () => rejoin?.availability(primaryProcessState !== "unavailable", replicaProcessState === "writer");
   const drainReady = () => { for (const work of [...pending.values()]) if (work.ready) work.apply(); };
   const currentWriter = () => promoted ? replicaProcessState === "writer" ? "replica" as const : "none" as const : primaryProcessState === "available" ? "primary" as const : "none" as const;
   return {
@@ -31,13 +34,16 @@ export function databaseReplica(config: DatabaseReplication, id: string, clock: 
       regressedKeys = [...primary].filter(([key, row]) => row.version > (replica.get(key)?.version ?? 0)).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, row]) => ({ key, primaryVersion: row.version, promotedVersion: replica.get(key)?.version ?? 0 }));
       promoted = true; replicaProcessState = "writer";
       if (primaryProcessState !== "unavailable") primaryProcessState = "fenced";
-      writerEpoch++; promotionAtUs = clock.now; pending.clear(); return replica;
+      writerEpoch++; promotionAtUs = clock.now; pending.clear();
+      if (config.rejoin) { rejoin = databaseRejoin(id, writerEpoch, config.replicationDelayMs, clock, primary, replica); updateRejoin(); }
+      return replica;
     },
-    primaryAvailability(value: boolean) { primaryProcessState = value ? promoted ? "fenced" : "available" : "unavailable"; },
-    available(value: boolean) { replicaProcessState = value ? promoted ? "writer" : "available" : "unavailable"; if (value) drainReady(); },
+    primaryAvailability(value: boolean) { primaryProcessState = value ? promoted ? "fenced" : "available" : "unavailable"; updateRejoin(); },
+    available(value: boolean) { replicaProcessState = value ? promoted ? "writer" : "available" : "unavailable"; updateRejoin(); if (value) drainReady(); },
     wholeAvailability(value: boolean) {
       if (!value && !crashRestore) { crashRestore = { primary: primaryProcessState, replica: replicaProcessState }; primaryProcessState = "unavailable"; replicaProcessState = "unavailable"; }
       else if (value && crashRestore) { primaryProcessState = crashRestore.primary; replicaProcessState = crashRestore.replica; crashRestore = undefined; drainReady(); }
+      updateRejoin();
     },
     readSource(readOnly: boolean) { return promoted || readOnly && replicaProcessState !== "unavailable" && (routing ? routing.config.policy === "replica-preferred" : config.readPolicy === "replica-preferred") ? "replica" as const : "primary" as const; },
     read(key: string, source: "primary" | "replica") { return (source === "replica" ? replica : primary).get(key); },
@@ -53,7 +59,7 @@ export function databaseReplica(config: DatabaseReplication, id: string, clock: 
     },
     commit(writes: Map<string, Row>) {
       if (!writes.size) return;
-      if (promoted) { replicaCommittedWrites++; replicaGeneration++; return; }
+      if (promoted) { replicaCommittedWrites++; replicaGeneration++; rejoin?.commit(writes); return; }
       const generation = ++primaryGeneration, payload = [...writes].map(([key, row]) => [key, { ...row }] as const);
       const epoch = writerEpoch;
       const work = { at: clock.now, keys: [...writes.keys()], ready: false, apply() {
@@ -68,13 +74,15 @@ export function databaseReplica(config: DatabaseReplication, id: string, clock: 
     evidence() {
       const oldest = pending.values().next().value;
       const age = oldest ? (clock.now - oldest.at) / 1000 : 0;
-      return { version: 1 as const, currentWriter: currentWriter(), primaryProcessState, replicaProcessState, replicaState: replicaProcessState === "unavailable" ? "unavailable" as const : promoted ? "promoted" as const : "available" as const, primaryReads, replicaReads, freshReplicaReads, staleReplicaReads,
-        writerEpoch, primaryEpoch: 1, replicaEpoch: promoted ? 2 : 1, primaryRole: promoted ? "fenced" as const : "writer" as const, replicaRole: promoted ? "writer" as const : "replica" as const,
+      const recovery = rejoin?.evidence(), joined = recovery?.joinedAtUs != null;
+      return { version: 1 as const, currentWriter: currentWriter(), primaryProcessState: joined && primaryProcessState === "fenced" ? "replica" as const : primaryProcessState, replicaProcessState, replicaState: replicaProcessState === "unavailable" ? "unavailable" as const : promoted ? "promoted" as const : "available" as const, primaryReads, replicaReads, freshReplicaReads, staleReplicaReads,
+        writerEpoch, primaryEpoch: recovery?.snapshotApplied ? writerEpoch : 1, replicaEpoch: promoted ? 2 : 1, primaryRole: joined ? "replica" as const : promoted ? "fenced" as const : "writer" as const, replicaRole: promoted ? "writer" as const : "replica" as const,
         fencedWriteRejections, fencedReplicationRejections, fencingReasons: { "fenced-writer-epoch": fencedWriteRejections, "fenced-replication-epoch": fencedReplicationRejections },
         primaryRows: [...primary].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, row]) => ({ key, ...row })),
         replicaCommittedWrites, promotionCount: promoted ? 1 : 0, promotionAtUs, lostOperations, regressedKeys: regressedKeys.map(row => ({ ...row })),
         primaryCommittedWrites, replicaAppliedWrites, pendingReplication: pending.size, lagMs: age, oldestPendingAgeMs: age, primaryGeneration, replicaGeneration,
-        replicaRows: [...replica].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, row]) => ({ key, ...row })) };
+        replicaRows: [...replica].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, row]) => ({ key, ...row })),
+        ...(config.rejoin ? { rejoin: recovery ?? null } : {}) };
     },
   };
 }

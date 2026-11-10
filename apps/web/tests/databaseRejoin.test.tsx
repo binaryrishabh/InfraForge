@@ -1,0 +1,31 @@
+import { expect, test } from "bun:test";
+import { resolve } from "node:path";
+import { renderToStaticMarkup } from "react-dom/server";
+import type { RunReport } from "@infraforge/contracts/reports";
+import { ReportMeasurements } from "../src/features/reports/components/ReportMeasurements";
+import { DatabaseRejoinReadings } from "../src/features/live/DatabaseRejoinReadings";
+
+test("existing report surface renders real saved rejoin evidence, separate loss, and Unknown without inferred zero", async () => {
+  const child = Bun.spawn([Bun.which("bun")!, "--no-env-file", resolve(import.meta.dir, "../../backend/tests/databaseRejoinReport.fixture.ts")], {stdout: "pipe", stderr: "pipe"});
+  const output = await new Response(child.stdout).text(), diagnostics = await new Response(child.stderr).text();
+  expect(await child.exited, diagnostics).toBe(0);
+  const reports = JSON.parse(output) as RunReport[];
+  const html = reports.map(report => renderToStaticMarkup(<ReportMeasurements report={report} number={3} />));
+  expect(html[0]).toContain("<dt>Original primary role</dt><dd>replica</dd>");
+  expect(html[0]).toContain("<dt>Primary</dt><dd>Replica</dd>");
+  expect(html[0]).toContain("<dt>Replica eligible at this sample</dt><dd>true</dd>");
+  expect(html[0]).toContain("<dt>Replayed new writer operations</dt><dd>60</dd>");
+  expect(html[1]).toContain("<dt>Original primary role</dt><dd>fenced</dd>");
+  expect(html[1]).toContain("<dt>Pending catch-up operations</dt><dd>60</dd>");
+  expect(html[1]).toContain("<dt>Pending catch-up batches (including snapshot)</dt><dd>61</dd>");
+  expect(html[1]).toContain("<dt>Pending replication</dt><dd>0</dd>");
+  expect(html[1]).toContain("<dt>Unreplicated commits lost at promotion</dt><dd>10</dd>");
+  expect(html[1]).toContain("no physical timing, database protocol or quorum guarantee");
+  expect(html[2]).toContain("<dt>Pending catch-up operations</dt><dd>Unknown</dd>");
+  expect(html[2]).toContain("<dt>Replica eligible at this sample</dt><dd>Unknown</dd>");
+  expect(html[2]).toContain("<dt>Unreplicated commits lost at promotion</dt><dd>10</dd>");
+  expect(renderToStaticMarkup(<DatabaseRejoinReadings values={undefined} />)).toBe("");
+  const unknown = renderToStaticMarkup(<DatabaseRejoinReadings values={null} />);
+  expect(unknown).toContain("<dt>Pending catch-up operations</dt><dd>Unknown</dd>");
+  expect(unknown).not.toContain("<dd>0</dd>");
+});

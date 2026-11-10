@@ -1,11 +1,13 @@
 import type { Resource } from "@infraforge/domain/resource";
 import type { ProductContract } from "./contracts";
 import type { SystemsInput } from "../systems/contracts";
+import { validateDatabaseRejoinProfile } from "./databaseRejoin";
 
 export const DATABASE_REPLICATION_PROFILE = "db-replication/1" as const;
 export const changedDatabaseReplication = (r: Resource) => r.databaseReplication !== undefined;
 export const databaseReplicationChanges = (resources: readonly Resource[]) => resources.some(changedDatabaseReplication);
 export function validateDatabaseReplicationProfile(resources: readonly Resource[], contract: ProductContract) {
+  validateDatabaseRejoinProfile(resources, contract);
   const count = (version: string) => {
     const profiles = version.match(/\/db-replication\/[^/]+/g) ?? [];
     if (profiles.some(p => p !== `/${DATABASE_REPLICATION_PROFILE}`)) throw Error("Unsupported database replication profile");
@@ -20,6 +22,6 @@ export function validateDatabaseReplicationBindings(resources: readonly Resource
     const db = input.resources.find(d => d.id === r.id);
     if (r.databaseReplication !== undefined && (r.type !== "Database" || db?.kind !== "relational")) throw Error("Database replication requires its owned relational engine");
     const actual = db?.kind === "relational" ? db.replication : undefined, expected = r.databaseReplication;
-    if (expected === undefined ? actual !== undefined : !actual || actual.version !== expected.version || actual.enabled !== true || actual.replicationDelayMs !== expected.replicationDelayMs || actual.readPolicy !== expected.readPolicy) throw Error("Database replication must match saved intent");
+    if (expected === undefined ? actual !== undefined : !actual || actual.version !== expected.version || actual.enabled !== true || actual.replicationDelayMs !== expected.replicationDelayMs || actual.readPolicy !== expected.readPolicy || actual.rejoin !== expected.rejoin) throw Error("Database replication must match saved intent");
   }
 }
