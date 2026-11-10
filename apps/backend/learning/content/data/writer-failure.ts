@@ -1,5 +1,5 @@
 import type { LearningModule } from "@infraforge/contracts/learning";
-import { promotingAReplica } from "./lessons/promoting-a-replica";
+import { promotingAReplicaV2 as promotingAReplica } from "./lessons/promoting-a-replica-v2";
 import { promotionAndPendingWork } from "./lessons/promotion-and-pending-work";
 
 export const writerFailureLessons = [promotingAReplica, promotionAndPendingWork];
