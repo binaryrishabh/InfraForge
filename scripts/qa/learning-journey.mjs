@@ -197,6 +197,18 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^At second 64, returned replica caught up with exactly one promoted writer$/],
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "scale-on-delivered-samples", title: /Scale on delivered samples/,
+    prediction: "The pool should not gain an app server while its delivered measurements are too old for the autoscaler to use.",
+    hypothesis: "Changing only the monitor's export interval from 20 to 2 seconds should deliver fresh measurements so the pool adds a server; lowering the CPU target alone cannot.",
+    improvement: {
+      stepName: "monitor's Export every (seconds) is changed from 20 to 2",
+      nodeSelector: '[data-resource-id="monitor"]', nodeText: /Monitoring Agent/, fallbackText: "monitor",
+      role: "spinbutton", name: /^Export every \(seconds\)$/, resourceId: "monitor", setting: "monitoringPolicy.exportIntervalSeconds", from: 20, to: 2,
+    },
+    reportRequirements: [/^The pool has at least 2 app servers in service at second 90$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Representative conceptual content, plus a reading without a check.

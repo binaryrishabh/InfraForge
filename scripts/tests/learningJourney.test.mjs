@@ -12,6 +12,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "move-monitoring-samples",
     "object-bytes-versus-app-cpu",
     "restore-safe-redundancy",
+    "scale-on-delivered-samples",
   ]);
   expect(new Set(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).size).toBe(JOURNEY_LABS.length);
   for (const lab of JOURNEY_LABS) {
@@ -718,4 +719,16 @@ test("monitoring journey changes the batch spinbutton and refuses missing or unr
   await expect(applyJourneyImprovement(fakePage({controlMissing:true}).page,edit)).rejects.toThrow("requested control is missing");
   await expect(applyJourneyImprovement(fakePage({storedValue:"1"}).page,edit)).rejects.toThrow("did not retain");
   expect(lab.reportRequirements[0].test("Receive 128 samples without drops or duplicates; backend ages at most 10 seconds")).toBe(true);
+});
+
+test("delivered-samples journey changes the export interval and refuses missing or unretained values", async () => {
+  const lab=journeyLab("scale-on-delivered-samples"),edit=lab.improvement;
+  expect([edit.resourceId,edit.setting,edit.from,edit.to]).toEqual(["monitor","monitoringPolicy.exportIntervalSeconds",20,2]);
+  expect(edit.name.test("Export every (seconds)")).toBe(true);
+  for(const label of ["Export batch size","Collect every (seconds)","Buffered samples"]) expect(edit.name.test(label)).toBe(false);
+  const fake=fakePage();
+  expect(await applyJourneyImprovement(fake.page,edit)).toEqual([{resourceId:"monitor",setting:"monitoringPolicy.exportIntervalSeconds",value:"2"}]);
+  await expect(applyJourneyImprovement(fakePage({controlMissing:true}).page,edit)).rejects.toThrow("requested control is missing");
+  await expect(applyJourneyImprovement(fakePage({storedValue:"20"}).page,edit)).rejects.toThrow("did not retain");
+  expect(lab.reportRequirements[0].test("The pool has at least 2 app servers in service at second 90")).toBe(true);
 });
