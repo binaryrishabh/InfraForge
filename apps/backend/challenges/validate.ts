@@ -43,7 +43,7 @@ const definition = z.object({
   scenario: z.unknown().optional(),
 }).strict();
 
-const CRITERIA = ["database-redundancy", "monitoring-delivery", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
+const CRITERIA = ["database-redundancy", "monitoring-delivery", "pool-in-service", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
   "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "queue-ready-age", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work", "caller-outcomes"];
 const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
