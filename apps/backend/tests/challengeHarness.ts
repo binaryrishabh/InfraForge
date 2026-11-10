@@ -1,3 +1,4 @@
+import { admitAReplicaImageV1 } from "../challenges/definitions/admit-a-replica-image/v1";
 import { restoreSafeRedundancyV1 } from "../challenges/definitions/restore-safe-redundancy/v1";
 import { moveMonitoringSamplesV1 } from "../challenges/definitions/move-monitoring-samples/v1";
 import { objectBytesVersusAppCpuV1 } from "../challenges/definitions/object-bytes-versus-app-cpu/v1";
@@ -87,6 +88,7 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "admit-a-replica-image": {...admitAReplicaImageV1.starter!, resources: admitAReplicaImageV1.starter!.resources.map(r => r.id === "app" ? {...r, artifactCachePolicy: {version: 1, capacityBytes: 4096}} : r)},
   "restore-safe-redundancy": {...restoreSafeRedundancyV1.starter!, resources: restoreSafeRedundancyV1.starter!.resources.map(r => r.id === "db" ? {...r, databaseReplication: {...r.databaseReplication!, rejoin: "snapshot-replay/1"}} : r)},
   "move-monitoring-samples": {...moveMonitoringSamplesV1.starter!, resources: moveMonitoringSamplesV1.starter!.resources.map(r => r.id === "monitor" ? {...r, monitoringPolicy: {...r.monitoringPolicy!, batchSamples: 16}} : r)},
   "object-bytes-versus-app-cpu": {...objectBytesVersusAppCpuV1.starter!, resources: objectBytesVersusAppCpuV1.starter!.resources.map(r => r.id === "store" ? {...r, objectStoragePolicy: {version: 1, capacityMiB: 4}} : r)},

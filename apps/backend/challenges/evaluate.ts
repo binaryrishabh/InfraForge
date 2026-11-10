@@ -20,6 +20,7 @@ import { SecurityMetricsSchema } from "../reports/securitySchema";
 import { isDepthCriterion, evaluateDepthCriterion } from "./depthCriteria";
 import { evaluateMonitoringDelivery } from "./monitoringCriterion";
 import { evaluateDatabaseRedundancy } from "./databaseRedundancyCriterion";
+import { evaluateStartupCapacity } from "./startupCapacityCriterion";
 
 export interface ChallengeAttemptRecord {
   challengeId: string; challengeVersion: number | null; challengeSpecHash: string | null;
@@ -110,6 +111,7 @@ class Judge {
       terminal.resources.length === input.resources.length && health(input.resources.map(r => r.id));
     switch (c.kind) {
       case "database-redundancy":
+      case "startup-capacity":
         return null; // Dedicated evaluator checks its exact terminal evidence below.
       case "deployment-checks":
         return GATES.every(g => this.stage(g)) ? null : "Complete, valid deployment-check evidence was not recorded.";
@@ -172,11 +174,11 @@ class Judge {
 
   criterion(c: ChallengeCriterion): ChallengeCriterionResult {
     const base = { id: c.id, label: c.label };
-    if (c.kind === "database-redundancy") {
+    if (c.kind === "database-redundancy" || c.kind === "startup-capacity") {
       if (this.active || this.evidence.topologyUnchanged !== true || this.atEvaluation?.topologyRevision !== this.evidence.topologyRevision) {
         return {...base, status: "not-evaluated", detail: "Finished evidence on the unchanged captured topology with matching terminal revision is required.", sources: ["runInputs", "liveTopology", "terminalSnapshot.topologyRevision"]};
       }
-      const result = evaluateDatabaseRedundancy(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds);
+      const result = c.kind === "startup-capacity" ? evaluateStartupCapacity(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds) : evaluateDatabaseRedundancy(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds);
       return {...base, status: result.met === undefined ? "not-evaluated" : result.met ? "met" : "not-met", detail: result.detail, sources: result.sources};
     }
     if (c.kind === "monitoring-delivery") {
