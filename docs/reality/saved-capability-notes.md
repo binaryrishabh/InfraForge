@@ -28,3 +28,21 @@ No capability here implies cloud-provider fidelity, an availability guarantee, a
 
 ## Replica staleness evidence (`stale-reads` criterion, existing saved delay)
 The saved `databaseReplication.replicationDelayMs` (1 to 60000) already set how long a replica applies each writer commit after it. Read routing records `staleReads` and `maxStaleReadAgeMs`. The `stale-reads` challenge criterion compares the cumulative stale read count at one exact second with a bounded limit and is not evaluated when the named replicated database, the exact second or the counters are missing or malformed. Limits: counters are cumulative, include health probes and describe modeled row versions only; the delay is an authored constant, so a real replica's varying lag is not modeled; nothing here shows application consistency or read-your-writes.
+
+## Cache capacity and lifetime in use (`data-cache-capacity/1`, `data-cache-policy/1`, existing)
+`cachePolicy {version 2, capacityEntries, ttlSeconds, singleFlight}` already compiled. `fit-the-working-set` uses capacity when a uniform working set exceeds the cache (evictions), the mirror of `reuse-before-expiry` (expiry with room to spare). A TTL of 60 seconds is the unmarked default; any other TTL is captured as `data-cache-policy/1`, so a design pair must differ in TTL consistently or the comparison degrades to side-by-side. Limits: counters are cache commands, not a caller hit ratio; no writes, invalidation or freshness requirement; entries are logical.
+
+## CDN single shared origin fetch (`cdn-coalescing/1`, existing)
+`cdnCachePolicy {version 2, ttlSeconds, coalesce, maxWaiters}` lets requests that miss the same object during a refill share one origin fetch. `share-one-origin-fetch` compares origin requests with coalescing off and on. Limits: one object, fixed request rate and object size, no geographic edges, purge propagation or stale serving; fewer origin requests show no freshness or user-impact result by themselves.
+
+## Serverless warm-instance retention (`serverless/1`, existing `idleExpiryMs`)
+`serverless {version 1, concurrency, initializationMs, durationMs, timeoutMs, idleExpiryMs}`. A call after the idle window pays initialization again. `keep-a-function-warm` separates idle expiry from a concurrency ceiling using the `function-reuse` criterion (completed calls, cold starts, unsuccessful calls). Limits: exact idle retention is an educational saved control, not a provider contract; the first call is always cold; function CPU, memory and cost are not modeled; no prewarming or provisioned concurrency.
+
+## Event bus dead-letter capacity (`event-bus/1`, existing `deadLetterCapacity`)
+`eventBus {version 1, retryDelayMs, maxAttempts, deadLetterCapacity}`. After the delivery attempts are used, the dead-letter list is the only retained copy of a failed event; a full list discards the rest. `keep-failed-events` uses the `bus-dead-letters` criterion. Limits: one subscriber failure mode, no redrive for the bus, no ordering or exactly-once claim; raising attempts does not enlarge the list.
+
+## Monitoring collection interval (`monitor-cadence/1`, existing `collectionIntervalSeconds`)
+`monitoringPolicy {version 2, collectionIntervalSeconds, exportIntervalSeconds, bufferSamples, batchSamples, exportAttempts}`. A sample cannot be newer than the last collection, so exporting more often does not freshen it. `sample-often-enough` changes only the collection interval. Limits: one agent and backend, authored cadences, no provider metric resolution, no alert evaluation; delivery of one sample is not continuous coverage.
+
+## Multi-cause cascade tracing (`trace-a-slowdown-cascade`)
+A reading and diagnosis lab over existing evidence: a scripted three-second database slowdown, retries, cache and pool effects recorded separately. It adds no saved setting. Limits: one scripted incident, a fixed-second sample, no root-cause automation and no claim that the cut chosen generalizes to other designs.
