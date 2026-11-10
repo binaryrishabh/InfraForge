@@ -2,6 +2,7 @@ import { openTheForwardingGateV1 } from "../challenges/definitions/open-the-forw
 import { keepAFunctionWarmV1 } from "../challenges/definitions/keep-a-function-warm/v1";
 import { isolateRouteCreditsV1 } from "../challenges/definitions/isolate-route-credits/v1";
 import { resolveAfterPublicationV1 } from "../challenges/definitions/resolve-after-publication/v1";
+import { fitTheWorkingSetV1 } from "../challenges/definitions/fit-the-working-set/v1";
 import { shedLoadAtTheEdgeV1 } from "../challenges/definitions/shed-load-at-the-edge/v1";
 import { holdSlotsOnASlowCallV1 } from "../challenges/definitions/hold-slots-on-a-slow-call/v1";
 import { admitAReplicaImageV1 } from "../challenges/definitions/admit-a-replica-image/v1";
@@ -102,6 +103,7 @@ export const REFERENCE: Record<string, ChallengeStarter> = {
   "keep-a-function-warm": {...keepAFunctionWarmV1.starter!, resources: keepAFunctionWarmV1.starter!.resources.map(r => r.id === "fn" ? {...r, serverless: {...r.serverless!, idleExpiryMs: 5000}} : r)},
   "isolate-route-credits": {...isolateRouteCreditsV1.starter!, resources: isolateRouteCreditsV1.starter!.resources.map(r => r.id === "gateway" ? {...r, gatewayQuota: {...r.gatewayQuota!, scope: "per-route"}} : r)},
   "resolve-after-publication": {...resolveAfterPublicationV1.starter!, resources: resolveAfterPublicationV1.starter!.resources.map(r => r.id === "dns" ? {...r, dnsCachePolicy: {version: 1, maxTtlSeconds: 1}} : r)},
+  "fit-the-working-set": {...fitTheWorkingSetV1.starter!, resources: fitTheWorkingSetV1.starter!.resources.map(r => r.id === "cache" ? {...r, cachePolicy: {version: 2, capacityEntries: 256, ttlSeconds: 30}} : r)},
   "shed-load-at-the-edge": {...shedLoadAtTheEdgeV1.starter!, resources: shedLoadAtTheEdgeV1.starter!.resources.map(r => r.id === "lb" ? {...r, lbAdmission: {...r.lbAdmission!, maxActive: 16}} : r)},
   "hold-slots-on-a-slow-call": {...holdSlotsOnASlowCallV1.starter!, resources: holdSlotsOnASlowCallV1.starter!.resources.map(r => r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, concurrency: 4}} : r)},
   "admit-a-replica-image": {...admitAReplicaImageV1.starter!, resources: admitAReplicaImageV1.starter!.resources.map(r => r.id === "app" ? {...r, artifactCachePolicy: {version: 1, capacityBytes: 4096}} : r)},
