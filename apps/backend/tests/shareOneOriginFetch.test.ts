@@ -17,11 +17,11 @@ import { definition, REFERENCE, answers, attemptRow } from "./challengeHarness";
 const ID = "share-one-origin-fetch";
 function variants() {
   const d = definition(ID), starter = d.starter!, near = structuredClone(starter);
-  (near.resources.find(r => r.id === "cdn")!.cdnCachePolicy as { ttlSeconds: number }).ttlSeconds = 2;
+  near.resources.find(r => r.id === "store")!.objectStoragePolicy = { version: 1, capacityMiB: 1024 };
   return { d, designs: [starter, REFERENCE[ID]!, near] };
 }
 
-test("share-one-origin-fetch: coalescing alone meets the origin budget; a longer TTL breaks freshness; reports round-trip", () => {
+test("share-one-origin-fetch: coalescing alone meets the origin budget; more origin capacity does not; reports round-trip", () => {
   const { d, designs } = variants();
   expect(validateInfrastructureName(d.title)).toBeNull();
   expect(specHash(d)).toBe(/"share-one-origin-fetch@1": "([a-f0-9]{64})"/.exec(readFileSync(new URL("./challengeAuthoring.test.ts", import.meta.url), "utf8"))![1]!);
@@ -31,7 +31,7 @@ test("share-one-origin-fetch: coalescing alone meets the origin budget; a longer
   const rows = designs.map(s => attemptRow(d, s, answers(d, { health: "healthy" }))), reports = rows.map(r => buildRunReport(r));
   expect(reports.map(r => r.challenge!.status)).toEqual(["not-met", "met", "not-met"]);
   const cdn = reports.map(r => r.terminal!.resources.find(x => x.id === "cdn")!.cdn!);
-  expect(cdn.map(c => [c.originRequests, c.coalesced])).toEqual([[120, 0], [60, 60], [60, 0]]);
+  expect(cdn.map(c => [c.originRequests, c.coalesced])).toEqual([[120, 0], [60, 60], [120, 0]]);
   for (const r of reports) expect(r.terminal!.traffic!.wholeRun).toMatchObject({ failed: 0 });
   for (const [i, row] of rows.entries()) {
     const saved = { ...row, runInputs: JSON.parse(JSON.stringify(row.runInputs)), terminalSnapshot: JSON.parse(JSON.stringify(row.terminalSnapshot)) };

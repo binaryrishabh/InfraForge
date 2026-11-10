@@ -21,6 +21,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "fit-the-working-set",
     "shed-load-at-the-edge",
     "share-one-origin-fetch",
+    "sample-often-enough",
     "hold-slots-on-a-slow-call",
     "admit-a-replica-image",
     "keep-a-function-warm",
@@ -790,4 +791,14 @@ test("origin-fetch journey turns the coalescing switch on and refuses missing or
   const on=make(true); await applyJourneyImprovement(on.page,edit); expect(on.calls).toEqual([["switch","^Coalesce concurrent misses$"]]);
   await expect(applyJourneyImprovement(make(false,true).page,edit)).rejects.toThrow("requested control is missing");
   expect(lab.reportRequirements[0].test("At most 90 origin requests by second 60 with a TTL of one second or less")).toBe(true);
+});
+
+test("sample journey changes the collection interval and refuses missing or unretained values", async () => {
+  const lab=journeyLab("sample-often-enough"),edit=lab.improvement;
+  expect([edit.resourceId,edit.setting,edit.from,edit.to]).toEqual(["monitor","monitoringPolicy.collectionIntervalSeconds",20,2]);
+  expect(edit.name.test("Collect every (seconds)")).toBe(true);
+  expect(edit.name.test("Export every (seconds)")).toBe(false);
+  expect(await applyJourneyImprovement(fakePage().page,edit)).toEqual([{resourceId:"monitor",setting:"monitoringPolicy.collectionIntervalSeconds",value:"2"}]);
+  await expect(applyJourneyImprovement(fakePage({controlMissing:true}).page,edit)).rejects.toThrow("requested control is missing");
+  await expect(applyJourneyImprovement(fakePage({storedValue:"20"}).page,edit)).rejects.toThrow("did not retain");
 });
