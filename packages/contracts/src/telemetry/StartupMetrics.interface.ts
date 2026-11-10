@@ -14,6 +14,8 @@ export interface StartupRegistry {
 }
 export interface StartupClient {
   id: string;
+  /** Present only for saved artifact-cache/1 intent; absence stays Unknown. */
+  capacityBytes?: number | null;
   cachedBytes?: number | null; pulledBytes?: number | null; reusedLayers?: number | null; failures?: number | null;
   cache?: StartupLayer[] | null; omittedCache?: number | null;
   replicas?: Array<{ id: string; target?: string | null; reference?: string | null; state?: "pending" | "pulling" | "failed" | "running" | null; attempts?: number | null;

@@ -26,6 +26,7 @@ import type { FirewallCapacity } from "./FirewallCapacity.interface";
 import type { DatabaseReplication } from "./DatabaseReplication.interface";
 
 export interface Resource {
+  artifactCachePolicy?: import("./ArtifactCachePolicy.interface").ArtifactCachePolicy;
   databaseRecoveryPlan?: import("./DatabaseRecoveryPlan.interface").DatabaseRecoveryPlan;
   serverless?: import("./Serverless.interface").ServerlessSettings;
   scheduler?: import("./Scheduler.interface").SchedulerSettings;

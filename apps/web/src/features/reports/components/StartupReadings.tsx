@@ -36,7 +36,7 @@ export function StartupReadings({id, metrics: m}: {id: string; metrics?: Startup
     <h4 className="mt-3 font-medium">Artifact clients</h4>
     {m?.clients == null ? <p>Unknown</p> : m.clients.length ? m.clients.map(c => <div key={c.id} className="mt-3">
       <h5 className="break-all font-medium">{c.id}</h5>
-      <Readings rows={[["Artifact pulled bytes (cumulative)", c.pulledBytes], ["Artifact reused layers (cumulative)", c.reusedLayers],
+      <Readings rows={[["Artifact cache capacity (bytes)", c.capacityBytes], ["Artifact pulled bytes (cumulative)", c.pulledBytes], ["Artifact reused layers (cumulative)", c.reusedLayers],
         ["Artifact failures (cumulative)", c.failures], ["Artifact cached bytes (current)", c.cachedBytes], ["Artifact cache rows omitted", c.omittedCache], ["Artifact replica rows omitted", c.omittedReplicas]]} />
       <Layers title="Artifact cached layers (digest and bytes)" rows={c.cache} omitted={c.omittedCache} digestLabel="Artifact cached layer digest" bytesLabel="Artifact cached layer bytes" />
       {c.replicas == null ? <p>Artifact replica records: Unknown</p> : c.replicas.length ? c.replicas.map(r => <div key={r.id} className="mt-3">

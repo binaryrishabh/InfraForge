@@ -93,7 +93,7 @@ export function Inspector({ resource }: { resource: Resource | undefined }) {
       {resource.type === "Monitoring Agent" && <MonitoringBufferSection key={`monitoring-buffer-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "DNS" && <DnsCacheSection key={`dns-cache-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === "CDN" && <CdnTtlSection key={`cdn-ttl-${resource.id}`} resource={resource} disabled={locked} />}
-      {resource.type === RESOURCE_TYPES.LoadBalancer && <AutoscalingSection key={`pool-${resource.id}`} resource={resource} disabled={locked} />}
+      {(resource.type === RESOURCE_TYPES.LoadBalancer || resource.type === "Virtual Machine" && resource.autoscaling?.enabled) && <AutoscalingSection key={`pool-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <LbRateLimitSection resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <LbAdmissionSection key={`admission-${resource.id}`} resource={resource} disabled={locked} />}
       {resource.type === RESOURCE_TYPES.LoadBalancer && <LbSelectionSection key={`selection-${resource.id}`} resource={resource} disabled={locked} />}

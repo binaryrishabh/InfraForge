@@ -3,4 +3,5 @@ import { servingUnderLoadLessons } from "./serving-under-load";
 import { firstScalingChoicesLessons } from "./first-scaling-choices";
 import { scalingReasoningLessons } from "./scaling-reasoning";
 import { startupReadinessLessons } from "./startup-readiness";
-export const lessons = [...firstScalingChoicesLessons, ...servingUnderLoadLessons, ...scalingReasoningLessons, ...startupReadinessLessons];
+import { artifactAdmissionLessons } from "./artifact-admission";
+export const lessons = [...artifactAdmissionLessons, ...firstScalingChoicesLessons, ...servingUnderLoadLessons, ...scalingReasoningLessons, ...startupReadinessLessons];

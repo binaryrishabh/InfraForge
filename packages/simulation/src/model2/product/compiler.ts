@@ -8,7 +8,7 @@ import { checkClientRetry } from "./clientRetry";
 import { checkObjective } from "./objective";
 import { databaseRecoveryPlanError } from "@infraforge/domain/resource";
 import { checkCpuDynamics } from "./workloadDynamics";
-import { RESOURCE_PORTS, dbPoolError, vmMemoryError, lbRateLimitError, firewallStateError, firewallCapacityError, objectStoragePolicyError, monitoringPolicyError, dnsCachePolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, dbPoolError, vmMemoryError, lbRateLimitError, firewallStateError, firewallCapacityError, artifactCachePolicyError, objectStoragePolicyError, monitoringPolicyError, dnsCachePolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -31,6 +31,7 @@ import { numericOrigins } from "./origins";
 import { dataKeys, hotKey, HOT_KEY_PROFILE, multiKey, KEYSPACE_PROFILE, validateDatabaseKeyspace } from "./keyspace";
 import { validateFirewallStateProfile, validateFirewallStateBindings } from "./firewallState";
 import { validateFirewallCapacityProfile, validateFirewallCapacityBindings } from "./firewallCapacity";
+import { validateArtifactCacheProfile, validateArtifactCacheBindings } from "./artifactCache";
 import { validateObjectCapacityProfile, validateObjectCapacityBindings } from "./objectCapacity";
 import { validateMonitoringBufferProfile, validateMonitoringBufferBindings } from "./monitoringBuffer";
 import { validateMonitoringCadenceProfile, validateMonitoringCadenceBindings } from "./monitoringCadence";
@@ -76,6 +77,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateDatabaseReplicationProfile(design.resources, contract);
     validateFirewallStateProfile(design.resources, contract);
     validateFirewallCapacityProfile(design.resources, contract);
+    validateArtifactCacheProfile(design.resources, contract);
     validateObjectCapacityProfile(design.resources, contract);
     validateMonitoringCadenceProfile(design.resources, contract);
     validateMonitoringBufferProfile(design.resources, contract);
@@ -125,6 +127,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (stateError) error("INVALID_FIREWALL_STATE", `resources.${r.id}.firewallState`, stateError);
       const firewallError = firewallCapacityError(r.type, r.firewallCapacity);
       if (firewallError) error("INVALID_FIREWALL_CAPACITY", `resources.${r.id}.firewallCapacity`, firewallError);
+      const artifactError = artifactCachePolicyError(r.type, r.artifactCachePolicy, r.autoscaling?.enabled);
+      if (artifactError) error("INVALID_ARTIFACT_CACHE", `resources.${r.id}.artifactCachePolicy`, artifactError);
       const objectError = objectStoragePolicyError(r.type, r.objectStoragePolicy);
       if (objectError) error("INVALID_OBJECT_CAPACITY", `resources.${r.id}.objectStoragePolicy`, objectError);
       const monitoringError = monitoringPolicyError(r.type, r.monitoringPolicy);
@@ -175,7 +179,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["databaseRecoveryPlan", "serverless", "scheduler", "apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dnsPublication", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "firewallState", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbPoolMaxConnections", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["databaseRecoveryPlan", "serverless", "scheduler", "apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dnsPublication", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "artifactCachePolicy", "firewallState", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbPoolMaxConnections", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -410,6 +414,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     runtime.ledger.sort((a, b) => a.id < b.id ? -1 : 1);
     validateFirewallStateBindings(design.resources, runtime);
     validateFirewallCapacityBindings(design.resources, runtime);
+    validateArtifactCacheBindings(design.resources, runtime, pools);
     validateObjectCapacityBindings(design.resources, runtime);
     validateDnsCacheBindings(design.resources, runtime);
     validateDnsPublicationBindings(design.resources, runtime);

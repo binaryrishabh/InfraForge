@@ -43,7 +43,7 @@ const definition = z.object({
   scenario: z.unknown().optional(),
 }).strict();
 
-const CRITERIA = ["database-redundancy", "monitoring-delivery", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
+const CRITERIA = ["startup-capacity", "database-redundancy", "monitoring-delivery", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
   "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "queue-ready-age", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work", "caller-outcomes"];
 const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
@@ -74,6 +74,12 @@ function checkDefinition(d: ChallengeDefinition): string[] {
   unique("criterion", d.criteria.map((c) => c.id));
   unique("prediction", d.predictions.map((p) => p.id));
   for (const c of d.criteria) {
+    if (c.kind === "startup-capacity") {
+      const owner = d.starter?.resources.find(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.VirtualMachine), p = owner?.autoscaling;
+      if (d.engine !== "2" || !id.safeParse(c.resourceId).success || !p?.enabled ||
+        !Number.isSafeInteger(c.minNewReady) || c.minNewReady < 1 || c.minNewReady > 100 ||
+        !Number.isSafeInteger(p.minReplicas) || !Number.isSafeInteger(p.maxReplicas) || p.minReplicas! < 1 || p.maxReplicas! > 100 || p.maxReplicas! - p.minReplicas! < c.minNewReady) problems.push(`${where}: startup-capacity needs Model 2, a named enabled VM pool and a bounded positive later-ready minimum`);
+    }
     if (c.kind === "database-redundancy" && (d.engine !== "2" || !id.safeParse(c.resourceId).success ||
       !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.Database && r.databaseReplication?.enabled) ||
       d.scenario?.databaseRecovery?.resourceId !== c.resourceId)) problems.push(`${where}: database-redundancy needs Model 2, its named enabled database and an approved recovery scenario`);

@@ -210,6 +210,21 @@ export const JOURNEY_LABS = [
   },
 ];
 
+// Artifact admission: run the full retained learning loop against the local QA stack.
+// JOURNEY_LAB=admit-a-replica-image JOURNEY_SHOTS=/tmp/artifact-admission node ../InfraForge/scripts/qa/learning-journey.mjs
+JOURNEY_LABS.push({
+  lessonId: "admit-a-replica-image", title: /Admit a replica image/,
+  prediction: "The initial app can stay Healthy while app#1/image refuses its required 1024-byte layer in a 256-byte cache.",
+  hypothesis: "Diagnosis: app#1/image reports node-blob-cache-capacity and no artifact or listener readiness. Increasing only its saved cache bytes should admit the layer and make the later replica listener-ready and LB-eligible; equal caller totals can remain.",
+  improvement: {
+    stepName: "app's Artifact cache capacity (bytes) changes from 256 to 4096",
+    nodeSelector: '[data-resource-id="app"]', nodeText: /Virtual Machine/, fallbackText: "app",
+    role: "spinbutton", name: /^Artifact cache capacity \(bytes\)$/, resourceId: "app", setting: "artifactCachePolicy.capacityBytes", from: 256, to: 4096,
+  },
+  reportRequirements: [/^At least one later replica is listener-ready and currently LB-eligible at second 20$/],
+  expected: {starter: "Not met", improved: "Met"},
+});
+
 // Representative conceptual content, plus a reading without a check.
 // These are UI expectations pinned to authored text, never simulated results.
 export const JOURNEY_LESSONS = [
