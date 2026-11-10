@@ -3,8 +3,9 @@ import { queuedWork } from "./queued-work";
 import { firstQueue } from "./first-queue";
 import { burstWorkers } from "./burst-workers";
 import { asyncReasoning } from "./async-reasoning";
+import { deadLetterRecovery } from "./dead-letter-recovery";
 
 export const track: LearningTrack = {
   id: "async", availability: "available", title: "Asynchronous systems",
-  summary: "Separate publishing from completed work, size acknowledgement leases and inspect fan-out failures.", modules: [firstQueue, queuedWork, burstWorkers, asyncReasoning],
+  summary: "Separate publishing from completed work, size acknowledgement leases and inspect fan-out failures.", modules: [firstQueue, queuedWork, burstWorkers, asyncReasoning, deadLetterRecovery],
 };

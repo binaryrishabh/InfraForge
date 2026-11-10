@@ -13,6 +13,8 @@ export interface QueueWorkMetrics {
   deadLettered: number;
   discarded: number;
   expired: number;
+  /** Present only when a saved redrive second exists: messages returned from the dead-letter list. */
+  redriven?: number;
 }
 
 export interface AsyncQueueMetricsV1 {

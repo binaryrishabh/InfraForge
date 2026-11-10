@@ -5,7 +5,7 @@ import type { BrokerConfig, QueueRequest, QueueReply, Delivery, MessageBody } fr
 import { commandService } from "./commands";
 import { ASYNC_LIMITS } from "./policy";
 const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value));
-interface Message { id: string; logicalId: string; publishAttempt: string; body: MessageBody; acceptedAt: number; expiresAt: number; attempts: number; state: "ready" | "scheduled" | "in-flight"; delivery?: Delivery; cancelExpiry?: () => boolean; cancelLease?: () => boolean; cancelDelay?: () => boolean }
+interface Message { id: string; logicalId: string; publishAttempt: string; body: MessageBody; acceptedAt: number; expiresAt: number; attempts: number; redriven?: boolean; state: "ready" | "scheduled" | "in-flight"; delivery?: Delivery; cancelExpiry?: () => boolean; cancelLease?: () => boolean; cancelDelay?: () => boolean }
 export function deliveryQueue(config: BrokerConfig, kernel: EventKernel) {
   const live = new Map<string, Message>(), ready = new Map<string, Message>(), dlq = new Map<string, { message: Omit<Message, "cancelExpiry" | "cancelLease" | "cancelDelay">; reason: string; at: number }>(), dedup = new Map<string, { id: string; body: string }>();
   const consumers = new Map(config.consumers.map((c) => [c.id, { credit: requireKnown(c.credit, "count"), outstanding: new Set<string>() }]));
@@ -45,7 +45,7 @@ export function deliveryQueue(config: BrokerConfig, kernel: EventKernel) {
     if (r.kind === "receive") {
       if (consumer.outstanding.size >= consumer.credit) return { ok: false, reason: "consumer-credit" };
       const m = ready.values().next().value; if (!m) return { ok: true, empty: true };
-      ready.delete(m.id); m.state = "in-flight"; m.attempts++; delivered++; if (m.attempts > 1) redelivered++;
+      ready.delete(m.id); m.state = "in-flight"; m.attempts++; delivered++; if (m.attempts > 1 || m.redriven) redelivered++;
       const d: Delivery = { id: m.id, logicalId: m.logicalId, publishAttempt: m.publishAttempt, attempt: m.attempts, consumer: r.consumer!, receipt: JSON.stringify([config.id, m.id, m.attempts]), deliveredAt: kernel.now, leaseUntil: kernel.now + requireKnown(config.lease, "us"), body: { ...m.body } };
       m.delivery = d; consumer.outstanding.add(m.id); record("delivery", m);
       // Expiry (priority 0) precedes receive/ack command effects (priority 2) at the same time.
@@ -64,12 +64,12 @@ export function deliveryQueue(config: BrokerConfig, kernel: EventKernel) {
     for (const [id, d] of [...dlq]) {
       if (live.size >= requireKnown(config.capacityMessages, "count") || used + d.message.body.bytes > requireKnown(config.capacityBytes, "bytes")) break;
       dlq.delete(id); dlqUsed -= d.message.body.bytes; redriven++;
-      const m: Message = { ...copy(d.message), attempts: 0, state: "ready", delivery: undefined, expiresAt: kernel.now + requireKnown(config.retention, "us") };
+      const m: Message = { ...copy(d.message), attempts: 0, redriven: true, state: "ready", delivery: undefined, expiresAt: kernel.now + requireKnown(config.retention, "us") };
       live.set(id, m); used += m.body.bytes; ready.set(id, m); record("redriven", m);
       m.cancelExpiry = kernel.schedule(m.expiresAt, 0, JSON.stringify(["message-expiry", config.id, id]), () => terminal(m, "expired", "retention"));
     }
   });
   const service = commandService(config.id, config, kernel, apply);
   const snapshot = (m: Message) => ({ id: m.id, logicalId: m.logicalId, publishAttempt: m.publishAttempt, body: { ...m.body }, state: m.state, attempts: m.attempts, acceptedAt: m.acceptedAt, expiresAt: m.expiresAt, delivery: m.delivery ? copy(m.delivery) : undefined });
-  return { ...service, inspectQueue: () => ({ accepted, deliveries: delivered, acknowledged, scheduled: [...live.values()].filter(m => m.state === "scheduled").length, discarded, expired, dlqOverflow, ready: ready.size, inFlight: [...live.values()].filter((m) => m.state === "in-flight").length, redelivered, deadLettered, oldestReadyAgeUs: ready.size ? Math.max(...[...ready.values()].map((m) => kernel.now - m.acceptedAt)) : null }), evidence: () => ({ id: config.id, ...(config.redriveAt ? { redriven } : {}), accepted, duplicatePublishes, rejectedPublishes, ready: ready.size, inFlight: [...live.values()].filter((m) => m.state === "in-flight").length, scheduled: [...live.values()].filter((m) => m.state === "scheduled").length, acknowledged, discarded, expired, deadLettered, dlqOverflow, liveBytes: used, dlqBytes: dlqUsed, deliveries: delivered, redelivered, leaseExpired, nacked, staleReceipts, oldestReadyAgeUs: ready.size ? Math.max(...[...ready.values()].map((m) => kernel.now - m.acceptedAt)) : null, messages: [...live.values()].map(snapshot), dlq: [...dlq.values()].map((d) => copy(d)), consumers: [...consumers].map(([id, c]) => ({ id, credit: c.credit, outstanding: [...c.outstanding] })), events: [...events], omitted, service: service.evidence(), physicalPersistence: "Unknown; pause retains logical state only" }) };
+  return { ...service, inspectQueue: () => ({ ...(config.redriveAt ? { redriven } : {}), accepted, deliveries: delivered, acknowledged, scheduled: [...live.values()].filter(m => m.state === "scheduled").length, discarded, expired, dlqOverflow, ready: ready.size, inFlight: [...live.values()].filter((m) => m.state === "in-flight").length, redelivered, deadLettered, oldestReadyAgeUs: ready.size ? Math.max(...[...ready.values()].map((m) => kernel.now - m.acceptedAt)) : null }), evidence: () => ({ id: config.id, ...(config.redriveAt ? { redriven } : {}), accepted, duplicatePublishes, rejectedPublishes, ready: ready.size, inFlight: [...live.values()].filter((m) => m.state === "in-flight").length, scheduled: [...live.values()].filter((m) => m.state === "scheduled").length, acknowledged, discarded, expired, deadLettered, dlqOverflow, liveBytes: used, dlqBytes: dlqUsed, deliveries: delivered, redelivered, leaseExpired, nacked, staleReceipts, oldestReadyAgeUs: ready.size ? Math.max(...[...ready.values()].map((m) => kernel.now - m.acceptedAt)) : null, messages: [...live.values()].map(snapshot), dlq: [...dlq.values()].map((d) => copy(d)), consumers: [...consumers].map(([id, c]) => ({ id, credit: c.credit, outstanding: [...c.outstanding] })), events: [...events], omitted, service: service.evidence(), physicalPersistence: "Unknown; pause retains logical state only" }) };
 }

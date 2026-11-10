@@ -208,6 +208,7 @@ export const LEARNING_REPORT_MEASUREMENTS = {
   "Queue: in flight": { scope: "resource", path: "queueWork.inFlight", resourceType: "Message Queue", source: queueSource, marker: "${q.inFlight} in flight" },
   "Queue: scheduled": { scope: "resource", path: "queueWork.scheduled", resourceType: "Message Queue", source: queueSource, marker: "${q.scheduled} scheduled" },
   "Queue: redeliveries": { scope: "resource", path: "queueWork.redeliveries", resourceType: "Message Queue", source: queueSource, marker: "${q.redeliveries} redeliveries" },
+  "Queue: redriven": { scope: "resource", path: "queueWork.redriven", resourceType: "Message Queue", source: queueSource, marker: "${q.redriven} redriven" },
   "Queue: dead-lettered": { scope: "resource", path: "queueWork.deadLettered", resourceType: "Message Queue", source: queueSource, marker: "${q.deadLettered} dead-lettered" },
   "Primary reads": { scope: "resource", path: "databaseReplication.primaryReads", resourceType: "Database", source: replicationSource, marker: '"Primary reads"' },
   "Replica reads": { scope: "resource", path: "databaseReplication.replicaReads", resourceType: "Database", source: replicationSource, marker: '"Replica reads"' },
