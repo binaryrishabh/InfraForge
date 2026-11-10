@@ -37,7 +37,7 @@ test("scaling starts with a beginner reading and exercise, then retains its publ
     }
   }
   expect(ordered.find(l => l.id === "retrying-a-full-pool")).toMatchObject({kind: "executable-lab", level: "advanced"});
-  expect(ordered.filter(l => l.kind === "executable-lab").map(l => l.id)).toEqual([
+  expect(ordered.filter(l => l.kind === "executable-lab").map(l => l.id).slice(0, 3)).toEqual([ // Later labs append after the published ladder.
     "route-around-a-slow-vm", "leave-room-for-a-burst", "retrying-a-full-pool",
   ]);
 });

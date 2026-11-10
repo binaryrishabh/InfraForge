@@ -17,10 +17,11 @@ test("observability offers two independent beginner entries before its versioned
     ["missing-readings-are-unknown", "beginner", "conceptual-exercise"],
     ["monitoring-loss-and-freshness", "intermediate", "conceptual-exercise"],
     ["move-monitoring-samples", "intermediate", "executable-lab"],
+    ["sample-often-enough", "intermediate", "executable-lab"],
     ["scale-on-delivered-samples", "advanced", "executable-lab"],
   ]);
   expect(LEARNING_REGISTRY.findModule("observability", "monitoring-ownership")!.lessonIds).toEqual(lessons.slice(0, 3).map(l => l.id));
-  expect(LEARNING_REGISTRY.findModule("observability", "monitoring-throughput")!.lessonIds).toEqual(["move-monitoring-samples"]);
+  expect(LEARNING_REGISTRY.findModule("observability", "monitoring-throughput")!.lessonIds).toEqual(["move-monitoring-samples", "sample-often-enough"]);
   for (const entry of lessons.slice(0, 2)) {
     expect(entry.prerequisites).toEqual([]);
     expect(entry.experiment).toBeNull();

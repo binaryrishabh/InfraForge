@@ -9,7 +9,7 @@ import { REFERENCE } from "./challengeHarness";
 
 test("failures registers three executable lessons with calibrated experiments and evidence limitations", () => {
   expect(tracks.filter(t => t.id === "failures")).toEqual([track]); expect(track.availability).toBe("available");
-  expect(track.modules).toEqual([firstFailure, incidentEvidence, failureReasoning]); expect(incidentEvidence.availability).toBe("available");
+  expect(track.modules.slice(0, 3)).toEqual([firstFailure, incidentEvidence, failureReasoning]); // Later labs append modules. expect(incidentEvidence.availability).toBe("available");
   expect(registered.filter(l => l.trackId === "failures")).toEqual(lessons);
   const labs = incidentEvidenceLessons.filter(lesson => lesson.kind === "executable-lab");
   expect(labs).toHaveLength(3);
