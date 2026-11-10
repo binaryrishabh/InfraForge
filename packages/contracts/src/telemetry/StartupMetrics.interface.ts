@@ -20,8 +20,11 @@ export interface StartupClient {
     artifactReadyAtUs?: number | null; resolvedDigest?: string | null; requiredLayers?: StartupLayer[] | null; omittedLayers?: number | null }> | null;
   omittedReplicas?: number | null; events?: StartupEvent[] | null; omittedEvents?: number | null;
 }
+/** Present only when the saved pool chose delivered monitoring samples (autoscaling-observed/1). */
+export interface StartupControllerSignal { source: "observed-core-time"; backend: string; freshForUs: number }
 export interface StartupController {
   id: string;
+  signal?: StartupControllerSignal | null;
   desired?: number | null; inService?: number | null; evaluations?: number | null; missingMeasurements?: number | null; identityBudgetExhausted?: number | null;
   replicas?: Array<{ id: string; ordinal?: number | null; state?: "reserved" | "provisioning" | "pulling" | "starting" | "ready" | "draining" | "failed" | "terminated" | null; createdAtUs?: number | null; listenerReadyAtUs?: number | null;
     attempts?: number | null; endpointAlive?: boolean | null; endpointReady?: boolean | null; lbHealthy?: boolean | null; lbDraining?: boolean | null }> | null;
