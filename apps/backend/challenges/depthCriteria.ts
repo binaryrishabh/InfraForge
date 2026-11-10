@@ -29,11 +29,13 @@ export function evaluateDepthCriterion(c: DepthCriterion, input: Topology | null
     if (!parsed.success) return unknown("Complete gateway budget counters were not recorded.");
     const expected = targets[0]!.apiGateway?.routes ?? defaultApiRoutes(input.connectionLines.filter(e => e.sourceId === c.resourceId).sort((a, b) => a.id < b.id ? -1 : 1));
     const g = parsed.data;
+    const quota = targets[0]!.gatewayQuota;
+    if (quota ? g.quota?.scope !== quota.scope : g.quota !== undefined) return unknown("Gateway quota scope does not match the captured saved setting; missing scope stays Unknown.");
     if (expected.length !== g.routes.length || !expected.every(e => g.routes.some(r => r.id === e.id && r.path === e.path && r.method === e.method && input.connectionLines.some(edge => edge.id === e.edge && edge.sourceId === c.resourceId && edge.targetId === r.target)))) return unknown("Gateway measurements do not match the captured route bindings.");
     const route = g.routes.find(r => r.id === c.routeId), o = route?.outcomes;
     if (!route || !o) return unknown("The named route's completed and failed upstream outcomes are Unknown.");
     return {met: o.completed >= c.minCompleted && o.upstreamFailed <= c.maxUpstreamFailed, sources,
-      detail: `${prefix}/${c.routeId}: ${o.completed} completions (minimum ${c.minCompleted}), ${o.upstreamFailed} upstream failures (maximum ${c.maxUpstreamFailed}); ${route.admitted} admitted, ${route.rejected} rate refusals, ${o.overloaded} shared-capacity refusals, ${o.pending} pending. Independent route tokens do not reserve shared execution capacity.`};
+      detail: `${prefix}/${c.routeId}: ${o.completed} completions (minimum ${c.minCompleted}), ${o.upstreamFailed} upstream failures (maximum ${c.maxUpstreamFailed}); ${route.admitted} admitted, ${route.rejected} rate refusals, ${o.overloaded} shared-capacity refusals, ${o.pending} pending. ${g.quota ? `Quota scope: ${g.quota.scope}. Tokens do not reserve shared execution capacity.` : "Independent route tokens do not reserve shared execution capacity."}`};
   }
   if (c.kind === "scheduler-work") {
     const parsed = SchedulerMetricsSchema.safeParse(rows[0]!.scheduler);

@@ -29,6 +29,7 @@ export interface Resource {
   databaseRecoveryPlan?: import("./DatabaseRecoveryPlan.interface").DatabaseRecoveryPlan;
   serverless?: import("./Serverless.interface").ServerlessSettings;
   scheduler?: import("./Scheduler.interface").SchedulerSettings;
+  gatewayQuota?: import("./GatewayQuota.interface").GatewayQuota;
   apiGateway?: import("./ApiGateway.interface").ApiGatewaySettings;
   eventBus?: import("./EventBus.interface").EventBusSettings;
   databaseReplication?: DatabaseReplication;

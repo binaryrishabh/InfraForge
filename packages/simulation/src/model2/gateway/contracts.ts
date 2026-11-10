@@ -2,6 +2,7 @@ import type { CommandConfig } from "../messaging/contracts";
 import type { Quantity } from "../../reality/quantity";
 export interface GatewayConfig extends CommandConfig {
   id: string; kind: "api-gateway"; profile: "exact-route-gateway/1";
+  quota?: {profile: "gateway-quota/1"; scope: "shared" | "per-route"};
   maxRequestBytes: Quantity<"bytes">;
   requestEnvelopeBytes: Quantity<"bytes">;
   maxInFlight: Quantity<"count">;
