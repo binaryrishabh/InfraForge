@@ -1,0 +1,30 @@
+import { expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { validateInfrastructureName } from "@infraforge/domain/validation";
+import { captureRunInputs } from "../deployments/runInputs";
+import { reviewDesignChanges } from "../challenges/designChanges";
+import { preflight } from "../challenges/preflight";
+import { challengeSeed, specHash } from "../challenges/registry";
+import { buildRunReport } from "../reports/report";
+import { definition, REFERENCE, answers, attemptRow } from "./challengeHarness";
+
+test("scale-on-delivered-samples: shortening export alone scales the pool; a lower CPU target alone does not", () => {
+  const d = definition("scale-on-delivered-samples"), start = d.starter!, fixed = REFERENCE[d.id]!, near = structuredClone(start);
+  const app = (s: typeof start) => s.resources.find(r => r.id === "app")!.autoscaling!;
+  app(near).targetCpu = 10;
+  expect(validateInfrastructureName(d.title)).toBeNull();
+  expect(specHash(d)).toBe(/"scale-on-delivered-samples@1": "([a-f0-9]{64})"/.exec(readFileSync(new URL("./challengeAuthoring.test.ts", import.meta.url), "utf8"))![1]!);
+  const designs = [start, fixed, near];
+  for (const design of designs) expect(preflight(d, design).errors).toEqual([]);
+  const inputs = designs.map(s => captureRunInputs(s, d.workload, challengeSeed(d)));
+  for (const i of [1, 2]) expect(reviewDesignChanges(inputs[0]!, inputs[i]!)).toMatchObject({classification: "one-change", count: 1});
+  const restored = structuredClone(fixed); restored.resources.find(r => r.id === "monitor")!.monitoringPolicy = start.resources.find(r => r.id === "monitor")!.monitoringPolicy;
+  expect(restored).toEqual(start);
+  const reports = designs.map(s => buildRunReport(attemptRow(d, s, answers(d, {scale: "yes"}))));
+  expect(reports.map(r => r.challenge!.status)).toEqual(["not-met", "met", "not-met"]);
+  const rows = reports.map(r => r.terminal!.resources.find(x => x.id === "app")!.startup!.controllers![0]!);
+  expect(rows.map(c => [c.desired, c.inService, c.evaluations, c.missingMeasurements])).toEqual([[1, 1, 9, 9], [2, 2, 9, 0], [1, 1, 9, 9]]);
+  const spare = rows[1]!.replicas!.find(r => r.id === "app#1")!;
+  expect([spare.state, spare.listenerReadyAtUs, spare.lbHealthy]).toEqual(["ready", 12_001_071, true]);
+  for (const r of reports) expect(r.terminal!.traffic!.wholeRun).toMatchObject({completed: 9000, failed: 0});
+});
