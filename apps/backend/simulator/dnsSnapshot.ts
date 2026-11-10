@@ -2,10 +2,10 @@ import { dnsPublicationSnapshot, type PublicationSource } from "./dnsPublication
 import type { DnsEvidence } from "@infraforge/contracts/reports";
 import { DnsEvidenceSchema } from "../reports/dnsSchema";
 
-/** Copy only resolver-owned evidence. Internal engine runs use the same read boundary. */
+/** Copy resolver evidence and opt-in authority publication observations at the same boundary. */
 interface Source {
   capture: {throughUs: number; timestampComplete?: boolean};
-  systems: PublicationSource & {resolvers: Array<{
+  systems: Omit<PublicationSource, "resolvers"> & {resolvers: Array<PublicationSource["resolvers"][number] & {
     id: string; queries: number; hits: number; misses: number; authoritativeLookups: number;
     failures: number; fills: number; expirations: number; evictions: number; replaced: number;
     cache: Array<{name: string; expiresAt: number; answer: {ok: boolean; name: string; authority: string;

@@ -72,7 +72,7 @@ test("DNS lab refuses incomplete caller evidence, scenario receipts and source i
     const row=structuredClone(rows[1]!);mutate(row);
     expect(buildRunReport(row).challenge!.criteria.find(c=>c.id==="callers")!.status).toBe("not-evaluated");
   }
-  expect(improvementSource(rows[0]!,d.id).input).toEqual(rows[0]!.runInputs);
+  expect(readRunInputs(rows[0]!.runInputs)).toEqual(improvementSource(rows[0]!,d.id).input);
   const forged=structuredClone(rows[0]!);forged.challengeScenario=null;
   expect(()=>improvementSource(forged,d.id)).toThrow("scenario");
   const wrongHash=structuredClone(rows[0]!);wrongHash.challengeSpecHash="0".repeat(64);

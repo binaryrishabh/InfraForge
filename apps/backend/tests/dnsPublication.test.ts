@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { interventionError } from "@infraforge/domain/resource";
 import { buildContractFromRunInputs, compileProduct } from "@infraforge/simulation/internal-product";
 import { compileScenario } from "@infraforge/simulation/model2-run";
 import { captureRunInputs } from "../deployments/runInputs";
@@ -21,9 +22,9 @@ test("publication preserves cached NXDOMAIN, records real authority time, then e
     expect(dnsSnapshot(run.evidence()).publication).toMatchObject({initialRecord:"absent",publishedAtUs:null,currentRecord:null,firstSuccessfulResolutionAtUs:null});
     for (let second=1;second<=8;second++) {
       run.advance();
-      if(second===2) { expect(run.apply({kind:"intervention",parameters:request}).outcome.intervention).toMatchObject({atUs:2_000_001}); while(run.catchingUp)run.catchUp(10); }
+      if(second===2) { expect(run.apply({kind:"intervention",parameters:request}).outcome.intervention).toMatchObject({atUs:2_000_001}); while(run.catchingUp)run.catchUp(10); expect(() => run.apply({kind:"intervention",parameters:request})).toThrow("only one DNS publication"); }
       const e=run.evidence(), before=JSON.stringify(e), saved=dnsSnapshot(e);
-      expect(JSON.stringify(run.evidence())).toBe(before); expect(DnsEvidenceSchema.parse(JSON.parse(JSON.stringify(saved)))).toEqual(saved);
+      expect(JSON.stringify(run.evidence())).toBe(before); expect(saved).toEqual(DnsEvidenceSchema.parse(JSON.parse(JSON.stringify(saved))));
       observations.push({raw:e,saved});
     }
     const three=observations[2]!;
@@ -33,7 +34,6 @@ test("publication preserves cached NXDOMAIN, records real authority time, then e
     expect(three.raw.systems.authorities[0]!.records[0]!.generation).toBe(2);
     expect(three.raw.systems.security.dnsFailed).toBe(three.raw.counts.rejected);
     expect(three.saved.publication!.firstSuccessfulResolutionAtUs).toBeNull();
-    expect(() => run.apply({kind:"intervention",parameters:request})).toThrow();
     return observations[7]!;
   });
   expect(rows.map(r=>r.raw.counts.completed)).toEqual([5,10]);
@@ -48,6 +48,8 @@ test("saved publication and profiles refuse malformed, wrong owner and mismatche
     const layout=publicationLayout();Object.assign(layout.resources[0]!,{dnsPublication:value});expect(LayoutSchema.safeParse(layout).success).toBe(false);
   }
   const wrong=publicationLayout();wrong.resources[1]!.dnsPublication=wrong.resources[0]!.dnsPublication;expect(LayoutSchema.safeParse(wrong).success).toBe(false);
+  expect(interventionError({...request,parameters:{name:"other.example"}})).toContain("INTERVENTION_PARAMETERS");
+  expect(interventionError({...request,revision:2})).toContain("INTERVENTION_REVISION");
   const input=captureRunInputs(publicationLayout(),dnsWorkload,"refusals");
   expect(buildContractFromRunInputs({...input,adapterProfiles:input.adapterProfiles!.filter(p=>p!=="dns-publication/1")},8)).toHaveProperty("refused");
   const old=captureRunInputs(dnsLayout(60),dnsWorkload,"old");
@@ -56,7 +58,8 @@ test("saved publication and profiles refuse malformed, wrong owner and mismatche
   expect(()=>compileScenario({...scenario,steps:[...scenario.steps,{...scenario.steps[0]!,id:"twice",atSecond:3}]},input,8)).toThrow();
   expect(()=>compileScenario({...scenario,steps:[{...scenario.steps[0]!,request:{...request,target:{resourceId:"app"}}}]},input,8)).toThrow();
   const built=buildContractFromRunInputs(input,8);if("refused" in built)throw Error(built.refused.join());
-  for(const change of [(c:typeof built.contract)=>{c.caller.security.dns!.routes.push({...c.caller.security.dns!.routes[0]!});},
+  for(const change of [(c:typeof built.contract)=>{c.version=c.version.replace("dns-publication/1","dns-publication/10");},
+    (c:typeof built.contract)=>{c.caller.security.dns!.routes.push({...c.caller.security.dns!.routes[0]!});},
     (c:typeof built.contract)=>{const a=c.nodes.dns!.resources[0]!.config;if(a.kind==="dns-authority")a.publication!.record.addresses=["10.0.0.99"];},
     (c:typeof built.contract)=>{c.caller.security.dns!.resolver="$app";}]) {
     const contract=structuredClone(built.contract);change(contract);

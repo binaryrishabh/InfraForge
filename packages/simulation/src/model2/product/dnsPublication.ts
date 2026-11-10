@@ -6,7 +6,7 @@ import type { SystemsInput } from "../systems/contracts";
 export const DNS_PUBLICATION_PROFILE = "dns-publication/1" as const;
 export const dnsPublicationChanges = (resources: readonly Resource[]) => resources.some(r => r.dnsPublication !== undefined);
 export function validateDnsPublicationProfile(resources: readonly Resource[], contract: ProductContract) {
-  if (dnsPublicationChanges(resources) !== contract.version.includes(`/${DNS_PUBLICATION_PROFILE}`)) throw Error("DNS publication requires its captured profile and matching saved intent");
+  if (dnsPublicationChanges(resources) !== /(?:^|\/)dns-publication\/1(?:\/|$)/.test(contract.version)) throw Error("DNS publication requires its captured profile and matching saved intent");
   for (const r of resources) { const error = dnsPublicationError(r.type, r.dnsPublication); if (error) throw Error(error); }
 }
 /** Select only the captured caller's single route. Never infer a destination from a drawn edge. */
