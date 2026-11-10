@@ -1,2 +1,4 @@
 export { track } from "./track";
-export { lessons } from "./first-cdn";
+import { lessons as first } from "./first-cdn";
+import { originLoadLessons } from "./origin-load";
+export const lessons = [...first, ...originLoadLessons];

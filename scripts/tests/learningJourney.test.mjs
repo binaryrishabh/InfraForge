@@ -4,7 +4,8 @@ import { JOURNEY_LABS, JOURNEY_LESSONS, acknowledgeJourneyChanges, answerJourney
 import { JOURNEY_FAILURES, installJourneyFailure, journeyFailure, localFailureApi } from "../qa/learning-journey.mjs";
 
 test("the lab table has unique journey ids, explicit controls and recorded-verdict expectations", () => {
-  expect(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).toEqual([
+  // Later labs join the table, so compare the set of ids; uniqueness is asserted below.
+  expect(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId).sort()).toEqual([
     "where-does-the-time-go", "writes-cost-more-than-reads", "balancer-shares-turns",
     "keep-waiting-work", "check-the-missing-server", "parallel-jobs-for-a-burst", "split-the-capacity-budget", "open-and-size-an-api",
     "writes-cost-more-than-reads-generic", "size-the-app-database-pool",
@@ -17,12 +18,14 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "isolate-route-credits",
     "redrive-after-the-fix",
     "keep-failed-events",
+    "fit-the-working-set",
     "shed-load-at-the-edge",
+    "share-one-origin-fetch",
     "hold-slots-on-a-slow-call",
     "admit-a-replica-image",
     "keep-a-function-warm",
     "open-the-forwarding-gate",
-  ]);
+  ].sort());
   expect(new Set(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).size).toBe(JOURNEY_LABS.length);
   for (const lab of JOURNEY_LABS) {
     expect(lab.lessonId).toMatch(/^[a-z]+(?:-[a-z]+)*$/);
@@ -34,7 +37,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
       expect(control.nodeSelector.trim().length).toBeGreaterThan(0);
       expect(control.nodeText).toBeInstanceOf(RegExp);
       expect(control.fallbackText).toBe(control.resourceId);
-      expect(["radio", "spinbutton", "combobox"]).toContain(control.role);
+      expect(["radio", "spinbutton", "combobox", "switch"]).toContain(control.role);
       expect(control.name).toBeInstanceOf(RegExp);
     }
     expect(lab.expected).toEqual({ starter: "Not met", improved: "Met" });
@@ -771,4 +774,20 @@ test("failed-events journey changes the dead-letter size and refuses missing or 
   expect(await applyJourneyImprovement(fakePage().page,edit)).toEqual([{resourceId:"bus",setting:"eventBus.deadLetterCapacity",value:"100"}]);
   await expect(applyJourneyImprovement(fakePage({controlMissing:true}).page,edit)).rejects.toThrow("requested control is missing");
   await expect(applyJourneyImprovement(fakePage({storedValue:"5"}).page,edit)).rejects.toThrow("did not retain");
+});
+
+test("origin-fetch journey turns the coalescing switch on and refuses missing or unretained values", async () => {
+  const lab=journeyLab("share-one-origin-fetch"),edit=lab.improvement;
+  expect([edit.resourceId,edit.setting,edit.role]).toEqual(["cdn","cdnCachePolicy.coalesce","switch"]);
+  const make=(checked, missing=false)=>{ const calls=[]; let state=checked;
+    const control={waitFor:async()=>{ if(missing) throw new Error("requested control is missing"); }, isChecked:async()=>state, click:async()=>{ calls.push("click"); state=true; }};
+    const scope={getByRole:(role,opts)=>{ calls.push([role,opts.name.source]); return {first:()=>control}; }};
+    const node={filter:()=>({first:()=>({click:async()=>{}})})};
+    return {calls,page:{locator:()=>node,getByText:()=>({first:()=>({click:async()=>{}})}),getByRole:scope.getByRole}}; };
+  const fake=make(false);
+  expect(await applyJourneyImprovement(fake.page,edit)).toEqual([{resourceId:"cdn",setting:"cdnCachePolicy.coalesce",value:true}]);
+  expect(fake.calls).toEqual([["switch","^Coalesce concurrent misses$"],"click"]);
+  const on=make(true); await applyJourneyImprovement(on.page,edit); expect(on.calls).toEqual([["switch","^Coalesce concurrent misses$"]]);
+  await expect(applyJourneyImprovement(make(false,true).page,edit)).rejects.toThrow("requested control is missing");
+  expect(lab.reportRequirements[0].test("At most 90 origin requests by second 60 with a TTL of one second or less")).toBe(true);
 });
