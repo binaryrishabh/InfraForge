@@ -9,6 +9,7 @@ import { buildExperimentTrace, type StoredEvidenceSample } from "../evidence/rep
 import { guidedReview } from "../challenges/guidedReview";
 import { improvementSource } from "../challenges/improvements";
 import { verifiedScenario } from "../challenges/scenario";
+import { canonical, normalizedTopology, unambiguous } from "../comparison/design";
 
 export interface StoredRun {
   evidenceSamples?: StoredEvidenceSample[];
@@ -31,11 +32,14 @@ const failureOf = (records: Records) => records.timeline.filter((e) => e.event =
 // Challenge results are derived from the run's own evidence on every read; nothing is stored as a score.
 function challengeOf(row: StoredRun, records: Records, registry?: ChallengeRegistry) {
   if (!row.challengeId) return null;
+  const unchanged = !!records.input && !!records.live && unambiguous(records.input) && unambiguous(records.live) &&
+    canonical(normalizedTopology(records.input)) === canonical(normalizedTopology(records.live));
   return evaluateAttempt({ challengeId: row.challengeId, challengeVersion: row.challengeVersion ?? null,
     challengeSpecHash: row.challengeSpecHash ?? null, challengePrediction: row.challengePrediction,
     predictionSubmittedAt: row.predictionSubmittedAt ?? null, evaluationStopAtSimulatedSeconds: row.evaluationStopAtSimulatedSeconds ?? null,
     challengeExperiment: row.challengeExperiment ?? null, challengeScenario: row.challengeScenario ?? null },
   { status: row.status, runtimeActive: !!row.runtimeActive, input: records.input, stages: records.stages, stageEvidence: records.stageEvidence, terminal: records.terminal,
+    topologyRevision: row.topologyRevision, topologyUnchanged: unchanged,
     actions: readReportActions(row.actions, []), actionCount: row.actionCount ?? row.actions?.length, runInputs: records.input,
     failure: row.status === "failed" ? failureOf(records)?.message ?? "The run failed without a recorded message." : null }, registry);
 }

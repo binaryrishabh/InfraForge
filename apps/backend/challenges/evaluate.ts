@@ -18,6 +18,7 @@ import { QueueWorkSchema } from "../reports/queueWorkSchema";
 import { WholeRunSchema } from "../reports/wholeRunSchema";
 import { SecurityMetricsSchema } from "../reports/securitySchema";
 import { isDepthCriterion, evaluateDepthCriterion } from "./depthCriteria";
+import { evaluateMonitoringDelivery } from "./monitoringCriterion";
 
 export interface ChallengeAttemptRecord {
   challengeId: string; challengeVersion: number | null; challengeSpecHash: string | null;
@@ -26,6 +27,8 @@ export interface ChallengeAttemptRecord {
   challengeScenario?: unknown;
 }
 export interface ChallengeEvidence {
+  topologyRevision?: number;
+  topologyUnchanged?: boolean;
   status: string; runtimeActive: boolean; input: Topology | null;
   stages: ReportStage[]; terminal: ReportCheckpoint | null; failure: string | null;
   stageEvidence?: Readonly<Record<string, boolean>>;
@@ -145,6 +148,7 @@ class Judge {
         return this.plan && input && health(input.resources.filter(r => r.id !== this.plan!.targetResourceId).map(r => r.id))
           ? null : "Complete experiment survivor measurements were not recorded.";
       case "caller-outcomes":
+      case "monitoring-delivery":
       case "backend-admission-budget":
       case "queue-work":
       case "queue-ready-age":
@@ -165,6 +169,13 @@ class Judge {
 
   criterion(c: ChallengeCriterion): ChallengeCriterionResult {
     const base = { id: c.id, label: c.label };
+    if (c.kind === "monitoring-delivery") {
+      if (this.evidence.topologyUnchanged !== true || this.atEvaluation?.topologyRevision !== this.evidence.topologyRevision) {
+        return {...base, status: "not-evaluated", detail: "An unchanged captured topology and matching terminal revision are required.", sources: ["runInputs", "liveTopology", "topologyRevision", "terminalSnapshot.topologyRevision"]};
+      }
+      const result = evaluateMonitoringDelivery(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds, this.active);
+      return {...base, status: result.met === undefined ? "not-evaluated" : result.met ? "met" : "not-met", detail: result.detail, sources: result.sources};
+    }
     const pending = (detail: string, sources: string[]) => ({ ...base, status: this.active ? "pending" as const : "not-evaluated" as const, detail, sources });
     const decided = (met: boolean, detail: string, sources: string[]) => ({ ...base, status: met ? "met" as const : "not-met" as const, detail, sources });
     // A fixed-load latency lab uses the same captured terminal evidence as a scenario.
