@@ -17,6 +17,9 @@ export interface CacheMetrics {
   expirations: number | null;
   evictions: number | null;
   coalescedWaiters: number | null;
+  /** Present only with a saved stale age bound: answers served from an expired body, and the oldest such age. A null age means none served. */
+  staleServed?: number | null;
+  maxStaleAgeUs?: number | null;
 }
 
 export interface CdnMetrics {

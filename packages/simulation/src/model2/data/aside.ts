@@ -41,10 +41,16 @@ export function cacheAside(config: AsideConfig, kernel: EventClock, send: Delive
         if (cached?.hit) { hits++; finish(cached, "cache-hit"); return; }
         if (cached?.ok) misses++;
         if (!cached?.ok) { cacheFailures++; if (config.onCacheFailure === "fail") { finish(undefined, "cache-failed", cacheCause); return; } }
-        const ready = (reply: DataReply | undefined, cause?: Cause) => finish(reply, "database-fetch", cause);
+        const ready = (reply: DataReply | undefined, cause?: Cause) => finish(reply, reply?.stale ? "stale-cache" : "database-fetch", cause);
         if (config.coalesce && fills.has(key)) { coalesced++; fills.get(key)!.push(ready); return; }
         const waiters = [ready]; if (config.coalesce) fills.set(key, waiters);
-        const complete = (reply: DataReply | undefined, cause?: Cause) => { if (config.coalesce && (!config.recordedKeysOnly || fills.get(key) === waiters)) fills.delete(key); for (const waiter of waiters) waiter(reply, cause); };
+        const complete = (reply: DataReply | undefined, cause?: Cause) => {
+          if (config.coalesce && (!config.recordedKeysOnly || fills.get(key) === waiters)) fills.delete(key);
+          const failed = !reply?.ok || !reply.rows?.some((r) => r.key === key);
+          // A failed fill may be answered, per waiter, from a retained expired body inside the saved stale bound; it is never reported as fresh.
+          if (config.staleOnError && failed && cached?.ok) { for (const waiter of waiters) request(config.cache, { kind: "get-stale", key }, (stale) => stale?.ok && stale.hit ? waiter(stale) : waiter(reply, cause)); return; }
+          for (const waiter of waiters) waiter(reply, cause);
+        };
         fetches++; request(config.database, { kind: "query", key }, (reply, cause) => {
           const row = reply?.rows?.find((r) => r.key === key);
           if (!reply?.ok || !row) { complete(reply, cause); return; }
