@@ -27,6 +27,7 @@ test("real DNS reports render audited values, resolver/name identity, windows, u
     expect(html).toContain("DNS success does not establish application reachability");
     expect(html).toContain("not a timestamped transition history");
     for (const [label, d] of labels) {
+      if (d.path.startsWith("dnsEvidence.publication.")) { expect(e.publication).toBeUndefined(); continue; }
       const source = readFileSync(resolve(import.meta.dir, "../../..", d.source), "utf8");
       expect(source).toContain(d.marker);
       // A recorded empty cache is an empty population, not a missing cached answer.
@@ -48,7 +49,8 @@ test("real DNS reports render audited values, resolver/name identity, windows, u
       }
     }
   }
-  for (const [label] of labels) {
+  for (const [label, d] of labels) {
+    if (d.path.startsWith("dnsEvidence.publication.")) { expect(render(f.missing)).not.toContain(`<dt>${label}</dt>`); continue; }
     expect(render(f.missing)).toContain(`<dt>${label}</dt><dd>Unknown</dd>`);
     expect(lessonRunMeasurements(f.missing, [label])[0]!.value).toBe("Unknown");
     expect(lessonRunMeasurements(f.checkpointOnly, [label])[0]!.value).toBe("Unknown");

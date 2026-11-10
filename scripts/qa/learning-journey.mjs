@@ -197,6 +197,17 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^At second 64, returned replica caught up with exactly one promoted writer$/],
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "resolve-after-publication", title: /Resolve after publication/,
+    prediction: "Final Healthy service can coexist with earlier unresolved caller failures.",
+    hypothesis: "A one-second resolver ceiling should expire negative answers sooner so later connection opens discover the unchanged published record.",
+    improvement: {
+      stepName: "dns's Maximum cached TTL is changed from 60 to 1 second",
+      nodeSelector: '[data-resource-id="dns"]', nodeText: /DNS/, fallbackText: "dns",
+      role: "spinbutton", name: /^Maximum cached TTL \(seconds\)$/, resourceId: "dns", setting: "dnsCachePolicy.maxTtlSeconds", from: 60, to: 1,
+    },
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Representative conceptual content, plus a reading without a check.
