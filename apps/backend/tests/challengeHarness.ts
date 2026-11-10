@@ -97,6 +97,7 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "release-the-cpu-budget": {...releaseTheCpuBudgetV1.starter!, resources: releaseTheCpuBudgetV1.starter!.resources.map(r => r.id === "app" ? {...r, vmCpuQuota: {...r.vmCpuQuota!, limitPercent: 100}} : r)},
   "open-the-forwarding-gate": {...openTheForwardingGateV1.starter!, resources: openTheForwardingGateV1.starter!.resources.map(r => r.id === "lb" ? {...r, lbAdmission: {...r.lbAdmission!, maxActive: 16}} : r)},
   "keep-a-function-warm": {...keepAFunctionWarmV1.starter!, resources: keepAFunctionWarmV1.starter!.resources.map(r => r.id === "fn" ? {...r, serverless: {...r.serverless!, idleExpiryMs: 5000}} : r)},
   "isolate-route-credits": {...isolateRouteCreditsV1.starter!, resources: isolateRouteCreditsV1.starter!.resources.map(r => r.id === "gateway" ? {...r, gatewayQuota: {...r.gatewayQuota!, scope: "per-route"}} : r)},
@@ -291,3 +292,4 @@ REFERENCE["reuse-before-expiry-v2"] = REFERENCE["reuse-before-expiry"]!;
 REFERENCE["share-a-cache-fill-v2"] = REFERENCE["share-a-cache-fill"]!;
 REFERENCE["catalogue-link-flash-v2"] = REFERENCE["catalogue-link-flash"]!;
 REFERENCE["cache-or-database-v2"] = REFERENCE["cache-or-database"]!;
+import { releaseTheCpuBudgetV1 } from "../challenges/definitions/release-the-cpu-budget/v1";
