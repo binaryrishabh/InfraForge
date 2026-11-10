@@ -13,6 +13,18 @@ export function DatabaseReplicationSection({ resource, disabled }: { resource: R
       </select>}
     </Field>
     {policy && <>
+      <Field label="Old-primary catch-up" hint="After promotion, the returned primary stays fenced until snapshot and ordered replay finish. Uses the modeled replication delay; recorded promotion loss is retained.">
+        {({ id, describedBy }) => <select id={id} aria-describedby={describedBy} disabled={disabled} value={policy.rejoin ?? "off"}
+          onChange={event => {
+            if (disabled || event.target.value !== "off" && event.target.value !== "snapshot-replay/1") return;
+            const nextPolicy = { ...policy };
+            if (event.target.value === "off") delete nextPolicy.rejoin;
+            else nextPolicy.rejoin = "snapshot-replay/1";
+            updateResource(resource.id, { databaseReplication: nextPolicy });
+          }}>
+          <option value="off">Off (returned primary stays fenced)</option><option value="snapshot-replay/1">Snapshot and ordered replay</option>
+        </select>}
+      </Field>
       <Field label="Modeled replication delay" hint="Milliseconds between a writer commit and replica application; no provider timing claim.">
         {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} type="number" min={1} max={DATABASE_REPLICATION_DELAY_MAX_MS} step={1} value={policy.replicationDelayMs} disabled={disabled}
           onChange={event => updateResource(resource.id, { databaseReplication: { ...policy, replicationDelayMs: Number(event.target.value) } })} />}

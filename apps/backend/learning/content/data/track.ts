@@ -1,3 +1,4 @@
+import { databaseRedundancy } from "./database-redundancy";
 import { objectCapacity } from "./object-capacity";
 import { databaseIncident } from "./database-incident";
 import type { LearningTrack } from "@infraforge/contracts/learning";
@@ -9,5 +10,5 @@ import { objectOwnership } from "./object-ownership";
 
 export const track: LearningTrack = {
   id: "data", availability: "available", title: "Databases and caching",
-  summary: "Follow read and write execution, budget database sessions and inspect delayed replica reads.", modules: [databasePressure, cacheLifetime, writerFailure, dataTradeoffs, objectOwnership, databaseIncident, objectCapacity],
+  summary: "Follow read and write execution, budget database sessions and inspect delayed replica reads.", modules: [databasePressure, cacheLifetime, writerFailure, dataTradeoffs, objectOwnership, databaseIncident, objectCapacity, databaseRedundancy],
 };

@@ -19,6 +19,7 @@ import { WholeRunSchema } from "../reports/wholeRunSchema";
 import { SecurityMetricsSchema } from "../reports/securitySchema";
 import { isDepthCriterion, evaluateDepthCriterion } from "./depthCriteria";
 import { evaluateMonitoringDelivery } from "./monitoringCriterion";
+import { evaluateDatabaseRedundancy } from "./databaseRedundancyCriterion";
 
 export interface ChallengeAttemptRecord {
   challengeId: string; challengeVersion: number | null; challengeSpecHash: string | null;
@@ -108,6 +109,8 @@ class Judge {
     const allHealth = () => !!input?.resources.length && !!terminal &&
       terminal.resources.length === input.resources.length && health(input.resources.map(r => r.id));
     switch (c.kind) {
+      case "database-redundancy":
+        return null; // Dedicated evaluator checks its exact terminal evidence below.
       case "deployment-checks":
         return GATES.every(g => this.stage(g)) ? null : "Complete, valid deployment-check evidence was not recorded.";
       case "security-clean":
@@ -169,6 +172,13 @@ class Judge {
 
   criterion(c: ChallengeCriterion): ChallengeCriterionResult {
     const base = { id: c.id, label: c.label };
+    if (c.kind === "database-redundancy") {
+      if (this.active || this.evidence.topologyUnchanged !== true || this.atEvaluation?.topologyRevision !== this.evidence.topologyRevision) {
+        return {...base, status: "not-evaluated", detail: "Finished evidence on the unchanged captured topology with matching terminal revision is required.", sources: ["runInputs", "liveTopology", "terminalSnapshot.topologyRevision"]};
+      }
+      const result = evaluateDatabaseRedundancy(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds);
+      return {...base, status: result.met === undefined ? "not-evaluated" : result.met ? "met" : "not-met", detail: result.detail, sources: result.sources};
+    }
     if (c.kind === "monitoring-delivery") {
       if (this.evidence.topologyUnchanged !== true || this.atEvaluation?.topologyRevision !== this.evidence.topologyRevision) {
         return {...base, status: "not-evaluated", detail: "An unchanged captured topology and matching terminal revision are required.", sources: ["runInputs", "liveTopology", "topologyRevision", "terminalSnapshot.topologyRevision"]};

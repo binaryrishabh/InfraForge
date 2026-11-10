@@ -186,9 +186,11 @@ test("measurement allow-list stays anchored in existing saved-report renderers",
     expect(source).toContain(definition.marker);
     if (definition.source.includes("/live/") || definition.source.includes("SecuritySection")) {
       const component = definition.source.split("/").at(-1)!.replace(".tsx", "");
-      // These nested components are reached through TrafficEvidence.
-      expect(["WholeRunReadings", "LatencyBreakdown"].includes(component)
-        ? readFileSync(new URL("apps/web/src/features/live/TrafficEvidence.tsx", root), "utf8") : report).toContain(component);
+      // Verify both edges for nested renderers rather than assuming a direct import.
+      const parent = component === "DatabaseRejoinReadings" ? "DatabaseReplicationReadings" :
+        ["WholeRunReadings", "LatencyBreakdown"].includes(component) ? "TrafficEvidence" : null;
+      expect(parent ? readFileSync(new URL(`apps/web/src/features/live/${parent}.tsx`, root), "utf8") : report).toContain(component);
+      if (parent) expect(report).toContain(parent);
     }
     if (definition.source.endsWith("/ActionTimeline.tsx")) {
       expect(readFileSync(new URL("apps/web/src/features/reports/components/ReportView.tsx", root), "utf8")).toContain("<ActionTimeline actions={report.actions}");

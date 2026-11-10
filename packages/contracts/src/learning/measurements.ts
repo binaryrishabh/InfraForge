@@ -26,6 +26,14 @@ const memorySource = "apps/web/src/features/live/VmMemoryReadings.tsx";
 // VM memory labels name the modeled population, distinct from generic Memory %.
 
 export const LEARNING_REPORT_MEASUREMENTS = {
+  "Current writer": {scope:"resource",path:"databaseReplication.currentWriter",resourceType:"Database",source:replicationSource,marker:'"Current writer"'},
+  "Original primary role": {scope:"resource",path:"databaseReplication.primaryRole",resourceType:"Database",source:replicationSource,marker:'"Original primary role"'},
+  "Replica role": {scope:"resource",path:"databaseReplication.replicaRole",resourceType:"Database",source:replicationSource,marker:'"Replica role"'},
+  "Writer epoch": {scope:"resource",path:"databaseReplication.writerEpoch",resourceType:"Database",source:replicationSource,marker:'"Writer epoch"'},
+  "Unreplicated commits lost at promotion": {scope:"resource",path:"databaseReplication.lostOperations",resourceType:"Database",source:replicationSource,marker:'"Unreplicated commits lost at promotion"'},
+  "Pending catch-up operations": {scope:"resource",path:"databaseReplication.rejoin.pendingOperations",resourceType:"Database",source:"apps/web/src/features/live/DatabaseRejoinReadings.tsx",marker:'"Pending catch-up operations"'},
+  "Pending catch-up batches (including snapshot)": {scope:"resource",path:"databaseReplication.rejoin.pendingBatches",resourceType:"Database",source:"apps/web/src/features/live/DatabaseRejoinReadings.tsx",marker:'"Pending catch-up batches (including snapshot)"'},
+  "Replica eligible at this sample": {scope:"resource",path:"databaseReplication.rejoin.eligible",resourceType:"Database",source:"apps/web/src/features/live/DatabaseRejoinReadings.tsx",marker:'"Replica eligible at this sample"'},
   "Monitoring: Generated samples": { scope: "resource", path: "monitoring.generated", unit: "count", resourceType: "Monitoring Agent", source: "apps/web/src/features/reports/components/MonitoringReadings.tsx", marker: '"Monitoring: Generated samples"' },
   "Monitoring: Collection requests": { scope: "resource", path: "monitoring.collections", unit: "count", resourceType: "Monitoring Agent", source: "apps/web/src/features/reports/components/MonitoringReadings.tsx", marker: '"Monitoring: Collection requests"' },
   "Monitoring: Collection failures": { scope: "resource", path: "monitoring.collectionFailures", unit: "count", resourceType: "Monitoring Agent", source: "apps/web/src/features/reports/components/MonitoringReadings.tsx", marker: '"Monitoring: Collection failures"' },
