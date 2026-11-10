@@ -9,6 +9,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "keep-waiting-work", "check-the-missing-server", "parallel-jobs-for-a-burst", "split-the-capacity-budget", "open-and-size-an-api",
     "writes-cost-more-than-reads-generic", "size-the-app-database-pool",
     "restore-a-database-writer",
+    "object-bytes-versus-app-cpu",
   ]);
   expect(new Set(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).size).toBe(JOURNEY_LABS.length);
   for (const lab of JOURNEY_LABS) {
@@ -663,6 +664,21 @@ test("failure CLI rejects bad selections and remote API/web origins before loadi
   }
 });
 
+
+test("object byte capacity journey selects the store control and refuses missing or unretained values", async () => {
+  const lab = journeyLab("object-bytes-versus-app-cpu"), edit = lab.improvement;
+  expect([edit.resourceId, edit.setting, edit.from, edit.to]).toEqual(["store", "objectStoragePolicy.capacityMiB", 1, 4]);
+  expect(edit.nodeText.test("Object Storage")).toBe(true);
+  expect(edit.name.test("Stored data capacity (MiB)")).toBe(true);
+  for (const name of ["Object stored bytes", "Stored data capacity (MB)", "Jobs in parallel", "Other Stored data capacity (MiB)"]) expect(edit.name.test(name)).toBe(false);
+  const fake = fakePage();
+  expect(await applyJourneyImprovement(fake.page, edit)).toEqual([{resourceId: "store", setting: edit.setting, value: "4"}]);
+  expect(fake.calls).toEqual(['[data-resource-id="store"]', ["spinbutton", "^Stored data capacity \\(MiB\\)$"], ["filled", "4"]]);
+  await expect(applyJourneyImprovement(fakePage({controlMissing: true}).page, edit)).rejects.toThrow("requested control is missing");
+  await expect(applyJourneyImprovement(fakePage({storedValue: "1"}).page, edit)).rejects.toThrow("did not retain");
+  expect(selectJourney({JOURNEY_LAB: lab.lessonId})).toEqual({kind: "lab", entry: lab});
+  expect(lab.reportRequirements[0].test("Complete at least 1100 callers; no unsuccessful callers")).toBe(true);
+});
 
 test("application database pool journey fills the exact numeric control and refuses missing or unretained values", async () => {
   const lab = journeyLab("size-the-app-database-pool"), edit = lab.improvement;
