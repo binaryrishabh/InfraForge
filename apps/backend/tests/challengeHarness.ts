@@ -1,3 +1,4 @@
+import { openTheForwardingGateV1 } from "../challenges/definitions/open-the-forwarding-gate/v1";
 import { keepAFunctionWarmV1 } from "../challenges/definitions/keep-a-function-warm/v1";
 import { isolateRouteCreditsV1 } from "../challenges/definitions/isolate-route-credits/v1";
 import { resolveAfterPublicationV1 } from "../challenges/definitions/resolve-after-publication/v1";
@@ -93,6 +94,7 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "open-the-forwarding-gate": {...openTheForwardingGateV1.starter!, resources: openTheForwardingGateV1.starter!.resources.map(r => r.id === "lb" ? {...r, lbAdmission: {...r.lbAdmission!, maxActive: 16}} : r)},
   "keep-a-function-warm": {...keepAFunctionWarmV1.starter!, resources: keepAFunctionWarmV1.starter!.resources.map(r => r.id === "fn" ? {...r, serverless: {...r.serverless!, idleExpiryMs: 5000}} : r)},
   "isolate-route-credits": {...isolateRouteCreditsV1.starter!, resources: isolateRouteCreditsV1.starter!.resources.map(r => r.id === "gateway" ? {...r, gatewayQuota: {...r.gatewayQuota!, scope: "per-route"}} : r)},
   "resolve-after-publication": {...resolveAfterPublicationV1.starter!, resources: resolveAfterPublicationV1.starter!.resources.map(r => r.id === "dns" ? {...r, dnsCachePolicy: {version: 1, maxTtlSeconds: 1}} : r)},
