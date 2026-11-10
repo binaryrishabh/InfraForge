@@ -17,6 +17,7 @@ import { orderedScenarioSteps } from "@infraforge/simulation/model2-run";
 import { QueueWorkSchema } from "../reports/queueWorkSchema";
 import { WholeRunSchema } from "../reports/wholeRunSchema";
 import { SecurityMetricsSchema } from "../reports/securitySchema";
+import { evaluatePoolInService } from "./poolCriterion";
 import { isDepthCriterion, evaluateDepthCriterion } from "./depthCriteria";
 import { evaluateMonitoringDelivery } from "./monitoringCriterion";
 import { evaluateDatabaseRedundancy } from "./databaseRedundancyCriterion";
@@ -152,6 +153,7 @@ class Judge {
           ? null : "Complete experiment survivor measurements were not recorded.";
       case "caller-outcomes":
       case "monitoring-delivery":
+      case "pool-in-service":
       case "backend-admission-budget":
       case "queue-work":
       case "queue-ready-age":
@@ -184,6 +186,13 @@ class Judge {
         return {...base, status: "not-evaluated", detail: "An unchanged captured topology and matching terminal revision are required.", sources: ["runInputs", "liveTopology", "topologyRevision", "terminalSnapshot.topologyRevision"]};
       }
       const result = evaluateMonitoringDelivery(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds, this.active);
+      return {...base, status: result.met === undefined ? "not-evaluated" : result.met ? "met" : "not-met", detail: result.detail, sources: result.sources};
+    }
+    if (c.kind === "pool-in-service") {
+      if (this.evidence.topologyUnchanged !== true || this.atEvaluation?.topologyRevision !== this.evidence.topologyRevision) {
+        return {...base, status: "not-evaluated", detail: "An unchanged captured topology and matching terminal revision are required.", sources: ["runInputs", "liveTopology", "topologyRevision", "terminalSnapshot.topologyRevision"]};
+      }
+      const result = evaluatePoolInService(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds, this.active);
       return {...base, status: result.met === undefined ? "not-evaluated" : result.met ? "met" : "not-met", detail: result.detail, sources: result.sources};
     }
     const pending = (detail: string, sources: string[]) => ({ ...base, status: this.active ? "pending" as const : "not-evaluated" as const, detail, sources });

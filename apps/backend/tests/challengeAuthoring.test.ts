@@ -15,6 +15,7 @@ the next version file, register it in definitions/index.ts and pin it here. Run 
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
   "restore-safe-redundancy@1": "631057be87e06eeea7a3a98f9d8afac0463dd5b8f9eb885c7a392e5b20290f19",
+  "scale-on-delivered-samples@1": "cac34337c223d3317df087d258d96d8861e0446b866041290a026108de6dc539",
   "move-monitoring-samples@1": "51393acc5853e12455a28fef35ee2de6195836e77d7311e2d3765df614f3f82a",
   "object-bytes-versus-app-cpu@1": "094aeb495b39d709714a3af06177967813792079f4f06f1eb2df66f88d4ffde0",
   "size-the-app-database-pool@1": "ce8ab0399c1dcd29ca3997913d52ba30e4b311337e53a94cb809602090669194",

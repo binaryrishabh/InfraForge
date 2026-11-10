@@ -100,6 +100,8 @@ export const LEARNING_REPORT_MEASUREMENTS = {
   "Startup sample time (us)": { scope: "resource", path: "startup.sampledAtUs", unit: "us", source: "apps/web/src/features/reports/components/StartupReadings.tsx", marker: "Startup sample time (us)" },
   "Registry owners omitted": { scope: "resource", path: "startup.omittedRegistries", source: "apps/web/src/features/reports/components/StartupReadings.tsx", marker: "Registry owners omitted" },
   "Artifact clients omitted": { scope: "resource", path: "startup.omittedClients", source: "apps/web/src/features/reports/components/StartupReadings.tsx", marker: "Artifact clients omitted" },
+  "Scaling signal source": { scope: "resource", path: "startup.controllers.*.signal.source", source: "apps/web/src/features/reports/components/StartupReadings.tsx", marker: "Scaling signal source" },
+  "Scaling signal freshness bound (us)": { scope: "resource", path: "startup.controllers.*.signal.freshForUs", unit: "us", source: "apps/web/src/features/reports/components/StartupReadings.tsx", marker: "Scaling signal freshness bound (us)" },
   "Startup controllers omitted": { scope: "resource", path: "startup.omittedControllers", source: "apps/web/src/features/reports/components/StartupReadings.tsx", marker: "Startup controllers omitted" },
   "Registry uploads (cumulative)": { scope: "resource", path: "startup.registries.*.uploads", source: "apps/web/src/features/reports/components/StartupReadings.tsx", marker: "Registry uploads (cumulative)" },
   "Registry deduplicated uploads (cumulative)": { scope: "resource", path: "startup.registries.*.deduplicated", source: "apps/web/src/features/reports/components/StartupReadings.tsx", marker: "Registry deduplicated uploads (cumulative)" },

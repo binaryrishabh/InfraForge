@@ -1,4 +1,5 @@
 import { restoreSafeRedundancyV1 } from "./restore-safe-redundancy/v1";
+import { scaleOnDeliveredSamplesV1 } from "./scale-on-delivered-samples/v1";
 import { moveMonitoringSamplesV1 } from "./move-monitoring-samples/v1";
 import { objectBytesVersusAppCpuV1 } from "./object-bytes-versus-app-cpu/v1";
 import { sizeTheAppDatabasePoolV1 } from "./size-the-app-database-pool/v1";
@@ -83,6 +84,7 @@ challenge list. See ../README.md for the authoring rules. */
 export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   restoreSafeRedundancyV1,
   moveMonitoringSamplesV1,
+  scaleOnDeliveredSamplesV1,
   objectBytesVersusAppCpuV1,
   sizeTheAppDatabasePoolV1,
   restoreADatabaseWriterV1,

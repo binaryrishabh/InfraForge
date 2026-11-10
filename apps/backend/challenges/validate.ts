@@ -87,6 +87,10 @@ function checkDefinition(d: ChallengeDefinition): string[] {
         problems.push(`${where}: monitoring-delivery needs Model 2, a named monitor/backend and connected targets, positive safe floors and a nonnegative safe age ceiling`);
       }
     }
+    if (c.kind === "pool-in-service" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isSafeInteger(c.minInService) || c.minInService < 1 ||
+      !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.VirtualMachine && r.autoscaling?.enabled && r.autoscaling.signal !== undefined && r.autoscaling.maxReplicas! >= c.minInService))) {
+      problems.push(`${where}: pool-in-service needs Model 2, its named autoscaled starter app server with a delivered-sample signal and a reachable positive floor`);
+    }
     if (isDepthCriterion(c)) {
       if (d.engine !== "2" || !id.safeParse(c.resourceId).success || !depthCriterionLimits(c) || !d.starter?.resources.some(r => r.id === c.resourceId && r.type === depthResourceType(c))) problems.push(`${where}: ${c.kind} needs Model 2, its named starter resource and safe limits with positive minCompleted`);
       if (c.kind === "gateway-route-work" && (!id.safeParse(c.routeId).success || !d.starter?.resources.find(r => r.id === c.resourceId)?.apiGateway?.routes?.some(r => r.id === c.routeId))) problems.push(`${where}: gateway-route-work needs its named explicit starter route`);

@@ -1,4 +1,5 @@
 import { restoreSafeRedundancyV1 } from "../challenges/definitions/restore-safe-redundancy/v1";
+import { scaleOnDeliveredSamplesV1 } from "../challenges/definitions/scale-on-delivered-samples/v1";
 import { moveMonitoringSamplesV1 } from "../challenges/definitions/move-monitoring-samples/v1";
 import { objectBytesVersusAppCpuV1 } from "../challenges/definitions/object-bytes-versus-app-cpu/v1";
 import { sizeTheAppDatabasePoolV1 } from "../challenges/definitions/size-the-app-database-pool/v1";
@@ -88,6 +89,7 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
   "restore-safe-redundancy": {...restoreSafeRedundancyV1.starter!, resources: restoreSafeRedundancyV1.starter!.resources.map(r => r.id === "db" ? {...r, databaseReplication: {...r.databaseReplication!, rejoin: "snapshot-replay/1"}} : r)},
+  "scale-on-delivered-samples": {...scaleOnDeliveredSamplesV1.starter!, resources: scaleOnDeliveredSamplesV1.starter!.resources.map(r => r.id === "monitor" ? {...r, monitoringPolicy: {version: 1 as const, collectionIntervalSeconds: 2, exportIntervalSeconds: 2}} : r)},
   "move-monitoring-samples": {...moveMonitoringSamplesV1.starter!, resources: moveMonitoringSamplesV1.starter!.resources.map(r => r.id === "monitor" ? {...r, monitoringPolicy: {...r.monitoringPolicy!, batchSamples: 16}} : r)},
   "object-bytes-versus-app-cpu": {...objectBytesVersusAppCpuV1.starter!, resources: objectBytesVersusAppCpuV1.starter!.resources.map(r => r.id === "store" ? {...r, objectStoragePolicy: {version: 1, capacityMiB: 4}} : r)},
   "size-the-app-database-pool": {...sizeTheAppDatabasePoolV1.starter!, resources: sizeTheAppDatabasePoolV1.starter!.resources.map(r => r.id === "db" ? {...r, dbPoolMaxConnections: 2} : r)},

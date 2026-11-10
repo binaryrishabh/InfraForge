@@ -17,6 +17,7 @@ test("observability offers two independent beginner entries before its versioned
     ["missing-readings-are-unknown", "beginner", "conceptual-exercise"],
     ["monitoring-loss-and-freshness", "intermediate", "conceptual-exercise"],
     ["move-monitoring-samples", "intermediate", "executable-lab"],
+    ["scale-on-delivered-samples", "advanced", "executable-lab"],
   ]);
   expect(LEARNING_REGISTRY.findModule("observability", "monitoring-ownership")!.lessonIds).toEqual(lessons.slice(0, 3).map(l => l.id));
   expect(LEARNING_REGISTRY.findModule("observability", "monitoring-throughput")!.lessonIds).toEqual(["move-monitoring-samples"]);

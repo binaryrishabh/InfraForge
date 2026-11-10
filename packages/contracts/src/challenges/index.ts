@@ -15,6 +15,7 @@ The client renders labels; it never decides whether one was met. */
 export type ChallengeCriterion =
   | { id: string; kind: "database-redundancy"; label: string; resourceId: string }
   | { id: string; kind: "monitoring-delivery"; label: string; resourceId: string; backendId: string; targetIds: string[]; minGenerated: number; minReceived: number; maxBackendAgeUs: number }
+  | { id: string; kind: "pool-in-service"; label: string; resourceId: string; minInService: number }
   | { id: string; kind: "caller-outcomes"; label: string; minCompleted: number; maxUnsuccessful: number }
   | { id: string; kind: "gateway-route-work"; label: string; resourceId: string; routeId: string; minCompleted: number; maxUpstreamFailed: number }
   | { id: string; kind: "scheduler-work"; label: string; resourceId: string; minCompleted: number; maxMissed: number; maxOutstanding: number }
