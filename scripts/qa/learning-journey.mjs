@@ -232,6 +232,18 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^Complete at least 45 reads with no upstream failures$/, /^Complete at least 45 writes with no upstream failures$/],
     expected: {starter: "Not met", improved: "Met"},
   },
+  {
+    lessonId: "redrive-after-the-fix", title: /Redrive after the fix/,
+    prediction: "The queue should finish with many messages still dead-lettered because the redrive runs before the repair.",
+    hypothesis: "Changing only the redrive second to after the repair should let redriven messages succeed; raising the delivery limit alone cannot.",
+    improvement: {
+      stepName: "queue's Redrive dead-lettered messages at second is changed from 20 to 45",
+      nodeSelector: '[data-resource-id="queue"]', nodeText: /Message Queue/, fallbackText: "queue",
+      role: "spinbutton", name: /^Redrive dead-lettered messages at second$/, resourceId: "queue", setting: "asyncQueue.redriveAtSecond", from: 20, to: 45,
+    },
+    reportRequirements: [/^Acknowledge 700; at most 10 outstanding by second 90$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Edge admission: JOURNEY_LAB=shed-load-at-the-edge JOURNEY_SHOTS=/tmp/shed-load node ../InfraForge/scripts/qa/learning-journey.mjs
@@ -270,6 +282,20 @@ JOURNEY_LABS.push({
     role: "spinbutton", name: /^Artifact cache capacity \(bytes\)$/, resourceId: "app", setting: "artifactCachePolicy.capacityBytes", from: 256, to: 4096,
   },
   reportRequirements: [/^At least one later replica is listener-ready and currently LB-eligible at second 20$/],
+  expected: {starter: "Not met", improved: "Met"},
+});
+
+// JOURNEY_LAB=keep-a-function-warm JOURNEY_SHOTS=./nx13-shots node ../InfraForge/scripts/qa/learning-journey.mjs
+JOURNEY_LABS.push({
+  lessonId: "keep-a-function-warm", title: /Keep a function warm/,
+  prediction: "Overall health stays Healthy even though each sparse call pays cold initialization.",
+  hypothesis: "Diagnosis: idle instances expire before the next sparse call. Increasing only idle expiry should preserve a warm instance and reduce cold starts; more concurrency alone cannot prevent expiry.",
+  improvement: {
+    stepName: "fn's Warm instance idle expiry (ms) changes from 100 to 5000",
+    nodeSelector: '[data-resource-id="fn"]', nodeText: /Serverless Function/, fallbackText: "fn",
+    role: "spinbutton", name: /^Warm instance idle expiry \(ms\)$/, resourceId: "fn", setting: "serverless.idleExpiryMs", from: 100, to: 5000,
+  },
+  reportRequirements: [/^Complete 7 invocations with at most 2 cold starts and no unsuccessful invocations$/],
   expected: {starter: "Not met", improved: "Met"},
 });
 

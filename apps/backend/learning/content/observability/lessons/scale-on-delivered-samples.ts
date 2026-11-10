@@ -4,7 +4,7 @@ export const scaleOnDeliveredSamples: LearningLesson = {
   id: "scale-on-delivered-samples", contentVersion: 1, trackId: "observability", moduleId: "monitoring-control",
   title: "Scale on delivered samples", kind: "executable-lab", level: "advanced", availability: "available",
   summary: "See an autoscaler hold because the measurements it trusts have not arrived, then restore its input with one monitoring change.",
-  prerequisites: ["monitoring-loss-and-freshness", "move-monitoring-samples"],
+  prerequisites: ["monitoring-loss-and-freshness", "move-monitoring-samples", "a-replica-must-become-ready"],
   problem: ["A busy app server is autoscaled on measurements delivered to a monitoring backend. Run the starter and find out why the pool never grows."],
   explanation: ["Predict whether the pool gains a server. Then read the pool's startup readings: evaluations, missing measurements, desired count and in-service count, beside the monitor backend's measurement age.",
     "Select monitor and change only Export interval from 20 seconds to 2 seconds. Keep collection at two seconds, the eight-second freshness bound and the CPU target. Compare the two saved reports and confirm the change review counts one change.",

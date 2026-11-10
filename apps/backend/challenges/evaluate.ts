@@ -21,6 +21,7 @@ import { evaluatePoolInService } from "./poolCriterion";
 import { isDepthCriterion, evaluateDepthCriterion } from "./depthCriteria";
 import { evaluateMonitoringDelivery } from "./monitoringCriterion";
 import { evaluateDatabaseRedundancy } from "./databaseRedundancyCriterion";
+import { evaluateFunctionReuse } from "./functionReuseCriterion";
 import { evaluateStartupCapacity } from "./startupCapacityCriterion";
 
 export interface ChallengeAttemptRecord {
@@ -113,6 +114,7 @@ class Judge {
     switch (c.kind) {
       case "database-redundancy":
       case "startup-capacity":
+      case "function-reuse":
         return null; // Dedicated evaluator checks its exact terminal evidence below.
       case "deployment-checks":
         return GATES.every(g => this.stage(g)) ? null : "Complete, valid deployment-check evidence was not recorded.";
@@ -176,11 +178,11 @@ class Judge {
 
   criterion(c: ChallengeCriterion): ChallengeCriterionResult {
     const base = { id: c.id, label: c.label };
-    if (c.kind === "database-redundancy" || c.kind === "startup-capacity") {
+    if (c.kind === "database-redundancy" || c.kind === "startup-capacity" || c.kind === "function-reuse") {
       if (this.active || this.evidence.topologyUnchanged !== true || this.atEvaluation?.topologyRevision !== this.evidence.topologyRevision) {
         return {...base, status: "not-evaluated", detail: "Finished evidence on the unchanged captured topology with matching terminal revision is required.", sources: ["runInputs", "liveTopology", "terminalSnapshot.topologyRevision"]};
       }
-      const result = c.kind === "startup-capacity" ? evaluateStartupCapacity(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds) : evaluateDatabaseRedundancy(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds);
+      const result = c.kind === "function-reuse" ? evaluateFunctionReuse(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds) : c.kind === "startup-capacity" ? evaluateStartupCapacity(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds) : evaluateDatabaseRedundancy(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds);
       return {...base, status: result.met === undefined ? "not-evaluated" : result.met ? "met" : "not-met", detail: result.detail, sources: result.sources};
     }
     if (c.kind === "monitoring-delivery") {
@@ -300,7 +302,7 @@ class Judge {
         const q = parsed.data;
         const outstanding = q.ready + q.inFlight + q.scheduled;
         return decided(q.acknowledged >= c.minAcknowledged && outstanding <= c.maxOutstanding && q.redeliveries <= c.maxRedeliveries,
-          `Through second ${q.throughSecond}, ${c.resourceId}: ${q.originals} originals, ${q.deliveries} deliveries, ${q.effects} completed object effects, ${q.acknowledged} acknowledged (minimum ${c.minAcknowledged}); ${outstanding} outstanding (${q.ready} ready + ${q.inFlight} in flight + ${q.scheduled} scheduled; maximum ${c.maxOutstanding}); ${q.redeliveries} redeliveries (maximum ${c.maxRedeliveries}), ${q.deadLettered} dead-lettered, ${q.discarded} discarded, ${q.expired} expired. Effects are separate from acknowledgements.`, sources);
+          `Through second ${q.throughSecond}, ${c.resourceId}: ${q.originals} originals, ${q.deliveries} deliveries, ${q.effects} completed object effects, ${q.acknowledged} acknowledged (minimum ${c.minAcknowledged}); ${outstanding} outstanding (${q.ready} ready + ${q.inFlight} in flight + ${q.scheduled} scheduled; maximum ${c.maxOutstanding}); ${q.redeliveries} redeliveries (maximum ${c.maxRedeliveries}), ${q.deadLettered} dead-lettered, ${q.discarded} discarded, ${q.expired} expired${q.redriven === undefined ? "" : `, ${q.redriven} redriven`}. Effects are separate from acknowledgements.`, sources);
       }
       case "backend-admission-budget": {
         const t = this.atEvaluation, whole = t?.traffic?.wholeRun;
