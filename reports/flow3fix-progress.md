@@ -1,0 +1,10 @@
+Task flow3fix, base d49da01 on local/flow3; audited previous HANDOFF, log/status/diff and review finding 1.
+Done: target enabled state gates publish readiness; ordinary absent/disabled queues pass adapter/compiler and complete four requests. Exact-edge requirement retained for enabled queues. Pins untouched.
+Overlap: apps/backend/challenges/validate.ts passes target to the existing direct validation call (one line).
+Validation: frozen Bun 1.3.14 install passed. Pre-fix regression: 1 pass/1 fail/6 assertions, failure exactly readiness after successful execution.
+Targeted command: bun --no-env-file --no-install test ./packages/domain/tests/applicationFlow.test.ts ./packages/domain/tests/validation.test.ts ./packages/simulation/tests/applicationFlowReadiness.test.ts ./packages/simulation/tests/applicationFlowPublish.test.ts --timeout 180000 => 22 pass/0 fail/163 assertions /4 files.
+Static authoring: bun --no-env-file --no-install test ./apps/backend/tests/challengeAuthoring.test.ts --test-name-pattern 'challenge authoring' => 5 pass/0 fail/277 assertions; 12 filtered.
+Broader attempt: bun --no-env-file --no-install test ./apps/backend/tests/challengeAuthoring.test.ts --timeout 180000 interrupted after cache-matters@2 calibration timed out at its explicit 120000ms test timeout; no complete counts. No calibration changes or retries.
+Root typecheck once: $env:TURBO_CONCURRENCY='2'; bun --no-env-file run typecheck => PASS, 7/7 tasks plus release tsc.
+Done: dbb2ddd implements the fix and regressions. Root lint once passed: 5/5 lint tasks, 1/1 generation task, 4528 imports/no cycles. Strict UTF-8/no BOM scan passed all 183 committed paths against main. Ten-line final report and progress committed separately from dbb2ddd; final committed encoding/whitespace/status checks passed. Work complete; no push.
+Decision: target optional for type/API compatibility; all contextual production callers now supply it; draw callers unchanged.
