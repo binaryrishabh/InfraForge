@@ -161,6 +161,18 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^Complete at least 110 callers; at most 30 unsuccessful$/],
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "move-monitoring-samples", title: /Move monitoring samples/,
+    prediction: "The service can stay Healthy while a fresh collector exports old observations to the backend.",
+    hypothesis: "Changing only Export batch size should increase backend arrivals and reduce backend measurement age; a larger buffer alone cannot increase export throughput.",
+    improvement: {
+      stepName: "monitor's Export batch size is changed from 1 to 16",
+      nodeSelector: '[data-resource-id="monitor"]', nodeText: /Monitoring Agent/, fallbackText: "monitor",
+      role: "spinbutton", name: /^Export batch size$/, resourceId: "monitor", setting: "monitoringPolicy.batchSamples", from: 1, to: 16,
+    },
+    reportRequirements: [/^Receive 128 samples without drops or duplicates; backend ages at most 10 seconds$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Representative conceptual content, plus a reading without a check.

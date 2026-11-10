@@ -9,6 +9,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "keep-waiting-work", "check-the-missing-server", "parallel-jobs-for-a-burst", "split-the-capacity-budget", "open-and-size-an-api",
     "writes-cost-more-than-reads-generic", "size-the-app-database-pool",
     "restore-a-database-writer",
+    "move-monitoring-samples",
   ]);
   expect(new Set(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).size).toBe(JOURNEY_LABS.length);
   for (const lab of JOURNEY_LABS) {
@@ -686,4 +687,17 @@ test("database incident journey performs the saved promotion change through the 
   expect(lab.reportRequirements[0].test("Complete at least 110 callers; at most 30 unsuccessful")).toBe(true);
   await expect(applyJourneyImprovement(fakePage({controlMissing: true}).page, edit)).rejects.toThrow("requested control is missing");
   await expect(applyJourneyImprovement(fakePage({storedValue: "8"}).page, edit)).rejects.toThrow("did not retain");
+});
+
+test("monitoring journey changes the batch spinbutton and refuses missing or unretained values", async () => {
+  const lab=journeyLab("move-monitoring-samples"),edit=lab.improvement;
+  expect([edit.resourceId,edit.setting,edit.from,edit.to]).toEqual(["monitor","monitoringPolicy.batchSamples",1,16]);
+  expect(edit.name.test("Export batch size")).toBe(true);
+  for(const label of ["Buffered samples","Export attempts","Export every (seconds)"]) expect(edit.name.test(label)).toBe(false);
+  const fake=fakePage();
+  expect(await applyJourneyImprovement(fake.page,edit)).toEqual([{resourceId:"monitor",setting:"monitoringPolicy.batchSamples",value:"16"}]);
+  expect(fake.calls).toEqual(['[data-resource-id="monitor"]',["spinbutton","^Export batch size$"],["filled","16"]]);
+  await expect(applyJourneyImprovement(fakePage({controlMissing:true}).page,edit)).rejects.toThrow("requested control is missing");
+  await expect(applyJourneyImprovement(fakePage({storedValue:"1"}).page,edit)).rejects.toThrow("did not retain");
+  expect(lab.reportRequirements[0].test("Receive 128 samples without drops or duplicates; backend ages at most 10 seconds")).toBe(true);
 });
