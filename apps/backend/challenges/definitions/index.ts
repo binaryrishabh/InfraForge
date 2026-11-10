@@ -1,6 +1,7 @@
 import { keepAFunctionWarmV1 } from "./keep-a-function-warm/v1";
 import { isolateRouteCreditsV1 } from "./isolate-route-credits/v1";
 import { resolveAfterPublicationV1 } from "./resolve-after-publication/v1";
+import { fitTheWorkingSetV1 } from "./fit-the-working-set/v1";
 import { shedLoadAtTheEdgeV1 } from "./shed-load-at-the-edge/v1";
 import { holdSlotsOnASlowCallV1 } from "./hold-slots-on-a-slow-call/v1";
 import { admitAReplicaImageV1 } from "./admit-a-replica-image/v1";
@@ -96,6 +97,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   admitAReplicaImageV1,
   holdSlotsOnASlowCallV1,
   shedLoadAtTheEdgeV1,
+  fitTheWorkingSetV1,
   restoreSafeRedundancyV1,
   moveMonitoringSamplesV1,
   scaleOnDeliveredSamplesV1,

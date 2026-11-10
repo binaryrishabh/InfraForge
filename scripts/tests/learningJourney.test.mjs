@@ -17,6 +17,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "isolate-route-credits",
     "redrive-after-the-fix",
     "keep-failed-events",
+    "fit-the-working-set",
     "shed-load-at-the-edge",
     "hold-slots-on-a-slow-call",
     "admit-a-replica-image",

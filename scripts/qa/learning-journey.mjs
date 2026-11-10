@@ -258,6 +258,18 @@ export const JOURNEY_LABS = [
   },
 ];
 
+// Cache working set: JOURNEY_LAB=fit-the-working-set JOURNEY_SHOTS=/tmp/fit-working-set node ../InfraForge/scripts/qa/learning-journey.mjs
+JOURNEY_LABS.push({
+  lessonId: "fit-the-working-set", title: /Fit the working set/,
+  prediction: "Most reads miss because the cache evicts entries it needs, so the database is busy and degraded.",
+  hypothesis: "Diagnosis: 16 cache entries cannot hold 256 keys, so evictions keep reads missing and the database works. Raising only Logical cache capacity to 256 should let reads be reused and cut database CPU and the tail.",
+  improvement: {
+    stepName: "cache's Logical cache capacity is changed from 16 to 256",
+    nodeSelector: '[data-resource-id="cache"]', nodeText: /Cache/, fallbackText: "cache",
+    role: "spinbutton", name: /^Logical cache capacity/, resourceId: "cache", setting: "cachePolicy.capacityEntries", from: 16, to: 256,
+  },
+  expected: {starter: "Not met", improved: "Met"},
+});
 // Edge admission: JOURNEY_LAB=shed-load-at-the-edge JOURNEY_SHOTS=/tmp/shed-load node ../InfraForge/scripts/qa/learning-journey.mjs
 JOURNEY_LABS.push({
   lessonId: "shed-load-at-the-edge", title: /Shed load at the edge/,
