@@ -14,7 +14,8 @@ test("all published identities and unmarked scenario plans retain their original
   // Later labs add identities; every identity published at the base keeps its exact hash.
   const published = new Set(pins.identities.map((i: unknown[]) => `${i[0]}@${i[1]}`));
   expect(CHALLENGE_VERSIONS.filter(d => published.has(`${d.id}@${d.version}`)).map(d => [d.id, d.version, specHash(d)])).toEqual(pins.identities);
-  expect(CHALLENGE_VERSIONS.filter(d => d.scenario).map(d => {
+  const scenarios = new Set(pins.scenarios.map((s: string[]) => s[0]));
+  expect(CHALLENGE_VERSIONS.filter(d => d.scenario && scenarios.has(d.id)).map(d => {
     const input = captureRunInputs(d.starter!, d.workload, challengeSeed(d));
     return [d.id, hash(recordedScenario(d, input))];
   })).toEqual(pins.scenarios);
