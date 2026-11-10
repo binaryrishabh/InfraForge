@@ -1,4 +1,5 @@
 import { resolveAfterPublicationV1 } from "./resolve-after-publication/v1";
+import { holdSlotsOnASlowCallV1 } from "./hold-slots-on-a-slow-call/v1";
 import { admitAReplicaImageV1 } from "./admit-a-replica-image/v1";
 import { restoreSafeRedundancyV1 } from "./restore-safe-redundancy/v1";
 import { moveMonitoringSamplesV1 } from "./move-monitoring-samples/v1";
@@ -85,6 +86,7 @@ challenge list. See ../README.md for the authoring rules. */
 export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   resolveAfterPublicationV1,
   admitAReplicaImageV1,
+  holdSlotsOnASlowCallV1,
   restoreSafeRedundancyV1,
   moveMonitoringSamplesV1,
   objectBytesVersusAppCpuV1,

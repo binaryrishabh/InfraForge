@@ -3,6 +3,7 @@
 export interface LearningChallengeReview { challengeId: string; version: number; hash: string }
 export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeReview>> = {
   "resolve-after-publication@1": {challengeId: "resolve-after-publication", version: 1, hash: "20590c51974fbf82a58914cc82fae9d3e34a29bc92b2293f15461ee70524c681"},
+  "hold-slots-on-a-slow-call@1": {challengeId: "hold-slots-on-a-slow-call", version: 1, hash: "036d8abb5a6686413bd159e24fef657814fa7ff98d7a3e43c0f614941e404112"},
   "admit-a-replica-image@1": {challengeId: "admit-a-replica-image", version: 1, hash: "ec9613f8a77d364e3a163a0cf230ed905d2e725a3c0db9bda1b5e635b9c8b96f"},
   "restore-safe-redundancy@1": {challengeId: "restore-safe-redundancy", version: 1, hash: "631057be87e06eeea7a3a98f9d8afac0463dd5b8f9eb885c7a392e5b20290f19"},
   "move-monitoring-samples@1": {challengeId: "move-monitoring-samples", version: 1, hash: "51393acc5853e12455a28fef35ee2de6195836e77d7311e2d3765df614f3f82a"},
