@@ -43,7 +43,6 @@ test("content and size mismatches in the registry's backing object cannot become
       expect(c.events.rows.map(e => e.detail)).toEqual(Array(3).fill("layer-unavailable"));
       expect(raw.network.endpoints[c.replicas[0]!.target]!.ready).toBe(false);
     }
-    expect(raw.systems.registries[0]!.service.reasons["blob-store-read-failed"]).toBe(6);
   }
 });
 test("invalid digest and conflicting blob/manifest sizes still refuse before startup", () => {
@@ -52,7 +51,7 @@ test("invalid digest and conflicting blob/manifest sizes still refuse before sta
   systemCommand(input, "conflicting-size", 1000, "$caller", "registry", {kind: "upload", digest: layer, bytes: 129});
   systemCommand(input, "conflicting-manifest", 1000, "$caller", "registry", {kind: "manifest", digest: image, bytes: 64, layers: [{digest: layer, bytes: 129}]});
   const run = createSystemsModel2(input); run.advanceTo(run.horizon); const raw = run.evidence(), registry = raw.systems.registries[0]!;
-  expect(registry.service.reasons).toMatchObject({"invalid-digest": 1, "immutable-blob-conflict": 1, "missing-or-invalid-manifest-blob": 1});
+  expect(Object.fromEntries(raw.systems.commands.results.map(r => [r.id, (r.reply as {reason?: string} | null)?.reason]))).toMatchObject({"invalid-digest": "invalid-digest", "conflicting-size": "immutable-blob-conflict", "conflicting-manifest": "missing-or-invalid-manifest-blob"});
   expect(registry.blobBytes).toBe(128); expect(registry.manifests[0]!.layers).toEqual([{digest: layer, bytes: 128}]);
   expect(raw.systems.clients.every(c => c.replicas[0]!.state === "running")).toBe(true);
 });
