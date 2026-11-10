@@ -16,6 +16,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "scale-on-delivered-samples",
     "isolate-route-credits",
     "redrive-after-the-fix",
+    "keep-failed-events",
     "hold-slots-on-a-slow-call",
     "admit-a-replica-image",
     "keep-a-function-warm",
@@ -758,4 +759,14 @@ test("redrive journey changes the redrive second and refuses missing or unretain
   expect(await applyJourneyImprovement(fakePage().page,edit)).toEqual([{resourceId:"queue",setting:"asyncQueue.redriveAtSecond",value:"45"}]);
   await expect(applyJourneyImprovement(fakePage({controlMissing:true}).page,edit)).rejects.toThrow("requested control is missing");
   await expect(applyJourneyImprovement(fakePage({storedValue:"20"}).page,edit)).rejects.toThrow("did not retain");
+});
+
+test("failed-events journey changes the dead-letter size and refuses missing or unretained values", async () => {
+  const lab=journeyLab("keep-failed-events"),edit=lab.improvement;
+  expect([edit.resourceId,edit.setting,edit.from,edit.to]).toEqual(["bus","eventBus.deadLetterCapacity",5,100]);
+  expect(edit.name.test("Dead letters per subscription")).toBe(true);
+  expect(edit.name.test("Delivery attempts")).toBe(false);
+  expect(await applyJourneyImprovement(fakePage().page,edit)).toEqual([{resourceId:"bus",setting:"eventBus.deadLetterCapacity",value:"100"}]);
+  await expect(applyJourneyImprovement(fakePage({controlMissing:true}).page,edit)).rejects.toThrow("requested control is missing");
+  await expect(applyJourneyImprovement(fakePage({storedValue:"5"}).page,edit)).rejects.toThrow("did not retain");
 });

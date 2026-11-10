@@ -244,6 +244,18 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^Acknowledge 700; at most 10 outstanding by second 90$/],
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "keep-failed-events", title: /Keep failed events/,
+    prediction: "Most failed events should be discarded because the bus's dead-letter list is tiny.",
+    hypothesis: "Changing only the dead-letter list size should keep the failed events; more delivery attempts cannot.",
+    improvement: {
+      stepName: "bus's Dead letters per subscription is changed from 5 to 100",
+      nodeSelector: '[data-resource-id="bus"]', nodeText: /Event Bus/, fallbackText: "bus",
+      role: "spinbutton", name: /^Dead letters per subscription$/, resourceId: "bus", setting: "eventBus.deadLetterCapacity", from: 5, to: 100,
+    },
+    reportRequirements: [/^Keep at least 50 failed events and discard none by second 30$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Held capacity: run the full retained learning loop against the local QA stack.

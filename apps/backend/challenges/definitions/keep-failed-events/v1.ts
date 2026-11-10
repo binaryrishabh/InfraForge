@@ -18,7 +18,7 @@ export const keepFailedEventsV1: ChallengeDefinition = {
   predictions: [{id: "health", kind: "overall-health", prompt: "What overall health will be recorded at second 30?"}],
   hints: ["Read each subscription's exhausted, dead-lettered and dead-letter overflow counts. Dispatches fail either way; the question is what is kept.",
     "More delivery attempts repeat failing dispatches but do not make the list any bigger.",
-    "Select bus. Change only Dead-letter capacity. Keep delivery attempts, retry delay and the queue's closed listener unchanged."],
+    "Select bus. Change only Dead letters per subscription. Keep delivery attempts, retry delay and the queue's closed listener unchanged."],
   debrief: ["Each exhausted dispatch moves to the bus's dead-letter list if there is room. When the list is full the event is discarded and counted as overflow, so the failure is invisible except in that counter.",
     "Raising delivery attempts only repeats failing dispatches, so the list still fills; a larger list keeps them. This lab keeps the subscriber broken on purpose; opening its listener is a different lesson.",
     "Not verified: durability of a real dead-letter store, replay tooling, ordering or alerting. Capacity is an educational limit.", MODEL_NOTE],
