@@ -4,6 +4,7 @@ import { resolveAfterPublicationV1 } from "./resolve-after-publication/v1";
 import { holdSlotsOnASlowCallV1 } from "./hold-slots-on-a-slow-call/v1";
 import { admitAReplicaImageV1 } from "./admit-a-replica-image/v1";
 import { restoreSafeRedundancyV1 } from "./restore-safe-redundancy/v1";
+import { redriveAfterTheFixV1 } from "./redrive-after-the-fix/v1";
 import { scaleOnDeliveredSamplesV1 } from "./scale-on-delivered-samples/v1";
 import { moveMonitoringSamplesV1 } from "./move-monitoring-samples/v1";
 import { objectBytesVersusAppCpuV1 } from "./object-bytes-versus-app-cpu/v1";
@@ -95,6 +96,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   restoreSafeRedundancyV1,
   moveMonitoringSamplesV1,
   scaleOnDeliveredSamplesV1,
+  redriveAfterTheFixV1,
   objectBytesVersusAppCpuV1,
   sizeTheAppDatabasePoolV1,
   restoreADatabaseWriterV1,

@@ -44,7 +44,7 @@ export function asyncWorker(config: WorkerConfig, kernel: EventKernel, send: Del
         // Only a scheduler completion establishes spent CPU; failed reads spend none.
         // Crash-lost work is separate from attempts that reach negative().
         if (!valid(p)) return; p.completedCpuUs = requireKnown(config.cpu, "cpu-us"); p.phase = "blocking";
-        p.cancel = kernel.schedule(kernel.now + requireKnown(config.blockingWait, "us"), 2, JSON.stringify(["consumer-work", config.id, d.receipt]), () => { if (poison.has(d.body.key)) negative(); else effect(); });
+        p.cancel = kernel.schedule(kernel.now + requireKnown(config.blockingWait, "us"), 2, JSON.stringify(["consumer-work", config.id, d.receipt]), () => { if (poison.has(d.body.key) && !(config.repairAt && kernel.now >= requireKnown(config.repairAt, "us"))) negative(); else effect(); });
       } });
     });
   };

@@ -302,7 +302,7 @@ class Judge {
         const q = parsed.data;
         const outstanding = q.ready + q.inFlight + q.scheduled;
         return decided(q.acknowledged >= c.minAcknowledged && outstanding <= c.maxOutstanding && q.redeliveries <= c.maxRedeliveries,
-          `Through second ${q.throughSecond}, ${c.resourceId}: ${q.originals} originals, ${q.deliveries} deliveries, ${q.effects} completed object effects, ${q.acknowledged} acknowledged (minimum ${c.minAcknowledged}); ${outstanding} outstanding (${q.ready} ready + ${q.inFlight} in flight + ${q.scheduled} scheduled; maximum ${c.maxOutstanding}); ${q.redeliveries} redeliveries (maximum ${c.maxRedeliveries}), ${q.deadLettered} dead-lettered, ${q.discarded} discarded, ${q.expired} expired. Effects are separate from acknowledgements.`, sources);
+          `Through second ${q.throughSecond}, ${c.resourceId}: ${q.originals} originals, ${q.deliveries} deliveries, ${q.effects} completed object effects, ${q.acknowledged} acknowledged (minimum ${c.minAcknowledged}); ${outstanding} outstanding (${q.ready} ready + ${q.inFlight} in flight + ${q.scheduled} scheduled; maximum ${c.maxOutstanding}); ${q.redeliveries} redeliveries (maximum ${c.maxRedeliveries}), ${q.deadLettered} dead-lettered, ${q.discarded} discarded, ${q.expired} expired${q.redriven === undefined ? "" : `, ${q.redriven} redriven`}. Effects are separate from acknowledgements.`, sources);
       }
       case "backend-admission-budget": {
         const t = this.atEvaluation, whole = t?.traffic?.wholeRun;

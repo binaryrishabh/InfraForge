@@ -232,6 +232,18 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^Complete at least 45 reads with no upstream failures$/, /^Complete at least 45 writes with no upstream failures$/],
     expected: {starter: "Not met", improved: "Met"},
   },
+  {
+    lessonId: "redrive-after-the-fix", title: /Redrive after the fix/,
+    prediction: "The queue should finish with many messages still dead-lettered because the redrive runs before the repair.",
+    hypothesis: "Changing only the redrive second to after the repair should let redriven messages succeed; raising the delivery limit alone cannot.",
+    improvement: {
+      stepName: "queue's Redrive dead-lettered messages at second is changed from 20 to 45",
+      nodeSelector: '[data-resource-id="queue"]', nodeText: /Message Queue/, fallbackText: "queue",
+      role: "spinbutton", name: /^Redrive dead-lettered messages at second$/, resourceId: "queue", setting: "asyncQueue.redriveAtSecond", from: 20, to: 45,
+    },
+    reportRequirements: [/^Acknowledge 700; at most 10 outstanding by second 90$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Held capacity: run the full retained learning loop against the local QA stack.
