@@ -228,6 +228,8 @@ export const LEARNING_REPORT_MEASUREMENTS = {
   "Applies at": { scope: "snapshot", path: "actions.*.outcome.intervention.atUs", unit: "us", source: actionSource, marker: "Applies at" },
   "baseline restore at": { scope: "snapshot", path: "actions.*.outcome.intervention.endUs", unit: "us", source: actionSource, marker: "baseline restore at" },
   "Admitted by backend (attempts)": { scope: "resource", path: "lbAccounting.acceptedByBackend", resourceType: "Load Balancer", source: lbSource, marker: '"Admitted by backend (attempts)"' },
+  "Rejected at load balancer (calls)": { scope: "resource", path: "lbAccounting.rejectedAtLb", resourceType: "Load Balancer", source: lbSource, marker: '"Rejected at load balancer (calls)"' },
+  "Queued at load balancer (calls)": { scope: "resource", path: "lbAccounting.queuedAtLb", resourceType: "Load Balancer", source: lbSource, marker: '"Queued at load balancer (calls)"' },
   "Queued at VM (attempts)": { scope: "resource", path: "lbAccounting.queuedAtVm", resourceType: "Load Balancer", source: lbSource, marker: '"Queued at VM (attempts)"' },
   "Refused by VM (attempts)": { scope: "resource", path: "lbAccounting.rejectedByVm", resourceType: "Load Balancer", source: lbSource, marker: '"Refused by VM (attempts)"' },
   "Current flow occupancy": { scope: "resource", path: "security.firewall.occupancy", resourceType: "Firewall", source: securitySource, marker: '"Current flow occupancy"' },

@@ -323,6 +323,19 @@ JOURNEY_LABS.push({
   expected: {starter: "Not met", improved: "Met"},
 });
 
+JOURNEY_LABS.push({
+  lessonId: "open-the-forwarding-gate", title: /Open the forwarding gate/,
+  prediction: "The app can have the highest known CPU while the active forwarding gate limits callers. LB CPU is Unknown.",
+  hypothesis: "Diagnosis: one active slot serializes round trips ahead of spare backend capacity. Increasing only Active requests should reduce LB waits and failures; a bigger waiting queue does not open that gate.",
+  improvement: {
+    stepName: "lb's Active requests changes from 1 to 16",
+    nodeSelector: '[data-resource-id="lb"]', nodeText: /Load Balancer/, fallbackText: "lb",
+    role: "spinbutton", name: /^Active requests$/, resourceId: "lb", setting: "lbAdmission.maxActive", from: 1, to: 16,
+  },
+  reportRequirements: [/^Complete 1700; at most 10 unsuccessful through second 6$/],
+  expected: {starter: "Not met", improved: "Met"},
+});
+
 // Representative conceptual content, plus a reading without a check.
 // These are UI expectations pinned to authored text, never simulated results.
 export const JOURNEY_LESSONS = [
