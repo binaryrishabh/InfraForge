@@ -63,7 +63,8 @@ test("forwarding caller criterion refuses absent, stale, malformed and mismatche
   const raw = (r: typeof good) => r.terminalSnapshot as ReturnType<typeof captureSnapshot>;
   const changes: Array<(r: typeof good) => void> = [
     r => {r.runInputs = null;}, r => {r.terminalSnapshot = null;},
-    r => {raw(r).simulatedSeconds--;}, r => {raw(r).metricsTopologyRevision = -1;},
+    r => {raw(r).simulatedSeconds--;}, r => {raw(r).metricsTopologyRevision = 1;},
+    r => {raw(r).metricsTopologyRevision = -1;}, r => {raw(r).metricsComputedAt = null;},
     r => {delete raw(r).traffic;}, r => {delete raw(r).traffic!.wholeRun;},
     r => {raw(r).traffic!.wholeRun!.throughSecond--;}, r => {raw(r).traffic!.wholeRun!.completed = -1;},
     r => {raw(r).traffic!.wholeRun!.failed = NaN;}, r => {raw(r).traffic!.wholeRun!.abandoned = Number.MAX_SAFE_INTEGER;},
