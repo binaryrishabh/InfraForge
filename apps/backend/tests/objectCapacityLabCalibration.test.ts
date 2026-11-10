@@ -56,7 +56,7 @@ test("object bytes versus app CPU: one byte-limit edit passes with headroom; a l
     const saved = {...row, runInputs: JSON.parse(JSON.stringify(row.runInputs)), terminalSnapshot: JSON.parse(JSON.stringify(row.terminalSnapshot))};
     expect(buildRunReport(saved).terminal).toEqual(reports[i]!.terminal);
     expect(buildRunReport(saved).challenge).toEqual(reports[i]!.challenge);
-    expect(reports[i]!.challenge!.predictions[0]!.actual).toBe(metrics[i]!.health);
+    expect(reports[i]!.challenge!.predictions[0]!.actual).toBe(metrics[i]!.health ?? null);
   }
   const raw = (row: typeof rows[number]) => row.terminalSnapshot as SimulationSnapshot;
   for (const mutate of [

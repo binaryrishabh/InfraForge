@@ -29,8 +29,10 @@ test("object capacity lab: browser-target replay matches server every second, in
         browser.advance(); server.advance();
         expect(browser.view()).toEqual(server.view()); expect(browser.evidence()).toEqual(server.evidence());
         const view = server.view(), store = server.evidence().asynchronous.objects[0]!;
-        maximum = Math.max(maximum, view.metrics.app!.cpu);
-        expect(view.metrics.app!.cpu).toBeLessThan(20);
+        const cpu = view.metrics.app!.cpu;
+        if (cpu === null) throw Error("Producer CPU was not recorded");
+        maximum = Math.max(maximum, cpu);
+        expect(cpu).toBeLessThan(20);
         expect(store.storedBytes).toBeLessThanOrEqual(store.capacityBytes!);
         expect(store.storedBytes).toBe(store.objects.reduce((sum, o) => sum + o.bytes, 0));
         expect(store.puts).toBe(store.committedPuts + (store.service.reasons["object-capacity"] ?? 0));
