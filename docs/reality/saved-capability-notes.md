@@ -25,3 +25,6 @@ Saved `asyncWorker.repairAtSecond` stops poison selection at that second; saved 
 
 ## What these notes do not claim
 No capability here implies cloud-provider fidelity, an availability guarantee, a whole-run latency target or cost accuracy. Each lab reads fixed-second samples and states its own limitations in its lesson.
+
+## Replica staleness evidence (`stale-reads` criterion, existing saved delay)
+The saved `databaseReplication.replicationDelayMs` (1 to 60000) already set how long a replica applies each writer commit after it. Read routing records `staleReads` and `maxStaleReadAgeMs`. The `stale-reads` challenge criterion compares the cumulative stale read count at one exact second with a bounded limit and is not evaluated when the named replicated database, the exact second or the counters are missing or malformed. Limits: counters are cumulative, include health probes and describe modeled row versions only; the delay is an authored constant, so a real replica's varying lag is not modeled; nothing here shows application consistency or read-your-writes.
