@@ -234,6 +234,18 @@ export const JOURNEY_LABS = [
   },
 ];
 
+// Edge admission: JOURNEY_LAB=shed-load-at-the-edge JOURNEY_SHOTS=/tmp/shed-load node ../InfraForge/scripts/qa/learning-journey.mjs
+JOURNEY_LABS.push({
+  lessonId: "shed-load-at-the-edge", title: /Shed load at the edge/,
+  prediction: "A busy app that finishes some callers is still critical: most fail and the final-second tail is long.",
+  hypothesis: "Diagnosis: the balancer admits nearly all demand, so the excess waits in the saturated app and the final-second p95 is long. Lowering only Active requests should refuse the excess at the balancer and shorten the tail while completions stay about the same.",
+  improvement: {
+    stepName: "lb's Active requests is changed from 1024 to 16",
+    nodeSelector: '[data-resource-id="lb"]', nodeText: /Load Balancer/, fallbackText: "lb",
+    role: "spinbutton", name: /^Active requests$/, resourceId: "lb", setting: "lbAdmission.maxActive", from: 1024, to: 16,
+  },
+  expected: {starter: "Not met", improved: "Met"},
+});
 // Held capacity: run the full retained learning loop against the local QA stack.
 // JOURNEY_LAB=hold-slots-on-a-slow-call JOURNEY_SHOTS=/tmp/hold-slots node ../InfraForge/scripts/qa/learning-journey.mjs
 JOURNEY_LABS.push({

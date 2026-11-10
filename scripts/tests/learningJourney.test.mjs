@@ -13,6 +13,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "object-bytes-versus-app-cpu",
     "restore-safe-redundancy",
     "resolve-after-publication",
+    "shed-load-at-the-edge",
     "hold-slots-on-a-slow-call",
     "admit-a-replica-image",
     "scale-on-delivered-samples",
