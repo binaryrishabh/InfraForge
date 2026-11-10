@@ -280,6 +280,19 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^Receive 60 samples without drops or duplicates; backend ages at most 6 seconds$/],
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "trace-a-slowdown-cascade", title: /Trace a slowdown cascade/,
+    prediction: "Overall health can look Healthy after recovery even though callers failed during the cascade.",
+    hypothesis: "Changing only Single-flight should stop fills piling up behind the slow database; a bigger database or no retries cannot.",
+    predictionQuestions: [/What overall health will be recorded at second 10, after the database recovers/, /What will the database's own health be at second 10/],
+    improvement: {
+      stepName: "cache's Single-flight is turned on",
+      nodeSelector: '[data-resource-id="cache"]', nodeText: /Cache/, fallbackText: "cache",
+      role: "switch", name: /^Single-flight$/, resourceId: "cache", setting: "cachePolicy.singleFlight", from: false, to: true,
+    },
+    reportRequirements: [/^Complete 1980 callers with at most 20 unsuccessful through second 10$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Cache working set: JOURNEY_LAB=fit-the-working-set JOURNEY_SHOTS=/tmp/fit-working-set node ../InfraForge/scripts/qa/learning-journey.mjs
