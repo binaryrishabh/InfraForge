@@ -1,3 +1,4 @@
+import { keepAFunctionWarmV1 } from "./keep-a-function-warm/v1";
 import { isolateRouteCreditsV1 } from "./isolate-route-credits/v1";
 import { resolveAfterPublicationV1 } from "./resolve-after-publication/v1";
 import { admitAReplicaImageV1 } from "./admit-a-replica-image/v1";
@@ -85,6 +86,7 @@ import { limitOrCapacityV1 } from "./limit-or-capacity/v1";
 attempts are judged by exactly the version that created them. Order sets the
 challenge list. See ../README.md for the authoring rules. */
 export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
+  keepAFunctionWarmV1,
   isolateRouteCreditsV1,
   resolveAfterPublicationV1,
   admitAReplicaImageV1,

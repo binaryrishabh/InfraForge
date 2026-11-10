@@ -13,6 +13,7 @@ import { recordedExperiment } from "./experiment";
 import { scenarioError } from "@infraforge/simulation/model2-run";
 import { recordedScenario } from "./scenario";
 import { captureRunInputs } from "../deployments/runInputs";
+import { functionReuseLimits } from "./functionReuseCriterion";
 import { isDepthCriterion, depthResourceType, depthCriterionLimits } from "./depthCriteria";
 
 /* Authoring checks for source-controlled challenges. Everything here is static and
@@ -43,7 +44,7 @@ const definition = z.object({
   scenario: z.unknown().optional(),
 }).strict();
 
-const CRITERIA = ["startup-capacity", "database-redundancy", "monitoring-delivery", "pool-in-service", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
+const CRITERIA = ["function-reuse", "startup-capacity", "database-redundancy", "monitoring-delivery", "pool-in-service", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
   "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "queue-ready-age", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work", "caller-outcomes"];
 const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
@@ -74,6 +75,8 @@ function checkDefinition(d: ChallengeDefinition): string[] {
   unique("criterion", d.criteria.map((c) => c.id));
   unique("prediction", d.predictions.map((p) => p.id));
   for (const c of d.criteria) {
+    if (c.kind === "function-reuse" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || !functionReuseLimits(c) ||
+      !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.ServerlessFunction))) problems.push(`${where}: function-reuse needs Model 2, its named starter function and safe limits with positive minCompleted`);
     if (c.kind === "startup-capacity") {
       const owner = d.starter?.resources.find(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.VirtualMachine), p = owner?.autoscaling;
       if (d.engine !== "2" || !id.safeParse(c.resourceId).success || !p?.enabled ||
