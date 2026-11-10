@@ -7,7 +7,7 @@ import { apiGatewayError } from "@infraforge/domain/resource";
 import { eventBusError } from "@infraforge/domain/resource";
 import { lbRateLimitError, LB_RATE_BURST_MAX, LB_RATE_MIN_RPS, LB_RATE_MAX_RPS } from "@infraforge/domain/resource";
 import * as z from "zod";
-import { dnsPublicationError, artifactCachePolicyError, ARTIFACT_CACHE_MAX_BYTES, dbPoolError, firewallStateError, firewallCapacityError, FIREWALL_IDLE_SECONDS_MAX, FIREWALL_FLOW_CAPACITY_MAX, objectStoragePolicyError, OBJECT_STORAGE_CAPACITY_MAX_MIB, dnsCachePolicyError, DNS_CACHE_MAX_TTL_SECONDS, monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT_MAX_ATTEMPTS, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmMemoryError, VM_MEMORY_MAX_MIB, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbSelectionError, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { dnsPublicationError, artifactCachePolicyError, ARTIFACT_CACHE_MAX_BYTES, autoscalingSignalError, AUTOSCALING_FRESH_MAX_SECONDS, dbPoolError, firewallStateError, firewallCapacityError, FIREWALL_IDLE_SECONDS_MAX, FIREWALL_FLOW_CAPACITY_MAX, objectStoragePolicyError, OBJECT_STORAGE_CAPACITY_MAX_MIB, dnsCachePolicyError, DNS_CACHE_MAX_TTL_SECONDS, monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT_MAX_ATTEMPTS, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmMemoryError, VM_MEMORY_MAX_MIB, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbSelectionError, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -73,6 +73,7 @@ const ResourceSchema = z.object({
     minReplicas: z.number().int().positive().optional(),
     maxReplicas: z.number().int().positive().optional(),
     targetCpu: z.number().min(0).max(100).optional(),
+    signal: z.object({ version: z.literal(1), source: z.literal("observed-core-time"), monitorId: z.string().min(1).max(64), stale: z.literal("hold"), freshForSeconds: z.number().int().min(1).max(AUTOSCALING_FRESH_MAX_SECONDS) }).strict().optional(),
   }).optional(),
   listenerSettings: z.object({ version: z.literal(1), ports: z.array(z.number().int().min(1).max(65535)).max(32) }).strict().optional(),
   firewallSettings: z.object({ version: z.literal(1), default: z.enum(["allow", "deny"]), rules: z.array(z.object({
@@ -122,6 +123,8 @@ const ResourceSchema = z.object({
   if (dnsMessage) ctx.addIssue({ code: "custom", path: ["dnsCachePolicy"], message: dnsMessage });
   const cdnMessage = cdnCachePolicyError(resource.type, resource.cdnCachePolicy);
   if (cdnMessage) ctx.addIssue({ code: "custom", path: ["cdnCachePolicy"], message: cdnMessage });
+  const signalMessage = autoscalingSignalError(resource.autoscaling);
+  if (signalMessage) ctx.addIssue({ code: "custom", path: ["autoscaling", "signal"], message: signalMessage });
   const selectionMessage = lbSelectionError(resource.type, resource.lbSelection);
   if (selectionMessage) ctx.addIssue({ code: "custom", path: ["lbSelection"], message: selectionMessage });
   const healthMessage = lbHealthError(resource.type, resource.lbHealth);

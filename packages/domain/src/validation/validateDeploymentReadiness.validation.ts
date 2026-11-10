@@ -27,6 +27,7 @@ import { dbPoolError } from "../resource/DbPool.interface";
 import { dbConcurrencyError } from "../resource/DbConcurrency.interface";
 import { lbAdmissionError } from "../resource/LbAdmission.interface";
 import { lbSelectionError } from "../resource/LbSelection.interface";
+import { autoscalingSignalError } from "../resource/AutoscalingSignal.interface";
 import { lbHealthError } from "../resource/LbHealth.interface";
 
 // Function to validete the above defined rules
@@ -100,6 +101,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
         if (rateLimitMessage) errors.push(`${resource.id}: ${rateLimitMessage}`);
         const admissionMessage = lbAdmissionError(resource.type, resource.lbAdmission);
         if (admissionMessage) errors.push(`${resource.id}: ${admissionMessage}`);
+        const signalMessage = autoscalingSignalError(resource.autoscaling);
+        if (signalMessage) errors.push(`${resource.id}: ${signalMessage}`);
         const selectionMessage = lbSelectionError(resource.type, resource.lbSelection);
         if (selectionMessage) errors.push(`${resource.id}: ${selectionMessage}`);
         const healthMessage = lbHealthError(resource.type, resource.lbHealth);

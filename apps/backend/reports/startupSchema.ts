@@ -14,7 +14,7 @@ const registry = z.object({id: text, uploads: n, deduplicated: n, manifestWrites
 const client = z.object({id: text, capacityBytes: count.min(1).nullable().optional(), cachedBytes: n, pulledBytes: n, reusedLayers: n, failures: n, cache: rows(layer), omittedCache: n,
   replicas: rows(z.object({id: text, target: t, reference: t, state: z.enum(["pending", "pulling", "failed", "running"]).nullable().optional(),
     attempts: n, artifactReadyAtUs: n, resolvedDigest: d, requiredLayers: rows(layer), omittedLayers: n}).strict()), omittedReplicas: n, events, omittedEvents: n}).strict();
-const controller = z.object({id: text, desired: n, inService: n, evaluations: n, missingMeasurements: n, identityBudgetExhausted: n,
+const controller = z.object({id: text, signal: z.object({source: z.literal("observed-core-time"), backend: text, freshForUs: count.min(1)}).strict().nullable().optional(), desired: n, inService: n, evaluations: n, missingMeasurements: n, identityBudgetExhausted: n,
   replicas: rows(z.object({id: text, ordinal: n, state: z.enum(["reserved", "provisioning", "pulling", "starting", "ready", "draining", "failed", "terminated"]).nullable().optional(),
     createdAtUs: n, listenerReadyAtUs: n, attempts: n, endpointAlive: b, endpointReady: b, lbHealthy: b, lbDraining: b}).strict()),
   omittedReplicas: n, events, omittedEvents: n}).strict();

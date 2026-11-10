@@ -37,7 +37,8 @@ export function startupLive(compiled: CompiledProduct, source: Source, node: str
   const rawControllers = pools.length ? source.inspectControllers() : [];
   const controllers: StartupController[] = pools.slice(0, 100).map(p => {
     const c = rawControllers.find(c => c.id === p.id);
-    return {id: p.id, desired: c?.desired ?? null, inService: c?.inService ?? null, evaluations: c?.evaluations ?? null,
+    const signal = p.profile.signal, marked = compiled.semantic.versions.contract.includes("/autoscaling-observed/1") && signal.kind === "observed-core-time";
+    return {id: p.id, ...(marked ? {signal: {source: signal.kind, backend: signal.backend, freshForUs: requireKnown(signal.freshFor, "us")}} : {}), desired: c?.desired ?? null, inService: c?.inService ?? null, evaluations: c?.evaluations ?? null,
       missingMeasurements: c?.missingMeasurements ?? null, identityBudgetExhausted: c?.identityBudgetExhausted ?? null,
       replicas: retain(c?.replicas)?.map(r => ({id: r.id, ordinal: r.ordinal, state: r.state, createdAtUs: r.createdAt, listenerReadyAtUs: r.readyAt,
         attempts: r.attempts, endpointAlive: r.endpoint.alive, endpointReady: r.endpoint.ready, lbHealthy: r.lb.health, lbDraining: r.lb.draining})) ?? null,

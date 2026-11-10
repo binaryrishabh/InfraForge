@@ -50,7 +50,7 @@ export function StartupReadings({id, metrics: m}: {id: string; metrics?: Startup
     <h4 className="mt-3 font-medium">Startup controllers</h4>
     {m?.controllers == null ? <p>Unknown</p> : m.controllers.length ? m.controllers.map(c => <div key={c.id} className="mt-3">
       <h5 className="break-all font-medium">{c.id}</h5>
-      <Readings rows={[["Desired replicas (current)", c.desired], ["LB-eligible replicas (current)", c.inService],
+      <Readings rows={[...(c.signal ? [["Scaling signal source", c.signal.source], ["Scaling signal monitoring backend", c.signal.backend], ["Scaling signal freshness bound (us)", c.signal.freshForUs]] as const : []), ["Desired replicas (current)", c.desired], ["LB-eligible replicas (current)", c.inService],
         ["Controller evaluations (cumulative)", c.evaluations], ["Controller missing measurements (cumulative)", c.missingMeasurements],
         ["Controller identity budget exhausted (cumulative)", c.identityBudgetExhausted], ["Controller replica rows omitted", c.omittedReplicas]]} />
       {c.replicas == null ? <p>Controller replica records: Unknown</p> : c.replicas.length ? c.replicas.map(r => <div key={r.id} className="mt-3">

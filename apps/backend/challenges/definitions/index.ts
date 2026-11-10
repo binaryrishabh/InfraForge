@@ -1,6 +1,7 @@
 import { resolveAfterPublicationV1 } from "./resolve-after-publication/v1";
 import { admitAReplicaImageV1 } from "./admit-a-replica-image/v1";
 import { restoreSafeRedundancyV1 } from "./restore-safe-redundancy/v1";
+import { scaleOnDeliveredSamplesV1 } from "./scale-on-delivered-samples/v1";
 import { moveMonitoringSamplesV1 } from "./move-monitoring-samples/v1";
 import { objectBytesVersusAppCpuV1 } from "./object-bytes-versus-app-cpu/v1";
 import { sizeTheAppDatabasePoolV1 } from "./size-the-app-database-pool/v1";
@@ -87,6 +88,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   admitAReplicaImageV1,
   restoreSafeRedundancyV1,
   moveMonitoringSamplesV1,
+  scaleOnDeliveredSamplesV1,
   objectBytesVersusAppCpuV1,
   sizeTheAppDatabasePoolV1,
   restoreADatabaseWriterV1,

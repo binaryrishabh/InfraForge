@@ -34,6 +34,7 @@ import { validateFirewallCapacityProfile, validateFirewallCapacityBindings } fro
 import { validateArtifactCacheProfile, validateArtifactCacheBindings } from "./artifactCache";
 import { validateObjectCapacityProfile, validateObjectCapacityBindings } from "./objectCapacity";
 import { validateMonitoringBufferProfile, validateMonitoringBufferBindings } from "./monitoringBuffer";
+import { validateAutoscalingSignalProfile, validateAutoscalingSignalBindings } from "./autoscalingSignal";
 import { validateMonitoringCadenceProfile, validateMonitoringCadenceBindings } from "./monitoringCadence";
 import { validateCdnCoalescingProfile, validateCdnCoalescingBindings } from "./cdnCoalescing";
 import { validateDnsPublicationProfile, validateDnsPublicationBindings } from "./dnsPublication";
@@ -79,6 +80,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateFirewallCapacityProfile(design.resources, contract);
     validateArtifactCacheProfile(design.resources, contract);
     validateObjectCapacityProfile(design.resources, contract);
+    validateAutoscalingSignalProfile(design.resources, contract);
     validateMonitoringCadenceProfile(design.resources, contract);
     validateMonitoringBufferProfile(design.resources, contract);
     validateCdnCoalescingProfile(design.resources, contract);
@@ -419,6 +421,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateDnsCacheBindings(design.resources, runtime);
     validateDnsPublicationBindings(design.resources, runtime);
     validateCdnTtlBindings(design.resources, runtime);
+    validateAutoscalingSignalBindings(design.resources, contract, pools, runtime);
     validateMonitoringCadenceBindings(design.resources, runtime);
     validateMonitoringBufferBindings(design.resources, runtime);
     validateCdnCoalescingBindings(design.resources, runtime);

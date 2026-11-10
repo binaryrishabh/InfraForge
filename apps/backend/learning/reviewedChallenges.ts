@@ -5,6 +5,7 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "resolve-after-publication@1": {challengeId: "resolve-after-publication", version: 1, hash: "20590c51974fbf82a58914cc82fae9d3e34a29bc92b2293f15461ee70524c681"},
   "admit-a-replica-image@1": {challengeId: "admit-a-replica-image", version: 1, hash: "ec9613f8a77d364e3a163a0cf230ed905d2e725a3c0db9bda1b5e635b9c8b96f"},
   "restore-safe-redundancy@1": {challengeId: "restore-safe-redundancy", version: 1, hash: "631057be87e06eeea7a3a98f9d8afac0463dd5b8f9eb885c7a392e5b20290f19"},
+  "scale-on-delivered-samples@1": {challengeId: "scale-on-delivered-samples", version: 1, hash: "cac34337c223d3317df087d258d96d8861e0446b866041290a026108de6dc539"},
   "move-monitoring-samples@1": {challengeId: "move-monitoring-samples", version: 1, hash: "51393acc5853e12455a28fef35ee2de6195836e77d7311e2d3765df614f3f82a"},
   "object-bytes-versus-app-cpu@1": {challengeId: "object-bytes-versus-app-cpu", version: 1, hash: "094aeb495b39d709714a3af06177967813792079f4f06f1eb2df66f88d4ffde0"},
   "size-the-app-database-pool@1": {challengeId: "size-the-app-database-pool", version: 1, hash: "ce8ab0399c1dcd29ca3997913d52ba30e4b311337e53a94cb809602090669194"},
