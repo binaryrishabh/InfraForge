@@ -42,7 +42,7 @@ test("quota lab proves one scope fix, ineffective backend CPU and retained route
   for(const [i,r] of reports.entries()) {
     const row=rows[i]!,saved={...row,runInputs:JSON.parse(JSON.stringify(row.runInputs)),terminalSnapshot:JSON.parse(JSON.stringify(row.terminalSnapshot))};
     expect(buildRunReport(saved).terminal).toEqual(r.terminal);expect(buildRunReport(saved).challenge).toEqual(r.challenge);
-    expect(improvementSource(row,d.id).input).toEqual(inputs[i]!);
+    expect(inputs[i]!).toEqual(improvementSource(row,d.id).input);
   }
   expect(guidedReview(reports[0]!,true,null)!.cues).toContainEqual(expect.objectContaining({id:"requirement:writes",kind:"requirement"}));
   console.info("gateway-quota-calibration",JSON.stringify(gateways.map(g=>({scope:g.quota!.scope,received:g.received,completed:g.completed,throttled:g.throttled,routes:g.routes.map(r=>({id:r.id,completed:r.outcomes!.completed,refused:r.rejected}))}))));

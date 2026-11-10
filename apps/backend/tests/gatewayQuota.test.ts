@@ -17,7 +17,7 @@ test("saved quota scope spends shared credits once while route counters retain t
     expect(configuration(input.resources[0]!)).toHaveProperty("gatewayQuota", {version: 1, scope});
     const run = createModel2Engine(input, 6); for (let second = 0; second < 6; second++) run.advance();
     const metrics = run.view().metrics.gateway!.gateway!;
-    expect(GatewayMetricsSchema.parse(metrics)).toEqual(metrics);
+    expect(metrics).toEqual(GatewayMetricsSchema.parse(metrics));
     expect(metrics.routes.reduce((n, r) => n + r.admitted, 0)).toBe(metrics.admitted);
     expect(metrics.routes.reduce((n, r) => n + r.rejected, 0)).toBe(metrics.throttled);
     expect(metrics.quota).toEqual({profile: "gateway-quota/1", scope});
