@@ -295,6 +295,18 @@ export const JOURNEY_LABS = [
   },
 ];
 
+// Rate limit: JOURNEY_LAB=set-the-limit-above-the-peak JOURNEY_SHOTS=/tmp/rate-limit node ../InfraForge/scripts/qa/learning-journey.mjs
+JOURNEY_LABS.push({
+  lessonId: "set-the-limit-above-the-peak", title: /Set the limit above the peak/,
+  prediction: "The app is mostly idle yet the run is critical because the balancer refuses the spike.",
+  hypothesis: "Diagnosis: the limiter refills at 300 requests per second, so the 600 per second spike is refused while the app has spare CPU. Raising only Sustained requests per second above the spike should serve every caller.",
+  improvement: {
+    stepName: "lb's Sustained requests per second is changed from 300 to 800",
+    nodeSelector: '[data-resource-id="lb"]', nodeText: /Load Balancer/, fallbackText: "lb",
+    role: "spinbutton", name: /^Sustained requests per second$/, resourceId: "lb", setting: "lbRateLimit.sustainedRequestsPerSecond", from: 300, to: 800,
+  },
+  expected: {starter: "Not met", improved: "Met"},
+});
 // Replica freshness: JOURNEY_LAB=bound-replica-staleness JOURNEY_SHOTS=/tmp/bound-staleness node ../InfraForge/scripts/qa/learning-journey.mjs
 JOURNEY_LABS.push({
   lessonId: "bound-replica-staleness", title: /Bound replica staleness/,
