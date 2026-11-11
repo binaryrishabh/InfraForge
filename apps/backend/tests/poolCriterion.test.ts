@@ -52,6 +52,9 @@ const refusals: Array<[string, Mutate]> = [
   ["captured design lost its signal", r => { r.runInputs = structuredClone(r.runInputs); delete design(r).find(x => x.id === "app")!.autoscaling!.signal; }],
   ["captured pool is not enabled", r => { r.runInputs = structuredClone(r.runInputs); design(r).find(x => x.id === "app")!.autoscaling!.enabled = false; }],
   ["captured pool is not an app server", r => { r.runInputs = structuredClone(r.runInputs); design(r).find(x => x.id === "app")!.type = "Database"; }],
+  ["startup sample from an earlier second", r => { snapshot(r).metrics.app!.startup!.sampledAtUs = (snapshot(r).simulatedSeconds - 1) * 1_000_000; }],
+  ["startup sample time unknown", r => { snapshot(r).metrics.app!.startup!.sampledAtUs = null; }],
+  ["in-service count contradicts its replica rows", r => { controller(r).inService = controller(r).inService! + 1; }],
   ["missing evaluation count", r => { controller(r).evaluations = null; }],
   ["missing-measurement count exceeds evaluations", r => { controller(r).missingMeasurements = controller(r).evaluations! + 1; }],
 ];

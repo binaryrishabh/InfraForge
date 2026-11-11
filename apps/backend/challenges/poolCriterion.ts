@@ -24,8 +24,13 @@ export function evaluatePoolInService(c: PoolCriterion, input: Topology | null, 
   const controllers = parsed?.success ? (parsed.data.controllers ?? []).filter(k => k.id === c.resourceId) : [];
   if (controllers.length !== 1) return unknown("Exactly one valid controller reading for the named pool is required.");
   const k = controllers[0]!;
+  if (parsed?.success !== true || parsed.data.sampledAtUs !== second * 1_000_000) return unknown("The pool reading must carry its exact sample time at the evaluation boundary; a missing time stays Unknown.");
   if (!safe(k.inService) || !safe(k.desired) || !safe(k.evaluations) || !safe(k.missingMeasurements) || k.missingMeasurements > k.evaluations || k.signal?.source !== "observed-core-time") {
     return unknown("Safe desired, in-service, evaluation and missing-measurement counts from the delivered-sample signal are required.");
+  }
+  const rowsKnown = k.replicas != null && k.omittedReplicas === 0 && k.replicas.every(r => [r.endpointAlive, r.endpointReady, r.lbHealthy, r.lbDraining].every(v => typeof v === "boolean"));
+  if (!rowsKnown || k.replicas!.filter(r => r.state === "ready" && r.endpointAlive && r.endpointReady && r.lbHealthy && !r.lbDraining).length !== k.inService) {
+    return unknown("The in-service count must reconcile with complete retained replica rows; otherwise it stays Unknown.");
   }
   return {met: k.inService >= c.minInService,
     detail: `At second ${second}, ${c.resourceId} has ${k.inService} in service (minimum ${c.minInService}), desired ${k.desired}; ${k.missingMeasurements} of ${k.evaluations} evaluations had no usable delivered measurements.`, sources};
