@@ -15,6 +15,6 @@ export const traceASlowdownCascade: LearningLesson = {
   limitations: ["Results are educational model outputs with an authored slowdown, sizes and timeouts, not provider benchmarks.",
     "Only the chain recorded here is traced. Real systems add layers this model does not represent, and a passing run does not show the service would survive a different failure.",
     "A reading missing from the report stays Unknown."],
-  followUp: "Write the chain in order, cite the starter and the change to sharing one fill, and explain why a bigger database and disabled retries both leave the failures in place.",
+  followUp: "Write the chain in order, cite the starter and the change to sharing one fill, and explain why a bigger database and disabled retries both leave the failures in place. Then compare trace-a-saturation-cascade and share-a-cache-fill, which isolate its two halves.",
   check: null,
 };

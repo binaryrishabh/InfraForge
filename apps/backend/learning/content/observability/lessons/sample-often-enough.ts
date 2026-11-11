@@ -15,6 +15,6 @@ export const sampleOftenEnough: LearningLesson = {
   limitations: ["Results are educational model outputs with fixed synthetic timings, not provider benchmarks or tuning advice.",
     "Instrumentation cost of sampling often, durability and continuous freshness are not modeled. A passing report is a terminal-second reading.",
     "A reading missing from the report stays Unknown."],
-  followUp: "Cite the starter, the collection change and the near miss that only shortened export. Explain why export frequency cannot create newer measurements.",
+  followUp: "Cite the starter, the collection change and the near miss that only shortened export. Explain why export frequency cannot create newer measurements. Compare move-monitoring-samples, where batching and buffering rather than collection were the limit.",
   check: null,
 };

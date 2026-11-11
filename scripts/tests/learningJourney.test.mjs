@@ -18,6 +18,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "isolate-route-credits",
     "redrive-after-the-fix",
     "keep-failed-events",
+    "set-the-limit-above-the-peak",
     "bound-replica-staleness",
     "fit-the-working-set",
     "shed-load-at-the-edge",
