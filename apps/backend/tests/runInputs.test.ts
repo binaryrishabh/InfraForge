@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { captureRunInputs, readRunInputs, assertSimulationContext, MODEL2_ENGINE_VERSION } from "../deployments/runInputs";
+import { captureRunInputs, readRunInputs, assertSimulationContext, MODEL2_ENGINE_VERSION, ADAPTER_PROFILE_IDS, ADAPTER_PROFILE_CAP } from "../deployments/runInputs";
 import { DEFAULT_RETRY_SETTINGS } from "@infraforge/domain/resource";
 import { rerunInputHash } from "../reruns/options";
 import { CATALOG_SNAPSHOT_DATE } from "@infraforge/catalog/types";
@@ -64,4 +64,14 @@ test("both run-input readers reject malformed or oversized profile lists", () =>
     expect(() => readRunInputs({...input, version, adapterProfiles})).toThrow("cannot be reconstructed safely");
   }
   for (const adapterProfiles of [[], ["failure-cause/1" as const]]) expect(readRunInputs({...input, adapterProfiles}).adapterProfiles).toEqual(adapterProfiles);
+});
+
+test("the saved adapter profile cap leaves room for every known profile plus headroom, and a full set is readable", () => {
+  expect(new Set(ADAPTER_PROFILE_IDS).size).toBe(ADAPTER_PROFILE_IDS.length);
+  expect(ADAPTER_PROFILE_CAP - ADAPTER_PROFILE_IDS.length).toBeGreaterThanOrEqual(10);
+  const input = JSON.parse(JSON.stringify(captureRunInputs(structuredClone(layout))));
+  input.adapterProfiles = [...ADAPTER_PROFILE_IDS];
+  expect(readRunInputs(input).adapterProfiles).toHaveLength(ADAPTER_PROFILE_IDS.length);
+  input.adapterProfiles = [...ADAPTER_PROFILE_IDS, ADAPTER_PROFILE_IDS[0]];
+  expect(() => readRunInputs(input)).toThrow();
 });
