@@ -3,7 +3,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
-import { predictionResourceTypes, PREDICTION_REASONING_MAX, type ChallengeBrief, type ChallengePreflight, type PredictionQuestion } from "@infraforge/contracts/challenges";
+import { predictionResourceTypes, predictionResourceIds, PREDICTION_REASONING_MAX, type ChallengeBrief, type ChallengePreflight, type PredictionQuestion } from "@infraforge/contracts/challenges";
 import { errorMessage } from "@/api/errorMessage";
 import { describeWorkload } from "@/lib/format";
 import { Dialog } from "@/ui/Dialog";
@@ -21,12 +21,12 @@ import { useChallengeImprovement } from "../learningContext";
 import { useImprovementReview } from "../useImprovementReview";
 import { ImprovementReview } from "./ImprovementReview";
 
-export function PredictionQuestionField({ question, index, value, onChange, designTypes }: { question: PredictionQuestion; index: number; value: string; onChange: (v: string) => void; designTypes: string[] }) {
+export function PredictionQuestionField({ question, index, value, onChange, designTypes, designIds = [] }: { question: PredictionQuestion; index: number; value: string; onChange: (v: string) => void; designTypes: string[]; designIds?: string[] }) {
   return (
     <fieldset className="rounded-md border border-line px-4 pt-3 pb-4">
       <legend className="px-1 text-sm font-semibold text-ink"><span className="if-num mr-1.5 text-ink-3">{index + 1}.</span>{question.prompt}</legend>
       <div className="mt-2 grid gap-2 sm:grid-cols-2">
-        {predictionChoices(question, designTypes).map((choice) => (
+        {predictionChoices(question, designTypes, designIds).map((choice) => (
           <label key={choice.value} className={cx("flex cursor-pointer items-center gap-2.5 rounded-md border px-3 py-2 text-sm transition-colors",
             value === choice.value ? "border-accent bg-accent-soft text-ink" : "border-line-strong text-ink-2 hover:border-ink-3")}>
             <input type="radio" name={`prediction-${question.id}`} value={choice.value} checked={value === choice.value} onChange={() => onChange(choice.value)} className="accent-[var(--if-accent)]" />
@@ -47,6 +47,7 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
   const capabilityReason = availability?.run.allowed === false ? availability.run.reason : null;
   const saved = useCanvasStore((s) => s.currentLayoutSaved);
   const designTypes = predictionResourceTypes(resources.map((r) => r.type), brief.engine);
+  const designIds = predictionResourceIds(resources, brief.engine);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [reasoning, setReasoning] = useState("");
   const [busy, setBusy] = useState(false);
@@ -61,11 +62,11 @@ export function AttemptDialog({ brief, preflight, open, onOpenChange }: { brief:
   // An earlier version's workspace cannot start an attempt at the current version; the server refuses it too.
   const olderWorkspace = !learning && workspaceVersion !== null && workspaceVersion < brief.latestVersion;
   const valid = (preflight?.valid ?? true) && resources.length > 0 && !olderWorkspace;
-  const answered = brief.predictions.every((q) => predictionChoices(q, designTypes).some((c) => c.value === answers[q.id]));
+  const answered = brief.predictions.every((q) => predictionChoices(q, designTypes, designIds).some((c) => c.value === answers[q.id]));
   const plan = brief.experiment ? planOf(brief.experiment) : null;
   const phases = predictionPhases(brief.predictions);
   const field = (question: PredictionQuestion) => (
-    <PredictionQuestionField key={question.id} question={question} index={brief.predictions.indexOf(question)} value={answers[question.id] ?? ""} designTypes={designTypes}
+    <PredictionQuestionField key={question.id} question={question} index={brief.predictions.indexOf(question)} value={answers[question.id] ?? ""} designTypes={designTypes} designIds={designIds}
       onChange={(value) => setAnswers((prev) => ({ ...prev, [question.id]: value }))} />
   );
   const submit = async (event: FormEvent) => {

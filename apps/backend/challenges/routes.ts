@@ -19,7 +19,7 @@ import { readPrediction } from "./prediction";
 import { preflight } from "./preflight";
 import { experimentReadiness, recordedExperiment } from "./experiment";
 import { learningAttempt } from "./history";
-import { HYPOTHESIS_MAX } from "@infraforge/contracts/challenges";
+import { HYPOTHESIS_MAX, predictionResourceIds } from "@infraforge/contracts/challenges";
 import { improvementRouter } from "./improvementRoutes";
 import { improvementSource } from "./improvements";
 import { reviewDesignChanges } from "./designChanges";
@@ -195,7 +195,7 @@ challengeRouter.post("/:id/attempts", async (req, res) => {
       const ready = experimentReadiness(definition.experiment, runInputs, definition.engine);
       if (!ready.ready) throw new ValidationError(`The experiment cannot run: ${ready.detail}`);
     }
-    const prediction = readPrediction(body.data.prediction, definition, runInputs.resources.map((r) => r.type));
+    const prediction = readPrediction(body.data.prediction, definition, runInputs.resources.map((r) => r.type), predictionResourceIds(runInputs.resources, definition.engine));
     const experiment = recordedExperiment(definition);
     let scenario;
     try { scenario = recordedScenario(definition, runInputs); }

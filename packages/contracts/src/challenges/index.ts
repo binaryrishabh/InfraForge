@@ -50,6 +50,8 @@ export type PredictionQuestion =
   | { id: string; kind: "overall-health"; prompt: string }
   | { id: string; kind: "database-health"; prompt: string }
   | { id: string; kind: "busiest-type"; prompt: string }
+  // One named resource of the design, graded against the highest known CPU at the evaluation second.
+  | { id: string; kind: "busiest-resource"; prompt: string }
   | { id: string; kind: "security-clean"; prompt: string }
   // Classifies retained incoming database connection counters, not CPU or health.
   | { id: string; kind: "database-admission"; prompt: string }
@@ -65,11 +67,16 @@ export function predictionResourceTypes(types: string[], engine?: "2") {
   return [...new Set(types)].filter((type) => engine !== "2" || (type !== "Load Balancer" && type !== "Firewall"));
 }
 
+// Resource ids a learner may name for "busiest-resource": the same CPU-reporting resources as the type list.
+export function predictionResourceIds(resources: { id: string; type: string }[], engine?: "2") {
+  return resources.filter((r) => engine !== "2" || (r.type !== "Load Balancer" && r.type !== "Firewall")).map((r) => r.id);
+}
+
 export interface PredictionChoice { value: string; label: string }
 
 /* Fixed answer sets. A busiest-type prediction instead chooses among the
 resource types present in the design being attempted. */
-export const PREDICTION_CHOICES: Record<Exclude<PredictionQuestion["kind"], "busiest-type">, PredictionChoice[]> = {
+export const PREDICTION_CHOICES: Record<Exclude<PredictionQuestion["kind"], "busiest-type" | "busiest-resource">, PredictionChoice[]> = {
   "database-admission": [{value: "policy-denied", label: "Firewall rule denials"}, {value: "no-listener", label: "Missing TCP listener"},
     {value: "other-or-mixed", label: "Other or mixed admission denials"}, {value: "no-denials", label: "Delivered database traffic without admission denials"}],
   "target-health": [{ value: "healthy", label: "Healthy" }, { value: "degraded", label: "Degraded" },

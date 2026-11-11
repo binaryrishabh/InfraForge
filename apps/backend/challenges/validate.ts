@@ -47,7 +47,7 @@ const definition = z.object({
 
 const CRITERIA = ["stale-reads", "function-reuse", "startup-capacity", "database-redundancy", "monitoring-delivery", "pool-in-service", "bus-dead-letters", "cdn-origin-load", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
   "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "queue-ready-age", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work", "caller-outcomes"];
-const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
+const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "busiest-resource", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
 
 // Authoring checks repeatedly visit the same source definitions. Reuse only a

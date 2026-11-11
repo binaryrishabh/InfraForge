@@ -18,7 +18,7 @@ const VERDICT: Record<ChallengeEvaluation["status"], string> = {
 function label(brief: ChallengeBrief | null, p: PredictionResult, value: string | null) {
   if (value === null) return "Not recorded";
   const kind = brief?.predictions.find((q) => q.id === p.id)?.kind;
-  if (!kind || kind === "busiest-type") return value;
+  if (!kind || kind === "busiest-type" || kind === "busiest-resource") return value;
   return value.split(" / ").map((v) => PREDICTION_CHOICES[kind].find((c) => c.value === v)?.label ?? v).join(" / ");
 }
 

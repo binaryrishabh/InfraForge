@@ -8,13 +8,14 @@ const body = z.object({
   reasoning: z.string().max(PREDICTION_REASONING_MAX * 2).nullable().optional(),
 }).strict();
 
-export function choicesFor(kind: ChallengeDefinition["predictions"][number]["kind"], designTypes: string[], engine?: "2") {
+export function choicesFor(kind: ChallengeDefinition["predictions"][number]["kind"], designTypes: string[], engine?: "2", designIds: string[] = []) {
+  if (kind === "busiest-resource") return designIds;
   return kind === "busiest-type" ? predictionResourceTypes(designTypes, engine) : PREDICTION_CHOICES[kind].map((choice) => choice.value);
 }
 
 /* Every question must be answered before the attempt exists. The answer set is
 closed: fixed choices, or a resource type present in the submitted design. */
-export function readPrediction(input: unknown, definition: ChallengeDefinition, designTypes: string[]): ChallengePrediction {
+export function readPrediction(input: unknown, definition: ChallengeDefinition, designTypes: string[], designIds: string[] = []): ChallengePrediction {
   const parsed = body.safeParse(input);
   if (!parsed.success) throw new ValidationError("Answer every prediction before starting the attempt.");
   const { answers } = parsed.data;
@@ -24,7 +25,7 @@ export function readPrediction(input: unknown, definition: ChallengeDefinition, 
   }
   for (const question of definition.predictions) {
     const answer = answers[question.id]!;
-    const valid = choicesFor(question.kind, designTypes, definition.engine).includes(answer) &&
+    const valid = choicesFor(question.kind, designTypes, definition.engine, designIds).includes(answer) &&
       (question.kind !== "busiest-type" || Object.values(RESOURCE_TYPES).includes(answer as never));
     if (!valid) throw new ValidationError(`"${question.prompt}" needs one of the offered answers.`);
   }

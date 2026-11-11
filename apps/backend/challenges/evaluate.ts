@@ -1,6 +1,6 @@
 import { isActiveRunStatus } from "@infraforge/contracts/deployment";
 import { findSku } from "@infraforge/catalog";
-import { PREDICTION_CHOICES } from "@infraforge/contracts/challenges";
+import { PREDICTION_CHOICES, predictionResourceIds } from "@infraforge/contracts/challenges";
 import { RESOURCE_TYPES } from "@infraforge/domain/resource";
 import type { RunAction } from "@infraforge/contracts/actions";
 import type { ChallengeCriterion, ChallengeCriterionResult, ChallengeDefinition, ChallengeEvaluation, ChallengeStatus,
@@ -375,7 +375,7 @@ class Judge {
     const compare = (actual: string, matched: boolean, detail: string, sources: string[]): PredictionResult =>
       ({ ...base, actual, outcome: matched ? "matched" : "different", detail, sources });
     const t = this.atEvaluation, input = this.evidence.input;
-    const choice = (value: string) => q.kind === "busiest-type" ? value : PREDICTION_CHOICES[q.kind].find((c) => c.value === value)?.label ?? value;
+    const choice = (value: string) => q.kind === "busiest-type" || q.kind === "busiest-resource" ? value : PREDICTION_CHOICES[q.kind].find((c) => c.value === value)?.label ?? value;
     switch (q.kind) {
       case "database-admission": {
         const sources = ["terminalSnapshot.metrics.security.edges", "runInputs.resources"];
@@ -424,6 +424,22 @@ class Judge {
         const top = busiestTypes(t, input);
         if (!top.types.length) return unknown("No CPU measurement was recorded.", ["terminalSnapshot.metrics"]);
         return compare(top.types.join(" / "), top.types.includes(predicted), `Highest known CPU at second ${t.simulatedSeconds}: ${list(top.types)} at ${top.cpu}%${top.types.length > 1 ? " (tied)" : ""}. Unknown CPU values are excluded. Autoscaled replicas count as Virtual Machines.`, ["terminalSnapshot.metrics"]);
+      }
+      case "busiest-resource": {
+        const sources = ["terminalSnapshot.metrics", "runInputs.resources"];
+        if (!t || !input) return unknown(this.missingMeasurement(), sources);
+        if (t.measurementFreshness !== "current-revision") return unknown("A current evaluation measurement was not recorded.", sources);
+        const offered = predictionResourceIds(input.resources, "2");
+        if (!offered.includes(predicted)) return unknown("The chosen resource is not a CPU-reporting resource of the captured design.", sources);
+        const known = offered.flatMap((id) => {
+          const rows = t.resources.filter((r) => r.id === id);
+          return rows.length === 1 && typeof rows[0]!.cpu === "number" && Number.isFinite(rows[0]!.cpu) ? [{ id, cpu: rows[0]!.cpu }] : [];
+        });
+        const missing = offered.filter((id) => !known.some((r) => r.id === id));
+        if (missing.length) return unknown(`No CPU measurement was recorded at second ${t.simulatedSeconds} for ${list(missing)}; a hidden higher value cannot be ruled out and no zero is inferred.`, sources);
+        const mine = known.find((r) => r.id === predicted)!;
+        const top = Math.max(...known.map((r) => r.cpu)), tied = known.filter((r) => r.cpu === top).map((r) => r.id);
+        return compare(tied.join(" / "), tied.includes(predicted), `Highest known CPU at second ${t.simulatedSeconds}: ${list(tied)} at ${top}%${tied.length > 1 ? " (tied; any tied resource matches)" : ""}. Resources without a CPU measurement are excluded; ${predicted} was ${mine.cpu}%.`, sources);
       }
       case "baseline-health": {
         const e = this.experiment;

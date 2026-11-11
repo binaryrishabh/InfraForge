@@ -3,7 +3,7 @@ import { PREDICTION_CHOICES, type ChallengeBrief, type ChallengePrediction } fro
 
 const answerLabel = (brief: ChallengeBrief, id: string, value: string) => {
   const question = brief.predictions.find((q) => q.id === id);
-  if (!question || question.kind === "busiest-type") return value;
+  if (!question || question.kind === "busiest-type" || question.kind === "busiest-resource") return value;
   return PREDICTION_CHOICES[question.kind].find((c) => c.value === value)?.label ?? value;
 };
 
