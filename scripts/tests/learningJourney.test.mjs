@@ -28,10 +28,10 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "sample-often-enough",
     "trace-a-slowdown-cascade",
     "trace-a-burst-backlog",
+    "trace-a-scaling-stall",
     "hold-slots-on-a-slow-call",
     "admit-a-replica-image",
     "keep-a-function-warm",
-    "release-the-cpu-budget",
     "open-the-forwarding-gate",
   ].sort());
   expect(new Set(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).size).toBe(JOURNEY_LABS.length);

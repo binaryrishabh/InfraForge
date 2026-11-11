@@ -2,6 +2,7 @@ import { openTheForwardingGateV1 } from "./open-the-forwarding-gate/v1";
 import { keepAFunctionWarmV1 } from "./keep-a-function-warm/v1";
 import { isolateRouteCreditsV1 } from "./isolate-route-credits/v1";
 import { resolveAfterPublicationV1 } from "./resolve-after-publication/v1";
+import { traceAScalingStallV1 } from "./trace-a-scaling-stall/v1";
 import { setTheLimitAboveThePeakV1 } from "./set-the-limit-above-the-peak/v1";
 import { boundReplicaStalenessV1 } from "./bound-replica-staleness/v1";
 import { fitTheWorkingSetV1 } from "./fit-the-working-set/v1";
@@ -109,6 +110,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   fitTheWorkingSetV1,
   boundReplicaStalenessV1,
   setTheLimitAboveThePeakV1,
+  traceAScalingStallV1,
   restoreSafeRedundancyV1,
   moveMonitoringSamplesV1,
   scaleOnDeliveredSamplesV1,

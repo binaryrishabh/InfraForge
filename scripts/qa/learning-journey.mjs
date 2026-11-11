@@ -320,6 +320,19 @@ export const JOURNEY_LABS = [
   },
 ];
 
+// Scaling stall capstone: JOURNEY_LAB=trace-a-scaling-stall JOURNEY_SHOTS=/tmp/scaling-stall node ../InfraForge/scripts/qa/learning-journey.mjs
+JOURNEY_LABS.push({
+  lessonId: "trace-a-scaling-stall", title: /Trace a scaling stall/,
+  prediction: "The busy app is saturated and callers fail, so health is Saturated and the app shows the highest CPU.",
+  hypothesis: "Diagnosis: callers fail because the one app is saturated; the pool stays at one because the controller holds on measurements older than its freshness bound; they are old because the agent exports every twenty seconds. Shortening only Export interval should let the pool grow.",
+  predictionQuestions: [/What overall health will be recorded at second 90/, /Which resource will record the highest CPU at second 90/],
+  improvement: {
+    stepName: "monitor's Export interval is changed from 20 to 2",
+    nodeSelector: '[data-resource-id="monitor"]', nodeText: /Monitoring Agent/, fallbackText: "monitor",
+    role: "spinbutton", name: /^Export every \(seconds\)$/, resourceId: "monitor", setting: "monitoringPolicy.exportIntervalSeconds", from: 20, to: 2,
+  },
+  expected: {starter: "Not met", improved: "Met"},
+});
 // Rate limit: JOURNEY_LAB=set-the-limit-above-the-peak JOURNEY_SHOTS=/tmp/rate-limit node ../InfraForge/scripts/qa/learning-journey.mjs
 JOURNEY_LABS.push({
   lessonId: "set-the-limit-above-the-peak", title: /Set the limit above the peak/,
