@@ -24,7 +24,7 @@ export function evaluatePoolInService(c: PoolCriterion, input: Topology | null, 
   const controllers = parsed?.success ? (parsed.data.controllers ?? []).filter(k => k.id === c.resourceId) : [];
   if (controllers.length !== 1) return unknown("Exactly one valid controller reading for the named pool is required.");
   const k = controllers[0]!;
-  if (parsed!.data.sampledAtUs !== second * 1_000_000) return unknown("The pool reading must carry its exact sample time at the evaluation boundary; a missing time stays Unknown.");
+  if (parsed?.success !== true || parsed.data.sampledAtUs !== second * 1_000_000) return unknown("The pool reading must carry its exact sample time at the evaluation boundary; a missing time stays Unknown.");
   if (!safe(k.inService) || !safe(k.desired) || !safe(k.evaluations) || !safe(k.missingMeasurements) || k.missingMeasurements > k.evaluations || k.signal?.source !== "observed-core-time") {
     return unknown("Safe desired, in-service, evaluation and missing-measurement counts from the delivered-sample signal are required.");
   }
