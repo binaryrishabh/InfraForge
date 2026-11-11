@@ -1,4 +1,5 @@
 import { lbForwardingLessons } from "./lb-forwarding";
+import { boundedStalenessLessons } from "./bounded-staleness";
 import { functionRetentionLessons } from "./function-retention";
 import { quotaOwnershipLessons } from "./quota-ownership";
 import { retryAndCircuitEvidenceLessons } from "./retry-and-circuit-evidence";
@@ -7,5 +8,5 @@ import { cacheEvidenceArchivedLessons } from "./cache-evidence-archives";
 export { track } from "./track";
 import { resourcePressureLessons } from "./resource-pressure";
 import { failureControlLessons } from "./failure-controls";
-export const lessons = [...resourcePressureLessons, ...failureControlLessons, ...retryAndCircuitEvidenceLessons, ...quotaOwnershipLessons, ...functionRetentionLessons, ...lbForwardingLessons];
+export const lessons = [...resourcePressureLessons, ...failureControlLessons, ...retryAndCircuitEvidenceLessons, ...quotaOwnershipLessons, ...functionRetentionLessons, ...lbForwardingLessons, ...boundedStalenessLessons];
 export const archivedLessons = [...failureControlArchivedLessons, ...cacheEvidenceArchivedLessons];

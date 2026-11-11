@@ -305,6 +305,18 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^Complete 1340 uploads with at most 20 unsuccessful through second 240$/],
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "serve-stale-on-error", title: /Serve stale on error/,
+    prediction: "Overall health can look Healthy even though callers failed while the database was down.",
+    hypothesis: "Setting a stale age bound alone should let expired entries answer failed refills; a bigger database or more retries cannot.",
+    improvement: {
+      stepName: "cache's Serve stale after expiry (seconds) is changed from blank to 30",
+      nodeSelector: '[data-resource-id="cache"]', nodeText: /Cache/, fallbackText: "cache",
+      role: "spinbutton", name: /^Serve stale after expiry \(seconds\)$/, resourceId: "cache", setting: "cachePolicy.staleSeconds", from: null, to: 30,
+    },
+    reportRequirements: [/^Serve 100 stale answers no older than 30 seconds, with the TTL at one second$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Replica freshness: JOURNEY_LAB=bound-replica-staleness JOURNEY_SHOTS=/tmp/bound-staleness node ../InfraForge/scripts/qa/learning-journey.mjs
