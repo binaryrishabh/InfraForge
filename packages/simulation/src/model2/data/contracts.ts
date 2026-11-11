@@ -21,12 +21,12 @@ export interface RelationalConfig {
 export interface CacheConfig {
   id: string; kind: "cache"; semantics: "keyed-cache/1"; execution: ComputeResource;
   capacity: Quantity<"bytes">; entryOverhead: Quantity<"bytes">; policy: "lru" | "no-eviction";
-  ttl: Quantity<"us">; initial: Row[]; commandCpu: Quantity<"cpu-us">;
+  ttl: Quantity<"us">; initial: Row[]; commandCpu: Quantity<"cpu-us">; staleFor?: Quantity<"us">;
 }
 export interface AsideConfig {
   recordedKeysOnly?: true;
   id: string; kind: "cache-aside"; execution: ComputeResource; cache: string; database: string;
-  keys: string[]; access: "cycle" | "keyed-uniform" | "keyed-hot"; coalesce: boolean; onCacheFailure: "fail" | "database";
+  keys: string[]; access: "cycle" | "keyed-uniform" | "keyed-hot"; coalesce: boolean; onCacheFailure: "fail" | "database"; staleOnError?: true;
   invalidateWrites: boolean; operations: Record<string, "read" | "write">;
 }
 export type DataResource = RelationalConfig | CacheConfig | AsideConfig;
@@ -39,5 +39,5 @@ export interface DataInput extends Omit<NetworkInput, "workloadVersion" | "resou
   resources: Array<NetworkInput["resources"][number] | DataResource>;
   dataInterventions: DataIntervention[];
 }
-export interface DataRequest { writerEpoch?: number; kind: "get" | "set" | "invalidate" | "query"; key: string; row?: { version: number; bytes: number }; token?: string }
-export interface DataReply { readSource?: "primary" | "replica"; ok: boolean; hit?: boolean; key?: string; version?: number; bytes?: number; token?: string; rows?: Array<{ key: string; version: number; bytes: number }>; reason?: string; durable?: boolean }
+export interface DataRequest { writerEpoch?: number; kind: "get" | "get-stale" | "set" | "invalidate" | "query"; key: string; row?: { version: number; bytes: number }; token?: string }
+export interface DataReply { readSource?: "primary" | "replica"; ok: boolean; hit?: boolean; stale?: boolean; ageUs?: number; key?: string; version?: number; bytes?: number; token?: string; rows?: Array<{ key: string; version: number; bytes: number }>; reason?: string; durable?: boolean }

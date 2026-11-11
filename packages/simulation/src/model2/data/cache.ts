@@ -15,7 +15,10 @@ export function keyedCache(config: CacheConfig, kernel: EventClock, ownedCpu?: R
   let expirationCursor = entries.keys();
   let busyUs = 0, busyStart = kernel.now;
   const remove = (key: string) => { const e = entries.get(key); if (e) { used -= e.bytes + overhead; entries.delete(key); } };
-  const expire = (key: string) => { if (expireOwned(entries, key, kernel.now, remove)) expirations++; };
+  // With a saved stale bound, an expired body is retained (and still owns its bytes) until the bound passes; it is never a hit.
+  const staleBound = config.staleFor ? requireKnown(config.staleFor, "us") : 0;
+  let staleServed = 0, maxStaleAgeUs = 0;
+  const expire = (key: string) => { const e = entries.get(key); if (staleBound && e && e.expires <= kernel.now && kernel.now - e.expires < staleBound) return; if (expireOwned(entries, key, kernel.now, remove)) expirations++; };
   const finish = (c: Command, reply: DataReply, cancel = false) => {
     if (c.terminal) return; c.terminal = true;
     if (active.has(c.work.callId)) { busyUs += kernel.now - busyStart; cpu.remove(c.work.callId); } active.delete(c.work.callId); queue.delete(c.work.callId);
@@ -27,7 +30,8 @@ export function keyedCache(config: CacheConfig, kernel: EventClock, ownedCpu?: R
   const apply = (request: DataRequest): DataReply => {
     if (!request || typeof request.key !== "string" || !request.key.length || request.key.length > DATA_LIMITS.keyCharacters) return { ok: false, reason: "invalid-cache-key" };
     expire(request.key);
-    if (request.kind === "get") { lookups++; const e = entries.get(request.key); if (e) { hits++; e.sequence = sequence++; entries.delete(request.key); entries.set(request.key, e); return { ok: true, hit: true, key: request.key, version: e.version, bytes: e.bytes, token: token(request.key) }; } misses++; return { ok: true, hit: false, key: request.key, token: token(request.key) }; }
+    if (request.kind === "get") { lookups++; const e = entries.get(request.key); if (e && e.expires > kernel.now) { hits++; e.sequence = sequence++; entries.delete(request.key); entries.set(request.key, e); return { ok: true, hit: true, key: request.key, version: e.version, bytes: e.bytes, token: token(request.key) }; } misses++; return { ok: true, hit: false, key: request.key, token: token(request.key) }; }
+    if (request.kind === "get-stale") { const e = entries.get(request.key); if (!staleBound || !e || e.expires > kernel.now) return { ok: true, hit: false, key: request.key }; const ageUs = kernel.now - e.expires; staleServed++; maxStaleAgeUs = Math.max(maxStaleAgeUs, ageUs); return { ok: true, hit: true, stale: true, ageUs, key: request.key, version: e.version, bytes: e.bytes }; }
     if (request.kind === "invalidate") { if (!generations.has(request.key) && generations.size >= DATA_LIMITS.keys) return { ok: false, reason: "key-budget" }; remove(request.key); generations.set(request.key, (generations.get(request.key) ?? 0) + 1); invalidations++; return { ok: true }; }
     if (request.kind !== "set" || !request.row) return { ok: false, reason: "unsupported-cache-command" };
     if (!Number.isSafeInteger(request.row.bytes) || request.row.bytes < 0 || !Number.isSafeInteger(request.row.version) || request.row.version < 1) return { ok: false, reason: "invalid-cache-row" };
@@ -57,7 +61,7 @@ export function keyedCache(config: CacheConfig, kernel: EventClock, ownedCpu?: R
     flush() { entries.clear(); generations.clear(); used = 0; epoch++; },
     pause(value: boolean) { paused = value; cpu.pause(value); if (value) for (const c of [...active.values(), ...queue.values()]) finish(c, { ok: false, reason: "cache-unavailable" }); else pump(); },
     measure: () => ({ id: config.id, paused, received, admitted, rejected, completed, failed, cancelled, queued: queue.size, serving: active.size, waiting: 0, consumedCoreUs: cpu.measure().appCoreUs, busySlotUs: busyUs + (active.size ? kernel.now - busyStart : 0) }),
-    evidence: () => ({ id: config.id, lookups: attemptedLookups, executedLookups: lookups, lookupFailures, lookupCancelled, liveLookups: [...active.values(), ...queue.values()].filter((c) => (c.work.message?.request as DataRequest | undefined)?.kind === "get").length, hits, misses, fills, evictions, expirations, invalidations, staleFillRefused, allocationRefused, epoch, allocatedEntryBytes: used, capacityBytes: capacity,
+    evidence: () => ({ id: config.id, ...(staleBound ? { staleServed, maxStaleAgeUs: staleServed ? maxStaleAgeUs : null } : {}), lookups: attemptedLookups, executedLookups: lookups, lookupFailures, lookupCancelled, liveLookups: [...active.values(), ...queue.values()].filter((c) => (c.work.message?.request as DataRequest | undefined)?.kind === "get").length, hits, misses, fills, evictions, expirations, invalidations, staleFillRefused, allocationRefused, epoch, allocatedEntryBytes: used, capacityBytes: capacity,
       entries: [...entries].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, e]) => ({ key, ...e, expired: e.expires <= kernel.now })), logicallyLiveEntries: [...entries.values()].filter((e) => e.expires > kernel.now).length, cpu: cpu.measure(), residentProcessBytes: "Unknown; entry budget excludes unmodeled runtime/allocator/native state" }),
   };
 }

@@ -1,5 +1,5 @@
 /** Optional generic cache-aside settings, owned by the Cache resource. */
-export type CachePolicy = { ttlSeconds?: number; singleFlight?: boolean } & (
+export type CachePolicy = { ttlSeconds?: number; singleFlight?: boolean; staleSeconds?: number } & (
   { version: 1 } | { version: 2; capacityEntries: number }
 );
 
@@ -11,9 +11,10 @@ export function cachePolicyError(type: string, value: unknown): string | undefin
   if (!value || typeof value !== "object" || Array.isArray(value)) return "Cache policy requires an explicit version.";
   const v = value as Record<string, unknown>;
   if (v.version !== 1 && v.version !== 2) return "Cache policy requires version 1 or 2.";
-  const fields = ["version", "ttlSeconds", "singleFlight", ...(v.version === 2 ? ["capacityEntries"] : [])];
+  const fields = ["version", "ttlSeconds", "singleFlight", "staleSeconds", ...(v.version === 2 ? ["capacityEntries"] : [])];
   if (Object.keys(v).some(k => !fields.includes(k))) return "Cache policy contains unsupported settings for its version.";
   if (v.version === 2 && (typeof v.capacityEntries !== "number" || !Number.isSafeInteger(v.capacityEntries) || v.capacityEntries < 1 || v.capacityEntries > CACHE_CAPACITY_MAX_ENTRIES)) return `Logical cache capacity must be an integer from 1 to ${CACHE_CAPACITY_MAX_ENTRIES} entries.`;
   if (v.ttlSeconds !== undefined && (typeof v.ttlSeconds !== "number" || !Number.isSafeInteger(v.ttlSeconds) || v.ttlSeconds < 1 || v.ttlSeconds > CACHE_TTL_MAX_SECONDS)) return `Cache TTL must be an integer from 1 to ${CACHE_TTL_MAX_SECONDS} seconds.`;
   if (v.singleFlight !== undefined && typeof v.singleFlight !== "boolean") return "Cache single-flight must be on or off.";
+  if (v.staleSeconds !== undefined && (typeof v.staleSeconds !== "number" || !Number.isSafeInteger(v.staleSeconds) || v.staleSeconds < 1 || v.staleSeconds > CACHE_TTL_MAX_SECONDS)) return `Stale age bound must be an integer from 1 to ${CACHE_TTL_MAX_SECONDS} seconds.`;
 }

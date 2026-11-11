@@ -1,4 +1,5 @@
 import { lbForwarding } from "./lb-forwarding";
+import { boundedStaleness } from "./bounded-staleness";
 import { functionRetention } from "./function-retention";
 import { quotaOwnership } from "./quota-ownership";
 import { retryAndCircuitEvidence } from "./retry-and-circuit-evidence";
@@ -9,6 +10,6 @@ import { failureControls } from "./failure-controls";
 export const track: LearningTrack = {
   id: "depth", title: "Resource depth", availability: "available",
   summary: "Practice intermediate resource policies and explain their measured effects on connected systems.",
-  modules: [resourcePressure, failureControls, retryAndCircuitEvidence, quotaOwnership, functionRetention, lbForwarding, cpuBudget],
+  modules: [resourcePressure, failureControls, retryAndCircuitEvidence, quotaOwnership, functionRetention, lbForwarding, cpuBudget, boundedStaleness],
 };
 import { cpuBudget } from "./cpu-budget";

@@ -5,10 +5,10 @@ import { updateResource } from "../../actions";
 import { InspectorSection } from "./InspectorSection";
 
 export function CachePolicySection({ resource, disabled }: { resource: Resource; disabled: boolean }) {
-  const commit = (patch: Partial<Pick<CachePolicy, "ttlSeconds" | "singleFlight">>) => updateResource(resource.id, { cachePolicy: { version: 1, ...resource.cachePolicy, ...patch } });
+  const commit = (patch: Partial<Pick<CachePolicy, "ttlSeconds" | "singleFlight" | "staleSeconds">>) => updateResource(resource.id, { cachePolicy: { version: 1, ...resource.cachePolicy, ...patch } });
   const capacity = (value: string) => {
-    const { ttlSeconds, singleFlight } = resource.cachePolicy ?? {};
-    const policy: CachePolicy = value === "" ? { version: 1, ttlSeconds, singleFlight } : { version: 2, capacityEntries: Number(value), ttlSeconds, singleFlight };
+    const { ttlSeconds, singleFlight, staleSeconds } = resource.cachePolicy ?? {};
+    const policy: CachePolicy = value === "" ? { version: 1, ttlSeconds, singleFlight, staleSeconds } : { version: 2, capacityEntries: Number(value), ttlSeconds, singleFlight, staleSeconds };
     updateResource(resource.id, { cachePolicy: policy });
   };
   return <InspectorSection title="Cache behavior">
@@ -22,6 +22,11 @@ export function CachePolicySection({ resource, disabled }: { resource: Resource;
         {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} type="number" min={1} max={CACHE_CAPACITY_MAX_ENTRIES} step={1} placeholder="Default"
           value={resource.cachePolicy?.version === 2 ? resource.cachePolicy.capacityEntries : ""} disabled={disabled}
           onChange={event => capacity(event.target.value)} />}
+      </Field>
+      <Field label="Serve stale after expiry (seconds)" hint="When a refill from the database fails, answer from an expired entry for up to this many seconds after expiry. Such answers are counted as stale and may be out of date. Blank keeps expired entries unusable.">
+        {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} type="number" min={1} max={CACHE_TTL_MAX_SECONDS} step={1} placeholder="Off"
+          value={resource.cachePolicy?.staleSeconds ?? ""} disabled={disabled}
+          onChange={event => commit({ staleSeconds: event.target.value === "" ? undefined : Number(event.target.value) })} />}
       </Field>
       <Switch label="Single-flight" checked={resource.cachePolicy?.singleFlight === true} disabled={disabled}
         onChange={singleFlight => commit({ singleFlight })}

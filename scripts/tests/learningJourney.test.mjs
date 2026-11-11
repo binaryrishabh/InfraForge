@@ -15,6 +15,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "restore-safe-redundancy",
     "resolve-after-publication",
     "scale-on-delivered-samples",
+    "serve-stale-on-error",
     "isolate-route-credits",
     "redrive-after-the-fix",
     "keep-failed-events",
@@ -29,6 +30,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "hold-slots-on-a-slow-call",
     "admit-a-replica-image",
     "keep-a-function-warm",
+    "release-the-cpu-budget",
     "open-the-forwarding-gate",
   ].sort());
   expect(new Set(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).size).toBe(JOURNEY_LABS.length);
@@ -805,4 +807,14 @@ test("sample journey changes the collection interval and refuses missing or unre
   expect(await applyJourneyImprovement(fakePage().page,edit)).toEqual([{resourceId:"monitor",setting:"monitoringPolicy.collectionIntervalSeconds",value:"2"}]);
   await expect(applyJourneyImprovement(fakePage({controlMissing:true}).page,edit)).rejects.toThrow("requested control is missing");
   await expect(applyJourneyImprovement(fakePage({storedValue:"20"}).page,edit)).rejects.toThrow("did not retain");
+});
+
+test("stale journey sets the stale bound and refuses missing or unretained values", async () => {
+  const lab=journeyLab("serve-stale-on-error"),edit=lab.improvement;
+  expect([edit.resourceId,edit.setting,edit.from,edit.to]).toEqual(["cache","cachePolicy.staleSeconds",null,60]);
+  expect(edit.name.test("Serve stale after expiry (seconds)")).toBe(true);
+  expect(edit.name.test("Cache TTL (seconds)")).toBe(false);
+  expect(await applyJourneyImprovement(fakePage().page,edit)).toEqual([{resourceId:"cache",setting:"cachePolicy.staleSeconds",value:"60"}]);
+  await expect(applyJourneyImprovement(fakePage({controlMissing:true}).page,edit)).rejects.toThrow("requested control is missing");
+  await expect(applyJourneyImprovement(fakePage({storedValue:"1"}).page,edit)).rejects.toThrow("did not retain");
 });
