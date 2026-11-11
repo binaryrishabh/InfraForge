@@ -17,6 +17,7 @@ import { orderedScenarioSteps } from "@infraforge/simulation/model2-run";
 import { QueueWorkSchema } from "../reports/queueWorkSchema";
 import { WholeRunSchema } from "../reports/wholeRunSchema";
 import { SecurityMetricsSchema } from "../reports/securitySchema";
+import { evaluateStaleAnswers } from "./staleCriterion";
 import { evaluateCdnOriginLoad } from "./cdnCriterion";
 import { evaluateBusDeadLetters } from "./busCriterion";
 import { evaluatePoolInService } from "./poolCriterion";
@@ -164,6 +165,7 @@ class Judge {
       case "pool-in-service":
       case "bus-dead-letters":
       case "cdn-origin-load":
+      case "cache-stale-answers":
       case "backend-admission-budget":
       case "queue-work":
       case "queue-ready-age":
@@ -196,6 +198,13 @@ class Judge {
         return {...base, status: "not-evaluated", detail: "An unchanged captured topology and matching terminal revision are required.", sources: ["runInputs", "liveTopology", "topologyRevision", "terminalSnapshot.topologyRevision"]};
       }
       const result = evaluateMonitoringDelivery(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds, this.active);
+      return {...base, status: result.met === undefined ? "not-evaluated" : result.met ? "met" : "not-met", detail: result.detail, sources: result.sources};
+    }
+    if (c.kind === "cache-stale-answers") {
+      if (this.evidence.topologyUnchanged !== true || this.atEvaluation?.topologyRevision !== this.evidence.topologyRevision) {
+        return {...base, status: "not-evaluated", detail: "An unchanged captured topology and matching terminal revision are required.", sources: ["runInputs", "liveTopology", "topologyRevision", "terminalSnapshot.topologyRevision"]};
+      }
+      const result = evaluateStaleAnswers(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds, this.active);
       return {...base, status: result.met === undefined ? "not-evaluated" : result.met ? "met" : "not-met", detail: result.detail, sources: result.sources};
     }
     if (c.kind === "cdn-origin-load") {

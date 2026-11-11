@@ -45,7 +45,7 @@ const definition = z.object({
   scenario: z.unknown().optional(),
 }).strict();
 
-const CRITERIA = ["stale-reads", "function-reuse", "startup-capacity", "database-redundancy", "monitoring-delivery", "pool-in-service", "bus-dead-letters", "cdn-origin-load", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
+const CRITERIA = ["stale-reads", "function-reuse", "startup-capacity", "database-redundancy", "monitoring-delivery", "pool-in-service", "bus-dead-letters", "cdn-origin-load", "cache-stale-answers", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
   "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "queue-ready-age", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work", "caller-outcomes"];
 const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
@@ -99,6 +99,8 @@ function checkDefinition(d: ChallengeDefinition): string[] {
         problems.push(`${where}: monitoring-delivery needs Model 2, a named monitor/backend and connected targets, positive safe floors and a nonnegative safe age ceiling`);
       }
     }
+    if (c.kind === "cache-stale-answers" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || ![c.minStaleServed, c.maxStaleAgeSeconds, c.maxTtlSeconds].every(n => Number.isSafeInteger(n) && n >= 1) ||
+      !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.Cache && r.cachePolicy?.ttlSeconds !== undefined))) problems.push(`${where}: cache-stale-answers needs Model 2, its named starter cache with a saved TTL and positive limits`);
     if (c.kind === "cdn-origin-load" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || ![c.maxOriginRequests, c.maxTtlSeconds].every(n => Number.isSafeInteger(n) && n >= 1) ||
       !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.CDN && r.cdnCachePolicy?.ttlSeconds !== undefined))) problems.push(`${where}: cdn-origin-load needs Model 2, its named starter CDN with a saved TTL and positive limits`);
     if (c.kind === "bus-dead-letters" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isSafeInteger(c.minDeadLettered) || c.minDeadLettered < 1 ||
