@@ -46,3 +46,6 @@ The saved `databaseReplication.replicationDelayMs` (1 to 60000) already set how 
 
 ## Multi-cause cascade tracing (`trace-a-slowdown-cascade`)
 A reading and diagnosis lab over existing evidence: a scripted three-second database slowdown, retries, cache and pool effects recorded separately. It adds no saved setting. Limits: one scripted incident, a fixed-second sample, no root-cause automation and no claim that the cut chosen generalizes to other designs.
+
+## Load balancer rate limit in use (`lb-rate-limit/1`, existing)
+`lbRateLimit {version 1, burstRequests, sustainedRequestsPerSecond}` is a token bucket at the balancer: the burst is spent first, then admission follows the sustained refill. `set-the-limit-above-the-peak` uses a scripted legitimate peak above the sustained rate; refusals appear as failed callers while app CPU stays low. Limits: one bucket for all callers, no per client identity, fairness or abuse model; a rate limit is a policy, not capacity, and no availability guarantee follows from one run.
