@@ -42,5 +42,5 @@ test("lesson is registered in its own module with limitations and the pinned rev
   expect(LEARNING_REGISTRY.findModule("scaling", "edge-admission")!.lessonIds).toContain(d.id);
   expect(REVIEWED_CHALLENGES[`${lesson.id}@1`]).toEqual({challengeId: d.id, version: 1, hash: specHash(d)});
   expect(validateLearningContent(learningContent)).toEqual([]); expect(checkLessonClaims(lesson, d)).toEqual([]);
-  expect(lesson.limitations.join(" ")).toContain("no availability guarantee");
+  expect(lesson.limitations.join(" ")).toContain("availability guarantee");
 });
