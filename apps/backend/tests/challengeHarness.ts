@@ -2,6 +2,7 @@ import { openTheForwardingGateV1 } from "../challenges/definitions/open-the-forw
 import { keepAFunctionWarmV1 } from "../challenges/definitions/keep-a-function-warm/v1";
 import { isolateRouteCreditsV1 } from "../challenges/definitions/isolate-route-credits/v1";
 import { resolveAfterPublicationV1 } from "../challenges/definitions/resolve-after-publication/v1";
+import { traceAScalingStallV1 } from "../challenges/definitions/trace-a-scaling-stall/v1";
 import { setTheLimitAboveThePeakV1 } from "../challenges/definitions/set-the-limit-above-the-peak/v1";
 import { boundReplicaStalenessV1 } from "../challenges/definitions/bound-replica-staleness/v1";
 import { fitTheWorkingSetV1 } from "../challenges/definitions/fit-the-working-set/v1";
@@ -110,6 +111,7 @@ export const REFERENCE: Record<string, ChallengeStarter> = {
   "keep-a-function-warm": {...keepAFunctionWarmV1.starter!, resources: keepAFunctionWarmV1.starter!.resources.map(r => r.id === "fn" ? {...r, serverless: {...r.serverless!, idleExpiryMs: 5000}} : r)},
   "isolate-route-credits": {...isolateRouteCreditsV1.starter!, resources: isolateRouteCreditsV1.starter!.resources.map(r => r.id === "gateway" ? {...r, gatewayQuota: {...r.gatewayQuota!, scope: "per-route"}} : r)},
   "resolve-after-publication": {...resolveAfterPublicationV1.starter!, resources: resolveAfterPublicationV1.starter!.resources.map(r => r.id === "dns" ? {...r, dnsCachePolicy: {version: 1, maxTtlSeconds: 1}} : r)},
+  "trace-a-scaling-stall": {...traceAScalingStallV1.starter!, resources: traceAScalingStallV1.starter!.resources.map(r => r.id === "monitor" ? {...r, monitoringPolicy: {...r.monitoringPolicy!, exportIntervalSeconds: 2}} : r)},
   "set-the-limit-above-the-peak": {...setTheLimitAboveThePeakV1.starter!, resources: setTheLimitAboveThePeakV1.starter!.resources.map(r => r.id === "lb" ? {...r, lbRateLimit: {...r.lbRateLimit!, sustainedRequestsPerSecond: 800}} : r)},
   "bound-replica-staleness": {...boundReplicaStalenessV1.starter!, resources: boundReplicaStalenessV1.starter!.resources.map(r => r.id === "db" ? {...r, databaseReplication: {...r.databaseReplication!, replicationDelayMs: 10}} : r)},
   "fit-the-working-set": {...fitTheWorkingSetV1.starter!, resources: fitTheWorkingSetV1.starter!.resources.map(r => r.id === "cache" ? {...r, cachePolicy: {version: 2, capacityEntries: 256, ttlSeconds: 30}} : r)},
