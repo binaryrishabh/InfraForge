@@ -31,7 +31,9 @@ test("trace-a-burst-backlog: capacity alone keeps the burst's events; a bigger w
   for (const design of designs) expect(preflight(d, design).errors).toEqual([]);
   const inputs = designs.map(s => captureRunInputs(s, d.workload, challengeSeed(d)));
   for (const i of [1, 2, 3]) expect(reviewDesignChanges(inputs[0]!, inputs[i]!)).toMatchObject({ classification: "one-change", count: 1 });
-  const rows = designs.map(s => attemptRow(d, s, answers(d, { health: "healthy" }))), reports = rows.map(r => buildRunReport(r));
+  const rows = designs.map(s => attemptRow(d, s, answers(d, { health: "healthy", where: "worker" }))), reports = rows.map(r => buildRunReport(r));
+  expect(reports.map(r => r.challenge!.predictions.find(x => x.id === "where")!.outcome).every(o => o === "matched")).toBe(true);
+  expect(reports.every(r => r.challenge!.predictions.find(x => x.id === "where")!.actual === "worker")).toBe(true);
   expect(reports.map(r => r.challenge!.status)).toEqual(["not-met", "met", "not-met", "not-met"]);
   expect(reports.map(r => r.terminal!.traffic!.wholeRun!.failed)).toEqual([223, 0, 63, 231]);
   const q = reports.map(r => r.terminal!.resources.find(x => x.id === "queue")!.queueWork!);
