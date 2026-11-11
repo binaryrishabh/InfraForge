@@ -1,6 +1,7 @@
 import { canonical } from "../comparison/design";
 import { assertSimulationContext, captureRunInputs, readRunInputs } from "../deployments/runInputs";
 import { ConflictError } from "../utils/errors";
+import { predictionResourceIds } from "@infraforge/contracts/challenges";
 import { findChallenge, challengeSeed } from "./registry";
 import { recordedExperiment } from "./experiment";
 import { readPrediction } from "./prediction";
@@ -20,7 +21,7 @@ export function improvementSource(row: { challengeId?: string | null; challengeV
   const { definition } = entry;
   if (definition.engine !== "2") throw new ConflictError("This attempt ran on the retired Model 1. Its report stays readable, but it cannot be improved; start the challenge's current version instead.");
 
-  try { readPrediction(row.challengePrediction, definition, input.resources.map((r) => r.type)); }
+  try { readPrediction(row.challengePrediction, definition, input.resources.map((r) => r.type), predictionResourceIds(input.resources, definition.engine)); }
   catch { throw new ConflictError("The source has no readable complete prediction; its challenge conditions cannot be reused safely."); }
   const fixed = captureRunInputs(input, definition.workload, challengeSeed(definition));
   try {

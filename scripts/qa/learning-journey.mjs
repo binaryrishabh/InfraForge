@@ -284,7 +284,7 @@ export const JOURNEY_LABS = [
     lessonId: "trace-a-slowdown-cascade", title: /Trace a slowdown cascade/,
     prediction: "Overall health can look Healthy after recovery even though callers failed during the cascade.",
     hypothesis: "Changing only Single-flight should stop fills piling up behind the slow database; a bigger database or no retries cannot.",
-    predictionQuestions: [/What overall health will be recorded at second 10, after the database recovers/, /What will the database's own health be at second 10/],
+    predictionQuestions: [/What overall health will be recorded at second 10, after the database recovers/, /What will the database's own health be at second 10/, /Which resource will record the highest CPU at second 10/],
     improvement: {
       stepName: "cache's Single-flight is turned on",
       nodeSelector: '[data-resource-id="cache"]', nodeText: /Cache/, fallbackText: "cache",
@@ -297,6 +297,7 @@ export const JOURNEY_LABS = [
     lessonId: "trace-a-burst-backlog", title: /Trace a burst backlog/,
     prediction: "Overall health can look Healthy at the end even though uploads failed during the burst.",
     hypothesis: "Changing only the queue's message capacity should keep the burst's events; a bigger worker or more parallel jobs cannot.",
+    predictionQuestions: [/What overall health will be recorded at second 240/, /Which resource will record the highest CPU at second 240/],
     improvement: {
       stepName: "queue's Queue capacity (messages) is changed from 100 to 500",
       nodeSelector: '[data-resource-id="queue"]', nodeText: /Message Queue/, fallbackText: "queue",

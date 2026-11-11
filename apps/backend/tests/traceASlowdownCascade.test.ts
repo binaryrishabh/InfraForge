@@ -31,9 +31,11 @@ test("trace-a-slowdown-cascade: sharing one fill ends the cascade; a bigger data
   for (const design of designs) expect(preflight(d, design).errors).toEqual([]);
   const inputs = designs.map(s => captureRunInputs(s, d.workload, challengeSeed(d)));
   for (const i of [1, 2, 3]) expect(reviewDesignChanges(inputs[0]!, inputs[i]!)).toMatchObject({ classification: "one-change", count: 1 });
-  const rows = designs.map(s => attemptRow(d, s, answers(d, { health: "healthy", database: "healthy" }))), reports = rows.map(r => buildRunReport(r));
+  const rows = designs.map(s => attemptRow(d, s, answers(d, { health: "healthy", database: "healthy", where: "app" }))), reports = rows.map(r => buildRunReport(r));
   expect(reports.map(r => r.challenge!.status)).toEqual(["not-met", "met", "not-met", "not-met"]);
   expect(reports.map(r => r.terminal!.traffic!.wholeRun!.failed)).toEqual([313, 0, 312, 369]);
+  expect(reports.map(r => r.challenge!.predictions.find(x => x.id === "where")!.outcome)).toEqual(["matched", "matched", "matched", "matched"]);
+  expect(reports.map(r => r.challenge!.predictions.find(x => x.id === "where")!.actual)).toEqual(["app", "app", "app", "app"]);
   const lb = reports[0]!.terminal!.resources.find(r => r.id === "lb")!;
   expect(lb.lbAccounting!.timedOutDownstream).toBeGreaterThan(300);
   for (const [i, row] of rows.entries()) {
