@@ -14,7 +14,7 @@ test("scaling registers three executable labs with real challenges, limitations 
   expect(track.modules.flatMap(m => m.lessonIds)).toEqual(lessons.map(l => l.id)); // Later lanes append modules and lessons.
   expect([...firstScalingChoices.lessonIds, ...servingUnderLoad.lessonIds, ...scalingReasoning.lessonIds].every(id => lessons.some(l => l.id === id))).toBe(true);
   expect(firstScalingChoicesLessons.map(l => l.kind)).toEqual(["reading", "conceptual-exercise"]);
-  const labs = lessons.filter(lesson => lesson.kind === "executable-lab");
+  const labs = lessons.filter(lesson => lesson.kind === "executable-lab" && lesson.moduleId === "serving-under-load"); // Later labs live in their own modules.
   expect(labs).toHaveLength(3);
   expect(new Set(registeredLessons.map(l => l.id)).size).toBe(registeredLessons.length);
   expect(new Set(tracks.map(t => t.id)).size).toBe(tracks.length);

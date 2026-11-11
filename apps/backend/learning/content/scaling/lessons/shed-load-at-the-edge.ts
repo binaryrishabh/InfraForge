@@ -18,5 +18,5 @@ export const shedLoadAtTheEdge: LearningLesson = {
     "Refusing excess demand chooses who waits; it adds no capacity and no availability guarantee. Clients that retry or back off are not modeled here.",
     "The final-second p95 excludes refused and unfinished callers, and a fixed-second sample proves no continuous behaviour."],
   check: null,
-  followUp: "Cite the starter, improved and larger app near miss reports. Explain what the refused callers cost, and when a larger app would be the better answer.",
+  followUp: "Cite the starter, improved and larger app near miss reports. Explain what the refused callers cost, and when a larger app would be the better answer. Then compare open-the-forwarding-gate, where the same Active requests setting is too low and spare backend capacity sits idle.",
 };

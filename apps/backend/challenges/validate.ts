@@ -13,6 +13,7 @@ import { recordedExperiment } from "./experiment";
 import { scenarioError } from "@infraforge/simulation/model2-run";
 import { recordedScenario } from "./scenario";
 import { captureRunInputs } from "../deployments/runInputs";
+import { staleReadsLimits } from "./staleReadsCriterion";
 import { functionReuseLimits } from "./functionReuseCriterion";
 import { isDepthCriterion, depthResourceType, depthCriterionLimits } from "./depthCriteria";
 
@@ -44,7 +45,7 @@ const definition = z.object({
   scenario: z.unknown().optional(),
 }).strict();
 
-const CRITERIA = ["function-reuse", "startup-capacity", "database-redundancy", "monitoring-delivery", "pool-in-service", "bus-dead-letters", "cdn-origin-load", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
+const CRITERIA = ["stale-reads", "function-reuse", "startup-capacity", "database-redundancy", "monitoring-delivery", "pool-in-service", "bus-dead-letters", "cdn-origin-load", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
   "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "queue-ready-age", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work", "caller-outcomes"];
 const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
@@ -75,6 +76,8 @@ function checkDefinition(d: ChallengeDefinition): string[] {
   unique("criterion", d.criteria.map((c) => c.id));
   unique("prediction", d.predictions.map((p) => p.id));
   for (const c of d.criteria) {
+    if (c.kind === "stale-reads" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || !staleReadsLimits(c) ||
+      !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.Database && r.databaseReplication?.enabled))) problems.push(`${where}: stale-reads needs Model 2, its named starter database with one enabled replica and a bounded limit`);
     if (c.kind === "function-reuse" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || !functionReuseLimits(c) ||
       !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.ServerlessFunction))) problems.push(`${where}: function-reuse needs Model 2, its named starter function and safe limits with positive minCompleted`);
     if (c.kind === "startup-capacity") {

@@ -24,6 +24,7 @@ import { isDepthCriterion, evaluateDepthCriterion } from "./depthCriteria";
 import { evaluateMonitoringDelivery } from "./monitoringCriterion";
 import { evaluateDatabaseRedundancy } from "./databaseRedundancyCriterion";
 import { evaluateFunctionReuse } from "./functionReuseCriterion";
+import { evaluateStaleReads } from "./staleReadsCriterion";
 import { evaluateStartupCapacity } from "./startupCapacityCriterion";
 
 export interface ChallengeAttemptRecord {
@@ -117,6 +118,7 @@ class Judge {
       case "database-redundancy":
       case "startup-capacity":
       case "function-reuse":
+      case "stale-reads":
         return null; // Dedicated evaluator checks its exact terminal evidence below.
       case "deployment-checks":
         return GATES.every(g => this.stage(g)) ? null : "Complete, valid deployment-check evidence was not recorded.";
@@ -182,11 +184,11 @@ class Judge {
 
   criterion(c: ChallengeCriterion): ChallengeCriterionResult {
     const base = { id: c.id, label: c.label };
-    if (c.kind === "database-redundancy" || c.kind === "startup-capacity" || c.kind === "function-reuse") {
+    if (c.kind === "database-redundancy" || c.kind === "startup-capacity" || c.kind === "function-reuse" || c.kind === "stale-reads") {
       if (this.active || this.evidence.topologyUnchanged !== true || this.atEvaluation?.topologyRevision !== this.evidence.topologyRevision) {
         return {...base, status: "not-evaluated", detail: "Finished evidence on the unchanged captured topology with matching terminal revision is required.", sources: ["runInputs", "liveTopology", "terminalSnapshot.topologyRevision"]};
       }
-      const result = c.kind === "function-reuse" ? evaluateFunctionReuse(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds) : c.kind === "startup-capacity" ? evaluateStartupCapacity(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds) : evaluateDatabaseRedundancy(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds);
+      const result = c.kind === "stale-reads" ? evaluateStaleReads(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds) : c.kind === "function-reuse" ? evaluateFunctionReuse(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds) : c.kind === "startup-capacity" ? evaluateStartupCapacity(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds) : evaluateDatabaseRedundancy(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds);
       return {...base, status: result.met === undefined ? "not-evaluated" : result.met ? "met" : "not-met", detail: result.detail, sources: result.sources};
     }
     if (c.kind === "monitoring-delivery") {

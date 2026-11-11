@@ -10,7 +10,7 @@ import { REFERENCE } from "./challengeHarness";
 
 test("async queued-work module retains three executable lessons with calibrated challenges and honest limitations", () => {
   expect(tracks.filter(t => t.id === "async")).toEqual([track]);
-  expect(track.modules).toEqual([firstQueue, queuedWork, burstWorkers, asyncReasoning]);
+  expect(track.modules.slice(0, 4)).toEqual([firstQueue, queuedWork, burstWorkers, asyncReasoning]); // Later labs append modules.
   expect(registeredLessons.filter(l => l.trackId === "async")).toEqual(lessons);
   expect(queuedWork.lessonIds).toEqual(queuedWorkLessons.map(l => l.id));
   const labs = queuedWorkLessons.filter(lesson => lesson.kind === "executable-lab");

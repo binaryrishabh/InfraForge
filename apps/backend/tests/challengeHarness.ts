@@ -2,12 +2,17 @@ import { openTheForwardingGateV1 } from "../challenges/definitions/open-the-forw
 import { keepAFunctionWarmV1 } from "../challenges/definitions/keep-a-function-warm/v1";
 import { isolateRouteCreditsV1 } from "../challenges/definitions/isolate-route-credits/v1";
 import { resolveAfterPublicationV1 } from "../challenges/definitions/resolve-after-publication/v1";
+import { setTheLimitAboveThePeakV1 } from "../challenges/definitions/set-the-limit-above-the-peak/v1";
+import { boundReplicaStalenessV1 } from "../challenges/definitions/bound-replica-staleness/v1";
 import { fitTheWorkingSetV1 } from "../challenges/definitions/fit-the-working-set/v1";
 import { shedLoadAtTheEdgeV1 } from "../challenges/definitions/shed-load-at-the-edge/v1";
 import { holdSlotsOnASlowCallV1 } from "../challenges/definitions/hold-slots-on-a-slow-call/v1";
 import { admitAReplicaImageV1 } from "../challenges/definitions/admit-a-replica-image/v1";
 import { restoreSafeRedundancyV1 } from "../challenges/definitions/restore-safe-redundancy/v1";
 import { shareOneOriginFetchV1 } from "../challenges/definitions/share-one-origin-fetch/v1";
+import { sampleOftenEnoughV1 } from "../challenges/definitions/sample-often-enough/v1";
+import { traceASlowdownCascadeV1 } from "../challenges/definitions/trace-a-slowdown-cascade/v1";
+import { traceABurstBacklogV1 } from "../challenges/definitions/trace-a-burst-backlog/v1";
 import { keepFailedEventsV1 } from "../challenges/definitions/keep-failed-events/v1";
 import { redriveAfterTheFixV1 } from "../challenges/definitions/redrive-after-the-fix/v1";
 import { scaleOnDeliveredSamplesV1 } from "../challenges/definitions/scale-on-delivered-samples/v1";
@@ -104,12 +109,17 @@ export const REFERENCE: Record<string, ChallengeStarter> = {
   "keep-a-function-warm": {...keepAFunctionWarmV1.starter!, resources: keepAFunctionWarmV1.starter!.resources.map(r => r.id === "fn" ? {...r, serverless: {...r.serverless!, idleExpiryMs: 5000}} : r)},
   "isolate-route-credits": {...isolateRouteCreditsV1.starter!, resources: isolateRouteCreditsV1.starter!.resources.map(r => r.id === "gateway" ? {...r, gatewayQuota: {...r.gatewayQuota!, scope: "per-route"}} : r)},
   "resolve-after-publication": {...resolveAfterPublicationV1.starter!, resources: resolveAfterPublicationV1.starter!.resources.map(r => r.id === "dns" ? {...r, dnsCachePolicy: {version: 1, maxTtlSeconds: 1}} : r)},
+  "set-the-limit-above-the-peak": {...setTheLimitAboveThePeakV1.starter!, resources: setTheLimitAboveThePeakV1.starter!.resources.map(r => r.id === "lb" ? {...r, lbRateLimit: {...r.lbRateLimit!, sustainedRequestsPerSecond: 800}} : r)},
+  "bound-replica-staleness": {...boundReplicaStalenessV1.starter!, resources: boundReplicaStalenessV1.starter!.resources.map(r => r.id === "db" ? {...r, databaseReplication: {...r.databaseReplication!, replicationDelayMs: 10}} : r)},
   "fit-the-working-set": {...fitTheWorkingSetV1.starter!, resources: fitTheWorkingSetV1.starter!.resources.map(r => r.id === "cache" ? {...r, cachePolicy: {version: 2, capacityEntries: 256, ttlSeconds: 30}} : r)},
   "shed-load-at-the-edge": {...shedLoadAtTheEdgeV1.starter!, resources: shedLoadAtTheEdgeV1.starter!.resources.map(r => r.id === "lb" ? {...r, lbAdmission: {...r.lbAdmission!, maxActive: 16}} : r)},
   "hold-slots-on-a-slow-call": {...holdSlotsOnASlowCallV1.starter!, resources: holdSlotsOnASlowCallV1.starter!.resources.map(r => r.id === "worker" ? {...r, asyncWorker: {...r.asyncWorker!, concurrency: 4}} : r)},
   "admit-a-replica-image": {...admitAReplicaImageV1.starter!, resources: admitAReplicaImageV1.starter!.resources.map(r => r.id === "app" ? {...r, artifactCachePolicy: {version: 1, capacityBytes: 4096}} : r)},
   "restore-safe-redundancy": {...restoreSafeRedundancyV1.starter!, resources: restoreSafeRedundancyV1.starter!.resources.map(r => r.id === "db" ? {...r, databaseReplication: {...r.databaseReplication!, rejoin: "snapshot-replay/1"}} : r)},
   "share-one-origin-fetch": {...shareOneOriginFetchV1.starter!, resources: shareOneOriginFetchV1.starter!.resources.map(r => r.id === "cdn" ? {...r, cdnCachePolicy: {version: 2 as const, ttlSeconds: 1, coalesce: true}} : r)},
+  "sample-often-enough": {...sampleOftenEnoughV1.starter!, resources: sampleOftenEnoughV1.starter!.resources.map(r => r.id === "monitor" ? {...r, monitoringPolicy: {...r.monitoringPolicy!, collectionIntervalSeconds: 2} as typeof r.monitoringPolicy} : r)},
+  "trace-a-slowdown-cascade": {...traceASlowdownCascadeV1.starter!, resources: traceASlowdownCascadeV1.starter!.resources.map(r => r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, singleFlight: true}} : r)},
+  "trace-a-burst-backlog": {...traceABurstBacklogV1.starter!, resources: traceABurstBacklogV1.starter!.resources.map(r => r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, capacityMessages: 500}} : r)},
   "keep-failed-events": {...keepFailedEventsV1.starter!, resources: keepFailedEventsV1.starter!.resources.map(r => r.id === "bus" ? {...r, eventBus: {...r.eventBus!, deadLetterCapacity: 100}} : r)},
   "redrive-after-the-fix": {...redriveAfterTheFixV1.starter!, resources: redriveAfterTheFixV1.starter!.resources.map(r => r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, redriveAtSecond: 45}} : r)},
   "scale-on-delivered-samples": {...scaleOnDeliveredSamplesV1.starter!, resources: scaleOnDeliveredSamplesV1.starter!.resources.map(r => r.id === "monitor" ? {...r, monitoringPolicy: {version: 1 as const, collectionIntervalSeconds: 2, exportIntervalSeconds: 2}} : r)},

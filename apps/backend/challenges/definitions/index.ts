@@ -2,12 +2,17 @@ import { openTheForwardingGateV1 } from "./open-the-forwarding-gate/v1";
 import { keepAFunctionWarmV1 } from "./keep-a-function-warm/v1";
 import { isolateRouteCreditsV1 } from "./isolate-route-credits/v1";
 import { resolveAfterPublicationV1 } from "./resolve-after-publication/v1";
+import { setTheLimitAboveThePeakV1 } from "./set-the-limit-above-the-peak/v1";
+import { boundReplicaStalenessV1 } from "./bound-replica-staleness/v1";
 import { fitTheWorkingSetV1 } from "./fit-the-working-set/v1";
 import { shedLoadAtTheEdgeV1 } from "./shed-load-at-the-edge/v1";
 import { holdSlotsOnASlowCallV1 } from "./hold-slots-on-a-slow-call/v1";
 import { admitAReplicaImageV1 } from "./admit-a-replica-image/v1";
 import { restoreSafeRedundancyV1 } from "./restore-safe-redundancy/v1";
 import { shareOneOriginFetchV1 } from "./share-one-origin-fetch/v1";
+import { sampleOftenEnoughV1 } from "./sample-often-enough/v1";
+import { traceASlowdownCascadeV1 } from "./trace-a-slowdown-cascade/v1";
+import { traceABurstBacklogV1 } from "./trace-a-burst-backlog/v1";
 import { keepFailedEventsV1 } from "./keep-failed-events/v1";
 import { redriveAfterTheFixV1 } from "./redrive-after-the-fix/v1";
 import { scaleOnDeliveredSamplesV1 } from "./scale-on-delivered-samples/v1";
@@ -101,11 +106,16 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   holdSlotsOnASlowCallV1,
   shedLoadAtTheEdgeV1,
   fitTheWorkingSetV1,
+  boundReplicaStalenessV1,
+  setTheLimitAboveThePeakV1,
   restoreSafeRedundancyV1,
   moveMonitoringSamplesV1,
   scaleOnDeliveredSamplesV1,
   redriveAfterTheFixV1,
   keepFailedEventsV1,
+  traceABurstBacklogV1,
+  traceASlowdownCascadeV1,
+  sampleOftenEnoughV1,
   shareOneOriginFetchV1,
   objectBytesVersusAppCpuV1,
   sizeTheAppDatabasePoolV1,

@@ -13,10 +13,12 @@ export type OverallHealth = "healthy" | "degraded" | "saturated" | "critical";
 /* Requirements are evaluated by the server from recorded run evidence.
 The client renders labels; it never decides whether one was met. */
 export type ChallengeCriterion =
+  | { id: string; kind: "stale-reads"; label: string; resourceId: string; maxStaleReads: number }
   | { id: string; kind: "function-reuse"; label: string; resourceId: string; minCompleted: number; maxColdStarts: number; maxUnsuccessful: number }
   | { id: string; kind: "startup-capacity"; label: string; resourceId: string; minNewReady: number }
   | { id: string; kind: "database-redundancy"; label: string; resourceId: string }
   | { id: string; kind: "monitoring-delivery"; label: string; resourceId: string; backendId: string; targetIds: string[]; minGenerated: number; minReceived: number; maxBackendAgeUs: number }
+  | { id: string; kind: "cdn-origin-load"; label: string; resourceId: string; maxOriginRequests: number; maxTtlSeconds: number }
   | { id: string; kind: "bus-dead-letters"; label: string; resourceId: string; minDeadLettered: number }
   | { id: string; kind: "pool-in-service"; label: string; resourceId: string; minInService: number }
   | { id: string; kind: "caller-outcomes"; label: string; minCompleted: number; maxUnsuccessful: number }

@@ -268,8 +268,69 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^At most 90 origin requests by second 60 with a TTL of one second or less$/],
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "sample-often-enough", title: /Sample often enough/,
+    prediction: "The service can stay Healthy while the backend's measurements are old.",
+    hypothesis: "Changing only the collection interval should make backend measurements fresh; exporting faster cannot.",
+    improvement: {
+      stepName: "monitor's Collect every (seconds) is changed from 20 to 2",
+      nodeSelector: '[data-resource-id="monitor"]', nodeText: /Monitoring Agent/, fallbackText: "monitor",
+      role: "spinbutton", name: /^Collect every \(seconds\)$/, resourceId: "monitor", setting: "monitoringPolicy.collectionIntervalSeconds", from: 20, to: 2,
+    },
+    reportRequirements: [/^Receive 60 samples without drops or duplicates; backend ages at most 6 seconds$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
+  {
+    lessonId: "trace-a-slowdown-cascade", title: /Trace a slowdown cascade/,
+    prediction: "Overall health can look Healthy after recovery even though callers failed during the cascade.",
+    hypothesis: "Changing only Single-flight should stop fills piling up behind the slow database; a bigger database or no retries cannot.",
+    predictionQuestions: [/What overall health will be recorded at second 10, after the database recovers/, /What will the database's own health be at second 10/],
+    improvement: {
+      stepName: "cache's Single-flight is turned on",
+      nodeSelector: '[data-resource-id="cache"]', nodeText: /Cache/, fallbackText: "cache",
+      role: "switch", name: /^Single-flight$/, resourceId: "cache", setting: "cachePolicy.singleFlight", from: false, to: true,
+    },
+    reportRequirements: [/^Complete 1980 callers with at most 20 unsuccessful through second 10$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
+  {
+    lessonId: "trace-a-burst-backlog", title: /Trace a burst backlog/,
+    prediction: "Overall health can look Healthy at the end even though uploads failed during the burst.",
+    hypothesis: "Changing only the queue's message capacity should keep the burst's events; a bigger worker or more parallel jobs cannot.",
+    improvement: {
+      stepName: "queue's Queue capacity (messages) is changed from 100 to 500",
+      nodeSelector: '[data-resource-id="queue"]', nodeText: /Message Queue/, fallbackText: "queue",
+      role: "spinbutton", name: /^Queue capacity \(messages\)$/, resourceId: "queue", setting: "asyncQueue.capacityMessages", from: 100, to: 500,
+    },
+    reportRequirements: [/^Complete 1340 uploads with at most 20 unsuccessful through second 240$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
+// Rate limit: JOURNEY_LAB=set-the-limit-above-the-peak JOURNEY_SHOTS=/tmp/rate-limit node ../InfraForge/scripts/qa/learning-journey.mjs
+JOURNEY_LABS.push({
+  lessonId: "set-the-limit-above-the-peak", title: /Set the limit above the peak/,
+  prediction: "The app is mostly idle yet the run is critical because the balancer refuses the spike.",
+  hypothesis: "Diagnosis: the limiter refills at 300 requests per second, so the 600 per second spike is refused while the app has spare CPU. Raising only Sustained requests per second above the spike should serve every caller.",
+  improvement: {
+    stepName: "lb's Sustained requests per second is changed from 300 to 800",
+    nodeSelector: '[data-resource-id="lb"]', nodeText: /Load Balancer/, fallbackText: "lb",
+    role: "spinbutton", name: /^Sustained requests per second$/, resourceId: "lb", setting: "lbRateLimit.sustainedRequestsPerSecond", from: 300, to: 800,
+  },
+  expected: {starter: "Not met", improved: "Met"},
+});
+// Replica freshness: JOURNEY_LAB=bound-replica-staleness JOURNEY_SHOTS=/tmp/bound-staleness node ../InfraForge/scripts/qa/learning-journey.mjs
+JOURNEY_LABS.push({
+  lessonId: "bound-replica-staleness", title: /Bound replica staleness/,
+  prediction: "The database can look healthy and fast while many reads are stale because the replica applies commits 1000 ms late.",
+  hypothesis: "Diagnosis: reads use the replica, which applies commits 1000 ms after the writer, so many reads miss recent commits. Shortening only the modeled replication delay should cut stale reads while the replica keeps carrying the reads.",
+  improvement: {
+    stepName: "db's Modeled replication delay is changed from 1000 to 10",
+    nodeSelector: '[data-resource-id="db"]', nodeText: /Database/, fallbackText: "db",
+    role: "spinbutton", name: /^Modeled replication delay/, resourceId: "db", setting: "databaseReplication.replicationDelayMs", from: 1000, to: 10,
+  },
+  expected: {starter: "Not met", improved: "Met"},
+});
 // Cache working set: JOURNEY_LAB=fit-the-working-set JOURNEY_SHOTS=/tmp/fit-working-set node ../InfraForge/scripts/qa/learning-journey.mjs
 JOURNEY_LABS.push({
   lessonId: "fit-the-working-set", title: /Fit the working set/,

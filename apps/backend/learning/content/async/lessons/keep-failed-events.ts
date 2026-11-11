@@ -15,6 +15,6 @@ export const keepFailedEvents: LearningLesson = {
   limitations: ["Results are educational model outputs. The capacity is an authored limit, not a provider quota.",
     "The subscriber stays broken on purpose here. Replay, ordering, alerting and durable storage of a real dead-letter list are not modeled.",
     "A reading missing from the report stays Unknown."],
-  followUp: "Cite the starter, the capacity change and the near miss that only raised delivery attempts. Explain why a failure can be invisible when the list is full.",
+  followUp: "Cite the starter, the capacity change and the near miss that only raised delivery attempts. Explain why a failure can be invisible when the list is full. Then compare redrive-after-the-fix, which replays kept failures only once the next delivery can succeed.",
   check: null,
 };
