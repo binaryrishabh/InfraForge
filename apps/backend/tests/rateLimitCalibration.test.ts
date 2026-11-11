@@ -16,14 +16,14 @@ test("rate limit: one sustained-rate edit serves the spike; a burst-only near mi
   expect(specHash(d)).toBe(/"set-the-limit-above-the-peak@1": "([a-f0-9]{64})"/.exec(readFileSync(new URL("./challengeAuthoring.test.ts", import.meta.url), "utf8"))![1]!);
   const inputs = designs.map(s => captureRunInputs(s, d.workload, challengeSeed(d)));
   for (const s of designs) expect(preflight(d, s).errors).toEqual([]);
-  for (const i of [1, 2]) expect(reviewDesignChanges(inputs[0]!, inputs[i]!)).toMatchObject({classification: "one-change", count: 1});
+  for (const i of [1, 2, 3]) expect(reviewDesignChanges(inputs[0]!, inputs[i]!)).toMatchObject({classification: "one-change", count: 1});
   expect(reviewDesignChanges(inputs[0]!, inputs[1]!).differences!.reconfigured[0]!.fields[0]!.field).toContain("lbRateLimit");
-  expect(reports.map(r => r.challenge!.status)).toEqual(["not-met", "met", "not-met"]);
+  expect(reports.map(r => r.challenge!.status)).toEqual(["not-met", "met", "not-met", "not-met"]);
   const detail = reports.map(r => r.challenge!.criteria.find(c => c.id === "work")!.detail);
   const done = detail.map(t => num(t, /: (\d+) completed/)), bad = detail.map(t => num(t, /; (\d+) unsuccessful/));
   const cpu = reports.map(r => r.terminal!.resources.find(x => x.id === "app")!.cpu!);
-  expect(done[1]!).toBeGreaterThan(35900); expect(bad[1]!).toBe(0); expect(bad[0]!).toBeGreaterThan(5000); expect(bad[2]!).toBeGreaterThan(4000);
-  expect(cpu[0]!).toBeLessThan(25); expect(cpu[2]!).toBeLessThan(25);
+  expect(done[1]!).toBeGreaterThan(35900); expect(bad[1]!).toBe(0); expect(bad[0]!).toBeGreaterThan(5000); expect(bad[2]!).toBeGreaterThan(4000); expect(bad[3]!).toBeGreaterThan(5000); expect(done[3]!).toBeLessThan(done[1]! - 4000);
+  expect(cpu[0]!).toBeLessThan(25); expect(cpu[2]!).toBeLessThan(25); expect(cpu[3]!).toBeLessThan(25);
   for (const [i, row] of rows.entries()) {
     const replayed = buildRunReport({...row, runInputs: JSON.parse(JSON.stringify(row.runInputs)), terminalSnapshot: JSON.parse(JSON.stringify(row.terminalSnapshot))});
     expect(replayed.terminal).toEqual(reports[i]!.terminal); expect(replayed.challenge).toEqual(reports[i]!.challenge);
