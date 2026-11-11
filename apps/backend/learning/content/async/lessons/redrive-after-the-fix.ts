@@ -14,6 +14,7 @@ export const redriveAfterTheFix: LearningLesson = {
     evidenceToInspect: ["Queue: acknowledged", "Queue: dead-lettered", "Queue: redriven", "Queue: redeliveries", "Queue: originals"]},
   limitations: ["Results are educational model outputs. The repair second and redrive second are authored inputs, not measured recovery times, and the bad share is an assumed input.",
     "A redrive here returns every dead-lettered message once. Ordering, selective replay, duplicate effects of replay outside the modeled result write, alerting and real queue products are not modeled.",
+    "The repair is checked when a job finishes, so a job that started just before the repair second but finishes after it succeeds. Dead-letter and redelivery counters are cumulative: a message that fails again after a redrive is counted again. If the queue has no room, a redrive returns only the messages that fit.",
     "Callers and the producer path are not judged. A reading missing from the report stays Unknown."],
   followUp: "Cite the starter, the redrive that moved after the repair and the near miss that only raised the delivery limit. Explain why replay is only useful once the next delivery can succeed. Compare keep-failed-events, where the failed list itself is too small to hold the evidence.",
   check: null,

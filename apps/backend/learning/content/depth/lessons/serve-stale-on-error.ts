@@ -14,6 +14,7 @@ export const serveStaleOnError: LearningLesson = {
     evidenceToInspect: ["Cache: Hits", "Cache: Misses", "Cache: Expirations", "Cache: Stale answers served", "Cache: Oldest stale answer (us)", "Whole run: Failed"]},
   limitations: ["Results are educational model outputs with an authored outage, bound and workload, not provider benchmarks.",
     "A stale answer is only acceptable for data where an old value is safe. This lab shows availability and age, not correctness. Writes invalidate an entry, so a stale answer is only served for an entry that was not invalidated.",
+    "The model treats a database reply that succeeds but lacks the requested key (for example a deleted row) as a failed fill, so a retained expired body can still be served for it. A real system may need to tell not-found from unavailable. Each waiting caller that receives a stale answer is counted separately.",
     "A reading missing from the report stays Unknown; no stale count is assumed when no bound is saved."],
   followUp: "Cite the starter, the stale bound and the near misses. Explain what freshness was given up, for how long, and where an old answer would be unsafe.",
   check: null,
