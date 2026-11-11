@@ -2,7 +2,7 @@ import type { LearningLesson } from "@infraforge/contracts/learning";
 
 export const admitAReplicaImage: LearningLesson = {
   id: "admit-a-replica-image", contentVersion: 1, trackId: "scaling", moduleId: "artifact-admission",
-  title: "Admit a replica image", kind: "executable-lab", level: "intermediate", availability: "available",
+  title: "Admit a replica image", kind: "executable-lab", level: "advanced", availability: "available",
   summary: "Find the byte admission gate that blocks a later replica, then separate artifact, listener and LB readiness.",
   prerequisites: ["a-replica-must-become-ready", "initial-replicas-and-later-limits"],
   problem: ["The deployed app still serves callers, but the controller wants another replica. Predict the starter's overall health, run unchanged, and record why that desired replica has no ready listener."],
