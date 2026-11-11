@@ -113,6 +113,9 @@ export const PUBLISHED: Record<string, string> = {
 
 const ANSWERS = { "database-admission": "no-denials", "overall-health": "healthy", "database-health": "healthy", "busiest-type": "Database", "security-clean": "yes",
   "scale-out": "no", "baseline-health": "healthy", "survivor-health": "degraded", "target-health": "healthy" };
+// The capstone labs also ask which resource records the highest CPU; the answer is lab specific.
+const BUSIEST_RESOURCE: Record<string, string> = { "trace-a-slowdown-cascade": "app", "trace-a-burst-backlog": "worker", "trace-a-scaling-stall": "app" };
+const answersFor = (d: { id: string }) => ({ ...ANSWERS, ...(BUSIEST_RESOURCE[d.id] ? { where: BUSIEST_RESOURCE[d.id]! } : {}) });
 const cache = CHALLENGE_VERSIONS.find((d) => d.id === "cache-failure")!;
 const withEdit = (edit: (d: ChallengeDefinition) => ChallengeDefinition) => CHALLENGE_VERSIONS.map((d) => d === cache ? edit(structuredClone(d)) : d);
 
@@ -211,11 +214,11 @@ describe("calibration against the real engine", () => {
   // Challenges whose latest version still needs Model 1 are retired and never run, so only Model 2 versions are calibrated.
   for (const { definition: d } of listLatestChallenges().filter(({ definition }) => definition.engine === "2")) {
     test(`${d.id}@${d.version}: a hidden reference meets every requirement and the starter does not`, () => {
-      const passed = attemptReport(d, REFERENCE[d.id]!, answers(d, ANSWERS));
+      const passed = attemptReport(d, REFERENCE[d.id]!, answers(d, answersFor(d)));
       expect(passed.challenge?.criteria.filter((r) => r.status !== "met")).toEqual([]);
       expect(passed.challenge?.status).toBe("met");
       expect(passed.terminal?.simulatedSeconds).toBe(d.evaluationSeconds);
-      const failed = attemptReport(d, d.starter ?? tier(1), answers(d, ANSWERS));
+      const failed = attemptReport(d, d.starter ?? tier(1), answers(d, answersFor(d)));
       expect(failed.challenge?.status).toBe("not-met");
       expect(failed.challenge!.metCount).toBeLessThan(failed.challenge!.total);
       if (d.id === "after-the-cache-returns" && d.version === 2) {
@@ -288,7 +291,7 @@ describe("calibration against the real engine", () => {
 
   test("after-the-cache-returns@2: capping replicas avoids session exhaustion but cannot fix database CPU", () => {
     const capped = { ...d.starter!, resources: d.starter!.resources.map(r => r.id === "app" ? { ...r, autoscaling: { ...r.autoscaling!, maxReplicas: 8 } } : r) };
-    const report = attemptReport(d, capped, answers(d, ANSWERS));
+    const report = attemptReport(d, capped, answers(d, answersFor(d)));
     expect(report.challenge?.criteria.find(c => c.id === "connections")?.status).toBe("met");
     expect(report.challenge?.criteria.find(c => c.id === "health")?.status).toBe("not-met");
     expect(report.terminal?.resources.find(r => r.id === "db")?.health).toBe("saturated");
