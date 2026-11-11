@@ -37,9 +37,9 @@ test("serve-stale-on-error: a stale bound alone serves counted stale answers; bi
   expect(inputs[1]!.adapterProfiles).toContain("cache-stale/1");
   const rows = designs.map(s => attemptRow(d, s, answers(d, { health: "healthy" }))), reports = rows.map(r => buildRunReport(r));
   expect(reports.map(r => r.challenge!.status)).toEqual(["not-met", "met", "not-met", "not-met", "not-met"]);
-  expect(reports.map(r => r.terminal!.traffic!.wholeRun!.failed)).toEqual([3240, 1, 3240, 3239, 2241]);
+  expect(reports.map(r => r.terminal!.traffic!.wholeRun!.failed)).toEqual([5840, 1, 5840, 5839, 4841]);
   const cache = reports.map(r => r.terminal!.resources.find(x => x.id === "cache")!.cache!);
-  expect(cache.map(c => [c.staleServed, c.maxStaleAgeUs])).toEqual([[undefined, undefined], [3398, 16988782], [undefined, undefined], [undefined, undefined], [1000, 4998782]]);
+  expect(cache.map(c => [c.staleServed, c.maxStaleAgeUs])).toEqual([[undefined, undefined], [5998, 29988782], [undefined, undefined], [undefined, undefined], [1000, 4998782]]);
   for (const [i, row] of rows.entries()) {
     const saved = { ...row, runInputs: JSON.parse(JSON.stringify(row.runInputs)), terminalSnapshot: JSON.parse(JSON.stringify(row.terminalSnapshot)) };
     expect(buildRunReport(saved).terminal).toEqual(reports[i]!.terminal);
@@ -52,7 +52,7 @@ test("serve-stale-on-error: invalid bounds are refused and missing stale evidenc
   for (const bad of [0, -1, 1.5, 100000]) expect(() => captureRunInputs(edit(s => { cachePolicy(s).staleSeconds = bad; }), d.workload, "x")).toThrow();
   const input = JSON.parse(JSON.stringify(captureRunInputs(designs[1]!, d.workload, "x")));
   input.adapterProfiles = input.adapterProfiles.filter((p: string) => p !== "cache-stale/1");
-  expect(() => createModel2Engine(readRunInputs(input), 20)).toThrow("cache-stale");
+  expect(() => createModel2Engine(readRunInputs(input), 33)).toThrow("cache-stale");
   const row: any = attemptRow(d, designs[1]!, answers(d, { health: "healthy" }));
   const stripped = JSON.parse(JSON.stringify(row.terminalSnapshot)); delete stripped.metrics.cache.cache.staleServed;
   expect(buildRunReport({ ...row, terminalSnapshot: stripped }).challenge!.criteria[2]!.status).toBe("not-evaluated");
@@ -71,10 +71,10 @@ test("serve-stale-on-error: browser-target bundle and default server replay agre
     for (const design of designs) {
       const input = readRunInputs(JSON.parse(JSON.stringify(captureRunInputs(design, d.workload, challengeSeed(d)))));
       
-      expect(browserContract(input, 20)).toEqual(buildContractFromRunInputs(input, 20));
-      const browser = browserRun(input, 20), server = createModel2Engine(input, 20);
-      for (let second = 1; second <= 20; second++) { browser.advance(); server.advance(); expect(browser.view()).toEqual(server.view()); expect(browser.evidence()).toEqual(server.evidence()); }
+      expect(browserContract(input, 33)).toEqual(buildContractFromRunInputs(input, 33));
+      const browser = browserRun(input, 33), server = createModel2Engine(input, 33);
+      for (let second = 1; second <= 33; second++) { browser.advance(); server.advance(); expect(browser.view()).toEqual(server.view()); expect(browser.evidence()).toEqual(server.evidence()); }
     }
-    console.info("stale-on-error-browser-target-server-parity", JSON.stringify({ cases: 5, secondsPerCase: 20 }));
+    console.info("stale-on-error-browser-target-server-parity", JSON.stringify({ cases: 5, secondsPerCase: 33 }));
   } finally { for (const path of [entry, out]) if (await Bun.file(path).exists()) await unlink(path); }
 }, 540000);

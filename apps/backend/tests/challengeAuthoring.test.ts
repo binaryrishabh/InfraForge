@@ -28,7 +28,7 @@ export const PUBLISHED: Record<string, string> = {
   "sample-often-enough@1": "58a46ecab5835d6a5290441d6aa42a52adbabf99f01610fe7783eabee776ef98",
   "trace-a-slowdown-cascade@1": "cb597eba2e4ca78d4e0b29d38cbfc0beb6a1e40e04d8b2743c58b66ebdb0c452",
   "trace-a-burst-backlog@1": "ec4c30eef244acc70c94a2e6c52a205bbb1a88412f796880165c67d5564ce3a0",
-  "serve-stale-on-error@1": "7e764a869ebddb02d804d445a75274e53d7e34c92360cc039db255c8a0932d58",
+  "serve-stale-on-error@1": "e0e8d5ee63c3a1a3c771046360cd87bca48096b888b6db40f2958d058ebf897e",
   "keep-failed-events@1": "4b85902f6b9e78e6b0c255c1de97f842c8d5b05e499e744fe7e755755f35877c",
   "redrive-after-the-fix@1": "8551be9f25d932fb776959b09fbba4ecf2ee7cae01bc775cc028061a97a605b8",
   "scale-on-delivered-samples@1": "cac34337c223d3317df087d258d96d8861e0446b866041290a026108de6dc539",
