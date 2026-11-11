@@ -1,1 +1,0 @@
-- 01:25Z (06:55 IST) NOTE: ~4h gap while all three Claude subagents sat on a session limit (reset 06:50 IST); all resumed at 06:51. ckpt2 had 1 stale fail (scaling lessons list order vs track module order) fixed by reordering lessons export -> 770e548. ckpt3 (focused learning/registry) + QA journeys for the 10 labs since the last QA run started.
