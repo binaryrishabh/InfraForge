@@ -38,7 +38,7 @@ test("lesson is registered in its own module with limitations and the pinned rev
   const { checkLessonClaims } = await import("../learning/claims"), { REVIEWED_CHALLENGES } = await import("../learning/reviewedChallenges");
   const {d} = shedLoadLabFixture(), lesson = findLearningLesson(d.id)!;
   expect(lesson).toMatchObject({kind: "executable-lab", trackId: "scaling", moduleId: "edge-admission", experiment: {challengeId: d.id}, check: null});
-  expect(LEARNING_REGISTRY.findModule("scaling", "edge-admission")!.lessonIds).toContain(d.id);
+  expect(LEARNING_REGISTRY.findModule("scaling", "edge-admission")!.lessonIds.filter(id => id === d.id)).toEqual([d.id]);
   expect(REVIEWED_CHALLENGES[`${lesson.id}@1`]).toEqual({challengeId: d.id, version: 1, hash: specHash(d)});
   expect(validateLearningContent(learningContent)).toEqual([]); expect(checkLessonClaims(lesson, d)).toEqual([]);
   expect(lesson.limitations.join(" ")).toContain("no availability guarantee");
