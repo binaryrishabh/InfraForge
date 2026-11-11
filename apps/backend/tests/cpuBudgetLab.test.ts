@@ -25,7 +25,7 @@ test("CPU quota releases useful service; extra workers share the same exhausted 
     expect(reviewDesignChanges(inputs[0]!, inputs[i]!)).toMatchObject({classification: "one-change", count: 1});
     expect(inputs[i]!.adapterProfiles).toEqual(inputs[0]!.adapterProfiles);
     expect(inputs[i]!.workloadProfile).toEqual(inputs[0]!.workloadProfile);
-    expect(inputs[i]!.seed).toBe(inputs[0]!.seed); expect(inputs[i]!.catalogSnapshot).toBe(inputs[0]!.catalogSnapshot);
+    expect(inputs[i]!.seed).toBe(inputs[0]!.seed); expect((inputs[i] as {catalogSnapshot?: string}).catalogSnapshot).toBe((inputs[0] as {catalogSnapshot?: string}).catalogSnapshot);
     const a = {...rows[0]!, createdAt: new Date(0)}, b = {...rows[i]!, createdAt: new Date(1), improvementSourceId: a.id};
     expect(classifyComparison(a, b)).toMatchObject({available: true, starting: {grade: "one-change-design"}, designChangeReview: {count: 1}, lineage: "source-and-improvement", challengeConditions: "same"});
   }
@@ -84,7 +84,7 @@ test("CPU budget caller criterion refuses missing, stale, malformed and mismatch
   }
   const badIdentity = structuredClone(good); badIdentity.challengeSpecHash = "0".repeat(64);
   expect(buildRunReport(badIdentity).challenge!.status).toBe("unavailable");
-  const missing = structuredClone(good); delete raw(missing).metrics.app!.cpu;
+  const missing = structuredClone(good); delete (raw(missing).metrics.app as {cpu?: number}).cpu;
   expect(buildRunReport(missing).terminal).toBeNull();
   expect(buildRunReport(missing).challenge!.criteria.find(c => c.id === "work")!.status).toBe("not-evaluated");
 });
