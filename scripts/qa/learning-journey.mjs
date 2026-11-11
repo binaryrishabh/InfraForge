@@ -410,6 +410,19 @@ JOURNEY_LABS.push({
   expected: {starter: "Not met", improved: "Met"},
 });
 
+JOURNEY_LABS.push({
+  lessonId: "release-the-cpu-budget", title: /Release the CPU budget/,
+  prediction: "Overall health can be critical while CPU stays near the saved 25% budget and callers fail.",
+  hypothesis: "Diagnosis: workers share a CPU-time budget. Increasing only Application CPU limit should complete more callers even though CPU rises; adding workers alone cannot release the withheld time.",
+  improvement: {
+    stepName: "app's Application CPU limit (%) changes from 25 to 100",
+    nodeSelector: '[data-resource-id="app"]', nodeText: /Virtual Machine/, fallbackText: "app",
+    role: "spinbutton", name: /^Application CPU limit \(%\)$/, resourceId: "app", setting: "vmCpuQuota.limitPercent", from: 25, to: 100,
+  },
+  reportRequirements: [/^Complete 1650; at most 20 unsuccessful through second 6$/],
+  expected: {starter: "Not met", improved: "Met"},
+});
+
 // Representative conceptual content, plus a reading without a check.
 // These are UI expectations pinned to authored text, never simulated results.
 export const JOURNEY_LESSONS = [

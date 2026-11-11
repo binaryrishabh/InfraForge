@@ -191,4 +191,6 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   splitTheCapacityBudgetV2,
   openAndSizeAnApiV1,
   testACircuitAgainV1,
+  releaseTheCpuBudgetV1,
 ];
+import { releaseTheCpuBudgetV1 } from "./release-the-cpu-budget/v1";
