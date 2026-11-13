@@ -253,7 +253,7 @@ export const JOURNEY_LABS = [
       nodeSelector: '[data-resource-id="bus"]', nodeText: /Event Bus/, fallbackText: "bus",
       role: "spinbutton", name: /^Dead letters per subscription$/, resourceId: "bus", setting: "eventBus.deadLetterCapacity", from: 5, to: 100,
     },
-    reportRequirements: [/^Keep at least 50 failed events and discard none by second 30$/],
+    reportRequirements: [/^Keep every failed event: at least 50 retained and none discarded by second 30$/],
     expected: { starter: "Not met", improved: "Met" },
   },
   {
@@ -277,13 +277,13 @@ export const JOURNEY_LABS = [
       nodeSelector: '[data-resource-id="monitor"]', nodeText: /Monitoring Agent/, fallbackText: "monitor",
       role: "spinbutton", name: /^Collect every \(seconds\)$/, resourceId: "monitor", setting: "monitoringPolicy.collectionIntervalSeconds", from: 20, to: 2,
     },
-    reportRequirements: [/^Receive 60 samples without drops or duplicates; backend ages at most 6 seconds$/],
+    reportRequirements: [/^Receive 20 samples without drops or duplicates; backend ages at most 6 seconds$/],
     expected: { starter: "Not met", improved: "Met" },
   },
   {
     lessonId: "trace-a-slowdown-cascade", title: /Trace a slowdown cascade/,
     prediction: "Overall health can look Healthy after recovery even though callers failed during the cascade.",
-    hypothesis: "Changing only Single-flight should stop fills piling up behind the slow database; a bigger database or no retries cannot.",
+    hypothesis: "Changing only Single-flight should stop fills piling up behind the slow database; a bigger database leaves the same fills waiting and no retries makes it worse.",
     predictionQuestions: [/What overall health will be recorded at second 10, after the database recovers/, /What will the database's own health be at second 10/, /Which resource will record the highest CPU at second 10/],
     improvement: {
       stepName: "cache's Single-flight is turned on",
@@ -296,7 +296,7 @@ export const JOURNEY_LABS = [
   {
     lessonId: "trace-a-burst-backlog", title: /Trace a burst backlog/,
     prediction: "Overall health can look Healthy at the end even though uploads failed during the burst.",
-    hypothesis: "Changing only the queue's message capacity should keep the burst's events; a bigger worker or more parallel jobs cannot.",
+    hypothesis: "Changing only the queue's message capacity should keep the burst's events; a medium worker or more parallel jobs cannot, though a much faster worker could.",
     predictionQuestions: [/What overall health will be recorded at second 240/, /Which resource will record the highest CPU at second 240/],
     improvement: {
       stepName: "queue's Queue capacity (messages) is changed from 100 to 500",
@@ -386,7 +386,7 @@ JOURNEY_LABS.push({
 JOURNEY_LABS.push({
   lessonId: "hold-slots-on-a-slow-call", title: /Hold slots on a slow call/,
   prediction: "Low worker CPU does not mean the worker keeps up: one job at a time holds its slot during a 450 ms external wait and the backlog grows.",
-  hypothesis: "Diagnosis: worker CPU is low but each job holds its only parallel slot about 500 ms, so about two jobs a second finish against four arriving. Increasing only Jobs in parallel should raise acknowledgements and cut outstanding work.",
+  hypothesis: "Diagnosis: worker CPU is low but each job holds its only parallel slot about 500 ms, so about two jobs a second finish against eight arriving. Increasing only Jobs in parallel should raise acknowledgements and cut outstanding work.",
   improvement: {
     stepName: "worker's Jobs in parallel is changed from 1 to 4",
     nodeSelector: '[data-resource-id="worker"]', nodeText: /Virtual Machine/, fallbackText: "worker",

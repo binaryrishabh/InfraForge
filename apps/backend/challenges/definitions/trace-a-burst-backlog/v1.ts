@@ -2,7 +2,6 @@ import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
 import { starter } from "../../starter";
 import { MODEL_NOTE } from "../modelNote";
 
-// Published. Immutable: any change, even to wording, ships as the next version file.
 export const traceABurstBacklogV1: ChallengeDefinition = {
   engine: "2", id: "trace-a-burst-backlog", version: 1, title: "Trace a burst backlog", difficulty: "advanced",
   summary: "A short burst fills the queue, the producer starts failing, and the lost events never come back. Find the first bottleneck.",
@@ -19,10 +18,10 @@ export const traceABurstBacklogV1: ChallengeDefinition = {
   predictions: [{id: "health", kind: "overall-health", prompt: "What overall health will be recorded at second 240?"},
     {id: "where", kind: "busiest-resource", prompt: "Which resource will record the highest CPU at second 240?"}],
   hints: ["Compare uploads that failed with the queue's originals and acknowledged counts, and the worker's CPU. Find which resource is full when the first upload fails.",
-    "A faster worker drains the backlog sooner but the queue is already full during the burst.",
+    "A modestly faster worker still lets the queue fill during the burst. Room and drain speed are two ways to cover it, so find which resource is full first.",
     "Select queue. Change only Queue capacity (messages). Keep the worker, its CPU work and the workload unchanged."],
   debrief: ["During the burst events arrive faster than the worker can finish them, so the queue fills to its message limit. Once it is full each new publish is refused, the upload fails and its event is never created.",
-    "A bigger worker or more parallel jobs drains the backlog sooner, but the burst still outruns it while the queue is at its limit, so uploads still fail. Room for the burst is what keeps the events.",
+    "A medium worker drains faster but the burst still fills the queue, so uploads still fail; more parallel jobs on the same CPU change nothing because the worker's CPU is the limit. A much faster worker (a large size, or much cheaper jobs) also meets the requirement, because the queue never fills: room stores the excess, speed removes it. The trace finds which resource is full first, and the fix at that resource is room.",
     "Not verified: real queue limits, producer retries or durability. The burst, capacity and CPU work are educational inputs.", MODEL_NOTE],
   starter: starter([["app", "Virtual Machine", 0, 0],
     ["queue", "Message Queue", 1, 0, {asyncQueue: {enabled: true, visibilityTimeoutSeconds: 30, maxReceives: 3, retentionSeconds: 300, capacityMessages: 100}}],

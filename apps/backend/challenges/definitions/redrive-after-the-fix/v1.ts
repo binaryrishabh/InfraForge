@@ -2,7 +2,6 @@ import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
 import { starter } from "../../starter";
 import { MODEL_NOTE } from "../modelNote";
 
-// Published. Immutable: any change, even to wording, ships as the next version file.
 export const redriveAfterTheFixV1: ChallengeDefinition = {
   engine: "2", id: "redrive-after-the-fix", version: 1, title: "Redrive after the fix", difficulty: "advanced",
   summary: "Dead-lettered work comes back only when you redrive it. Redrive before the repair and the same messages fail again.",

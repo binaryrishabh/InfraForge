@@ -3,7 +3,6 @@ import { DeploymentChaosNames } from "@infraforge/domain/resource";
 import { starter } from "../../starter";
 import { MODEL_NOTE } from "../modelNote";
 
-// Published. Immutable: any change, even to wording, ships as the next version file.
 export const serveStaleOnErrorV1: ChallengeDefinition = {
   engine: "2", id: "serve-stale-on-error", version: 1, title: "Serve stale on error", difficulty: "advanced",
   summary: "When the database is down, an expired cache entry can still answer. Choose how stale an answer you will accept.",

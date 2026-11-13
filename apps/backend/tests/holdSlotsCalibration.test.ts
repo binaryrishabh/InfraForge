@@ -7,6 +7,7 @@ import { preflight } from "../challenges/preflight";
 import { challengeSeed, specHash } from "../challenges/registry";
 import { improvementSource } from "../challenges/improvements";
 import { buildRunReport } from "../reports/report";
+import { answers, attemptRow } from "./challengeHarness";
 import { holdSlotsLabFixture } from "./holdSlotsLab.fixture";
 
 test("hold slots: one concurrency edit clears the backlog; a larger worker near miss stays blocked", () => {
@@ -22,9 +23,9 @@ test("hold slots: one concurrency edit clears the backlog; a larger worker near 
   const detail = reports.map(r => r.challenge!.criteria.find(c => c.id === "work")!.detail);
   const acked = detail.map(t => Number(/(\d+) acknowledged/.exec(t)![1])), outstanding = detail.map(t => Number(/(\d+) outstanding/.exec(t)![1]));
   const cpu = reports.map(r => r.terminal!.resources.find(x => x.id === "worker")!.cpu!);
-  expect(acked).toEqual([79, 158, 79]); expect(outstanding).toEqual([81, 2, 81]);
+  expect(acked).toEqual([79, 316, 79]); expect(outstanding).toEqual([241, 4, 241]);
   expect(cpu[0]!).toBeLessThan(10); expect(cpu[2]!).toBeLessThan(cpu[0]!);
-  expect(acked[1]! - 140).toBeGreaterThanOrEqual(10); expect(140 - acked[0]!).toBeGreaterThan(50);
+  expect(acked[1]! - 280).toBeGreaterThanOrEqual(30); expect(280 - acked[0]!).toBeGreaterThan(150); expect(12 - outstanding[1]!).toBeGreaterThanOrEqual(8);
   for (const [i, row] of rows.entries()) {
     const replayed = buildRunReport({...row, runInputs: JSON.parse(JSON.stringify(row.runInputs)), terminalSnapshot: JSON.parse(JSON.stringify(row.terminalSnapshot))});
     expect(replayed.terminal).toEqual(reports[i]!.terminal); expect(replayed.challenge).toEqual(reports[i]!.challenge);
@@ -33,6 +34,15 @@ test("hold slots: one concurrency edit clears the backlog; a larger worker near 
   expect(improvementSource(rows[0]!, d.id).input).toEqual(inputs[0]!);
   console.info("hold-slots-calibration", JSON.stringify({acked, outstanding, cpu, health: reports.map(r => r.challenge!.predictions[0]!.actual)}));
 }, 120000);
+
+test("hold slots: two and three parallel jobs (up to the core count and one over it) still leave a backlog; four are needed", () => {
+  const {d, designs} = holdSlotsLabFixture();
+  const rows = [2, 3].map(n => { const s = structuredClone(designs[0]!); s.resources.find(r => r.id === "worker")!.asyncWorker!.concurrency = n; return attemptRow(d, s, answers(d, {health: "degraded"})); });
+  const reports = rows.map(r => buildRunReport(r)), detail = reports.map(r => r.challenge!.criteria.find(c => c.id === "work")!.detail);
+  expect(reports.map(r => r.challenge!.status)).toEqual(["not-met", "not-met"]);
+  expect(detail.map(t => Number(/(\d+) acknowledged/.exec(t)![1]))).toEqual([158, 237]);
+  expect(detail.map(t => Number(/(\d+) outstanding/.exec(t)![1]))).toEqual([162, 83]);
+});
 
 test("lesson is registered in its own module with limitations and the pinned review record", async () => {
   const { findLearningLesson, LEARNING_REGISTRY } = await import("../learning/registry");

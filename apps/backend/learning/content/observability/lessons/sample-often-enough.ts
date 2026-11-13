@@ -13,6 +13,7 @@ export const sampleOftenEnough: LearningLesson = {
   experiment: {challengeId: "sample-often-enough", prediction: "Can the service stay Healthy while the backend's measurements are old?",
     evidenceToInspect: ["Monitoring: Generated samples", "Monitoring: Collection requests", "Monitoring backend: Received samples", "Monitoring backend: Measurement age"]},
   limitations: ["Results are educational model outputs with fixed synthetic timings, not provider benchmarks or tuning advice.",
+    "Two seconds is the reference, not the only value: any collection interval that keeps the newest measurement within the age limit meets the requirement here, and the sample floor is deliberately low so freshness is the rule that binds.",
     "Instrumentation cost of sampling often, durability and continuous freshness are not modeled. A passing report is a terminal-second reading.",
     "A reading missing from the report stays Unknown."],
   followUp: "Cite the starter, the collection change and the near miss that only shortened export. Explain why export frequency cannot create newer measurements. Compare move-monitoring-samples, where batching and buffering rather than collection were the limit.",
