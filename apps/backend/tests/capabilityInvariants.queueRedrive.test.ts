@@ -60,6 +60,13 @@ test("the redrive never overfills the queue's own message capacity and leaves th
   for (const s of Object.values(at)) expect(s.queue.messages.length).toBeLessThanOrEqual(3);
 }, 60000);
 
+test("a redrive or repair scheduled after the run ends never fires and shows a counted zero, not an error", () => {
+  const { last } = run({ bad: 100, repairAt: 3599, redriveAt: 3599, maxReceives: 3, visibility: 5 }, 30);
+  expect(last.queue.redriven).toBe(0);
+  expect(last.queue.deadLettered).toBeGreaterThan(0);
+  expect(last.queue.acknowledged).toBe(0); // the repair second was never reached, so the poison kept failing
+}, 60000);
+
 test("unmarked queues and workers show no redrive evidence and keep poison failing for the whole run", () => {
   const { last } = run({ bad: 100, maxReceives: 3, visibility: 5 }, 40);
   expect("redriven" in last.queue).toBe(false);
