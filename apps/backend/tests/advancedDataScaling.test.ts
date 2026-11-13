@@ -53,7 +53,7 @@ test("advanced data and scaling reasoning is discoverable with bounded checks, e
     }
   }
   expect(learningContent.lessons.filter(l => l.trackId === "data" && l.level === "advanced").map(l => l.id)).toContain(anchors[0]!.id); // Later lanes add advanced data lessons.
-  expect(learningContent.lessons.filter(l => l.trackId === "scaling" && l.level === "advanced").map(l => l.id)).toEqual(["retrying-a-full-pool", anchors[1]!.id]);
+  expect(learningContent.lessons.filter(l => l.trackId === "scaling" && l.level === "advanced").map(l => l.id).slice(0, 2)).toEqual(["retrying-a-full-pool", anchors[1]!.id]); // Later labs may follow these two.
 });
 
 for (const id of [...new Set(anchors.flatMap(a => a.labs))]) test(`${id}: controlled reports ground reasoning, retain tradeoffs and preserve missing evidence`, async () => {
