@@ -110,8 +110,8 @@ test("claim gate accepts only audited startup labels and refuses unowned generat
   const d = definition("budget-app-database-sessions"), source = findLearningLesson(d.id)!;
   if (source.kind !== "executable-lab") throw Error("Expected existing lab");
   const labels = Object.entries(LEARNING_REPORT_MEASUREMENTS).filter(([,m]) => m.path.startsWith("startup.")).map(([label]) => label);
-  // Later labs may add audited startup labels; every one must stay accepted, and the known labels must stay registered.
-  expect(labels.length).toBeGreaterThanOrEqual(51);
+  // 50 base labels plus the three added with artifact-cache/1 and autoscaling-observed/1; the count is pinned so a label cannot appear or vanish silently.
+  expect(labels).toHaveLength(53);
   for (const known of ["Artifact cache capacity (bytes)", "Scaling signal source", "Scaling signal freshness bound (us)"]) expect(labels).toContain(known);
   for (const label of labels) expect(checkLessonClaims({...source, experiment: {...source.experiment, evidenceToInspect: [label]}}, d)).toEqual([]);
   for (const label of ["Replica generation", "First LB-eligible time", "Registry delivered bytes", "Startup availability percentage"]) {
