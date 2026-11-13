@@ -27,7 +27,7 @@ for (const lock of ["liveLocked", "isDeploying"] as const) test(`Cache controls 
   useCanvasStore.setState({ [lock]: true });
   const configured: Resource = { ...cache, cachePolicy: { version: 1, ttlSeconds: 120, singleFlight: true } };
   const html = renderToStaticMarkup(<CachePolicySection resource={configured} disabled />);
-  expect(html).toContain('value="120"'); expect(html).toContain('aria-checked="true"'); expect(html.match(/disabled=""/g)).toHaveLength(html.match(/<(input|button|select|textarea)/g)!.length); // every control is locked, however many the policy has
+  expect(html).toContain('value="120"'); expect(html).toContain('aria-checked="true"'); expect(html.match(/disabled=""/g)).toHaveLength(html.match(/<(input|button|select|textarea)/g)!.length); // every control is locked, however many the policy has
   useCanvasStore.getState().loadLayout([configured], [], "layout", "Cache"); useCanvasStore.setState({ [lock]: true });
   updateResource("cache", { cachePolicy: { version: 1, ttlSeconds: 1, singleFlight: false } });
   expect(useCanvasStore.getState().resources[0]!.cachePolicy).toEqual(configured.cachePolicy);

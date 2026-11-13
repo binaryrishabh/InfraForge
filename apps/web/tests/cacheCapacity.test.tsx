@@ -51,7 +51,7 @@ for (const lock of ["liveLocked", "isDeploying"] as const) test(`capacity preser
   updateResource("cache", { cachePolicy: { ...policy, capacityEntries: 100 } });
   const saved = useCanvasStore.getState().resources[0]!; expect(saved.cachePolicy).toEqual(policy);
   const html = renderToStaticMarkup(<CachePolicySection resource={saved} disabled />);
-  expect(html).toContain('value="10"'); expect(html.match(/disabled=""/g)).toHaveLength(html.match(/<(input|button|select|textarea)/g)!.length);
+  expect(html).toContain('value="10"'); expect(html.match(/disabled=""/g)).toHaveLength(html.match(/<(input|button|select|textarea)/g)!.length);
 });
 
 test("saved version 2 capacity and existing policies survive save/reload", async () => {
