@@ -122,6 +122,16 @@ test("refresh-after-a-write: lesson, module, review record and reviewed hash are
   expect(lesson.limitations.join(" ")).toContain("not application correctness"); expect(lesson.explanation.join(" ")).toContain("Valid alternatives exist");
 });
 
+test("refresh-after-a-write: the lesson says what the engine does with a replicated database (refused before the run) and how many hits the gap counted (none)", async () => {
+  const { findLearningLesson } = await import("../learning/registry"), lesson = findLearningLesson(ID)!;
+  const replicated = edit(STARTER, s => { s.resources.find(r => r.id === "db")!.databaseReplication = { version: 1, enabled: true, replicationDelayMs: 100, readPolicy: "primary" }; });
+  expect(preflight(d, replicated).errors.join(" ")).toContain("needs a database without replication or read routing"); // a refusal, not an Unknown reading
+  const limits = lesson.limitations.join(" ");
+  expect(limits).toContain("refused"); expect(limits).not.toContain("stays Unknown");
+  expect(lesson.explanation.join(" ")).not.toContain("fall to the few"); // the measured count is zero, so the lesson must not promise a few
+  expect(lesson.explanation.join(" ")).toContain("none did");
+});
+
 test("refresh-after-a-write: browser-target bundle and default server replay agree every second for starter, reference and near miss", async () => {
   const entry = resolve(import.meta.dir, `../../../.cache/refresh-after-a-write-${process.pid}.ts`), out = entry.replace(/\.ts$/, ".mjs");
   await mkdir(dirname(entry), { recursive: true });
