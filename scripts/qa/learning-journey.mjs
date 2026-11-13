@@ -317,7 +317,7 @@ export const JOURNEY_LABS = [
       nodeSelector: '[data-resource-id="cache"]', nodeText: /Cache/, fallbackText: "cache",
       role: "spinbutton", name: /^Serve stale after expiry \(seconds\)$/, resourceId: "cache", setting: "cachePolicy.staleSeconds", from: null, to: 60,
     },
-    reportRequirements: [/^Serve 100 stale answers no older than 60 seconds, with the TTL at one second$/],
+    reportRequirements: [/^Serve 100 stale answers no more than 60 seconds past expiry, with the TTL at one second$/],
     expected: { starter: "Not met", improved: "Met" },
   },
 ];

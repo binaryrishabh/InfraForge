@@ -3,7 +3,7 @@ import type { ReportCheckpoint } from "@infraforge/contracts/reports";
 type Resource = ReportCheckpoint["resources"][number];
 const cacheRows = [["hits", "Cache: Hits"], ["misses", "Cache: Misses"], ["expirations", "Cache: Expirations"],
   ["evictions", "Cache: Evictions"], ["coalescedWaiters", "Cache: Targeting-helper coalesced waiters"],
-  ["staleServed", "Cache: Stale answers served"], ["maxStaleAgeUs", "Cache: Oldest stale answer (us)"]] as const;
+  ["staleServed", "Cache: Stale answers served"], ["maxStaleAgeUs", "Cache: Oldest stale answer past expiry (us)"]] as const;
 const helperRows = [["received", "Application helper: Received"], ["completed", "Application helper: Completed"],
   ["failed", "Application helper: Failed"], ["live", "Application helper: Live requests"],
   ["databaseFetches", "Application helper: Database fetches"], ["cacheFailures", "Application helper: Cache failures"],

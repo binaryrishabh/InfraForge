@@ -24,5 +24,5 @@ export function evaluateStaleAnswers(c: StaleCriterion, input: Topology | null, 
   if (served > 0 && typeof oldest !== "number") return unknown("The oldest stale answer age was not recorded.");
   const ageOk = oldest == null || oldest <= c.maxStaleAgeSeconds * 1_000_000;
   return {met: served >= c.minStaleServed && ageOk && ttl <= c.maxTtlSeconds && bound <= c.maxStaleAgeSeconds, sources,
-    detail: `Through second ${second}, ${c.resourceId}: ${served} stale answers (minimum ${c.minStaleServed}), oldest ${oldest == null ? "none served" : `${(oldest / 1e6).toFixed(1)} s`} (maximum ${c.maxStaleAgeSeconds} s); TTL ${ttl} s (maximum ${c.maxTtlSeconds} s), stale bound ${bound} s.`};
+    detail: `Through second ${second}, ${c.resourceId}: ${served} stale answers (minimum ${c.minStaleServed}), oldest ${oldest == null ? "none served" : `${(oldest / 1e6).toFixed(1)} s past expiry`} (maximum ${c.maxStaleAgeSeconds} s past expiry); TTL ${ttl} s (maximum ${c.maxTtlSeconds} s), stale bound ${bound} s past expiry.`};
 }

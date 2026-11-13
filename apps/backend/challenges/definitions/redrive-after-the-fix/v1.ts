@@ -7,7 +7,7 @@ export const redriveAfterTheFixV1: ChallengeDefinition = {
   summary: "Dead-lettered work comes back only when you redrive it. Redrive before the repair and the same messages fail again.",
   concepts: ["Dead-letter queue", "Redrive", "Repair before replay", "One-change experiments"],
   story: ["A notification worker fails one request in five because of a bug. The queue gives each message three deliveries, then moves it to the dead-letter list.",
-    "The team will deploy a fix at second 40 and has scheduled one redrive of the dead-letter list at second 20. A redrive returns every dead-lettered message to the queue once, with its deliveries reset."],
+    "The team will deploy a fix at second 40 and has scheduled one redrive of the dead-letter list at second 20. A redrive returns the dead-lettered messages to the queue once, as many as the queue's capacity admits, with their deliveries reset."],
   objective: "At second 90, acknowledge at least 700 messages and leave at most 10 outstanding. Compare one setting change.",
   workload: {targetThroughput: 480, throughputUnit: "per-minute", trafficShape: "steady", peakMultiplier: 1, readWriteRatio: 1, payloadSize: "light"},
   workloadNote: "Eight requests/s, steady. The bad share is a fixed saved setting applied to requests chosen from the run's seed; the repair second stops those requests failing.",
