@@ -56,7 +56,7 @@ export function asyncWorker(config: WorkerConfig, kernel: EventKernel, send: Del
       const parent: Invocation = { rootId: id, callId: id, operation: config.databaseOperation, attempt: 0, offeredAt: kernel.now };
       messageClient(parent, send)<QueueReply>(config.broker, { kind: "receive", consumer: config.id }, (reply, outcome) => {
         if (!available || current !== epoch) return; pendingReceive = false;
-        if (outcome === "completed" && reply?.delivery) { const d = reply.delivery, p: Processing = { delivery: d, work: { ...parent, rootId: d.logicalId, callId: JSON.stringify(["processing", config.id, d.id, d.attempt]), attempt: d.attempt }, epoch, phase: "buffered" }; local.set(d.receipt, p); deliveries++; record("received", p); pump(); }
+        if (outcome === "completed" && reply?.delivery) { const d = reply.delivery, p: Processing = { delivery: d, work: { ...parent, rootId: d.logicalId, callId: JSON.stringify(["processing", config.id, d.id, d.attempt, ...(d.redrives ? [d.redrives] : [])]), attempt: d.attempt }, epoch, phase: "buffered" }; local.set(d.receipt, p); deliveries++; record("received", p); pump(); }
       });
     }
     schedulePoll(requireKnown(config.pollInterval, "us"));

@@ -21,7 +21,7 @@ export type AsyncResource = import("../serverless/contracts").ServerlessConfig |
 export type AsyncIntervention = { id: string; target: string; at: Quantity<"us">; duration: Quantity<"us"> } & ({ kind: "consumer-state"; available: boolean } | { kind: "object-access"; reads: boolean; writes: boolean } | { kind: "object-capacity"; bytes: Quantity<"bytes"> });
 export interface AsyncInput extends Omit<DataInput, "workloadVersion" | "resources"> { workloadVersion: "m2f/1"; resources: Array<DataInput["resources"][number] | AsyncResource>; asyncInterventions: AsyncIntervention[] }
 export interface QueueRequest { kind: "publish" | "receive" | "ack" | "nack"; logicalId?: string; body?: MessageBody; delayUs?: number; consumer?: string; receipt?: string; action?: "requeue" | "discard" | "dead-letter" }
-export interface Delivery { id: string; logicalId: string; publishAttempt: string; attempt: number; consumer: string; receipt: string; deliveredAt: number; leaseUntil: number; body: MessageBody }
+export interface Delivery { id: string; logicalId: string; publishAttempt: string; attempt: number; consumer: string; receipt: string; deliveredAt: number; leaseUntil: number; body: MessageBody; redrives?: number }
 export interface QueueReply { ok: boolean; reason?: string; acceptedId?: string; deduplicated?: boolean; delivery?: Delivery; empty?: boolean; durability?: "logical-ownership-only" }
 export interface ObjectRequest { kind: "put" | "get" | "head" | "delete"; namespace: string; key: string; bytes?: number; content?: string; ifAbsent?: boolean; ifGeneration?: number }
 export interface ObjectReply { ok: boolean; reason?: string; object?: ObjectRow; deleted?: boolean }
