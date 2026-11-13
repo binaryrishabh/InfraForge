@@ -44,6 +44,7 @@ import { CDN_TTL_PROFILE, cdnTtlChanges, validateCdnTtlBindings } from "./cdnTtl
 import { CACHE_POLICY_PROFILE, cachePolicyChanges, validateCachePolicyBindings } from "./cachePolicy";
 import { CACHE_CAPACITY_PROFILE, cacheCapacityChanges, validateCacheCapacityBindings } from "./cacheCapacity";
 import { WORKER_WAIT_PROFILE, workerWaitChanges, validateWorkerWaitBindings } from "./workerWait";
+import { CACHE_INVALIDATION_PROFILE, cacheInvalidationChanges, validateCacheInvalidationBindings } from "./cacheInvalidation";
 import { CACHE_STALE_PROFILE, cacheStaleChanges, validateCacheStaleBindings } from "./cacheStale";
 import { QUEUE_REDRIVE_PROFILE, queueRedriveChanges, validateQueueRedriveBindings } from "./queueRedrive";
 import { QUEUE_ACK_DELAY_PROFILE, queueAckDelayChanges, validateQueueAckDelayBindings } from "./queueAckDelay";
@@ -98,6 +99,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (cacheCapacityChanges(design.resources) !== contract.version.includes(`/${CACHE_CAPACITY_PROFILE}`)) error("CACHE_CAPACITY_VERSION", "version", "Logical cache capacity requires its explicit data-cache-capacity/1 contract version and matching saved intent");
     if (workerWaitChanges(design.resources) !== contract.version.includes(`/${WORKER_WAIT_PROFILE}`)) error("WORKER_WAIT_VERSION", "version", "External worker wait requires worker-wait/1 and matching saved intent");
     if (cacheStaleChanges(design.resources) !== contract.version.includes(`/${CACHE_STALE_PROFILE}`)) error("CACHE_STALE_VERSION", "version", "A saved stale age bound requires cache-stale/1 and matching saved intent");
+    if (cacheInvalidationChanges(design.resources) !== contract.version.includes(`/${CACHE_INVALIDATION_PROFILE}`)) error("CACHE_INVALIDATION_VERSION", "version", "A saved cache write policy requires cache-invalidation/1 and matching saved intent");
     if (queueRedriveChanges(design.resources) !== contract.version.includes(`/${QUEUE_REDRIVE_PROFILE}`)) error("QUEUE_REDRIVE_VERSION", "version", "Queue redrive or worker repair requires queue-redrive/1 and matching saved intent");
     if (queueAckDelayChanges(design.resources) !== contract.version.includes(`/${QUEUE_ACK_DELAY_PROFILE}`)) error("QUEUE_ACK_DELAY_VERSION", "version", "Acknowledgement delay requires queue-ack-delay/1 and matching saved intent");
     if (queueIdempotencyChanges(design.resources) !== contract.version.includes(`/${QUEUE_IDEMPOTENCY_PROFILE}`)) error("QUEUE_IDEMPOTENCY_VERSION", "version", "Idempotent result writes require the explicit queue-idempotency/1 contract version and matching saved intent");
@@ -432,6 +434,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateAutoscalingSignalBindings(design.resources, contract, pools, runtime);
     validateQueueRedriveBindings(design.resources, runtime);
     validateCacheStaleBindings(design.resources, runtime);
+    validateCacheInvalidationBindings(design.resources, runtime);
     validateMonitoringCadenceBindings(design.resources, runtime);
     validateMonitoringBufferBindings(design.resources, runtime);
     validateCdnCoalescingBindings(design.resources, runtime);

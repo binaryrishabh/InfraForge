@@ -9,7 +9,7 @@ const fields: Record<string, string[]> = {
   compute: ["cores", "workers", "scheduler", "quota", "memory", "queueCapacity", "profiles", "context", "cancellation", "downstream", "downstreamByOperation", "applicationFlow"],
   relational: ["readRouting", "replication", "semantics", "execution", "maxSessions", "activeTransactions", "pendingQueries", "keys", "initial", "plans", "access"],
   cache: ["semantics", "execution", "capacity", "entryOverhead", "policy", "ttl", "initial", "commandCpu", "staleFor"],
-  "cache-aside": ["execution", "cache", "database", "keys", "access", "coalesce", "onCacheFailure", "invalidateWrites", "operations", "staleOnError"],
+  "cache-aside": ["execution", "cache", "database", "keys", "access", "coalesce", "onCacheFailure", "invalidateWrites", "operations", "staleOnError", "trackFreshness"],
   "load-balancer": ["rateLimit", "backends", "policy", "maxOutstanding", "maxPending", "pendingTimeout", "health", "retry"],
   "dns-authority": ["records", "negativeTtl", "publication"], "dns-resolver": ["authority", "cacheEntries", "cachePolicy", "publicationEvidence"],
   cdn: ["origin", "namespace", "keys", "capacity", "ttl", "coalesce", "maxWaiters"],

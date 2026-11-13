@@ -18,3 +18,11 @@ test("deployment readiness refuses invalid cache policy before a run", () => {
   const result = validateDeploymentReadiness([resource], []);
   expect(result.valid).toBe(false); expect(result.errors.some(e => e.includes("Cache TTL"))).toBe(true);
 });
+
+test("invalidate on write is an optional strict boolean on both cache policy versions", () => {
+  for (const invalidateOnWrite of [undefined, true, false]) {
+    expect(cachePolicyError("Cache", { version: 1, ...(invalidateOnWrite === undefined ? {} : { invalidateOnWrite }) })).toBeUndefined();
+    expect(cachePolicyError("Cache", { version: 2, capacityEntries: 10, ...(invalidateOnWrite === undefined ? {} : { invalidateOnWrite }) })).toBeUndefined();
+  }
+  for (const invalidateOnWrite of [0, 1, "true", "false", null, {}, []]) expect(cachePolicyError("Cache", { version: 1, invalidateOnWrite })).toBeString();
+});

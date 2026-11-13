@@ -20,6 +20,9 @@ export interface CacheMetrics {
   /** Present only with a saved stale age bound: answers served from an expired body, and the oldest such age. A null age means none served. */
   staleServed?: number | null;
   maxStaleAgeUs?: number | null;
+  /** Present only with a saved write policy: hits whose body was older than the database committed version at that moment, and the largest gap in versions (0 when none was behind; null is Unknown). */
+  outdatedHits?: number | null;
+  maxVersionsBehind?: number | null;
 }
 
 export interface CdnMetrics {

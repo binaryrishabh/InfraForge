@@ -5,10 +5,10 @@ import { updateResource } from "../../actions";
 import { InspectorSection } from "./InspectorSection";
 
 export function CachePolicySection({ resource, disabled }: { resource: Resource; disabled: boolean }) {
-  const commit = (patch: Partial<Pick<CachePolicy, "ttlSeconds" | "singleFlight" | "staleSeconds">>) => updateResource(resource.id, { cachePolicy: { version: 1, ...resource.cachePolicy, ...patch } });
+  const commit = (patch: Partial<Pick<CachePolicy, "ttlSeconds" | "singleFlight" | "staleSeconds" | "invalidateOnWrite">>) => updateResource(resource.id, { cachePolicy: { version: 1, ...resource.cachePolicy, ...patch } });
   const capacity = (value: string) => {
-    const { ttlSeconds, singleFlight, staleSeconds } = resource.cachePolicy ?? {};
-    const policy: CachePolicy = value === "" ? { version: 1, ttlSeconds, singleFlight, staleSeconds } : { version: 2, capacityEntries: Number(value), ttlSeconds, singleFlight, staleSeconds };
+    const { ttlSeconds, singleFlight, staleSeconds, invalidateOnWrite } = resource.cachePolicy ?? {};
+    const policy: CachePolicy = value === "" ? { version: 1, ttlSeconds, singleFlight, staleSeconds, invalidateOnWrite } : { version: 2, capacityEntries: Number(value), ttlSeconds, singleFlight, staleSeconds, invalidateOnWrite };
     updateResource(resource.id, { cachePolicy: policy });
   };
   return <InspectorSection title="Cache behavior">
@@ -31,6 +31,9 @@ export function CachePolicySection({ resource, disabled }: { resource: Resource;
       <Switch label="Single-flight" checked={resource.cachePolicy?.singleFlight === true} disabled={disabled}
         onChange={singleFlight => commit({ singleFlight })}
         description="When enabled, concurrent misses for the same key share one database fill instead of independently hitting the database." />
+      <Switch label="Invalidate on write" checked={resource.cachePolicy?.invalidateOnWrite !== false} disabled={disabled}
+        onChange={invalidateOnWrite => commit({ invalidateOnWrite })}
+        description="When enabled, a committed write removes the cached entry so the next read refills the new row. When off, the old row stays until it expires and the report counts hits behind the database." />
     </div>
   </InspectorSection>;
 }

@@ -27,6 +27,8 @@ export interface AsideConfig {
   recordedKeysOnly?: true;
   id: string; kind: "cache-aside"; execution: ComputeResource; cache: string; database: string;
   keys: string[]; access: "cycle" | "keyed-uniform" | "keyed-hot"; coalesce: boolean; onCacheFailure: "fail" | "database"; staleOnError?: true;
+  /** Marked designs only: count hits whose body is older than the database committed version (replicated databases are refused). */
+  trackFreshness?: true;
   invalidateWrites: boolean; operations: Record<string, "read" | "write">;
 }
 export type DataResource = RelationalConfig | CacheConfig | AsideConfig;

@@ -198,6 +198,8 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
       paused = wasPaused; pump(); return invalid;
     },
     openSession,
+    /** The version the writer has committed for a key, for the freshness oracle; unknown keys have none. */
+    committedVersion: (key: string) => rows.get(key)?.version,
     sessionAlive: (id: string) => sessions.has(id),
     accept(work: Invocation, done: (outcome: RemoteOutcome) => void): Receipt {
       if (config.access !== undefined && (work.message?.request as DataRequest | undefined)?.key === undefined) {

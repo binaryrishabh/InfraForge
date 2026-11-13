@@ -22,5 +22,5 @@ export function dataModules(input: DataInput, instances: {
     .register("cache", { manifest: manifest("keyed-cache", "m2e/1"), validate,
       instantiate(config, host) { const resource = keyedCache(config, host.clock, host.cpu); instances.caches.set(config.id, resource); return resource; } })
     .register("cache-aside", { manifest: manifest("cache-aside", "m2e/1"), validate,
-      instantiate(config, host) { const resource = cacheAside(config, host.clock, host.send, input.seed); instances.applications.set(config.id, resource); return resource; } });
+      instantiate(config, host) { const resource = cacheAside(config, host.clock, host.send, input.seed, config.trackFreshness ? (key) => instances.databases.get(config.database)?.committedVersion(key) : undefined); instances.applications.set(config.id, resource); return resource; } });
 }

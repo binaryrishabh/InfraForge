@@ -37,6 +37,7 @@ export function validateData(input: DataInput) {
       if (!r.keys.length || r.keys.length > caps.keys || r.keys.some((k) => !validKey(k)) || new Set(r.keys).size !== r.keys.length || !["cycle", "keyed-uniform", "keyed-hot"].includes(r.access) || !["fail", "database"].includes(r.onCacheFailure) || typeof r.coalesce !== "boolean" || typeof r.invalidateWrites !== "boolean") throw new Error("Invalid cache-aside key/policy");
       if (resources.get(r.cache)?.kind !== "cache" || resources.get(r.database)?.kind !== "relational" || !pairs.has(JSON.stringify([r.id, r.cache])) || !pairs.has(JSON.stringify([r.id, r.database]))) throw new Error("Missing cache-aside resource/path");
       const database = resources.get(r.database);
+      if (r.trackFreshness !== undefined && (r.trackFreshness !== true || database?.kind !== "relational" || database.replication || database.readRouting)) throw Error("Freshness evidence needs one unreplicated database as its committed-version source");
       if (database?.kind === "relational" && database.access !== undefined && (r.access !== database.access || JSON.stringify(r.keys) !== JSON.stringify(database.keys))) throw Error("Keyed cache-aside must share its database keyspace and access pattern");
       for (const op of input.operations) if (!["read", "write"].includes(r.operations[op.id]!)) throw new Error("Missing authored cache-aside operation");
       if (input.networkInterventions.some((i) => i.target === r.id)) throw new Error("Cache-aside suspension/restart policy is unmodeled");
