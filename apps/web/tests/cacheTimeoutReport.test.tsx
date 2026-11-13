@@ -43,7 +43,10 @@ test("real saved cache and helper evidence renders exact counts with separate ow
     for (const label of newLabels) expect(render(f.reports[1]!)).toContain(`<dt>${label}</dt>`);
   }
   const old = render(f.missing);
-  for (const label of labels) expect(old).toContain(`<dt>${label}</dt><dd>Unknown</dd>`);
+  // Stale-answer rows exist only for reports that recorded stale evidence, so an old report renders them absent; every other label shows Unknown.
+  const conditional = labels.filter(l => l === "Cache: Stale answers served" || l === "Cache: Oldest stale answer (us)");
+  for (const label of labels.filter(l => !conditional.includes(l))) expect(old).toContain(`<dt>${label}</dt><dd>Unknown</dd>`);
+  for (const label of conditional) expect(old).not.toContain(`<dt>${label}</dt>`);
   expect(lessonRunMeasurements(f.missing, labels).every(r => /Unknown/.test(r.value))).toBe(true);
   expect(render(f.unknown)).toContain("<dt>Cache: Hits</dt><dd>Unknown</dd>");
   expect(f.invalid.terminal).toBeNull();
