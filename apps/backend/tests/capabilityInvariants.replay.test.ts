@@ -4,10 +4,10 @@ import { challengeSeed } from "../challenges/registry";
 import { createModel2Engine } from "../simulator/model2Engine";
 import { answers, attemptReport, definition, REFERENCE } from "./challengeHarness";
 
-// Replay safety for the seven optional saved capabilities: a saved design rebuilt from its captured inputs reproduces identical evidence,
+// Replay safety for the optional saved capabilities: a saved design rebuilt from its captured inputs reproduces identical evidence,
 // reading evidence or the live view while the run advances never changes what the run later records, and every marked design names its profile.
 const LABS: Array<[id: string, profile: string]> = [["resolve-after-publication", "dns-publication/1"], ["admit-a-replica-image", "artifact-cache/1"], ["scale-on-delivered-samples", "autoscaling-observed/1"],
-  ["isolate-route-credits", "gateway-quota/1"], ["hold-slots-on-a-slow-call", "worker-wait/1"], ["redrive-after-the-fix", "queue-redrive/1"], ["serve-stale-on-error", "cache-stale/1"]];
+  ["isolate-route-credits", "gateway-quota/1"], ["hold-slots-on-a-slow-call", "worker-wait/1"], ["redrive-after-the-fix", "queue-redrive/1"], ["serve-stale-on-error", "cache-stale/1"], ["refresh-after-a-write", "cache-invalidation/1"]];
 // Wall-clock timestamps and random record ids are report metadata, not simulated state.
 const simulated = (v: unknown) => JSON.stringify(v, (_k, x) => typeof x === "string" && /^\d{4}-\d\d-\d\dT[\d:.]+Z$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(x) ? "~" : x);
 const ANSWERS = { "overall-health": "healthy", "scale-out": "no", where: "app" };
