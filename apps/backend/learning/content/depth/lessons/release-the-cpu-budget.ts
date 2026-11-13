@@ -13,7 +13,7 @@ export const releaseTheCpuBudget: LearningLesson = {
   limitations: ["Results are educational model outputs. This is an educational CPU-time policy over modeled cores, not operating system quota fidelity, physical timing or a provider benchmark. No neighboring tenants, physical host contention or dynamic CPU frequencies are represented.",
     "Saved reports retain CPU and caller outcomes. Scheduler throttled time, runnable workers and queue depth are calibration observations, not saved report measurements for this lab. Memory remains Unknown under partial coverage.",
     "The fixed-horizon caller population keeps unfinished work separate. Final health and latency do not establish continuous health, a whole-run latency SLO or production availability.",
-    "Releasing a quota is not a universal tuning rule. Resource isolation may be intentional. This single-app case has no dependency, retry, fault or autoscaling; increasing admission can overload a different system."],
+    "The saved limit is not the only fix: a larger instance size also meets the requirement here, because the limit is a percentage of that instance's total modeled CPU, so it grants more CPU time; the lab keeps the size fixed to compare the limit with worker slots. Releasing a quota is not a universal tuning rule. Resource isolation may be intentional. This single-app case has no dependency, retry, fault or autoscaling; increasing admission can overload a different system."],
   followUp: "Explain why CPU rose after the successful change. Use saved completions, failures and in-flight work to distinguish useful service from simply accepting more unfinished work.",
   check: null,
 };

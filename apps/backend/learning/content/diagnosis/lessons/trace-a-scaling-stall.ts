@@ -14,6 +14,7 @@ export const traceAScalingStall: LearningLesson = {
   experiment: {challengeId: "trace-a-scaling-stall", prediction: "What overall health will be recorded at second 90, and which resource will show the highest CPU? Both are scored.",
     evidenceToInspect: ["CPU; Overall health", "Desired replicas (current); LB-eligible replicas (current)", "Whole run: Completed; Whole run: Failed; Whole run: In-flight"]},
   limitations: [
+    "Shortening the export interval is not the only fix: a looser freshness bound also scales the pool here, but it acts on older measurements and still left more failed callers than the requirement allows in this run.",
     "Results are educational model outputs with authored timings, sizes and traffic, not provider benchmarks.",
     "Only the chain recorded here is traced. A second gate such as a too small artifact cache can hide behind the first; here it is roomy, so it never opens, and a passing run does not show the pool would grow under a different failure.",
     "Highest CPU is a recorded reading, not a diagnosis. Fixed-second readings prove no continuous availability, and a reading missing from the report stays Unknown."],
