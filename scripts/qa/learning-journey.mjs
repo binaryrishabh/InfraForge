@@ -295,6 +295,8 @@ export const JOURNEY_LABS = [
   },
   {
     lessonId: "trace-a-burst-backlog", title: /Trace a burst backlog/,
+    // Judged at second 240 and played at 1x in the browser, so the default 240 s wait would end before the run does.
+    runWaitMs: 420_000,
     prediction: "Overall health can look Healthy at the end even though uploads failed during the burst.",
     hypothesis: "Changing only the queue's message capacity should keep the burst's events; a bigger worker or more parallel jobs cannot.",
     predictionQuestions: [/What overall health will be recorded at second 240/, /Which resource will record the highest CPU at second 240/],
@@ -1177,7 +1179,7 @@ async function runJourney() {
     await dialog.getByRole("button", { name: /lock prediction and run/i }).click();
     await page.screenshot({ path: `${SHOTS}/6-running.png` });
     // Each challenge supplies its evaluation second; wait for the app to show a finished attempt.
-    await page.getByRole("link", { name: /see the result/i }).waitFor({ timeout: 240_000 });
+    await page.getByRole("link", { name: /see the result/i }).waitFor({ timeout: lab.runWaitMs ?? 240_000 });
     await page.screenshot({ path: `${SHOTS}/7a-finished.png` });
     await page.getByRole("link", { name: /see the result/i }).click();
     await page.waitForURL(/\/runs\//, { timeout: 120_000 });
@@ -1233,7 +1235,7 @@ async function runJourney() {
     await answerJourneyPredictions(dialog, lab);
     await acknowledgeJourneyChanges(dialog, lab.improvement);
     await dialog.getByRole("button", { name: /lock prediction and run/i }).click();
-    await page.getByRole("link", { name: /see the result/i }).waitFor({ timeout: 240_000 });
+    await page.getByRole("link", { name: /see the result/i }).waitFor({ timeout: lab.runWaitMs ?? 240_000 });
     await page.getByRole("link", { name: /see the result/i }).click();
     await page.waitForURL(/\/runs\//, { timeout: 120_000 });
     await page.waitForFunction(() => /Your design/.test(document.body.innerText) && /requirements? met/.test(document.body.innerText), null, { timeout: 120_000 });
