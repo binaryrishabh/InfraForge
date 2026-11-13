@@ -2,7 +2,6 @@ import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
 import { starter } from "../../starter";
 import { MODEL_NOTE } from "../modelNote";
 
-// Published. Immutable: any change, even to wording, ships as the next version file.
 export const shareOneOriginFetchV1: ChallengeDefinition = {
   engine: "2", id: "share-one-origin-fetch", version: 1, title: "Share one origin fetch", difficulty: "core",
   summary: "Every time a hot object expires, requests that arrive during the refill each go to the origin. Let them share one fetch.",

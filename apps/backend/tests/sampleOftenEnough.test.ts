@@ -60,3 +60,11 @@ test("sample-often-enough: browser-target bundle and default server replay agree
     console.info("sample-often-browser-target-server-parity", JSON.stringify({ cases: 3, secondsPerCase: 90 }));
   } finally { for (const path of [entry, out]) if (await Bun.file(path).exists()) await unlink(path); }
 }, 240000);
+
+test("sample-often-enough: freshness binds, not the sample floor: collecting every 3 or 5 seconds also meets it, every 10 does not", () => {
+  const { d } = variants(), at = (n: number) => { const s = structuredClone(d.starter!); (s.resources.find(r => r.id === "monitor")!.monitoringPolicy as { collectionIntervalSeconds: number }).collectionIntervalSeconds = n; return buildRunReport(attemptRow(d, s, answers(d, { health: "healthy" }))); };
+  const reports = [3, 5, 10].map(at);
+  expect(reports.map(r => r.challenge!.status)).toEqual(["met", "met", "not-met"]);
+  expect(reports.map(r => r.terminal!.resources.find(x => x.id === "monitor")!.monitoring!.generated)).toEqual([58, 34, 16]);
+  expect(reports[2]!.challenge!.criteria.find(c => c.id === "delivery")!.detail).toContain("maximum 6000000 us");
+});

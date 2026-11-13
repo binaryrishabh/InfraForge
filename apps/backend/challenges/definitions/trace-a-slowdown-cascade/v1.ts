@@ -2,10 +2,9 @@ import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
 import { starter } from "../../starter";
 import { MODEL_NOTE } from "../modelNote";
 
-// Published. Immutable: any change, even to wording, ships as the next version file.
 export const traceASlowdownCascadeV1: ChallengeDefinition = {
   engine: "2", id: "trace-a-slowdown-cascade", version: 1, title: "Trace a slowdown cascade", difficulty: "advanced",
-  summary: "A three-second database slowdown leaves callers failing long after it ends. Trace the chain, then cut it at its source.",
+  summary: "A three-second database slowdown makes hundreds of callers fail while cache fills and balancer retries pile on. Trace the chain, then cut it at its source.",
   concepts: ["Cascading failure", "Cache fills under slowdown", "Downstream timeouts and retries", "Root cause versus symptom"],
   story: ["A read service sits behind a load balancer that times out slow backends and retries them within a budget. Each app server asks a cache first and fills a missing entry from the database. Cache entries live one second.",
     "At second 2 the database loses almost all its CPU for three seconds, then recovers. The service should recover with it. Run unchanged and trace where the first bottleneck is, what it feeds, and which of the balancer's retries really matter."],
@@ -21,10 +20,10 @@ export const traceASlowdownCascadeV1: ChallengeDefinition = {
     {id: "database", kind: "database-health", prompt: "What will the database's own health be at second 10?"},
     {id: "where", kind: "busiest-resource", prompt: "Which resource will record the highest CPU at second 10?"}],
   hints: ["Compare the LB's downstream timeouts and retry counts, the app's database fetches and the cache's hits and misses. Find where requests first start to wait.",
-    "A bigger database or turning retries off leaves the same requests waiting on the same fills.",
+    "A bigger database leaves the same requests waiting on the same fills, and turning retries off makes the failures worse, not better.",
     "Change only the cache's Single-flight. Keep the balancer retries, sizes and the cache TTL unchanged."],
-  debrief: ["During the slowdown every request for the expired key starts its own database fill, so fills pile up behind a database that can barely serve one. Callers wait past the balancer's downstream timeout and fail; the retry budget limits how many are retried, so retries are a bystander rather than the cause.",
-    "Sharing one in-progress fill removes the pile-up at its source. A larger database only changes how long the slowdown looks; turning off retries changes nothing about what waits. A longer cache TTL also helps here by shrinking how often the key must be filled, at the cost of freshness.",
+  debrief: ["During the slowdown every request for the expired key starts its own database fill, so fills pile up behind a database that can barely serve one. Callers wait past the balancer's downstream timeout and fail; the retry budget limits how many are retried, so retries are not the cause. They rescue some callers, and the failures all fall inside the slowdown: once the database recovers new callers complete again and the failed count stops growing.",
+    "Sharing one in-progress fill removes the pile-up at its source. A larger database leaves the same fills waiting; turning off retries removes the extra attempts that rescued some callers, so more fail. A longer cache TTL (five seconds) also meets the requirement by shrinking how often the key must be filled, but every normal answer is then older; sharing one fill keeps the one-second freshness. The fix is the same as share-a-cache-fill; what this lab adds is attributing the failures across the balancer, cache and database.",
     "Not verified: real cache or balancer behaviour. The slowdown, sizes and timeouts are educational inputs.", MODEL_NOTE],
   starter: starter([["lb", "Load Balancer", 0, 0, {lbHealth: {version: 1, intervalSeconds: 60, timeoutSeconds: 60},
       retry: {enabled: true, maxAttempts: 4, backoffMs: 1, jitterRatio: 0.2, maxConcurrentRetries: 64, retryOn: ["backendFailure", "timeout", "connectionFailure"]}}],

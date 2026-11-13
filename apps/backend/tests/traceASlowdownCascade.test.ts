@@ -65,3 +65,17 @@ test("trace-a-slowdown-cascade: browser-target bundle and default server replay 
     console.info("slowdown-cascade-browser-target-server-parity", JSON.stringify({ cases: 4, secondsPerCase: 10 }));
   } finally { for (const path of [entry, out]) if (await Bun.file(path).exists()) await unlink(path); }
 }, 240000);
+
+test("trace-a-slowdown-cascade: failures stop with the slowdown, retries help, a 5 s TTL also meets the requirement, and the text says exactly that", async () => {
+  const { d, designs } = variants();
+  const failedAt = (second: number) => buildRunReport(attemptRow(d, designs[0]!, answers(d, { health: "healthy", database: "healthy", where: "app" }), { stopAt: second })).terminal!.traffic!.wholeRun!;
+  const [s6, s10] = [failedAt(6), failedAt(10)];
+  expect(s6.failed).toBe(s10.failed); expect(s10.completed - s6.completed).toBeGreaterThanOrEqual(600);
+  const ttl5 = edit(s => { s.resources.find(r => r.id === "cache")!.cachePolicy!.ttlSeconds = 5; });
+  const report = buildRunReport(attemptRow(d, ttl5, answers(d, { health: "healthy", database: "healthy", where: "app" })));
+  expect(report.challenge!.status).toBe("met");
+  const { findLearningLesson } = await import("../learning/registry");
+  const lesson = findLearningLesson(ID)!, text = [d.summary, ...d.debrief, ...lesson.problem, ...lesson.explanation].join(" ");
+  expect(text).toContain("retries rescued some callers"); expect(text).toContain("longer TTL also meets the requirement");
+  expect(text).not.toMatch(/long after it ends|keep failing until the end|bystander rather than the cause/);
+});

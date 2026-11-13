@@ -13,7 +13,7 @@ export const scaleOnDeliveredSamples: LearningLesson = {
   experiment: {challengeId: "scale-on-delivered-samples", prediction: "By second 90, will the autoscaled pool have an extra app server?",
     evidenceToInspect: ["Desired replicas (current)", "LB-eligible replicas (current)", "Controller evaluations (cumulative)", "Controller missing measurements (cumulative)",
       "Scaling signal freshness bound (us)", "Monitoring backend: Measurement age"]},
-  limitations: ["Results are educational model outputs with fixed synthetic timings, not provider benchmarks, safe freshness thresholds or tuning advice.",
+  limitations: ["Shortening the export interval is not the only fix. A looser freshness bound also lets the autoscaler use older measurements and scales the pool here, at the price of acting on stale data; the lab keeps the bound fixed to isolate delivery.","Results are educational model outputs with fixed synthetic timings, not provider benchmarks, safe freshness thresholds or tuning advice.",
     "The lab teaches one control-loop consequence: missing delivered measurements hold the pool. It does not model alerting, adaptive targets, queue-driven scaling or a real autoscaler.",
     "Callers are served in every variant of this light workload, so no outcome claim is made about user impact. A reading missing from the report stays Unknown."],
   followUp: "Cite the starter, the change to the export interval and the near miss that only lowered the CPU target. Explain why a fresh collector and a lower target cannot replace delivered measurements.",

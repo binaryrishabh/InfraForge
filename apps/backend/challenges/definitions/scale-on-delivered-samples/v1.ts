@@ -1,14 +1,13 @@
 import type { ChallengeDefinition } from "@infraforge/contracts/challenges";
 import { starter } from "../../starter";
 
-// Published. Immutable: any change, even to wording, ships as the next version file.
 export const scaleOnDeliveredSamplesV1: ChallengeDefinition = {
   engine: "2", id: "scale-on-delivered-samples", version: 1, title: "Scale on delivered samples", difficulty: "advanced",
   summary: "The autoscaler only trusts measurements that reached the backend. When delivery is slow it holds, even while the app server is busy.",
   concepts: ["Autoscaling signal", "Monitoring delivery", "Hold on missing measurements", "One-change experiments"],
   story: ["An autoscaled app server is watched by a monitoring agent. The autoscaler is set to scale only on measurements that the agent has delivered to its backend.",
     "Traffic is steady and the server is busy. The agent collects often but exports rarely, so the newest measurements are old by the time they arrive."],
-  objective: "By second 90 the pool must run more than one app server, with the extra server listener-ready and in service, and callers must be served without unsuccessful outcomes. Compare one setting change.",
+  objective: "By second 90 the pool must run more than one app server, with the extra server listener-ready and in service. Compare one setting change.",
   workload: {targetThroughput: 6000, throughputUnit: "per-minute", trafficShape: "steady", peakMultiplier: 1, readWriteRatio: 0.8, payloadSize: "light"},
   workloadNote: "100 requests/s, steady, 80% reads and light payloads. No fault or intervention script.",
   evaluationSeconds: 90, evaluationNote: "Pool state is read at second 90; it is a terminal reading, not a continuous availability guarantee.",

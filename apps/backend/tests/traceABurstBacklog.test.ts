@@ -65,3 +65,16 @@ test("trace-a-burst-backlog: browser-target bundle and default server replay agr
     console.info("burst-backlog-browser-target-server-parity", JSON.stringify({ cases: 4, secondsPerCase: 240 }));
   } finally { for (const path of [entry, out]) if (await Bun.file(path).exists()) await unlink(path); }
 }, 540000);
+
+test("trace-a-burst-backlog: a large worker or much cheaper jobs also meet the requirement, and the definition and lesson say so instead of calling them impossible", async () => {
+  const { d } = variants();
+  const large = edit(s => { s.resources.find(r => r.id === "worker")!.size = "large"; });
+  const cheap = edit(s => { s.resources.find(r => r.id === "worker")!.asyncWorker!.cpuMsPerJob = 50; });
+  const reports = [large, cheap].map(design => buildRunReport(attemptRow(d, design, answers(d, { health: "healthy", where: "worker" }))));
+  expect(reports.map(r => r.challenge!.status)).toEqual(["met", "met"]);
+  expect(reports.map(r => r.terminal!.traffic!.wholeRun!.failed)).toEqual([0, 0]);
+  const { findLearningLesson } = await import("../learning/registry");
+  const text = [...d.hints, ...d.debrief, ...findLearningLesson(ID)!.explanation, findLearningLesson(ID)!.followUp ?? ""].join(" ");
+  expect(text).toContain("much faster worker");
+  expect(text).not.toMatch(/neither a faster worker|a faster worker (?:alone )?does not|A bigger worker or more parallel jobs drains/);
+});
