@@ -15,6 +15,7 @@ import { sampleOftenEnoughV1 } from "../challenges/definitions/sample-often-enou
 import { traceASlowdownCascadeV1 } from "../challenges/definitions/trace-a-slowdown-cascade/v1";
 import { traceABurstBacklogV1 } from "../challenges/definitions/trace-a-burst-backlog/v1";
 import { serveStaleOnErrorV1 } from "../challenges/definitions/serve-stale-on-error/v1";
+import { refreshAfterAWriteV1 } from "../challenges/definitions/refresh-after-a-write/v1";
 import { keepFailedEventsV1 } from "../challenges/definitions/keep-failed-events/v1";
 import { redriveAfterTheFixV1 } from "../challenges/definitions/redrive-after-the-fix/v1";
 import { scaleOnDeliveredSamplesV1 } from "../challenges/definitions/scale-on-delivered-samples/v1";
@@ -124,6 +125,7 @@ export const REFERENCE: Record<string, ChallengeStarter> = {
   "trace-a-slowdown-cascade": {...traceASlowdownCascadeV1.starter!, resources: traceASlowdownCascadeV1.starter!.resources.map(r => r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, singleFlight: true}} : r)},
   "trace-a-burst-backlog": {...traceABurstBacklogV1.starter!, resources: traceABurstBacklogV1.starter!.resources.map(r => r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, capacityMessages: 500}} : r)},
   "serve-stale-on-error": {...serveStaleOnErrorV1.starter!, resources: serveStaleOnErrorV1.starter!.resources.map(r => r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, staleSeconds: 60}} : r)},
+  "refresh-after-a-write": {...refreshAfterAWriteV1.starter!, resources: refreshAfterAWriteV1.starter!.resources.map(r => r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, invalidateOnWrite: true}} : r)},
   "keep-failed-events": {...keepFailedEventsV1.starter!, resources: keepFailedEventsV1.starter!.resources.map(r => r.id === "bus" ? {...r, eventBus: {...r.eventBus!, deadLetterCapacity: 100}} : r)},
   "redrive-after-the-fix": {...redriveAfterTheFixV1.starter!, resources: redriveAfterTheFixV1.starter!.resources.map(r => r.id === "queue" ? {...r, asyncQueue: {...r.asyncQueue!, redriveAtSecond: 45}} : r)},
   "scale-on-delivered-samples": {...scaleOnDeliveredSamplesV1.starter!, resources: scaleOnDeliveredSamplesV1.starter!.resources.map(r => r.id === "monitor" ? {...r, monitoringPolicy: {version: 1 as const, collectionIntervalSeconds: 2, exportIntervalSeconds: 2}} : r)},
