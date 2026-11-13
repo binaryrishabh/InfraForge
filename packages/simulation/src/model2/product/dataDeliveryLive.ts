@@ -20,7 +20,11 @@ export function dataDeliveryLive(resource: CompiledProduct["input"]["resources"]
     // Coalescing belongs to application helpers. Include only helpers explicitly targeting this cache.
     const helpers = resources.filter(r => r.kind === "cache-aside" && r.cache === resource.id).map(r => source.inspectData.application(r.id)?.coalescedWaiters);
     const coalescedWaiters = helpers.length && helpers.every(n => n != null) ? helpers.reduce<number>((sum, n) => sum + n!, 0) : null;
+    // Freshness counters exist only for marked helpers; a helper that did not record them, or could not compare a hit, leaves the cache's counters Unknown (null).
+    const fresh = resources.filter(r => r.kind === "cache-aside" && r.cache === resource.id).map(r => source.inspectData.application(r.id)?.freshness);
+    const marked = fresh.some(f => f !== undefined), known = marked && fresh.every(f => f !== undefined && f.unobserved === 0);
     return { cache: { version: 1, hits: cache?.hits ?? null, misses: cache?.misses ?? null, expirations: cache?.expirations ?? null, evictions: cache?.evictions ?? null, coalescedWaiters,
+      ...(marked ? { outdatedHits: known ? fresh.reduce((sum, f) => sum + f!.outdatedHits, 0) : null, maxVersionsBehind: known ? fresh.reduce((max, f) => Math.max(max, f!.maxVersionsBehind), 0) : null } : {}),
       ...(cache && "staleServed" in cache ? { staleServed: (cache as { staleServed: number }).staleServed, maxStaleAgeUs: (cache as { maxStaleAgeUs: number | null }).maxStaleAgeUs } : {}) } };
   }
   if (resource.kind === "cdn") {

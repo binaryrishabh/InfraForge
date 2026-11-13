@@ -320,6 +320,18 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^Serve 100 stale answers no more than 60 seconds past expiry, with the TTL at one second$/],
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "refresh-after-a-write", title: /Refresh after a write/,
+    prediction: "Overall health can look Healthy even though most cache hits return rows that were already updated.",
+    hypothesis: "Turning invalidation on write back on alone should remove the hits behind the database; cutting the TTL, a bigger database or a bigger app cannot.",
+    improvement: {
+      stepName: "cache's Invalidate on write is turned on",
+      nodeSelector: '[data-resource-id="cache"]', nodeText: /Cache/, fallbackText: "cache",
+      role: "switch", name: /^Invalidate on write$/, resourceId: "cache", setting: "cachePolicy.invalidateOnWrite", from: false, to: true,
+    },
+    reportRequirements: [/^Serve at least 4000 cache hits with at most 100 hits behind the database$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Scaling stall capstone: JOURNEY_LAB=trace-a-scaling-stall JOURNEY_SHOTS=/tmp/scaling-stall node ../InfraForge/scripts/qa/learning-journey.mjs

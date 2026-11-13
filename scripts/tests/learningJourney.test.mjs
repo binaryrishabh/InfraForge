@@ -17,6 +17,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "resolve-after-publication",
     "scale-on-delivered-samples",
     "serve-stale-on-error",
+    "refresh-after-a-write",
     "isolate-route-credits",
     "redrive-after-the-fix",
     "keep-failed-events",
@@ -808,6 +809,26 @@ test("sample journey changes the collection interval and refuses missing or unre
   expect(await applyJourneyImprovement(fakePage().page,edit)).toEqual([{resourceId:"monitor",setting:"monitoringPolicy.collectionIntervalSeconds",value:"2"}]);
   await expect(applyJourneyImprovement(fakePage({controlMissing:true}).page,edit)).rejects.toThrow("requested control is missing");
   await expect(applyJourneyImprovement(fakePage({storedValue:"20"}).page,edit)).rejects.toThrow("did not retain");
+});
+
+test("refresh journey turns the invalidate-on-write switch on and refuses missing or unretained values", async () => {
+  const lab=journeyLab("refresh-after-a-write"),edit=lab.improvement;
+  expect([edit.resourceId,edit.setting,edit.role,edit.from,edit.to]).toEqual(["cache","cachePolicy.invalidateOnWrite","switch",false,true]);
+  expect(edit.name.test("Invalidate on write")).toBe(true);
+  expect(edit.name.test("Single-flight")).toBe(false);
+  const make=(checked, missing=false, stuck=false)=>{ const calls=[]; let state=checked;
+    const control={waitFor:async()=>{ if(missing) throw new Error("requested control is missing"); }, isChecked:async()=>state, click:async()=>{ calls.push("click"); if(!stuck) state=true; }};
+    const scope={getByRole:(role,opts)=>{ calls.push([role,opts.name.source]); return {first:()=>control}; }};
+    const node={filter:()=>({first:()=>({click:async()=>{}})})};
+    return {calls,page:{locator:()=>node,getByText:()=>({first:()=>({click:async()=>{}})}),getByRole:scope.getByRole}}; };
+  const fake=make(false);
+  expect(await applyJourneyImprovement(fake.page,edit)).toEqual([{resourceId:"cache",setting:"cachePolicy.invalidateOnWrite",value:true}]);
+  expect(fake.calls).toEqual([["switch","^Invalidate on write$"],"click"]);
+  const on=make(true); await applyJourneyImprovement(on.page,edit); expect(on.calls).toEqual([["switch","^Invalidate on write$"]]);
+  await expect(applyJourneyImprovement(make(false,true).page,edit)).rejects.toThrow("requested control is missing");
+  await expect(applyJourneyImprovement(make(false,false,true).page,edit)).rejects.toThrow("did not retain");
+  expect(lab.reportRequirements[0].test("Serve at least 4000 cache hits with at most 100 hits behind the database")).toBe(true);
+  expect(lab.reportRequirements[0].test("Serve at least 4000 cache hits with at most 300 hits behind the database")).toBe(false);
 });
 
 test("stale journey sets the stale bound and refuses missing or unretained values", async () => {

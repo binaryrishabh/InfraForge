@@ -25,7 +25,7 @@ const FlowStepsSchema = z.object({ steps: z.array(z.union([
 const ApplicationFlowSchema = z.object({ schema: z.enum(["application-flow/1", "application-flow/2", "application-flow/3"]), operations: z.object({
   read: FlowStepsSchema.optional(), write: FlowStepsSchema.optional(),
 }).strict() }).strict();
-const CachePolicyV1Schema = z.object({ version: z.literal(1), ttlSeconds: z.number().int().min(1).max(CACHE_TTL_MAX_SECONDS).optional(), singleFlight: z.boolean().optional(), staleSeconds: z.number().int().min(1).max(CACHE_TTL_MAX_SECONDS).optional() }).strict();
+const CachePolicyV1Schema = z.object({ version: z.literal(1), ttlSeconds: z.number().int().min(1).max(CACHE_TTL_MAX_SECONDS).optional(), singleFlight: z.boolean().optional(), staleSeconds: z.number().int().min(1).max(CACHE_TTL_MAX_SECONDS).optional(), invalidateOnWrite: z.boolean().optional() }).strict();
 const CachePolicySchema = z.discriminatedUnion("version", [CachePolicyV1Schema, CachePolicyV1Schema.extend({
   version: z.literal(2), capacityEntries: z.number().int().min(1).max(CACHE_CAPACITY_MAX_ENTRIES),
 }).strict()]);

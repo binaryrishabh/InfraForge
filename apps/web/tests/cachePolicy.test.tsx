@@ -59,3 +59,18 @@ for (const cachePolicy of [undefined, { version: 1 as const, ttlSeconds: 60, sin
     expect(useCanvasStore.getState().resources[0]!.cachePolicy).toEqual(cachePolicy); expect(useCanvasStore.getState().undoStack).toEqual([]);
   } finally { saved.mockRestore(); }
 });
+
+test("Invalidate on write defaults on, shows a saved off value, and an explicit value survives undo and redo", () => {
+  const html = (policy?: CachePolicy) => renderToStaticMarkup(<CachePolicySection resource={{ ...cache, ...(policy ? { cachePolicy: policy } : {}) }} disabled={false} />);
+  expect(html()).toContain("Invalidate on write");
+  expect(html()).toContain("When off, the old row stays until it expires");
+  expect(html({ version: 1, invalidateOnWrite: false })).not.toBe(html({ version: 1, invalidateOnWrite: true }));
+  expect(html({ version: 1 })).toBe(html({ version: 1, invalidateOnWrite: true }));
+  useCanvasStore.getState().loadLayout([cache], [], "layout", "Cache");
+  const policy: CachePolicy = { version: 1, ttlSeconds: 30, invalidateOnWrite: false };
+  updateResource("cache", { cachePolicy: policy }); expect(useCanvasStore.getState().resources[0]!.cachePolicy).toEqual(policy);
+  undo(); expect(useCanvasStore.getState().resources[0]!.cachePolicy).toBeUndefined();
+  redo(); expect(useCanvasStore.getState().resources[0]!.cachePolicy).toEqual(policy);
+  updateResource("cache", { cachePolicy: { version: 1, invalidateOnWrite: "no" as never } });
+  expect(useCanvasStore.getState().resources[0]!.cachePolicy).toEqual(policy);
+});

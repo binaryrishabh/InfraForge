@@ -24,7 +24,7 @@ const cases: Record<string, [ReturnType<typeof starter>, ReturnType<typeof wl>, 
 };
 for (const [name, [design, workload, seconds, pins]] of Object.entries(cases)) test(`unmarked ${name} design keeps its base inputs, compiled contract, live views and evidence`, () => {
   const input = captureRunInputs({ ...design, layoutVersion: 3 }, workload, `synth:${name}`);
-  for (const profile of ["dns-publication/1", "artifact-cache/1", "autoscaling-observed/1", "gateway-quota/1", "worker-wait/1", "queue-redrive/1", "cache-stale/1"]) expect(input.adapterProfiles ?? []).not.toContain(profile as never);
+  for (const profile of ["dns-publication/1", "artifact-cache/1", "autoscaling-observed/1", "gateway-quota/1", "worker-wait/1", "queue-redrive/1", "cache-stale/1", "cache-invalidation/1"]) expect(input.adapterProfiles ?? []).not.toContain(profile as never);
   const engine = createModel2Engine(input, seconds), views: string[] = [];
   for (let s = 1; s <= seconds; s++) { engine.advance(); if (s % 10 === 0) views.push(sha(engine.view())); }
   expect([sha(input), sha(buildContractFromRunInputs(input, seconds)), sha(engine.evidence()), views]).toEqual(pins);

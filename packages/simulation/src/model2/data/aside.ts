@@ -6,11 +6,14 @@ import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
 import type { AsideConfig, DataRequest, DataReply } from "./contracts";
 import { DATA_LIMITS } from "./policy";
 
-export function cacheAside(config: AsideConfig, kernel: EventClock, send: Deliver, seed: string) {
+export function cacheAside(config: AsideConfig, kernel: EventClock, send: Deliver, seed: string, committedVersion?: (key: string) => number | undefined) {
+  if (config.trackFreshness && !committedVersion) throw Error("Freshness evidence needs the database committed-version oracle");
   const live = new Map<string, { done(outcome: RemoteOutcome, cause?: Cause): void; work: Invocation; terminal: boolean }>();
   const fills = new Map<string, Array<(reply: DataReply | undefined, cause?: Cause) => void>>();
   let hits = 0, misses = 0, fillAttempts = 0, fillAcknowledged = 0, fillRejected = 0;
   let received = 0, completed = 0, failed = 0, cacheFailures = 0, fetches = 0, coalesced = 0, invalidations = 0;
+  // Freshness: a hit is outdated when its body is older than the version the database has committed for the key at that moment.
+  let freshHits = 0, outdatedHits = 0, maxVersionsBehind = 0, unobserved = 0;
   const results: Array<{ root: string; key: string; at: number; version?: number; source: string; ok: boolean }> = []; let omitted = 0;
   return {
     accept(work: Invocation, done: (outcome: RemoteOutcome, cause?: Cause) => void): Receipt {
@@ -38,7 +41,11 @@ export function cacheAside(config: AsideConfig, kernel: EventClock, send: Delive
           request(config.cache, { kind: "invalidate", key }, (invalidated) => { if (invalidated?.ok) invalidations++; finish(reply, invalidated?.ok ? "write-invalidated" : "write-invalidation-failed"); });
         });
       } else request(config.cache, { kind: "get", key }, (cached, cacheCause) => {
-        if (cached?.hit) { hits++; finish(cached, "cache-hit"); return; }
+        if (cached?.hit) {
+          hits++;
+          if (config.trackFreshness) { freshHits++; const committed = committedVersion!(key); if (committed === undefined || cached.version === undefined) unobserved++; else if (committed > cached.version) { outdatedHits++; maxVersionsBehind = Math.max(maxVersionsBehind, committed - cached.version); } }
+          finish(cached, "cache-hit"); return;
+        }
         if (cached?.ok) misses++;
         if (!cached?.ok) { cacheFailures++; if (config.onCacheFailure === "fail") { finish(undefined, "cache-failed", cacheCause); return; } }
         const ready = (reply: DataReply | undefined, cause?: Cause) => finish(reply, reply?.stale ? "stale-cache" : "database-fetch", cause);
@@ -64,6 +71,7 @@ export function cacheAside(config: AsideConfig, kernel: EventClock, send: Delive
     pause() { throw new Error("Cache-aside process suspension is outside this policy"); },
     measure: () => ({ id: config.id, paused: false, received, admitted: received, rejected: 0, completed, failed, cancelled: 0, queued: 0, serving: 0, waiting: live.size, consumedCoreUs: 0, busySlotUs: 0 }),
     evidence: () => ({ id: config.id, received, completed, failed, live: live.size, databaseFetches: fetches, cacheFailures, coalescedWaiters: coalesced, fillsInProgress: fills.size, invalidations, results, omitted,
+      ...(config.trackFreshness ? { freshness: { hits: freshHits, outdatedHits, maxVersionsBehind, unobserved } } : {}),
       ...(config.recordedKeysOnly ? { recordedKeys: { hits, misses, fillAttempts, fillAcknowledged, fillRejected, savedDatabaseReads: hits + coalesced, policyCpu: "Charged only through explicit app demand; this role owns no second CPU" } } : {}) }),
   };
 }
