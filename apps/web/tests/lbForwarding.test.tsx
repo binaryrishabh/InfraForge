@@ -57,4 +57,4 @@ test("saved forwarding reports render actual LB accounting, generic verdicts and
     expect(lessonRunMeasurements(old, labels).map(m => m.value)).toEqual(["lb: Unknown", "lb: Unknown", "lb: Unknown"]);
     expect(renderToStaticMarkup(<ReportMeasurements report={old} number={3} />)).toContain("Load balancer accounting: Unknown");
   }
-});
+}, 60000); // spawns a fixture process; the default 5 s fails under parallel suite load

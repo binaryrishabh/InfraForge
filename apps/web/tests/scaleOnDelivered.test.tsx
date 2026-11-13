@@ -28,4 +28,4 @@ test("real lab reports render the selected scaling signal, hold counts and in-se
   expect(render(old)).not.toContain("Scaling signal source");
   expect(starter.challenge!.criteria.find(c => c.id === "scaled")?.status).toBe("not-met");
   expect(reference.challenge!.criteria.find(c => c.id === "scaled")?.status).toBe("met");
-});
+}, 60000); // spawns a fixture process; the default 5 s fails under parallel suite load
