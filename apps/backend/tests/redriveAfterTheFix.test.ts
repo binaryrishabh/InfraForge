@@ -32,7 +32,10 @@ test("redrive-after-the-fix: one-change reference passes, near miss and starter 
   const rows = designs.map(s => attemptRow(d, s, answers(d, { health: "healthy" }))), reports = rows.map(r => buildRunReport(r));
   expect(reports.map(r => r.challenge!.status)).toEqual(["not-met", "met", "not-met"]);
   const q = reports.map(r => r.terminal!.resources.find(x => x.id === "queue")!.queueWork!);
-  expect(q.map(x => [x.originals, x.acknowledged, x.deadLettered, x.redriven])).toEqual([[720, 668, 90, 38], [720, 720, 52, 52], [720, 682, 75, 37]]);
+  expect(q.map(x => [x.originals, x.acknowledged, x.deadLettered, x.redriven])).toEqual([[720, 654, 104, 38], [720, 720, 66, 66], [720, 654, 103, 37]]);
+  // Margins against the 700-message floor: both failing designs lose at least 40 messages' worth of margin, so no engine or seed rounding can flip them.
+  expect(700 - q[0]!.acknowledged).toBeGreaterThanOrEqual(40); expect(700 - q[2]!.acknowledged).toBeGreaterThanOrEqual(40); expect(q[1]!.acknowledged - 700).toBeGreaterThanOrEqual(20);
+  expect(start.resources.find(r => r.id === "worker")!.asyncWorker!.repairAtSecond).toBe(40);
   expect(start.resources.find(r => r.id === "queue")!.asyncQueue!.redriveAtSecond).toBe(20);
   for (const [i, row] of rows.entries()) {
     const saved = { ...row, runInputs: JSON.parse(JSON.stringify(row.runInputs)), terminalSnapshot: JSON.parse(JSON.stringify(row.terminalSnapshot)) };
