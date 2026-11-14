@@ -15,6 +15,6 @@ export const traceASlowdownCascade: LearningLesson = {
   limitations: ["Results are educational model outputs with an authored slowdown, sizes and timeouts, not provider benchmarks.",
     "Only this fixed, read-only keyspace and CPU cut are tested. There is no mutable-data freshness guarantee, provider benchmark or whole-run latency target. Fitting all keys is not the only passing capacity.",
     "A reading missing from the report stays Unknown."],
-  followUp: "Write the balancer -> cache -> database diagnosis with saved counters, the recorded CPU cut and the live serving-query sample. Compare (share-a-cache-fill): why can sharing same-key fills work there yet be insufficient here? Relate this incident to (fit-the-working-set), then explain why shrinking the modeled keyspace changes the question.",
+  followUp: "Write the balancer -> cache -> database diagnosis with saved counters, the recorded CPU cut and the live sample of serving queries. Compare (share-a-cache-fill): why can sharing fills for one key work there yet be insufficient here? Relate this incident to (fit-the-working-set), then explain why shrinking the modeled keyspace changes the question.",
   check: null,
 };

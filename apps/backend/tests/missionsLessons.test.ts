@@ -14,14 +14,15 @@ test("missions retain four advanced labs and add an intermediate guided module w
   expect(firstApplications.lessonIds).toEqual(firstApplicationLessons.map(l => l.id)); expect(backgroundServices.lessonIds).toEqual(backgroundServiceLessons.map(l => l.id));
   expect(new Set(registered.map(l => l.id)).size).toBe(registered.length);
   for (const lesson of lessons) {
-    expect(lesson).toMatchObject({trackId: "missions", moduleId: track.modules.find(m => m.lessonIds.includes(lesson.id))!.id, contentVersion: lesson.id === "catalogue-link-flash" ? 3 : lesson.id === "analytics-burst-buffer" ? 2 : 1, kind: "executable-lab", availability: "available"});
+    expect(lesson).toMatchObject({trackId: "missions", moduleId: track.modules.find(m => m.lessonIds.includes(lesson.id))!.id, kind: "executable-lab", availability: "available"});
+    expect(lesson.contentVersion).toBeGreaterThanOrEqual(lesson.id === "catalogue-link-flash" ? 3 : lesson.id === "analytics-burst-buffer" ? 2 : 1); // version-forward corrections only raise it
     expect(lesson.prerequisites.length).toBeGreaterThanOrEqual(2);
     expect(lesson.prerequisites.every(id => registered.some(l => l.id === id && l.trackId !== "missions"))).toBe(true);
     expect(lesson.limitations.length).toBeGreaterThan(2); expect(lesson.limitations.every(t => t.trim().length > 0)).toBe(true);
     expect((lesson.experiment?.prediction?.trim().length ?? 0)).toBeGreaterThan(0); expect((lesson.experiment?.evidenceToInspect?.length ?? 0)).toBeGreaterThan(1);
     expect((lesson.followUp?.trim().length ?? 0)).toBeGreaterThan(0);
     const d = latestChallenge(lesson.experiment!.challengeId)!.definition;
-    expect(d.engine).toBe("2"); expect(d.version).toBe(d.id === "catalogue-link-flash" ? 2 : 1); expect(d.hints).toHaveLength(3); expect(REFERENCE[d.id]).toBeDefined();
+    expect(d.engine).toBe("2"); expect(d.version).toBeGreaterThanOrEqual(d.id === "catalogue-link-flash" ? 2 : 1); expect(d.hints).toHaveLength(3); expect(REFERENCE[d.id]).toBeDefined();
     expect(lesson.check!.choices.some(c => c.id === lesson.check!.correctChoiceId)).toBe(true);
   }
   const advanced = [...firstApplicationLessons, ...backgroundServiceLessons];

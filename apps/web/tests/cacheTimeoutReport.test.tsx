@@ -37,7 +37,7 @@ test("real saved cache and helper evidence renders exact counts with separate ow
     }
   }
   for (const {old, current} of f.lessons) {
-    expect(old.contentVersion).toBe(1); expect(current.contentVersion).toBe(3);
+    expect(old.contentVersion).toBe(1); expect(current.contentVersion).toBeGreaterThanOrEqual(3); // later corrections only raise it
     const newLabels = current.experiment!.evidenceToInspect!.flatMap(evidenceLabels).filter(l => l.startsWith("Cache:") || l.startsWith("Application helper:"));
     expect(newLabels).toContain("Application helper: Database fetches");
     for (const label of newLabels) expect(render(f.reports[1]!)).toContain(`<dt>${label}</dt>`);

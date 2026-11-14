@@ -30,7 +30,9 @@ function takeLock() {
 const dropLock = () => { try { unlinkSync(lockPath); } catch {} };
 
 function launch(s: State, id: string, attempt: number, resumes: number, brief: string, resumeSession: string, quotaRetries = 0) {
-  const branch = git(s.worktree, "rev-parse", "--abbrev-ref", "HEAD");
+  // A single blank answer from git (seen once after a quota pause) must not stop the lane: ask again before judging the branch.
+  let branch = git(s.worktree, "rev-parse", "--abbrev-ref", "HEAD");
+  for (let i = 0; i < 4 && !branch; i++) { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000); branch = git(s.worktree, "rev-parse", "--abbrev-ref", "HEAD"); }
   if (branch !== s.branch) throw new Error(`worktree is on ${branch}, expected ${s.branch}`);
   if (!resumeSession && git(s.worktree, "status", "--porcelain")) {
     sh("git", ["-C", `${ROOT}/${s.worktree}`, "add", "-A"]);
