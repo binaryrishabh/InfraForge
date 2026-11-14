@@ -1,6 +1,6 @@
 # InfraForge project state
 
-_Current state as of 2026-10-27. History lives in git (`git log`), not in this file._
+_Production state below is as of 2026-10-27; the learning and backend state is as of 2026-11-14. History lives in git (`git log`), not in this file._
 
 ## What InfraForge is
 
@@ -22,6 +22,16 @@ challenges) and engineers (a free canvas).
   in the browser; when it ends, the server replays its inputs and actions for the official
   result. Eight guided challenges run on Model 2; cache-failure and after-the-cache-returns
   are retired until Model 2 models database connection pools. Public launch: **6 November 2026**.
+
+## Learning curriculum and backend (backend + learning V1, not yet on `main`)
+
+Measured from the registries (`apps/backend/scripts/registry-counts.ts`, `curriculum-audit.ts`), not from prose:
+
+- 12 learning tracks, 59 modules, 121 current lessons (71 runnable labs, 32 conceptual exercises, 18 readings) plus 52 archived earlier lesson versions.
+- 82 challenges (104 versions); 71 are taught by a guided one-change lab and 11 are free-design catalogue challenges.
+- Published lesson and challenge versions are immutable. Corrections are version-forward: a new lesson or challenge version, the old one stays resolvable.
+- Optional saved capabilities added in this phase (each unset = historical behaviour byte for byte, each with its own captured adapter profile): DNS publication after negative caching, artifact cache capacity, autoscaling from delivered telemetry, gateway quota scope, worker external wait, queue redrive with worker repair, cache stale-if-error, cache write invalidation, row lock order, successful empty-answer caching. See [reality/saved-capability-notes.md](reality/saved-capability-notes.md) for what each one models and what it does not claim.
+- Deliberately not modelled (future scope, never started): a load-balancer outage with a restart state machine, an editable caller attempt timeout, consensus, cluster membership, distributed storage, real protocol or physical timing.
 
 ## Production
 
