@@ -12,6 +12,8 @@ test("empty-answer lesson keeps its original text and challenge identity while f
   expect(next).toEqual({...old, contentVersion: 2,
     prerequisites: old.prerequisites.map(p => p === "share-a-cache-fill" ? "concurrent-cache-misses" : p),
     followUp: old.followUp!.replace("negative-cache run", "negative cache run").replace("source-work budget", "source work budget"),
+    // The visibility cost of caching absence (added by the independent audit) lives in the current version only.
+    limitations: [old.limitations[0]!.replace("earlier cached absence. Saved absence settings", "earlier cached absence. That is the cost of caching absence: a remembered empty answer can hide a row published later, as Resolve after publication shows for a resolver"s negative answer, and this lab shows only the benefit. Saved absence settings"), ...old.limitations.slice(1)],
   });
   expect(next.level).toBe("intermediate");
   expect(LEARNING_REGISTRY.findLesson("concurrent-cache-misses")!.level).toBe("intermediate");
