@@ -2,6 +2,13 @@
  * Keep old records. A changed challenge needs a new reviewed contentVersion. */
 export interface LearningChallengeReview { challengeId: string; version: number; hash: string }
 export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeReview>> = {
+  "choose-a-retry-mitigation@2": {challengeId: "choose-a-retry-mitigation", version: 1, hash: "6ca83f5bd42df0ea1f6ad09bb15d139a7b3b15abb3083a93b0e4d7e8b65ef46e"},
+  "keep-an-asset-cached@2": {challengeId: "keep-an-asset-cached", version: 1, hash: "3f6328645b2f62cf07f9071f08e7a4b0d8956936a684ae55166f580fd6e7db71"},
+  "leave-room-for-firewall-flows@2": {challengeId: "leave-room-for-firewall-flows", version: 1, hash: "492dca0578609884ed0729140e110de02cfd689831faecaa172f43eca803c705"},
+  "diagnose-lost-app-capacity@2": {challengeId: "diagnose-lost-app-capacity", version: 1, hash: "c96034e934dbd75035b519f13035467cdae6eb9d8f08b921c06ad18cdb2466f2"},
+  "reuse-before-expiry@4": {challengeId: "reuse-before-expiry", version: 2, hash: "da68b973d3fe19a49afd259da61031732ca766af391c25d48cda885477d6d757"},
+  "restore-a-database-writer@2": {challengeId: "restore-a-database-writer", version: 1, hash: "e7c0c1a217ab01ecb79dd3a490d7f3d69f526788bb99d00286f8b7be884d0c25"},
+  "notification-retry-storm@2": {challengeId: "notification-retry-storm", version: 1, hash: "e154e1b8a5741ba5754d9f1bb1bc95e6fb567530610563789f84aa709d2af3de"},
   "release-the-cpu-budget@1": {challengeId: "release-the-cpu-budget", version: 1, hash: "b6270c37b5e20b00dce45a705fa07bfdfc2aaaa39eaf807801e4709c70259567"},
   "open-the-forwarding-gate@1": {challengeId: "open-the-forwarding-gate", version: 1, hash: "2de1e51858aa980eb93333a201adbc4d3689dbec836e48620ed6f8f87d51c131"},
   "keep-a-function-warm@1": {challengeId: "keep-a-function-warm", version: 1, hash: "efda13d2be6bb0bdbbddcafa04651a1da0bd71a8e0d8cd1f72cf991b987a6d17"},

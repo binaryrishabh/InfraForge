@@ -15,4 +15,5 @@ export const lessons = [...databasePressureLessons, ...cacheLifetimeLessons, ...
 import { cacheEvidenceArchivedLessons } from "./cache-evidence-archives";
 import { connectionPoolBudgets } from "./lessons/connection-pool-budgets";
 import { promotingAReplica } from "./lessons/promoting-a-replica";
-export const archivedLessons = [...cacheEvidenceArchivedLessons, connectionPoolBudgets, promotingAReplica];
+import { restoreADatabaseWriter as originalRestoreADatabaseWriter } from "./lessons/restore-a-database-writer";
+export const archivedLessons = [...cacheEvidenceArchivedLessons, connectionPoolBudgets, promotingAReplica, originalRestoreADatabaseWriter];

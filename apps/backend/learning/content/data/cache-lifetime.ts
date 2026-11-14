@@ -1,5 +1,5 @@
 import type { LearningModule } from "@infraforge/contracts/learning";
-import { reuseBeforeExpiryV3 as reuseBeforeExpiry } from "./lessons/reuse-before-expiry-v3";
+import { reuseBeforeExpiryV4 as reuseBeforeExpiry } from "./lessons/reuse-before-expiry-v4";
 
 export const cacheLifetimeLessons = [reuseBeforeExpiry];
 export const cacheLifetime: LearningModule = {
