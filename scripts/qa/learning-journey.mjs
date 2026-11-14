@@ -290,7 +290,7 @@ export const JOURNEY_LABS = [
       nodeSelector: '[data-resource-id="cache"]', nodeText: /Cache/, fallbackText: "cache",
       role: "spinbutton", name: /^Logical cache capacity$/, resourceId: "cache", setting: "cachePolicy.capacityEntries", from: 1, to: 16,
     },
-    reportRequirements: [/^Complete 1980 callers with at most 20 unsuccessful through second 10$/],
+    reportRequirements: [/^Complete 1920 callers with at most 80 unsuccessful through second 10$/],
     expected: { starter: "Not met", improved: "Met" },
   },
   {

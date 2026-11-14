@@ -46,10 +46,10 @@ test("trace-a-slowdown-cascade: capacity preserves reuse with single-flight alre
   expect(reports.map(r => r.terminal!.traffic!.wholeRun!.completed)).toEqual([1690, 2000, 1848, 1634]);
   const callerRule = d.criteria.find(c => c.kind === "caller-outcomes")!;
   if (callerRule.kind !== "caller-outcomes") throw Error("Missing caller rule");
-  expect(2000 - callerRule.minCompleted).toBeGreaterThanOrEqual(20);
-  expect(callerRule.maxUnsuccessful).toBeGreaterThanOrEqual(20);
-  expect(callerRule.minCompleted - 1848).toBeGreaterThanOrEqual(100);
-  expect(151 - callerRule.maxUnsuccessful).toBeGreaterThanOrEqual(100);
+  expect(2000 - callerRule.minCompleted).toBeGreaterThanOrEqual(80);
+  expect(callerRule.maxUnsuccessful).toBeGreaterThanOrEqual(80);
+  expect(callerRule.minCompleted - 1848).toBeGreaterThanOrEqual(70);
+  expect(151 - callerRule.maxUnsuccessful).toBeGreaterThanOrEqual(70);
   expect(reports.map(r => r.challenge!.predictions.find(x => x.id === "where")!.outcome)).toEqual(["different", "matched", "matched", "different"]);
   expect(reports.map(r => r.challenge!.predictions.find(x => x.id === "where")!.actual)).toEqual(["db", "app", "app", "db"]);
   const lb = reports[0]!.terminal!.resources.find(r => r.id === "lb")!;
