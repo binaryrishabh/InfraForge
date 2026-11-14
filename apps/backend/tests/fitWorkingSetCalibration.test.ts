@@ -29,7 +29,7 @@ test("fit the working set: one capacity edit fits the keys; a longer TTL near mi
     expect(reports[i]!.challenge!.predictions[0]).toMatchObject({predicted: "degraded", outcome: expect.any(String)});
   }
   expect(improvementSource(rows[0]!, d.id).input).toEqual(inputs[0]!);
-  console.info("shed-load-calibration", JSON.stringify({lat, dbCpu}));
+  console.info("fit-working-set-calibration", JSON.stringify({lat, dbCpu}));
 }, 120000);
 
 test("lesson is registered in its own module with limitations and the pinned review record", async () => {

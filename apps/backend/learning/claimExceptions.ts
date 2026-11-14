@@ -449,4 +449,11 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     values: ["6"],
     reason: "6 is the first controlled promotion-second input that misses the caller requirement, measured by apps/backend/tests/olderLabLessonCorrections.test.ts (100 completed, 40 unsuccessful); it names the near miss and is not a result claim.",
   },
+  {
+    lesson: "shed-load-at-the-edge@1", field: "limitations.2",
+    text: "The final-second p95 excludes refused and unfinished callers, and a fixed-second sample proves no continuous behaviour. At the tested admission limits in this fixed workload, final-second p95 is about 3 ms times the Active requests limit; this is a measured model result, not a general sizing rule.",
+    values: ["3"],
+    reason: "apps/backend/tests/closureWindowTextPolish.test.ts measures attemptRow + buildRunReport p95 at active limits 8, 16 and 32: 24.070, 48.070 and 96.070 ms, approximately 3 ms per active request in this fixed workload.",
+  },
+
 ];
