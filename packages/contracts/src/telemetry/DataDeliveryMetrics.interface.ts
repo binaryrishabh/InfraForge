@@ -8,6 +8,10 @@ export interface DatabaseMetrics {
   rejected: number | null;
   sessionRefused: number | null;
   "query-queue-full": number | null;
+  /** Present only with a saved row lock order: deadlock cycles found, requests that had to wait for a row lock, and transactions ended as deadlock victims (0 when none; null is Unknown). */
+  deadlocks?: number | null;
+  lockWaits?: number | null;
+  deadlockVictims?: number | null;
 }
 
 export interface CacheMetrics {

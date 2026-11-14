@@ -10,6 +10,7 @@ import type { Resource } from "../resource/Resource.interface";
 import { CONNECTION_RULES } from "../topology/CONNECTION_RULES.constants";
 import { computeTopology } from "../topology/computeTopology";
 import { dataKeyspaceError } from "../resource/DataKeyspace.interface";
+import { rowLockingError } from "../resource/RowLocking.interface";
 import { cachePolicyError } from "../resource/CachePolicy.interface";
 import { firewallStateError } from "../resource/FirewallState.interface";
 import { firewallCapacityError } from "../resource/FirewallCapacity.interface";
@@ -83,6 +84,8 @@ export function validateDeploymentReadiness(resources: Array<Resource>, connecti
         if (cdnMessage) errors.push(`${resource.id}: ${cdnMessage}`);
         const message = dataKeyspaceError(resource.type, resource.dataKeyspace);
         if (message) errors.push(`${resource.id}: ${message}`);
+        const rowLockMessage = rowLockingError(resource.type, resource.rowLocking, resource.dataKeyspace);
+        if (rowLockMessage) errors.push(`${resource.id}: ${rowLockMessage}`);
         const cacheMessage = cachePolicyError(resource.type, resource.cachePolicy);
         if (cacheMessage) errors.push(`${resource.id}: ${cacheMessage}`);
         const memoryMessage = vmMemoryError(resource.type, resource.vmMemory, resource.asyncWorker?.enabled);

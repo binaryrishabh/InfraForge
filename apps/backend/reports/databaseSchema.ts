@@ -11,6 +11,7 @@ const member = z.object({
 export const DatabaseMetricsSchema = z.object({
   version: z.literal(1), serving: count.nullable(), waiting: count.nullable(), queued: count.nullable(),
   rejected: count.nullable(), sessionRefused: count.nullable(), "query-queue-full": count.nullable(),
+  deadlocks: count.nullable().optional(), lockWaits: count.nullable().optional(), deadlockVictims: count.nullable().optional(),
   readRouting: z.object({version: z.literal(1), policy: z.enum(["primary-only", "replica-preferred"]),
     fallback: z.literal("unavailable-only; capacity refuses"), sessionModel: z.string().min(1).max(400),
     staleReads: count, maxStaleReadAgeMs: amount, unboundSessions: count,

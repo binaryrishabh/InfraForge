@@ -39,6 +39,7 @@ export interface Resource {
   firewallCapacity?: FirewallCapacity;
   objectStoragePolicy?: ObjectStoragePolicy;
   dataKeyspace?: DataKeyspace;
+  rowLocking?: import("./RowLocking.interface").RowLocking;
   cachePolicy?: CachePolicy;
   dnsPublication?: import("./DnsPublication.interface").DnsPublication;
   dnsCachePolicy?: import("./DnsCachePolicy.interface").DnsCachePolicy;

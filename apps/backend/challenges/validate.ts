@@ -28,6 +28,7 @@ const workload = z.object({
   targetThroughput: z.number().int().positive().max(100_000_000), throughputUnit: z.enum(["per-minute", "per-hour"]),
   trafficShape: z.enum(["steady", "peak"]), peakMultiplier: z.number().min(1).max(10), readWriteRatio: z.number().min(0).max(1),
   payloadSize: z.enum(["light", "medium", "heavy"]),
+  workloadDynamics: z.object({ version: z.literal(1), arrivalProcess: z.enum(["even", "poisson"]), applicationCpuCv: z.number().finite().min(0).max(1) }).strict().optional(),
 }).strict();
 const resource = z.object({ id: z.string().min(1).max(64), type: z.enum(types), x: z.number(), y: z.number() }).passthrough();
 const line = z.object({ id: z.string().min(1), sourceId: z.string().min(1), targetId: z.string().min(1), sourceType: z.enum(types), targetType: z.enum(types), port: z.number().int().min(0).max(65535) }).strict();
@@ -45,7 +46,7 @@ const definition = z.object({
   scenario: z.unknown().optional(),
 }).strict();
 
-const CRITERIA = ["stale-reads", "function-reuse", "startup-capacity", "database-redundancy", "monitoring-delivery", "pool-in-service", "bus-dead-letters", "cdn-origin-load", "cache-stale-answers", "cache-fresh-reads", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
+const CRITERIA = ["stale-reads", "function-reuse", "startup-capacity", "database-redundancy", "monitoring-delivery", "pool-in-service", "bus-dead-letters", "cdn-origin-load", "cache-stale-answers", "cache-fresh-reads", "database-deadlocks", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
   "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "queue-ready-age", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work", "caller-outcomes"];
 const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "busiest-resource", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
@@ -103,6 +104,8 @@ function checkDefinition(d: ChallengeDefinition): string[] {
       !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.Cache && r.cachePolicy?.ttlSeconds !== undefined))) problems.push(`${where}: cache-stale-answers needs Model 2, its named starter cache with a saved TTL and positive limits`);
     if (c.kind === "cache-fresh-reads" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isSafeInteger(c.maxOutdatedHits) || c.maxOutdatedHits < 0 || !Number.isSafeInteger(c.minHits) || c.minHits < 1 ||
       !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.Cache && typeof r.cachePolicy?.invalidateOnWrite === "boolean"))) problems.push(`${where}: cache-fresh-reads needs Model 2, its named starter cache with a saved write policy and nonnegative or positive limits`);
+    if (c.kind === "database-deadlocks" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isSafeInteger(c.maxDeadlocks) || c.maxDeadlocks < 0 ||
+      !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.Database && r.rowLocking !== undefined))) problems.push(`${where}: database-deadlocks needs Model 2, its named starter database with a saved row lock order and a nonnegative limit`);
     if (c.kind === "cdn-origin-load" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || ![c.maxOriginRequests, c.maxTtlSeconds].every(n => Number.isSafeInteger(n) && n >= 1) ||
       !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.CDN && r.cdnCachePolicy?.ttlSeconds !== undefined))) problems.push(`${where}: cdn-origin-load needs Model 2, its named starter CDN with a saved TTL and positive limits`);
     if (c.kind === "bus-dead-letters" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isSafeInteger(c.minDeadLettered) || c.minDeadLettered < 1 ||

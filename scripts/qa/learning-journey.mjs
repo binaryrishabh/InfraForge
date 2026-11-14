@@ -332,6 +332,18 @@ export const JOURNEY_LABS = [
     reportRequirements: [/^Serve at least 4000 cache hits with at most 100 hits behind the database$/],
     expected: { starter: "Not met", improved: "Met" },
   },
+  {
+    lessonId: "order-the-row-locks", title: /Order the row locks/,
+    prediction: "Overall health can read Degraded while the app and the database still have CPU to spare, because transfers fail waiting on each other's row locks.",
+    hypothesis: "Setting the row lock order to by key alone should remove the deadlocks and the failed transfers; a bigger database or a bigger app only changes the odds.",
+    improvement: {
+      stepName: "db's Row lock order is changed from as requested to by key",
+      nodeSelector: '[data-resource-id="db"]', nodeText: /Database/, fallbackText: "db",
+      role: "combobox", name: /^Row lock order$/, resourceId: "db", setting: "rowLocking.order", from: "as-requested", to: "by-key",
+    },
+    reportRequirements: [/^Have no deadlocks through second 30$/],
+    expected: { starter: "Not met", improved: "Met" },
+  },
 ];
 
 // Scaling stall capstone: JOURNEY_LAB=trace-a-scaling-stall JOURNEY_SHOTS=/tmp/scaling-stall node ../InfraForge/scripts/qa/learning-journey.mjs

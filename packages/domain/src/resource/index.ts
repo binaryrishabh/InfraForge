@@ -5,6 +5,7 @@ export { DeploymentChaosNames, type DeploymentChaosNamesType } from "./Deploymen
 export { ResourceHealth, type ResourceHealthType } from "./ResourceHealth.enum";
 export type { Resource } from "./Resource.interface";
 export { DATA_KEYSPACE_MAX, dataKeyspaceError, type DataKeyspace } from "./DataKeyspace.interface";
+export { ROW_LOCK_ORDERS, rowLockingError, type RowLocking } from "./RowLocking.interface";
 export { CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, type CachePolicy } from "./CachePolicy.interface";
 export { firewallStateError, FIREWALL_IDLE_SECONDS_MAX, FIREWALL_STATE_HELP, type FirewallState } from "./FirewallState.interface";
 export { firewallCapacityError, FIREWALL_FLOW_CAPACITY_MAX, FIREWALL_FLOW_CAPACITY_HELP, type FirewallCapacity } from "./FirewallCapacity.interface";

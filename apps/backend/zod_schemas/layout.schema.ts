@@ -7,7 +7,7 @@ import { apiGatewayError } from "@infraforge/domain/resource";
 import { eventBusError } from "@infraforge/domain/resource";
 import { lbRateLimitError, LB_RATE_BURST_MAX, LB_RATE_MIN_RPS, LB_RATE_MAX_RPS } from "@infraforge/domain/resource";
 import * as z from "zod";
-import { gatewayQuotaError, dnsPublicationError, artifactCachePolicyError, ARTIFACT_CACHE_MAX_BYTES, autoscalingSignalError, AUTOSCALING_FRESH_MAX_SECONDS, dbPoolError, firewallStateError, firewallCapacityError, FIREWALL_IDLE_SECONDS_MAX, FIREWALL_FLOW_CAPACITY_MAX, objectStoragePolicyError, OBJECT_STORAGE_CAPACITY_MAX_MIB, dnsCachePolicyError, DNS_CACHE_MAX_TTL_SECONDS, monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT_MAX_ATTEMPTS, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmMemoryError, VM_MEMORY_MAX_MIB, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbSelectionError, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
+import { gatewayQuotaError, dnsPublicationError, artifactCachePolicyError, ARTIFACT_CACHE_MAX_BYTES, autoscalingSignalError, AUTOSCALING_FRESH_MAX_SECONDS, dbPoolError, firewallStateError, firewallCapacityError, FIREWALL_IDLE_SECONDS_MAX, FIREWALL_FLOW_CAPACITY_MAX, objectStoragePolicyError, OBJECT_STORAGE_CAPACITY_MAX_MIB, dnsCachePolicyError, DNS_CACHE_MAX_TTL_SECONDS, monitoringPolicyError, MONITORING_BUFFER_MAX_SAMPLES, MONITORING_EXPORT_MAX_ATTEMPTS, MONITORING_CADENCE_MAX_SECONDS, cdnCachePolicyError, CDN_MAX_WAITERS, CDN_TTL_MAX_SECONDS, vmMemoryError, VM_MEMORY_MAX_MIB, vmCpuQuotaError, VM_CPU_LIMIT_MAX, VM_WORKERS_MAX, VM_QUEUED_REQUESTS_MAX, vmExecutionError, LB_HEALTH_SECONDS_MAX, LB_HEALTH_THRESHOLD_MAX, lbSelectionError, lbHealthError, LB_ACTIVE_MAX, LB_QUEUED_MAX, LB_QUEUE_WAIT_MAX_MS, DB_ACTIVE_QUERIES_MAX, DB_QUEUED_QUERIES_MAX, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, CACHE_TTL_MAX_SECONDS, CACHE_CAPACITY_MAX_ENTRIES, cachePolicyError, DATA_KEYSPACE_MAX, dataKeyspaceError, rowLockingError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, RESOURCE_TYPES, RETRY_GROUPS, retrySettingsError } from "@infraforge/domain/resource";
 
 const ResourceIdSchema = z.string().min(1).refine(
   (id) => !Object.hasOwn(Object.prototype, id),
@@ -69,6 +69,7 @@ const ResourceSchema = z.object({
   dbPoolMaxConnections: z.number().int().min(1).max(512).optional(),
   dbConcurrency: z.object({ version: z.literal(1), activeQueries: z.number().int().min(1).max(DB_ACTIVE_QUERIES_MAX).optional(), queuedQueries: z.number().int().min(0).max(DB_QUEUED_QUERIES_MAX).optional() }).strict().optional(),
   dataKeyspace: z.object({ version: z.literal(1), count: z.number().int().min(1).max(DATA_KEYSPACE_MAX), accessPattern: z.enum(["uniform", "hot-key"]).optional() }).strict().optional(),
+  rowLocking: z.object({ version: z.literal(1), rowsPerWrite: z.literal(2), order: z.enum(["as-requested", "by-key"]) }).strict().optional(),
   autoscaling: z.object({
     enabled: z.boolean().optional(),
     minReplicas: z.number().int().positive().optional(),
@@ -156,6 +157,8 @@ const ResourceSchema = z.object({
   if (cacheMessage) ctx.addIssue({ code: "custom", path: ["cachePolicy"], message: cacheMessage });
   const keyspaceMessage = dataKeyspaceError(resource.type, resource.dataKeyspace);
   if (keyspaceMessage) ctx.addIssue({ code: "custom", path: ["dataKeyspace"], message: keyspaceMessage });
+  const rowLockMessage = rowLockingError(resource.type, resource.rowLocking, resource.dataKeyspace);
+  if (rowLockMessage) ctx.addIssue({ code: "custom", path: ["rowLocking"], message: rowLockMessage });
   const securityMessage = securitySettingsError(resource.type, resource.listenerSettings, resource.firewallSettings);
   if (securityMessage) ctx.addIssue({ code: "custom", path: ["security"], message: securityMessage });
   const flowMessage = applicationFlowError(resource.type, resource.applicationFlow);

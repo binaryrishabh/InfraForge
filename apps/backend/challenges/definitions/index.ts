@@ -16,6 +16,7 @@ import { traceASlowdownCascadeV1 } from "./trace-a-slowdown-cascade/v1";
 import { traceABurstBacklogV1 } from "./trace-a-burst-backlog/v1";
 import { serveStaleOnErrorV1 } from "./serve-stale-on-error/v1";
 import { refreshAfterAWriteV1 } from "./refresh-after-a-write/v1";
+import { orderTheRowLocksV1 } from "./order-the-row-locks/v1";
 import { keepFailedEventsV1 } from "./keep-failed-events/v1";
 import { redriveAfterTheFixV1 } from "./redrive-after-the-fix/v1";
 import { scaleOnDeliveredSamplesV1 } from "./scale-on-delivered-samples/v1";
@@ -119,6 +120,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   keepFailedEventsV1,
   serveStaleOnErrorV1,
   refreshAfterAWriteV1,
+  orderTheRowLocksV1,
   traceABurstBacklogV1,
   traceASlowdownCascadeV1,
   sampleOftenEnoughV1,
