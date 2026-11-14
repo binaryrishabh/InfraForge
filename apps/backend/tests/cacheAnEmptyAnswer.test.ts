@@ -86,7 +86,8 @@ test("cache-an-empty-answer: lesson, module, vocabulary and unchanged reviewed i
  const {findLearningLesson,LEARNING_REGISTRY}=await import("../learning/registry"),{learningContent}=await import("../learning/content"),{validateLearningContent}=await import("../learning/validate");
  const {checkLessonClaims}=await import("../learning/claims"),{REVIEWED_CHALLENGES}=await import("../learning/reviewedChallenges");
  const l=findLearningLesson(ID)!;expect(l).toMatchObject({kind:"executable-lab",trackId:"data",moduleId:"cache-absence",experiment:{challengeId:ID},check:null});
- expect(LEARNING_REGISTRY.findModule("data","cache-absence")!.lessonIds).toEqual([ID]);expect(REVIEWED_CHALLENGES[`${ID}@1`]).toEqual({challengeId:ID,version:1,hash:specHash(d)});
+ expect(l.contentVersion).toBeGreaterThanOrEqual(1);
+ expect(LEARNING_REGISTRY.findModule("data","cache-absence")!.lessonIds).toEqual([ID]);expect(REVIEWED_CHALLENGES[`${ID}@${l.contentVersion}`]).toEqual({challengeId:ID,version:d.version,hash:specHash(d)});
  expect(validateLearningContent(learningContent)).toEqual([]);expect(checkLessonClaims(l,d)).toEqual([]);
  expect(l.limitations.join(" ")).toContain("no inserts");expect(l.explanation.join(" ")).toContain("valid capacity improvement");
 });

@@ -101,4 +101,5 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "diagnose-query-admission@2": {challengeId: "diagnose-query-admission", version: 1, hash: "af3d1ac31f9cca4078a377cc11d2c7c64a524c2bd3b16aada23829499a71aff5"},
   "diagnose-consumer-credit@3": {challengeId: "diagnose-consumer-credit", version: 2, hash: "df97ca199816deccd0b3cdcdd332775946ab04e1c36ab9380b9204bbb79a9e60"},
   "trace-a-saturation-cascade@2": { challengeId: "trace-a-saturation-cascade", version: 1, hash: "b8b8a24164dfdc70aadc52aac2b4eb75c1bb8f3e6730d7206c400de777b29f64" },
+  "cache-an-empty-answer@2": {challengeId: "cache-an-empty-answer", version: 1, hash: "e1929d65d5216171c902731f2913d09b7b19f7d8b451ac3d52b78076daf445a2"},
 };
