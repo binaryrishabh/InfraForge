@@ -1,14 +1,14 @@
 import { expect, test } from "bun:test";
 import type { ChallengeStarter } from "@infraforge/contracts/challenges";
 import { buildRunReport } from "../reports/report";
-import { specHash } from "../challenges/registry";
+import { findChallenge, specHash } from "../challenges/registry";
 import { checkLessonClaims, lessonText } from "../learning/claims";
 import { LEARNING_REGISTRY } from "../learning/registry";
 import { REVIEWED_CHALLENGES } from "../learning/reviewedChallenges";
 import { attemptRow, definition } from "./challengeHarness";
 
 /* Audit of the 48 pre-window labs: lesson-only, version-forward corrections. Every corrected sentence is pinned to
-   a fact measured on the real engine (harness attemptRow + buildRunReport). Challenge definitions and hashes are unchanged. */
+   a fact measured on the real engine (harness attemptRow + buildRunReport). These lesson revisions retain their original challenge pins. */
 
 function runLab(id: string, edit: (resource: any) => void, resourceId: string) {
   const d = definition(id), design = structuredClone(d.starter!) as ChallengeStarter;
@@ -21,15 +21,17 @@ function runLab(id: string, edit: (resource: any) => void, resourceId: string) {
 const n = (text: string, re: RegExp) => Number(re.exec(text)![1]);
 
 const text = (lesson: ReturnType<typeof LEARNING_REGISTRY.findLesson>) => lessonText(lesson!).map(([, t]) => t).join("\n");
-/** Current version differs from the archived one; the old text stays only in the archived version; the pin names the same unchanged challenge. */
+/** Check the original lesson correction even after a later version archives it; its review still names the original challenge. */
 function versionForward(id: string, oldVersion: number, challengeVersion: number, goneFromCurrent: string[], presentInCurrent: string[]) {
-  const current = LEARNING_REGISTRY.findLesson(id)!, old = LEARNING_REGISTRY.findLesson(id, oldVersion)!;
+  const current = LEARNING_REGISTRY.findLesson(id, oldVersion + 1)!, old = LEARNING_REGISTRY.findLesson(id, oldVersion)!;
+  const live = LEARNING_REGISTRY.findLesson(id)!;
   expect(current.contentVersion).toBe(oldVersion + 1);
   expect(old.contentVersion).toBe(oldVersion);
-  expect(LEARNING_REGISTRY.listLessons().filter(l => l.id === id).map(l => l.contentVersion)).toEqual([oldVersion + 1]);
+  expect(live.contentVersion).toBeGreaterThanOrEqual(current.contentVersion);
+  expect(LEARNING_REGISTRY.listLessons().filter(l => l.id === id).map(l => l.contentVersion)).toEqual([live.contentVersion]);
   for (const phrase of goneFromCurrent) { expect(text(old)).toContain(phrase); expect(text(current)).not.toContain(phrase); }
   for (const phrase of presentInCurrent) { expect(text(current)).toContain(phrase); expect(text(old)).not.toContain(phrase); }
-  const d = definition(id), newPin = REVIEWED_CHALLENGES[`${id}@${oldVersion + 1}`], oldPin = REVIEWED_CHALLENGES[`${id}@${oldVersion}`];
+  const d = findChallenge(id, challengeVersion)!.definition, newPin = REVIEWED_CHALLENGES[`${id}@${oldVersion + 1}`], oldPin = REVIEWED_CHALLENGES[`${id}@${oldVersion}`];
   expect(newPin).toEqual({challengeId: id, version: d.version, hash: specHash(d)});
   expect(newPin).toEqual(oldPin);
   expect(d.version).toBe(challengeVersion);

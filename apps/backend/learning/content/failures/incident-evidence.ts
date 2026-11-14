@@ -5,7 +5,7 @@ import { missingFailureObservations } from "./lessons/missing-failure-observatio
 import { mitigationTradeoffs } from "./lessons/mitigation-tradeoffs";
 import { findTheDenyingRule } from "./lessons/find-the-denying-rule";
 import { leaveRoomForFirewallFlowsV2 as leaveRoomForFirewallFlows } from "./lessons/leave-room-for-firewall-flows-v2";
-import { chooseARetryMitigationV2 as chooseARetryMitigation } from "./lessons/choose-a-retry-mitigation-v2";
+import { chooseARetryMitigationV3 as chooseARetryMitigation } from "./lessons/choose-a-retry-mitigation-v3";
 
 export const incidentEvidenceLessons = [firewallRuleMatching, dnsCacheLifetime, missingFailureObservations, mitigationTradeoffs,
   findTheDenyingRule, leaveRoomForFirewallFlows, chooseARetryMitigation];

@@ -1,3 +1,6 @@
+import { chooseARetryMitigationV2 } from "./choose-a-retry-mitigation/v2";
+import { restoreADatabaseWriterV2 } from "./restore-a-database-writer/v2";
+import { notificationRetryStormV2 } from "./notification-retry-storm/v2";
 import { openTheForwardingGateV1 } from "./open-the-forwarding-gate/v1";
 import { keepAFunctionWarmV1 } from "./keep-a-function-warm/v1";
 import { isolateRouteCreditsV1 } from "./isolate-route-credits/v1";
@@ -126,6 +129,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   objectBytesVersusAppCpuV1,
   sizeTheAppDatabasePoolV1,
   restoreADatabaseWriterV1,
+  restoreADatabaseWriterV2,
   keepAnAssetCachedV1,
   parallelJobsForABurstV1,
   keepWaitingWorkV1,
@@ -175,6 +179,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   findTheDenyingRuleV1,
   leaveRoomForFirewallFlowsV1,
   chooseARetryMitigationV1,
+  chooseARetryMitigationV2,
   catalogueLinkFlashV1,
   catalogueLinkFlashV2,
   flashSaleOrderBacklogV1,
@@ -184,6 +189,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   writesCostMoreThanReadsV1,
   balancerSharesTurnsV1,
   notificationRetryStormV1,
+  notificationRetryStormV2,
   analyticsBurstBufferV1,
   diagnoseLostAppCapacityV1,
   investigateAPoolResetV1,

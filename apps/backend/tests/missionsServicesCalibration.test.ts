@@ -3,7 +3,7 @@ import type { ChallengeStarter } from "@infraforge/contracts/challenges";
 import type { SimulationSnapshot } from "@infraforge/contracts/telemetry";
 import { buildRunReport } from "../reports/report";
 import { captureRunInputs } from "../deployments/runInputs";
-import { challengeSeed } from "../challenges/registry";
+import { challengeSeed, findChallenge } from "../challenges/registry";
 import { preflight } from "../challenges/preflight";
 import { definition, REFERENCE, attemptRow, answers } from "./challengeHarness";
 
@@ -18,15 +18,14 @@ const differingLeaves = (a: unknown, b: unknown): number => {
 };
 // Every variant is the starter or the reference with exactly one saved setting changed.
 function variant(base: ChallengeStarter, change: (s: ChallengeStarter) => void) { const s = structuredClone(base); change(s); return s; }
-const report = (id: string, design: ChallengeStarter, stopAt?: number) => {
-  const d = definition(id);
+const report = (d: ReturnType<typeof definition>, design: ChallengeStarter, stopAt?: number) => {
   return buildRunReport(attemptRow(d, design, answers(d, {"overall-health": "healthy"}), stopAt ? {stopAt} : {}));
 };
 const log = (mission: string, name: string, r: ReturnType<typeof buildRunReport>) =>
   console.info(JSON.stringify({mission, variant: name, status: r.challenge!.status, health: r.terminal!.health, failed: r.terminal!.traffic!.wholeRun!.failed, completed: r.terminal!.traffic!.wholeRun!.completed, queue: queue(r), workerCpu: metric(r, "worker").cpu}));
 
-function malformedEvidenceStaysUnknown(id: string) {
-  const d = definition(id), row = attemptRow(d, REFERENCE[id]!, answers(d, {"overall-health": "healthy"}));
+function malformedEvidenceStaysUnknown(d: ReturnType<typeof definition>) {
+  const row = attemptRow(d, REFERENCE[d.id]!, answers(d, {"overall-health": "healthy"}));
   for (const mutate of [
     (r: typeof row) => { r.terminalSnapshot = null; },
     (r: typeof row) => { snapshot(r).simulatedSeconds--; },
@@ -46,8 +45,9 @@ function malformedEvidenceStaysUnknown(id: string) {
   expect(buildRunReport(running).challenge!.criteria.find(c => c.id === "work")!.status).toBe("pending");
 }
 
-test("notification-retry-storm: a lower delivery limit stops bad requests starving good ones; capacity alone only repeats the waste", () => {
-  const id = "notification-retry-storm", d = definition(id), start = d.starter!, fixed = REFERENCE[id]!;
+test("notification-retry-storm@1: a lower delivery limit stops bad requests starving good ones; capacity alone only repeats the waste", () => {
+  // Preserve this exact v1 calibration. The v2 production seed and verdict bands are checked in olderLabDefinitionCorrections.test.ts.
+  const id = "notification-retry-storm", d = findChallenge(id, 1)!.definition, start = d.starter!, fixed = REFERENCE[id]!;
   const limit = (s: ChallengeStarter, n: number) => { resource(s, "queue").asyncQueue!.maxReceives = n; };
   const designs = {
     starter: start, reference: fixed,
@@ -61,7 +61,7 @@ test("notification-retry-storm: a lower delivery limit stops bad requests starvi
     expect(preflight(d, design).valid).toBe(true);
     expect(captureRunInputs(design, d.workload, challengeSeed(d)).workloadProfile).toEqual(captureRunInputs(start, d.workload, challengeSeed(d)).workloadProfile);
   }
-  const r = Object.fromEntries(Object.entries(designs).map(([k, s]) => [k, report(id, s)])) as Record<keyof typeof designs, ReturnType<typeof report>>;
+  const r = Object.fromEntries(Object.entries(designs).map(([k, s]) => [k, report(d, s)])) as Record<keyof typeof designs, ReturnType<typeof report>>;
   for (const [k, v] of Object.entries(r)) { log(id, k, v); expect(v.terminal!.simulatedSeconds).toBe(d.evaluationSeconds); expect(v.challenge!.predictions.every(p => p.actual !== null)).toBe(true); }
   const work = (v: typeof r.starter) => v.challenge!.criteria.find(c => c.id === "work")!.status;
   // The requirement is met only by the reference.
@@ -83,7 +83,7 @@ test("notification-retry-storm: a lower delivery limit stops bad requests starvi
   expect(queue(r.biggerWorker).acknowledged).toBeGreaterThanOrEqual(350); expect(queue(r.biggerWorker).ready + queue(r.biggerWorker).inFlight).toBeLessThanOrEqual(10);
   expect(queue(r.biggerWorker).redeliveries).toBeGreaterThan(250); expect(queue(r.reference).redeliveries).toBeLessThanOrEqual(250);
   expect(work(r.biggerWorker)).toBe("not-met");
-  malformedEvidenceStaysUnknown(id);
+  malformedEvidenceStaysUnknown(d);
   const invalid = variant(start, s => limit(s, 0)); expect(preflight(d, invalid).valid).toBe(false);
 }, 600000);
 
@@ -104,7 +104,7 @@ test("analytics-burst-buffer: waiting room that fits the burst keeps every event
     expect(preflight(d, design).valid).toBe(true);
     expect(captureRunInputs(design, d.workload, challengeSeed(d)).workloadProfile).toEqual(captureRunInputs(start, d.workload, challengeSeed(d)).workloadProfile);
   }
-  const r = Object.fromEntries(Object.entries(designs).map(([k, s]) => [k, report(id, s)])) as Record<keyof typeof designs, ReturnType<typeof report>>;
+  const r = Object.fromEntries(Object.entries(designs).map(([k, s]) => [k, report(d, s)])) as Record<keyof typeof designs, ReturnType<typeof report>>;
   for (const [k, v] of Object.entries(r)) { log(id, k, v); expect(v.terminal!.simulatedSeconds).toBe(d.evaluationSeconds); expect(v.challenge!.predictions.every(p => p.actual !== null)).toBe(true); }
   const failed = (v: typeof r.starter) => v.terminal!.traffic!.wholeRun!.failed;
   expect(r.reference.challenge!.status).toBe("met"); expect(r.reference.challenge!.criteria.every(c => c.status === "met")).toBe(true);
@@ -115,7 +115,7 @@ test("analytics-burst-buffer: waiting room that fits the burst keeps every event
   expect(r.starter.challenge!.predictions[0]!.actual).toBe("healthy");
   // Reference: nothing refused, every event acknowledged, and the burst really used more than the starter's room.
   expect(failed(r.reference)).toBe(0); expect(queue(r.reference)).toMatchObject({originals: 1150, acknowledged: 1150, ready: 0, inFlight: 0, redeliveries: 0});
-  const peak = report(id, fixed, 140);
+  const peak = report(d, fixed, 140);
   expect(queue(peak).ready + queue(peak).inFlight).toBeGreaterThan(50);
   console.info(JSON.stringify({mission: id, measuredAt140: queue(peak)}));
   // Near misses: a little more room still loses some events; plenty of room with a slow worker leaves a backlog instead.
@@ -123,6 +123,6 @@ test("analytics-burst-buffer: waiting room that fits the burst keeps every event
   expect(failed(r.roomButSlowWorker)).toBe(0); expect(queue(r.roomButSlowWorker).ready + queue(r.roomButSlowWorker).inFlight).toBeGreaterThan(10);
   // A faster worker is a second supported answer: it removes the excess instead of storing it.
   expect(r.fasterWorker.challenge!.status).toBe("met"); expect(failed(r.fasterWorker)).toBe(0);
-  malformedEvidenceStaysUnknown(id);
+  malformedEvidenceStaysUnknown(d);
   const invalid = variant(start, s => room(s, 0)); expect(preflight(d, invalid).valid).toBe(false);
 }, 900000);

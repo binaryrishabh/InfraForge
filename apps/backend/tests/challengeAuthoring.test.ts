@@ -14,6 +14,9 @@ A published version never changes and is never removed. To change a challenge, a
 the next version file, register it in definitions/index.ts and pin it here. Run with
 `bun run check:challenges`. */
 export const PUBLISHED: Record<string, string> = {
+  "notification-retry-storm@2": "abeddc5a66094145e2a3ee8e0748654dd8f08066e84b461f0c24ba2320aa6edd",
+  "restore-a-database-writer@2": "b842d08e3e2c81caa76de14668bdf2abb7b3fdc9c0eedf9163e773f4a4b8cbb9",
+  "choose-a-retry-mitigation@2": "7aef8a84ccfe8b452d1a47a949fb7316c9535ce6249db54879d30fcecfb56875",
   "open-the-forwarding-gate@1": "2de1e51858aa980eb93333a201adbc4d3689dbec836e48620ed6f8f87d51c131",
   "release-the-cpu-budget@1": "b6270c37b5e20b00dce45a705fa07bfdfc2aaaa39eaf807801e4709c70259567",
   "keep-a-function-warm@1": "efda13d2be6bb0bdbbddcafa04651a1da0bd71a8e0d8cd1f72cf991b987a6d17",
