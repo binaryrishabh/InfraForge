@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { cachePolicyError, dataKeyspaceError } from "@infraforge/domain/resource";
 import { starter } from "../challenges/starter";
 import { captureRunInputs, readRunInputs, ADAPTER_PROFILE_CAP, ADAPTER_PROFILE_IDS } from "../deployments/runInputs";
-import { buildContractFromRunInputs } from "@infraforge/simulation/internal-product";
+import { buildContractFromRunInputs, compileProduct, contractFromDesign, type ProductContract, type SavedProductDesign } from "@infraforge/simulation/internal-product";
 import { createModel2Engine } from "../simulator/model2Engine";
 
 const design = (ttl = 0) => starter([["app","Virtual Machine",0,0],["cache","Cache",1,0,{cachePolicy:{version:2,capacityEntries:64,negativeTtlSeconds:ttl}}],["db","Database",1,1,{dataKeyspace:{version:1,count:10,absentCount:8}}]],[["app","cache"],["app","db"]]);
@@ -37,4 +37,24 @@ test("missing profile and unsupported source visibility are refused",()=>{
     else s.resources[0]!.applicationFlow={schema:"application-flow/1",operations:{read:{steps:[{id:"cpu",kind:"compute"}]}}};
     expect("refused" in buildContractFromRunInputs(captureRunInputs(s,workload,"seed"),2)).toBe(true);
   }
+});
+test("a compiler cannot drop the captured absence policy or repopulate a saved absent dataset",()=>{
+ const s=design(30),saved:SavedProductDesign={schema:"infraforge-saved-design/1",resources:s.resources,connections:s.connectionLines,workload};
+ const built=contractFromDesign(saved);if("refused"in built)throw Error(JSON.stringify(built.refused));
+ expect(compileProduct(saved,built.contract).ok).toBe(true);
+ for(const patch of [
+  (c:ProductContract)=>{const r=c.nodes.cache!.resources.find(r=>r.config.kind==="cache")!.config;if(r.kind==="cache")delete r.negativeTtl;},
+  (c:ProductContract)=>{const r=c.nodes.app!.resources.find(r=>r.config.kind==="cache-aside")!.config;if(r.kind==="cache-aside")r.negativeCaching=false;},
+  (c:ProductContract)=>{const r=c.nodes.db!.resources[0]!.config;if(r.kind==="relational")r.initial=[];},
+ ]){const c=structuredClone(built.contract);patch(c);expect(compileProduct(saved,c).ok).toBe(false);}
+ const empty=design(30);empty.resources[2]!.dataKeyspace!.absentCount=10;
+ expect("contract"in buildContractFromRunInputs(captureRunInputs(empty,workload,"empty"),2)).toBe(true);
+});
+test("a background timer cannot introduce writes into the captured read-only absence scope",()=>{
+ for(const operation of [undefined,"write"] as const){
+  const s=design(30);s.resources.push({id:"timer",type:"Scheduler",x:0,y:300,scheduler:{version:1,...(operation?{operation}:{})}});
+  s.connectionLines.push({id:"timer-app",sourceId:"timer",targetId:"app",sourceType:"Scheduler",targetType:"Virtual Machine",port:80});
+  const built=buildContractFromRunInputs(captureRunInputs(s,workload,"timer"),2);
+  expect("refused"in built).toBe(true);
+ }
 });

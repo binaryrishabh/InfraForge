@@ -16,10 +16,12 @@ export function evaluateNegativeCache(c: Extract<ChallengeCriterion, {kind:"cach
   const rows=terminal.resources.filter(r=>r.id===c.resourceId);
   const parsed=rows.length===1?CacheMetricsSchema.safeParse(rows[0]!.cache):undefined;
   if(!parsed?.success)return unknown("Complete valid cache counters were not recorded.");
-  const {absentAnswers,negativeHits,absentSourceReads,hits}=parsed.data;
-  if(typeof absentAnswers!=="number" || typeof negativeHits!=="number" || typeof absentSourceReads!=="number" || typeof hits!=="number")return unknown("Successful absent answers, negative hits, empty source queries and hits must all be recorded.");
+  const {absentAnswers,negativeHits,absentSourceReads,hits,coalescedWaiters}=parsed.data;
+  if(typeof absentAnswers!=="number" || typeof negativeHits!=="number" || typeof absentSourceReads!=="number" || typeof hits!=="number" || typeof coalescedWaiters!=="number")return unknown("Successful absent answers, negative hits, empty source queries, hits and coalesced waiters must all be recorded.");
   if(negativeHits>absentAnswers || negativeHits>hits)return unknown("The negative-hit count contradicts the answer or cache-hit count.");
   if(absentAnswers===0)return {met:false,sources,detail:"No successful absent answer was recorded; a run without that demand cannot demonstrate reuse of an empty answer."};
+  const possible=negativeHits+absentSourceReads+coalescedWaiters;
+  if(absentSourceReads===0 || !Number.isSafeInteger(possible) || absentAnswers>possible)return unknown("Successful absent answers need a recorded empty source query and cannot exceed source answers, negative hits and coalesced waiters combined.");
   const ratio=absentSourceReads/absentAnswers;
   return {met:ratio<=c.maxSourceReadsPerAnswer,sources,detail:`Through second ${second}, ${c.resourceId}: ${absentSourceReads} empty source queries for ${absentAnswers} successful absent answers (${ratio.toFixed(4)} per answer; maximum ${c.maxSourceReadsPerAnswer}); ${negativeHits} answers came from cached absence. Source queries and answers are different populations when misses coalesce.`};
 }

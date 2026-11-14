@@ -6,10 +6,12 @@ import { createHash } from "node:crypto";
 import { EventKernel } from "../src/model2/time";
 import { keyedCache } from "../src/model2/data/cache";
 import { cacheAside } from "../src/model2/data/aside";
+import {relationalDatabase} from "../src/model2/data/database";
+import {dataDeliveryLive} from "../src/model2/product/dataDeliveryLive";
 import type { CacheConfig, AsideConfig, DataRequest, DataReply } from "../src/model2/data/contracts";
 import type { Invocation, Receipt, RemoteOutcome } from "../src/model2/workload/contracts";
 
-function run(negative: boolean) {
+function run(negative: boolean, watch = false) {
   const input = dataFixture({keys: 4, count: 80, interval: 500, horizon: 60000, timeout: 20000, ttl: 100000, coalesce: true, slots: 64, dbCpu: 500});
   const db = input.resources.find(r => r.kind === "relational")!;
   if (db.kind !== "relational") throw Error("database");
@@ -18,7 +20,9 @@ function run(negative: boolean) {
   Object.assign(input.resources.find(r => r.kind === "cache")!, {negativeTtl: q.q("negative.ttl", negative ? 100000 : 0, "us")});
   Object.assign(input.resources.find(r => r.kind === "cache-aside")!, {negativeCaching: negative});
   input.ledger.push(...q.ledger);
-  const m = createDataModel2(input); m.advanceTo(m.horizon); return m.evidence();
+  const m = createDataModel2(input);
+  if(watch)for(let at=1000;at<m.horizon;at+=1000){m.advanceTo(at);m.evidence();m.evidence();}
+  m.advanceTo(m.horizon); return m.evidence();
 }
 test("cache explicit successful absence, rather than sending every repeated lookup to the database", () => {
   const off = run(false), on = run(true);
@@ -73,12 +77,38 @@ test("failures, missing rows and malformed success replies are never cached as a
     expect(aside.evidence().negative?.absentSourceReads).toBe(0);
   }
 });
+test("a real out-of-dataset rejection is never cached as a successful empty result",()=>{
+ const w=cacheWorld(100000),f=dataFixture(),config=f.resources.find(r=>r.kind==="cache-aside") as AsideConfig,dbConfig=f.resources.find(r=>r.kind==="relational")!;
+ if(dbConfig.kind!=="relational")throw Error("database");
+ const db=relationalDatabase(dbConfig,w.kernel);config.negativeCaching=true;
+ const aside=cacheAside(config,w.kernel,(target,child,done)=>target==="cache"?w.cache.accept(child,done):db.accept(child,done),"seed");
+ for(let i=0;i<3;i++){aside.accept(work(String(i),{kind:"get",key:"outside"}),()=>{});w.kernel.advanceTo(w.kernel.now+5000);}
+ expect(db.evidence().reasons["key-outside-dataset"]).toBe(3);expect(w.cache.evidence().entries).toEqual([]);
+ expect(aside.evidence().negative).toEqual({absentAnswers:0,negativeHits:0,absentSourceReads:0});
+});
 test("observation and batching do not alter negative-cache evidence",()=>{
-  expect(run(true)).toEqual(run(true));
+  expect(run(true,true)).toEqual(run(true));expect(run(false,true)).toEqual(run(false));
+});
+test("absence entries share LRU capacity with row bodies and invalidation removes either kind",()=>{
+ const w=cacheWorld(100000),fill=(key:string)=>w.call({kind:"set",key,absent:true});
+ for(let i=0;i<64;i++)expect(fill(`n${i}`).ok).toBe(true);
+ expect(w.cache.evidence().allocatedEntryBytes).toBe(1024); // 64 entries x 16 actual overhead, no row payload
+ w.call({kind:"get",key:"n0"});
+ expect(w.call({kind:"set",key:"positive",row:{version:1,bytes:64}}).ok).toBe(true);
+ const e=w.cache.evidence();expect(e.allocatedEntryBytes).toBeLessThanOrEqual(1024);expect(e.evictions).toBe(5);expect(e.entries.some(r=>r.key==="n0")).toBe(true);expect(e.entries.some(r=>r.key==="n1")).toBe(false);
+ w.call({kind:"invalidate",key:"n0"});expect(w.call({kind:"get",key:"n0"}).hit).toBe(false);
+ w.call({kind:"invalidate",key:"positive"});expect(w.call({kind:"get",key:"positive"}).hit).toBe(false);
 });
 test("unmarked empty-result path keeps its baseline evidence bytes",()=>{
   const input=dataFixture({keys:4,count:80,interval:500,horizon:60000,timeout:20000,ttl:100000,coalesce:true,slots:64,dbCpu:500});
   const db=input.resources.find(r=>r.kind==="relational")!;if(db.kind==="relational")db.initial=[];
   const m=createDataModel2(input);m.advanceTo(m.horizon);
   expect(createHash("sha256").update(JSON.stringify(m.evidence())).digest("hex").slice(0,16)).toBe("eb6af165af49a45f");
+});
+test("marked evidence without its helper readings is Unknown; unmarked evidence has no absence fields",()=>{
+ const f=dataFixture(),c=f.resources.find(r=>r.kind==="cache") as CacheConfig;
+ const missing={inspectData:{database:()=>undefined,cache:()=>undefined,application:()=>undefined},inspectCdn:()=>undefined};
+ c.negativeTtl=quantities().q("marked.ttl",0,"us");
+ expect(dataDeliveryLive(c,missing as never,undefined,f.resources).cache).toMatchObject({absentAnswers:null,negativeHits:null,absentSourceReads:null});
+ delete c.negativeTtl;expect(dataDeliveryLive(c,missing as never,undefined,f.resources).cache).not.toHaveProperty("absentAnswers");
 });

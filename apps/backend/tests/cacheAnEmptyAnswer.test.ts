@@ -24,14 +24,17 @@ const run=(design:ChallengeStarter)=>{
  const row=attemptRow(d,design,answers(d,{health:"saturated"})),report=buildRunReport(row),t=report.terminal!,cache=t.resources.find(r=>r.id==="cache")!.cache!,w=t.traffic!.wholeRun!;
  return {row,report,status:report.challenge!.status,completed:w.completed,failed:w.failed,cache,ratio:cache.absentSourceReads!/cache.absentAnswers!};
 };
-let measured:ReturnType<typeof run>[]|undefined;
-const results=()=>measured??= [STARTER,REF,near,big].map(run);
+const measured=new Map<ChallengeStarter,ReturnType<typeof run>>();
+const resultFor=(design:ChallengeStarter)=>{if(!measured.has(design))measured.set(design,run(design));return measured.get(design)!;};
+const results=()=>[STARTER,REF,near,big].map(resultFor);
 
 test("cache-an-empty-answer: a stored absence avoids repeated real queries, with caller harm, a TTL near miss and a separate capacity improvement",()=>{
  expect(validateInfrastructureName(d.title)).toBeNull();expect(specHash(d)).toBe(new RegExp(`"${ID}@1": "([a-f0-9]{64})"`).exec(readFileSync(new URL("./challengeAuthoring.test.ts",import.meta.url),"utf8"))![1]);
  const designs=[STARTER,REF,near,big],inputs=designs.map(s=>captureRunInputs(s,d.workload,challengeSeed(d)));
  for(const s of designs)expect(preflight(d,s).errors).toEqual([]);
  for(const i of inputs)expect(i.adapterProfiles).toContain("cache-negative/1");
+ expect(REF).toEqual(edit(s=>{R(s,"cache").cachePolicy!.negativeTtlSeconds=30;})); // exactly one saved scalar, independent of Compare's object grouping
+ for(const i of inputs.slice(1))expect(i.adapterProfiles).toEqual(inputs[0]!.adapterProfiles);
  for(const i of inputs.slice(1))expect(reviewDesignChanges(inputs[0]!,i)).toMatchObject({classification:"one-change",count:1});
  const r=results();expect(r.map(x=>x.status)).toEqual(["not-met","met","not-met","not-met"]);
  expect(r.map(x=>[x.completed,x.failed,x.cache.absentAnswers,x.cache.negativeHits,x.cache.absentSourceReads])).toEqual([
@@ -45,7 +48,7 @@ test("cache-an-empty-answer: a stored absence avoids repeated real queries, with
 },T);
 
 test("cache-an-empty-answer: missing, malformed, zero-demand and contradictory saved evidence never passes",()=>{
- const x=results()[1]!,criterion=d.criteria.find(c=>c.kind==="cache-negative-load")!;
+ const x=resultFor(REF),criterion=d.criteria.find(c=>c.kind==="cache-negative-load")!;
  if(criterion.kind!=="cache-negative-load")throw Error("criterion");
  const input=captureRunInputs(REF,d.workload,challengeSeed(d)),terminal=x.report.terminal!;
  const verdict=(patch:(c:Record<string,unknown>)=>void)=>{
@@ -59,6 +62,9 @@ test("cache-an-empty-answer: missing, malformed, zero-demand and contradictory s
  }
  expect(verdict(c=>{c.negativeHits=(c.absentAnswers as number)+1;})).toBe("not-evaluated");
  expect(verdict(c=>{c.hits=0;})).toBe("not-evaluated");
+  expect(verdict(c=>{c.absentSourceReads=0;})).toBe("not-evaluated");
+  expect(verdict(c=>{c.negativeHits=0;c.coalescedWaiters=0;})).toBe("not-evaluated");
+  expect(verdict(c=>{c.coalescedWaiters=null;})).toBe("not-evaluated");
  expect(verdict(c=>{c.absentAnswers=0;c.negativeHits=0;c.absentSourceReads=0;})).toBe("not-met");
  expect(verdict(c=>{c.absentSourceReads=c.absentAnswers;})).toBe("not-met");
  const evalDirect=(t=terminal,i:typeof input|null=input,active=false,profiles:readonly string[]|undefined=input.adapterProfiles)=>evaluateNegativeCache(criterion,i,t,12,active,profiles);

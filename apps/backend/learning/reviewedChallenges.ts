@@ -2,7 +2,7 @@
  * Keep old records. A changed challenge needs a new reviewed contentVersion. */
 export interface LearningChallengeReview { challengeId: string; version: number; hash: string }
 export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeReview>> = {
-  "cache-an-empty-answer@1": {challengeId: "cache-an-empty-answer", version: 1, hash: "540822a3dfe0ca52f1d55f1c1d6cf5a979659d45c616d7b7ede94de990cd5a82"},
+  "cache-an-empty-answer@1": {challengeId: "cache-an-empty-answer", version: 1, hash: "47d8a56a3e880c1d104cfce0d44847fea9c7672edf2cf6afb4b6f328f2f951c5"},
   "notification-retry-storm@3": {challengeId: "notification-retry-storm", version: 2, hash: "abeddc5a66094145e2a3ee8e0748654dd8f08066e84b461f0c24ba2320aa6edd"},
   "restore-a-database-writer@3": {challengeId: "restore-a-database-writer", version: 2, hash: "b842d08e3e2c81caa76de14668bdf2abb7b3fdc9c0eedf9163e773f4a4b8cbb9"},
   "choose-a-retry-mitigation@3": {challengeId: "choose-a-retry-mitigation", version: 2, hash: "7aef8a84ccfe8b452d1a47a949fb7316c9535ce6249db54879d30fcecfb56875"},

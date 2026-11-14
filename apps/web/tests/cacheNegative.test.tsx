@@ -4,6 +4,7 @@ import type {ReactElement} from "react";
 import type {Resource} from "@infraforge/domain/resource";
 import {CachePolicySection} from "../src/features/canvas/components/inspector/CachePolicySection";
 import {DataKeyspaceSection} from "../src/features/canvas/components/inspector/DataKeyspaceSection";
+import {CacheReadings} from "../src/features/reports/components/CacheReadings";
 import {useCanvasStore} from "../src/features/canvas/store/canvasStore";
 import {undo,redo} from "../src/features/canvas/history";
 const cache:Resource={id:"cache",type:"Cache",x:0,y:0,cachePolicy:{version:2,capacityEntries:256,ttlSeconds:60,singleFlight:true,negativeTtlSeconds:0}};
@@ -30,4 +31,11 @@ test("negative TTL is the only new cache control, bounded, explicit, locked and 
 test("the static absent dataset is visible without adding a second editable control",()=>{
  const html=renderToStaticMarkup(<DataKeyspaceSection resource={{id:"db",type:"Database",x:0,y:0,dataKeyspace:{version:1,count:100,absentCount:80}}} disabled/>);
  expect(html).toContain("Initially absent keys: 80");expect(html).toContain("no inserts");
+});
+test("saved absence readings appear only when recorded, and null remains Unknown",()=>{
+ const html=(extra:Record<string,unknown>)=>renderToStaticMarkup(<CacheReadings resource={{id:"cache",cache:{version:1,hits:100,misses:10,expirations:0,evictions:0,coalescedWaiters:0,...extra}} as never} cache/>);
+ expect(html({})).not.toContain("Cache: Absent answers");
+ expect(html({absentAnswers:90,negativeHits:80,absentSourceReads:10})).toContain("<dt>Cache: Empty source queries</dt><dd>10</dd>");
+ expect(html({absentAnswers:0,negativeHits:0,absentSourceReads:0})).toContain("<dt>Cache: Absent answers</dt><dd>0</dd>");
+ expect(html({absentAnswers:null,negativeHits:null,absentSourceReads:null})).toContain("<dt>Cache: Negative hits</dt><dd>Unknown</dd>");
 });

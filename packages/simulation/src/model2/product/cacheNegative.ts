@@ -13,7 +13,7 @@ export function cacheNegativeField(r: Resource, q: (id: string, n: number, unit:
 /** V1 has a static dataset. Inserts, mutable-data freshness, replicas and typed flows need a separate absence visibility contract. */
 export function cacheNegativeRefusal(resources: readonly Resource[], readWriteRatio: number | undefined): string | undefined {
   if (!cacheNegativeChanges(resources)) return;
-  if (readWriteRatio !== 1) return "Negative caching and an initially absent dataset support read-only workloads; insertion and mutable absence visibility are not modeled.";
+  if (readWriteRatio !== 1 || resources.some(r => r.type === "Scheduler" && r.scheduler?.operation !== "read")) return "Negative caching and an initially absent dataset support read-only workloads and read-only timer operations; insertion and mutable absence visibility are not modeled.";
   if (resources.some(r => r.applicationFlow || r.rowLocking || r.databaseReplication || r.databaseReadRouting || (changedCacheNegative(r) && (r.cachePolicy?.staleSeconds !== undefined || r.cachePolicy?.invalidateOnWrite !== undefined)))) return "Negative caching supports plain read-only cache-aside paths without typed flows, row locking, replication, read routing, stale fallback or write freshness tracking.";
 }
 export function validateCacheNegativeBindings(resources: readonly Resource[], input: SystemsInput) {
