@@ -57,7 +57,7 @@ const NEAR_MISS: Record<string, { what: string; cue: RegExp; edit: Edit }> = {
   "scale-on-delivered-samples": { what: "target CPU 10 %", cue: /CPU target|lower target|target CPU|lower the target/i, edit: (s) => { res(s, "app").autoscaling!.targetCpu = 10; } },
   "serve-stale-on-error": { what: "database size large", cue: /bigger database|larger database|bigger db|database/i, edit: (s) => { res(s, "db").size = "large"; } },
   "set-the-limit-above-the-peak": { what: "burst 1000", cue: /burst to 1000/i, edit: (s) => { res(s, "lb").lbRateLimit!.burstRequests = 1000; } },
-  "share-one-origin-fetch": { what: "origin store capacity 1024 MiB", cue: /store|capacity|bigger/i, edit: (s) => { res(s, "store").objectStoragePolicy = { version: 1, capacityMiB: 1024 }; } },
+  "share-one-origin-fetch": { what: "CDN TTL 2 s with coalescing off", cue: /doubling.*TTL|TTL/i, edit: (s) => { res(s, "cdn").cdnCachePolicy!.ttlSeconds = 2; } },
   "shed-load-at-the-edge": { what: "app size large", cue: /larger app/i, edit: (s) => { res(s, "app").size = "large"; } },
   "trace-a-burst-backlog": { what: "worker size medium", cue: /faster worker|bigger worker|larger worker|worker size/i, edit: (s) => { res(s, "worker").size = "medium"; } },
   "trace-a-scaling-stall": { what: "autoscaling maximum 6", cue: /higher maximum|Raising the maximum/i, edit: (s) => { res(s, "app").autoscaling!.maxReplicas = 6; } },
