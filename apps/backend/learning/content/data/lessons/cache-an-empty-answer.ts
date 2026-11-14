@@ -1,6 +1,6 @@
 import type {LearningLesson} from "@infraforge/contracts/learning";
 export const cacheAnEmptyAnswer:LearningLesson={
- id:"cache-an-empty-answer",contentVersion:1,trackId:"data",moduleId:"cache-absence",title:"Cache an empty answer",kind:"executable-lab",level:"intermediate",availability:"available",
+ id:"cache-an-empty-answer",contentVersion:1,trackId:"data",moduleId:"cache-absence",title:"Cache an empty answer",kind:"executable-lab",level:"advanced",availability:"available",
  summary:"A long lifetime cannot reuse an empty answer that was never stored. Keep successful absence separate from failure.",
  prerequisites:["cache-hits-and-misses","reuse-before-expiry","share-a-cache-fill"],
  problem:["Most keys in this fixed read-only dataset have no rows. Those queries succeed with an empty result, but the starter never caches that result. The database saturates and callers fail even though ordinary cached rows remain reusable and Single-flight is on."],
