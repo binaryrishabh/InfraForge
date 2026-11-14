@@ -283,12 +283,12 @@ export const JOURNEY_LABS = [
   {
     lessonId: "trace-a-slowdown-cascade", title: /Trace a slowdown cascade/,
     prediction: "Overall health can look Healthy after recovery even though callers failed during the cascade.",
-    hypothesis: "Changing only Single-flight should stop fills piling up behind the slow database; a bigger database leaves the same fills waiting and no retries makes it worse.",
+    hypothesis: "Single-flight is already on. Keeping the sixteen keys in cache should avoid competing source reads during the slowdown; longer TTL cannot retain evicted entries.",
     predictionQuestions: [/What overall health will be recorded at second 10, after the database recovers/, /What will the database's own health be at second 10/, /Which resource will record the highest CPU at second 10/],
     improvement: {
-      stepName: "cache's Single-flight is turned on",
+      stepName: "cache's Logical cache capacity is changed from 1 to 16",
       nodeSelector: '[data-resource-id="cache"]', nodeText: /Cache/, fallbackText: "cache",
-      role: "switch", name: /^Single-flight$/, resourceId: "cache", setting: "cachePolicy.singleFlight", from: false, to: true,
+      role: "spinbutton", name: /^Logical cache capacity$/, resourceId: "cache", setting: "cachePolicy.capacityEntries", from: 1, to: 16,
     },
     reportRequirements: [/^Complete 1980 callers with at most 20 unsuccessful through second 10$/],
     expected: { starter: "Not met", improved: "Met" },

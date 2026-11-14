@@ -32,7 +32,7 @@ export const PUBLISHED: Record<string, string> = {
   "restore-safe-redundancy@1": "631057be87e06eeea7a3a98f9d8afac0463dd5b8f9eb885c7a392e5b20290f19",
   "share-one-origin-fetch@1": "40991fe061088fd1eba986031c9204b60da7867019731846f3a5468cb55e4fa7",
   "sample-often-enough@1": "1bb4300a41c25b34e6fa89ea95faddf6170448786d79d831fe5627f7bb68e52b",
-  "trace-a-slowdown-cascade@1": "0d10c537c7cd29a2ba113beed02fd56477fb6fe46a71caf8a60654b46b14534e",
+  "trace-a-slowdown-cascade@1": "abbf57b6fe7628c09dfb266cffeccfdfffe024223cf36a225e93ffc30eba076f",
   "trace-a-burst-backlog@1": "1b1b09412ae80259df0267e08ab819e2975de012729d157e5ca457404784d5fe",
   "serve-stale-on-error@1": "b6d4e2a48bd2af5b98b154609f2cf0983fa6474c33047aea167379a1abeed62e",
   "refresh-after-a-write@1": "ccb974c894fd10ef74dd99558b5796ab586a3317c90db39ed147e842e53893ad",
