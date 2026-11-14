@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
 import { JOURNEY_LABS, JOURNEY_LESSONS, acknowledgeJourneyChanges, answerJourneyPredictions, applyJourneyImprovement, changeJourneyControl, inspectJourneyRequirements, isLocalJourneyRequest, journeyLab, journeyLesson, selectJourney, walkJourneyLesson } from "../qa/learning-journey.mjs";
 import { JOURNEY_FAILURES, installJourneyFailure, journeyFailure, localFailureApi } from "../qa/learning-journey.mjs";
 
@@ -36,6 +37,22 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "admit-a-replica-image",
     "keep-a-function-warm",
     "open-the-forwarding-gate",
+    "route-around-a-slow-vm",
+    "retrying-a-full-pool",
+    "move-reads-off-the-writer",
+    "reuse-before-expiry",
+    "leave-time-to-acknowledge",
+    "find-the-denying-rule",
+    "leave-room-for-firewall-flows",
+    "choose-a-retry-mitigation",
+    "notification-retry-storm",
+    "protect-one-api-route",
+    "queue-overlapping-jobs",
+    "share-a-cache-fill",
+    "test-a-circuit-again",
+    "diagnose-lost-app-capacity",
+    "limit-or-capacity",
+    "keep-an-asset-cached",
   ].sort());
   expect(new Set(JOURNEY_LABS.map((lab) => lab.journeyId ?? lab.lessonId)).size).toBe(JOURNEY_LABS.length);
   for (const lab of JOURNEY_LABS) {
@@ -104,7 +121,7 @@ test("database resizing and balancing target the intended resource and setting",
 });
 
 // Only selector behavior is exercised here. These doubles provide no run evidence.
-function fakePage({ nodeMissing = false, controlMissing = false, groupMissing = false, failNode, storedValue } = {}) {
+function fakePage({ nodeMissing = false, controlMissing = false, groupMissing = false, failNode, storedValue, storedChecked } = {}) {
   const calls = [];
   let filled = "", scopeMissing = false;
   const size = {
@@ -114,7 +131,8 @@ function fakePage({ nodeMissing = false, controlMissing = false, groupMissing = 
     async fill(value) { calls.push(["filled", value]); filled = value; },
     async selectOption(value) { calls.push(["selected", value]); filled = value; },
     async inputValue() { return storedValue ?? filled; },
-    async isChecked() { return true; },
+    async isChecked() { return storedChecked ?? true; },
+    async click() { calls.push("clicked"); },
   };
   const page = {
     locator(selector) {
@@ -866,4 +884,235 @@ test("stale journey sets the stale bound and refuses missing or unretained value
   expect(await applyJourneyImprovement(fakePage().page,edit)).toEqual([{resourceId:"cache",setting:"cachePolicy.staleSeconds",value:"60"}]);
   await expect(applyJourneyImprovement(fakePage({controlMissing:true}).page,edit)).rejects.toThrow("requested control is missing");
   await expect(applyJourneyImprovement(fakePage({storedValue:"1"}).page,edit)).rejects.toThrow("did not retain");
+});
+
+// CX5 closes the diff-derived 42-lab inventory; these doubles prove selection/refusal only.
+const CLOSURE_CONTROLS = [
+  [
+    "route-around-a-slow-vm",
+    "lb",
+    "Load Balancer",
+    "lbSelection.policy",
+    "round-robin",
+    "least-outstanding",
+    "combobox",
+    "Selection policy",
+    null
+  ],
+  [
+    "retrying-a-full-pool",
+    "lb",
+    "Load Balancer",
+    "retry.maxAttempts",
+    5,
+    2,
+    "spinbutton",
+    "Maximum attempts",
+    null
+  ],
+  [
+    "move-reads-off-the-writer",
+    "db",
+    "Database",
+    "databaseReadRouting.policy",
+    "primary-only",
+    "replica-preferred",
+    "combobox",
+    "Read routing",
+    null
+  ],
+  [
+    "reuse-before-expiry",
+    "cache",
+    "Cache",
+    "cachePolicy.ttlSeconds",
+    1,
+    60,
+    "spinbutton",
+    "Cache TTL",
+    null
+  ],
+  [
+    "leave-time-to-acknowledge",
+    "queue",
+    "Message Queue",
+    "asyncQueue.visibilityTimeoutSeconds",
+    1,
+    5,
+    "spinbutton",
+    "Visibility timeout (seconds)",
+    null
+  ],
+  [
+    "find-the-denying-rule",
+    "fw",
+    "Firewall",
+    "firewallSettings.rules.quarantine-db.priority",
+    0,
+    20,
+    "spinbutton",
+    "Priority",
+    "quarantine-db"
+  ],
+  [
+    "leave-room-for-firewall-flows",
+    "fw",
+    "Firewall",
+    "firewallCapacity.maxFlows",
+    1,
+    8,
+    "spinbutton",
+    "Tracked connection limit",
+    null
+  ],
+  [
+    "choose-a-retry-mitigation",
+    "lb",
+    "Load Balancer",
+    "retry.maxAttempts",
+    4,
+    2,
+    "spinbutton",
+    "Maximum attempts",
+    null
+  ],
+  [
+    "notification-retry-storm",
+    "queue",
+    "Message Queue",
+    "asyncQueue.maxReceives",
+    10,
+    2,
+    "spinbutton",
+    "Maximum deliveries before dead-lettering",
+    null
+  ],
+  [
+    "protect-one-api-route",
+    "gateway",
+    "API Gateway",
+    "apiGateway.routes.read.burstRequests",
+    10000,
+    1,
+    "spinbutton",
+    "Burst requests read",
+    null
+  ],
+  [
+    "queue-overlapping-jobs",
+    "timer",
+    "Scheduler",
+    "scheduler.overlap",
+    "allow",
+    "queue",
+    "combobox",
+    "Overlap",
+    null
+  ],
+  [
+    "share-a-cache-fill",
+    "cache",
+    "Cache",
+    "cachePolicy.singleFlight",
+    false,
+    true,
+    "switch",
+    "Single-flight",
+    null
+  ],
+  [
+    "test-a-circuit-again",
+    "lb",
+    "Load Balancer",
+    "circuitBreaker.cooldownMs",
+    60000,
+    2000,
+    "spinbutton",
+    "Wait before testing again",
+    null
+  ],
+  [
+    "diagnose-lost-app-capacity",
+    "fw",
+    "Firewall",
+    "firewallCapacity.maxFlows",
+    1,
+    8,
+    "spinbutton",
+    "Tracked connection limit",
+    null
+  ],
+  [
+    "limit-or-capacity",
+    "gateway",
+    "API Gateway",
+    "apiGateway.routes.read.burstRequests",
+    10000,
+    1,
+    "spinbutton",
+    "Burst requests read",
+    null
+  ],
+  [
+    "keep-an-asset-cached",
+    "cdn",
+    "CDN",
+    "cdnCachePolicy.ttlSeconds",
+    1,
+    60,
+    "spinbutton",
+    "Cache TTL (seconds)",
+    null
+  ]
+];
+for (const [id, resourceId, type, setting, from, to, role, label, group] of CLOSURE_CONTROLS) {
+  test(`${id}: journey targets the reference leaf and refuses missing or unretained controls`, async () => {
+    const lab = journeyLab(id), edit = lab.improvement, fake = fakePage();
+    expect([edit.resourceId, edit.setting, edit.from, edit.to, edit.role]).toEqual([resourceId, setting, from, to, role]);
+    expect(edit.nodeSelector).toBe(`[data-resource-id="${resourceId}"]`);
+    expect(edit.nodeText.test(type)).toBe(true);
+    expect(edit.name.test(label)).toBe(true);
+    expect(edit.name.test(`Other ${label}`)).toBe(false);
+    expect(edit.name.test(`${label} write`)).toBe(false);
+    if (group) { expect(edit.group.test(group)).toBe(true); expect(edit.group.test("allow-app-db")).toBe(false); }
+    const value = role === "switch" ? true : String(to);
+    expect(await applyJourneyImprovement(fake.page, edit)).toEqual([{ resourceId, setting, value }]);
+    expect(fake.calls).toEqual([edit.nodeSelector, ...(group ? [["group", edit.group.source]] : []), [role, edit.name.source], ...(role === "switch" ? [] : [[role === "combobox" ? "selected" : "filled", String(to)]])]);
+    await expect(applyJourneyImprovement(fakePage({ controlMissing: true }).page, edit)).rejects.toThrow("requested control is missing");
+    await expect(applyJourneyImprovement(fakePage({ storedValue: String(from), storedChecked: false }).page, edit)).rejects.toThrow("did not retain");
+    if (group) await expect(applyJourneyImprovement(fakePage({ groupMissing: true }).page, edit)).rejects.toThrow("requested control is missing");
+    expect(lab.predictionQuestions.length).toBeGreaterThan(0);
+    expect(lab.reportRequirements.length).toBeGreaterThan(0);
+    expect(lab.runWaitMs).toBeGreaterThanOrEqual(420_000);
+    expect(lab.expected).toEqual({ starter: "Not met", improved: "Met" });
+  });
+}
+
+test("every lab changed since the closure base has a journey; new rows match current predictions, criteria and one reference control", async () => {
+  const { learningContent } = await import("../../apps/backend/learning/content/index.ts");
+  const { latestChallenge } = await import("../../apps/backend/challenges/registry.ts");
+  const { REFERENCE } = await import("../../apps/backend/tests/challengeHarness.ts");
+  const root = fileURLToPath(new URL("../../", import.meta.url));
+  const changed = execFileSync("git", ["diff", "--name-status", "46f8a9f", "--", "apps/backend/challenges/definitions", "apps/backend/learning/content"], { cwd: root, encoding: "utf8" });
+  const ids = new Set(CLOSURE_CONTROLS.map(c => c[0]));
+  for (const line of changed.split("\n")) {
+    const path = line.split("\t").at(-1) ?? "";
+    const match = /definitions\/([^/]+)\/v\d+\.ts$/.exec(path) ?? /content\/[^/]+\/lessons\/(.+?)(?:-v\d+)?\.ts$/.exec(path);
+    if (match) ids.add(match[1]);
+  }
+  const required = learningContent.lessons.filter(l => l.kind === "executable-lab" && (ids.has(l.id) || ids.has(l.experiment.challengeId)));
+  expect(required.length).toBeGreaterThanOrEqual(42);
+  for (const lesson of required) expect(JOURNEY_LABS.some(j => j.lessonId === lesson.id)).toBe(true);
+  const leaf = (design, resourceId, setting) => setting.split(".").reduce((value, key) => Array.isArray(value) ? value.find(row => row.id === key) : value?.[key], design.resources.find(r => r.id === resourceId));
+  for (const [id, resourceId, , setting, from, to] of CLOSURE_CONTROLS) {
+    const lab = journeyLab(id), lesson = learningContent.lessons.find(l => l.id === id), d = latestChallenge(lesson.experiment.challengeId).definition;
+    expect(lab.title.test(d.title)).toBe(true);
+    expect(lab.predictionQuestions).toHaveLength(d.predictions.length);
+    for (const [i, question] of d.predictions.entries()) expect(lab.predictionQuestions[i].test(question.prompt)).toBe(true);
+    const criteria = d.criteria.filter(c => c.kind !== "deployment-checks");
+    expect(lab.reportRequirements).toHaveLength(criteria.length);
+    for (const [i, criterion] of criteria.entries()) expect(lab.reportRequirements[i].test(criterion.label)).toBe(true);
+    expect(leaf(d.starter, resourceId, setting)).toBe(from);
+    expect(leaf(REFERENCE[d.id], resourceId, setting)).toBe(to);
+  }
 });
