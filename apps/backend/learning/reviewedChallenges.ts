@@ -26,7 +26,7 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "hold-slots-on-a-slow-call@1": {challengeId: "hold-slots-on-a-slow-call", version: 1, hash: "da76ff534d0d92d4a0e6880dd4dfef04753d660590d08ed3f4ecd4ee0515a1d5"},
   "admit-a-replica-image@1": {challengeId: "admit-a-replica-image", version: 1, hash: "ec9613f8a77d364e3a163a0cf230ed905d2e725a3c0db9bda1b5e635b9c8b96f"},
   "restore-safe-redundancy@1": {challengeId: "restore-safe-redundancy", version: 1, hash: "631057be87e06eeea7a3a98f9d8afac0463dd5b8f9eb885c7a392e5b20290f19"},
-  "share-one-origin-fetch@1": {challengeId: "share-one-origin-fetch", version: 1, hash: "40991fe061088fd1eba986031c9204b60da7867019731846f3a5468cb55e4fa7"},
+  "share-one-origin-fetch@1": {challengeId: "share-one-origin-fetch", version: 1, hash: "f0cce339cc5d6467e1e0dd32e9b2d18248668677ee243e0ee9174a62165bdde4"},
   "sample-often-enough@1": {challengeId: "sample-often-enough", version: 1, hash: "1bb4300a41c25b34e6fa89ea95faddf6170448786d79d831fe5627f7bb68e52b"},
   "trace-a-slowdown-cascade@1": {challengeId: "trace-a-slowdown-cascade", version: 1, hash: "248a60565cbda35ef6eb063389e941c85a8f1af1e7cdcea14c1e26301b8134d2"},
   "trace-a-burst-backlog@1": {challengeId: "trace-a-burst-backlog", version: 1, hash: "1b1b09412ae80259df0267e08ab819e2975de012729d157e5ca457404784d5fe"},

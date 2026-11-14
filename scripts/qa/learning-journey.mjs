@@ -258,14 +258,16 @@ export const JOURNEY_LABS = [
   },
   {
     lessonId: "share-one-origin-fetch", title: /Share one origin fetch/,
-    prediction: "Callers complete either way, but the origin gets extra requests every time the object expires.",
-    hypothesis: "Turning on coalescing alone should cut origin requests; a longer TTL would also but breaks the freshness requirement.",
+    prediction: "The terminal health label does not summarize earlier failed callers while duplicate origin responses competed on the constrained link.",
+    hypothesis: "Sharing overlapping origin fills should reduce failed callers and origin requests while TTL and the constrained link stay fixed.",
+    predictionQuestions: [/What overall health will be recorded at second 30 after the origin link restores/],
+    runWaitMs: 420_000,
     improvement: {
       stepName: "cdn's Coalesce concurrent misses is turned on",
       nodeSelector: '[data-resource-id="cdn"]', nodeText: /CDN/, fallbackText: "cdn",
       role: "switch", name: /^Coalesce concurrent misses$/, resourceId: "cdn", setting: "cdnCachePolicy.coalesce", from: false, to: true,
     },
-    reportRequirements: [/^At most 90 origin requests by second 60 with a TTL of one second or less$/],
+    reportRequirements: [/^At most 45 origin requests by second 30 with a TTL of one second or less$/, /^Complete 10500 callers with at most 50 unsuccessful through second 30$/],
     expected: { starter: "Not met", improved: "Met" },
   },
   {

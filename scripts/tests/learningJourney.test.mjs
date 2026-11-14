@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test";
 import { fileURLToPath } from "node:url";
-import { execFileSync } from "node:child_process";
 import { JOURNEY_LABS, JOURNEY_LESSONS, acknowledgeJourneyChanges, answerJourneyPredictions, applyJourneyImprovement, changeJourneyControl, inspectJourneyRequirements, isLocalJourneyRequest, journeyLab, journeyLesson, selectJourney, walkJourneyLesson } from "../qa/learning-journey.mjs";
 import { JOURNEY_FAILURES, installJourneyFailure, journeyFailure, localFailureApi } from "../qa/learning-journey.mjs";
 
@@ -819,7 +818,10 @@ test("failed-events journey changes the dead-letter size and refuses missing or 
 
 test("origin-fetch journey turns the coalescing switch on and refuses missing or unretained values", async () => {
   const lab=journeyLab("share-one-origin-fetch"),edit=lab.improvement;
-  expect([edit.resourceId,edit.setting,edit.role]).toEqual(["cdn","cdnCachePolicy.coalesce","switch"]);
+  expect([edit.resourceId,edit.setting,edit.from,edit.to,edit.role]).toEqual(["cdn","cdnCachePolicy.coalesce",false,true,"switch"]);
+  expect(edit.nodeSelector).toBe('[data-resource-id="cdn"]');
+  expect(edit.name.test("Coalesce concurrent misses")).toBe(true);
+  expect(edit.name.test("Other Coalesce concurrent misses")).toBe(false);
   const make=(checked, missing=false)=>{ const calls=[]; let state=checked;
     const control={waitFor:async()=>{ if(missing) throw new Error("requested control is missing"); }, isChecked:async()=>state, click:async()=>{ calls.push("click"); state=true; }};
     const scope={getByRole:(role,opts)=>{ calls.push([role,opts.name.source]); return {first:()=>control}; }};
@@ -830,7 +832,12 @@ test("origin-fetch journey turns the coalescing switch on and refuses missing or
   expect(fake.calls).toEqual([["switch","^Coalesce concurrent misses$"],"click"]);
   const on=make(true); await applyJourneyImprovement(on.page,edit); expect(on.calls).toEqual([["switch","^Coalesce concurrent misses$"]]);
   await expect(applyJourneyImprovement(make(false,true).page,edit)).rejects.toThrow("requested control is missing");
-  expect(lab.reportRequirements[0].test("At most 90 origin requests by second 60 with a TTL of one second or less")).toBe(true);
+  await expect(applyJourneyImprovement(fakePage({storedChecked:false}).page,edit)).rejects.toThrow("did not retain");
+  expect(lab.reportRequirements[0].test("At most 45 origin requests by second 30 with a TTL of one second or less")).toBe(true);
+  expect(lab.reportRequirements[1].test("Complete 10500 callers with at most 50 unsuccessful through second 30")).toBe(true);
+  expect(lab.prediction).toContain("failed callers");
+  expect(lab.hypothesis).toContain("constrained link stay fixed");
+  expect(lab.runWaitMs).toBe(420_000);
 });
 
 test("sample journey changes the collection interval and refuses missing or unretained values", async () => {
@@ -888,183 +895,24 @@ test("stale journey sets the stale bound and refuses missing or unretained value
 
 // CX5 closes the diff-derived 42-lab inventory; these doubles prove selection/refusal only.
 const CLOSURE_CONTROLS = [
-  [
-    "route-around-a-slow-vm",
-    "lb",
-    "Load Balancer",
-    "lbSelection.policy",
-    "round-robin",
-    "least-outstanding",
-    "combobox",
-    "Selection policy",
-    null
-  ],
-  [
-    "retrying-a-full-pool",
-    "lb",
-    "Load Balancer",
-    "retry.maxAttempts",
-    5,
-    2,
-    "spinbutton",
-    "Maximum attempts",
-    null
-  ],
-  [
-    "move-reads-off-the-writer",
-    "db",
-    "Database",
-    "databaseReadRouting.policy",
-    "primary-only",
-    "replica-preferred",
-    "combobox",
-    "Read routing",
-    null
-  ],
-  [
-    "reuse-before-expiry",
-    "cache",
-    "Cache",
-    "cachePolicy.ttlSeconds",
-    1,
-    60,
-    "spinbutton",
-    "Cache TTL",
-    null
-  ],
-  [
-    "leave-time-to-acknowledge",
-    "queue",
-    "Message Queue",
-    "asyncQueue.visibilityTimeoutSeconds",
-    1,
-    5,
-    "spinbutton",
-    "Visibility timeout (seconds)",
-    null
-  ],
-  [
-    "find-the-denying-rule",
-    "fw",
-    "Firewall",
-    "firewallSettings.rules.quarantine-db.priority",
-    0,
-    20,
-    "spinbutton",
-    "Priority",
-    "quarantine-db"
-  ],
-  [
-    "leave-room-for-firewall-flows",
-    "fw",
-    "Firewall",
-    "firewallCapacity.maxFlows",
-    1,
-    8,
-    "spinbutton",
-    "Tracked connection limit",
-    null
-  ],
-  [
-    "choose-a-retry-mitigation",
-    "lb",
-    "Load Balancer",
-    "retry.maxAttempts",
-    4,
-    2,
-    "spinbutton",
-    "Maximum attempts",
-    null
-  ],
-  [
-    "notification-retry-storm",
-    "queue",
-    "Message Queue",
-    "asyncQueue.maxReceives",
-    10,
-    2,
-    "spinbutton",
-    "Maximum deliveries before dead-lettering",
-    null
-  ],
-  [
-    "protect-one-api-route",
-    "gateway",
-    "API Gateway",
-    "apiGateway.routes.read.burstRequests",
-    10000,
-    1,
-    "spinbutton",
-    "Burst requests read",
-    null
-  ],
-  [
-    "queue-overlapping-jobs",
-    "timer",
-    "Scheduler",
-    "scheduler.overlap",
-    "allow",
-    "queue",
-    "combobox",
-    "Overlap",
-    null
-  ],
-  [
-    "share-a-cache-fill",
-    "cache",
-    "Cache",
-    "cachePolicy.singleFlight",
-    false,
-    true,
-    "switch",
-    "Single-flight",
-    null
-  ],
-  [
-    "test-a-circuit-again",
-    "lb",
-    "Load Balancer",
-    "circuitBreaker.cooldownMs",
-    60000,
-    2000,
-    "spinbutton",
-    "Wait before testing again",
-    null
-  ],
-  [
-    "diagnose-lost-app-capacity",
-    "fw",
-    "Firewall",
-    "firewallCapacity.maxFlows",
-    1,
-    8,
-    "spinbutton",
-    "Tracked connection limit",
-    null
-  ],
-  [
-    "limit-or-capacity",
-    "gateway",
-    "API Gateway",
-    "apiGateway.routes.read.burstRequests",
-    10000,
-    1,
-    "spinbutton",
-    "Burst requests read",
-    null
-  ],
-  [
-    "keep-an-asset-cached",
-    "cdn",
-    "CDN",
-    "cdnCachePolicy.ttlSeconds",
-    1,
-    60,
-    "spinbutton",
-    "Cache TTL (seconds)",
-    null
-  ]
+  ["route-around-a-slow-vm", "lb", "Load Balancer", "lbSelection.policy", "round-robin", "least-outstanding", "combobox", "Selection policy", null],
+  ["retrying-a-full-pool", "lb", "Load Balancer", "retry.maxAttempts", 5, 2, "spinbutton", "Maximum attempts", null],
+  ["move-reads-off-the-writer", "db", "Database", "databaseReadRouting.policy", "primary-only", "replica-preferred", "combobox", "Read routing", null],
+  ["reuse-before-expiry", "cache", "Cache", "cachePolicy.ttlSeconds", 1, 60, "spinbutton", "Cache TTL", null],
+  ["leave-time-to-acknowledge", "queue", "Message Queue", "asyncQueue.visibilityTimeoutSeconds", 1, 5, "spinbutton", "Visibility timeout (seconds)", null],
+  ["find-the-denying-rule", "fw", "Firewall", "firewallSettings.rules.quarantine-db.priority", 0, 20, "spinbutton", "Priority", "quarantine-db"],
+  ["leave-room-for-firewall-flows", "fw", "Firewall", "firewallCapacity.maxFlows", 1, 8, "spinbutton", "Tracked connection limit", null],
+  ["choose-a-retry-mitigation", "lb", "Load Balancer", "retry.maxAttempts", 4, 2, "spinbutton", "Maximum attempts", null],
+  ["notification-retry-storm", "queue", "Message Queue", "asyncQueue.maxReceives", 10, 2, "spinbutton", "Maximum deliveries before dead-lettering", null],
+  ["protect-one-api-route", "gateway", "API Gateway", "apiGateway.routes.read.burstRequests", 10000, 1, "spinbutton", "Burst requests read", null],
+  ["queue-overlapping-jobs", "timer", "Scheduler", "scheduler.overlap", "allow", "queue", "combobox", "Overlap", null],
+  ["share-a-cache-fill", "cache", "Cache", "cachePolicy.singleFlight", false, true, "switch", "Single-flight", null],
+  ["test-a-circuit-again", "lb", "Load Balancer", "circuitBreaker.cooldownMs", 60000, 2000, "spinbutton", "Wait before testing again", null],
+  ["diagnose-lost-app-capacity", "fw", "Firewall", "firewallCapacity.maxFlows", 1, 8, "spinbutton", "Tracked connection limit", null],
+  ["limit-or-capacity", "gateway", "API Gateway", "apiGateway.routes.read.burstRequests", 10000, 1, "spinbutton", "Burst requests read", null],
+  ["keep-an-asset-cached", "cdn", "CDN", "cdnCachePolicy.ttlSeconds", 1, 60, "spinbutton", "Cache TTL (seconds)", null],
 ];
+
 for (const [id, resourceId, type, setting, from, to, role, label, group] of CLOSURE_CONTROLS) {
   test(`${id}: journey targets the reference leaf and refuses missing or unretained controls`, async () => {
     const lab = journeyLab(id), edit = lab.improvement, fake = fakePage();
@@ -1088,21 +936,59 @@ for (const [id, resourceId, type, setting, from, to, role, label, group] of CLOS
   });
 }
 
-test("every lab changed since the closure base has a journey; new rows match current predictions, criteria and one reference control", async () => {
+test("every lab in the audited closure inventory has a journey; new rows match current predictions, criteria and one reference control", async () => {
   const { learningContent } = await import("../../apps/backend/learning/content/index.ts");
   const { latestChallenge } = await import("../../apps/backend/challenges/registry.ts");
   const { REFERENCE } = await import("../../apps/backend/tests/challengeHarness.ts");
-  const root = fileURLToPath(new URL("../../", import.meta.url));
-  const changed = execFileSync("git", ["diff", "--name-status", "46f8a9f", "--", "apps/backend/challenges/definitions", "apps/backend/learning/content"], { cwd: root, encoding: "utf8" });
-  const ids = new Set(CLOSURE_CONTROLS.map(c => c[0]));
-  for (const line of changed.split("\n")) {
-    const path = line.split("\t").at(-1) ?? "";
-    const match = /definitions\/([^/]+)\/v\d+\.ts$/.exec(path) ?? /content\/[^/]+\/lessons\/(.+?)(?:-v\d+)?\.ts$/.exec(path);
-    if (match) ids.add(match[1]);
+  // Inventory measured from the requested phase diff, including the corrected older labs.
+  const required = [
+    "admit-a-replica-image",
+    "bound-replica-staleness",
+    "cache-an-empty-answer",
+    "choose-a-retry-mitigation",
+    "diagnose-lost-app-capacity",
+    "find-the-denying-rule",
+    "fit-the-working-set",
+    "hold-slots-on-a-slow-call",
+    "isolate-route-credits",
+    "keep-a-function-warm",
+    "keep-an-asset-cached",
+    "keep-failed-events",
+    "keep-waiting-work",
+    "leave-room-for-firewall-flows",
+    "leave-time-to-acknowledge",
+    "limit-or-capacity",
+    "move-reads-off-the-writer",
+    "notification-retry-storm",
+    "open-the-forwarding-gate",
+    "order-the-row-locks",
+    "parallel-jobs-for-a-burst",
+    "protect-one-api-route",
+    "queue-overlapping-jobs",
+    "redrive-after-the-fix",
+    "refresh-after-a-write",
+    "release-the-cpu-budget",
+    "resolve-after-publication",
+    "restore-a-database-writer",
+    "retrying-a-full-pool",
+    "reuse-before-expiry",
+    "route-around-a-slow-vm",
+    "sample-often-enough",
+    "scale-on-delivered-samples",
+    "serve-stale-on-error",
+    "set-the-limit-above-the-peak",
+    "share-a-cache-fill",
+    "share-one-origin-fetch",
+    "shed-load-at-the-edge",
+    "test-a-circuit-again",
+    "trace-a-burst-backlog",
+    "trace-a-scaling-stall",
+    "trace-a-slowdown-cascade"
+];
+  for (const id of required) {
+    expect(learningContent.lessons.some(l => l.id === id && l.kind === "executable-lab")).toBe(true);
+    expect(JOURNEY_LABS.some(j => j.lessonId === id)).toBe(true);
   }
-  const required = learningContent.lessons.filter(l => l.kind === "executable-lab" && (ids.has(l.id) || ids.has(l.experiment.challengeId)));
-  expect(required.length).toBeGreaterThanOrEqual(42);
-  for (const lesson of required) expect(JOURNEY_LABS.some(j => j.lessonId === lesson.id)).toBe(true);
   const leaf = (design, resourceId, setting) => setting.split(".").reduce((value, key) => Array.isArray(value) ? value.find(row => row.id === key) : value?.[key], design.resources.find(r => r.id === resourceId));
   for (const [id, resourceId, , setting, from, to] of CLOSURE_CONTROLS) {
     const lab = journeyLab(id), lesson = learningContent.lessons.find(l => l.id === id), d = latestChallenge(lesson.experiment.challengeId).definition;
