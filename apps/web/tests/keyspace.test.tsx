@@ -26,7 +26,9 @@ test("multi-key databases expose a tiny uniform/hot-key control with historical 
   expect(html).toContain("Access pattern"); expect(html).toContain('value="uniform" selected'); expect(html).toContain("Hot-key");
   expect(html).toContain("Hot-key sends about 80% of accesses to one stable key; the rest use the remaining keys.");
   const hot = renderToStaticMarkup(<DataKeyspaceSection resource={{ ...multi, dataKeyspace: { ...multi.dataKeyspace!, accessPattern: "hot-key" } }} disabled />);
-  expect(hot).toContain('value="hot-key" selected'); expect(hot.match(/disabled=""/g)).toHaveLength(3); // keyspace count, access pattern and row lock order
+  expect(hot).toContain('value="hot-key" selected'); 
+  const controls = hot.match(/<(?:select|input|button)\b[^>]*>/g) ?? [];
+  expect(controls.length).toBeGreaterThanOrEqual(3); for (const control of controls) expect(control).toContain('disabled=""'); // locked means every control is locked, however many the section grows
   expect(renderToStaticMarkup(<DataKeyspaceSection resource={db} disabled={false} />)).not.toContain("Access pattern");
 });
 

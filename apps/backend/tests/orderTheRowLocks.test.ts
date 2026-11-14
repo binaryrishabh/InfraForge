@@ -166,6 +166,19 @@ test("order-the-row-locks: lesson, module, review record and reviewed hash are r
   expect(explanation).toContain("impossible"); expect(explanation).toContain("with four hundred rows one or none do"); expect(explanation).toContain("only one transaction at a time"); expect(limits).not.toMatch(/guarantee|always correct/i);
 });
 
+test("order-the-row-locks: with one transaction at a time the deadlocks go, but callers fail at the app while the database queue stays empty; the lesson names that place", async () => {
+  const { findLearningLesson } = await import("../learning/registry");
+  for (const queued of [undefined, 1000]) {
+    const x = run(edit(STARTER, s => { R(s, "db").dbConcurrency = { version: 1, activeQueries: 1, ...(queued === undefined ? {} : { queuedQueries: queued }) }; }));
+    const db = x.report.terminal!.resources.find(r => r.id === "db")!.database as unknown as Record<string, number | null>;
+    expect(x.deadlocks).toBe(0); expect(x.failed).toBeGreaterThan(4000); expect(x.status).toBe("not-met");
+    expect(db.rejected).toBe(0); expect(db["query-queue-full"] ?? 0).toBe(0); // the database queue refused nobody, even a 256 or 1000 deep one
+  }
+  const explanation = findLearningLesson(ID)!.explanation.join(" ");
+  expect(explanation).toContain("only one transaction at a time"); expect(explanation).not.toContain("the queue fails callers");
+  expect(explanation).toMatch(/app[^.]*(turns|fails|rejects)[^.]*callers/); // the app is where the overflow is refused
+}, T);
+
 test("order-the-row-locks: browser-target bundle and default server replay agree every second for starter, reference and a near miss", async () => {
   const entry = resolve(import.meta.dir, `../../../.cache/order-the-row-locks-${process.pid}.ts`), out = entry.replace(/\.ts$/, ".mjs");
   await mkdir(dirname(entry), { recursive: true });
