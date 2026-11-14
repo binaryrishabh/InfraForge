@@ -15,13 +15,14 @@ test("failures registers three executable lessons with calibrated experiments an
   expect(labs).toHaveLength(3);
   expect(incidentEvidence.lessonIds).toEqual(incidentEvidenceLessons.map(l => l.id)); expect(new Set(registered.map(l => l.id)).size).toBe(registered.length);
   for (const lesson of labs) {
-    expect(lesson).toMatchObject({trackId: "failures", moduleId: "incident-evidence", contentVersion: 1, kind: "executable-lab", availability: "available"});
+    expect(lesson).toMatchObject({trackId: "failures", moduleId: "incident-evidence", kind: "executable-lab", availability: "available"});
     expect(lesson.prerequisites.every(id => registered.some(l => l.id === id))).toBe(true);
     expect(lesson.limitations.length).toBeGreaterThan(1); expect(lesson.limitations.every(t => t.trim().length > 0)).toBe(true);
     expect((lesson.followUp?.trim().length ?? 0)).toBeGreaterThan(0); expect((lesson.experiment?.prediction?.trim().length ?? 0)).toBeGreaterThan(0);
     expect((lesson.experiment?.evidenceToInspect?.length ?? 0)).toBeGreaterThan(1);
     const d = latestChallenge(lesson.experiment!.challengeId)!.definition;
-    expect(d.engine).toBe("2"); expect(d.version).toBe(1); expect(d.hints).toHaveLength(3); expect(REFERENCE[d.id]).toBeDefined();
+    expect(lesson.contentVersion).toBeGreaterThanOrEqual(1); // later version-forward corrections raise it
+    expect(d.engine).toBe("2"); expect(d.version).toBeGreaterThanOrEqual(1); expect(d.hints).toHaveLength(3); expect(REFERENCE[d.id]).toBeDefined();
     expect(lesson.check!.choices.some(c => c.id === lesson.check!.correctChoiceId)).toBe(true);
   }
 });
