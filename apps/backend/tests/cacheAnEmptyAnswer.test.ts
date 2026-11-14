@@ -105,3 +105,10 @@ test("cache-an-empty-answer: browser-target bundle, JSON capture and two server 
   }
  }finally{for(const path of [entry,out])if(await Bun.file(path).exists())await unlink(path);}
 },T);
+
+test("cache-an-empty-answer: the lesson states the visibility cost of caching absence that this static dataset cannot show and names the DNS lab that shows it",async()=>{
+ const {findLearningLesson}=await import("../learning/registry"),{checkLessonClaims}=await import("../learning/claims"),{validateLearningContent}=await import("../learning/validate"),{learningContent}=await import("../learning/content");
+ const l=findLearningLesson(ID)!,dns=findLearningLesson("resolve-after-publication")!;
+ expect(dns).toBeDefined();expect(l.limitations.join(" ")).toContain(dns.title);expect(l.limitations.join(" ")).toMatch(/published later|new(?:ly created)? row/i);
+ expect(validateLearningContent(learningContent)).toEqual([]);expect(checkLessonClaims(l,d)).toEqual([]);
+});
