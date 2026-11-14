@@ -107,17 +107,19 @@ for (const family of baseline.families) {
   });
 
   test(`${id}: content v3 keeps v2 prose unchanged and binds only the new challenge review`, () => {
-    const latest = LEARNING_REGISTRY.findLesson(id)!, prior = LEARNING_REGISTRY.findLesson(id, 2)!;
+    // reuse-before-expiry moved on to content v4 (olderLabLessonCorrections.test.ts); v3 stays retrievable and archived.
+    const latest = LEARNING_REGISTRY.findLesson(id, 3)!, prior = LEARNING_REGISTRY.findLesson(id, 2)!;
     expect(latest.contentVersion).toBe(3);
     expect(differences(prior, latest)).toEqual(["contentVersion"]);
     expect(learningContent.archivedLessons).toContainEqual(prior);
-    expect(LEARNING_REGISTRY.listLessons({challengeId: id})).toEqual([latest]);
-    expect(LEARNING_REGISTRY.findLesson(id, 4)).toBeNull();
+    expect(LEARNING_REGISTRY.listLessons({challengeId: id})).toEqual([LEARNING_REGISTRY.findLesson(id)!]);
+    expect(LEARNING_REGISTRY.findLesson(id, id === "reuse-before-expiry" ? 5 : 4)).toBeNull();
     for (const version of [1, 2]) expect(REVIEWED_CHALLENGES[`${id}@${version}`]).toEqual({challengeId: id, version: 1, hash: old.hash});
     expect(REVIEWED_CHALLENGES[`${id}@3`]).toEqual({challengeId: id, version: 2, hash: current.hash});
     const key = `${id}@3`, missing = {...REVIEWED_CHALLENGES}; delete missing[key];
     expect(() => checkLearningAuthoring(learningContent, missing)).toThrow(`${key}: missing challenge review`);
-    expect(() => checkLearningAuthoring(learningContent, {...REVIEWED_CHALLENGES, [key]: REVIEWED_CHALLENGES[`${id}@2`]!})).toThrow("moved since contentVersion");
+    const live = `${id}@${LEARNING_REGISTRY.findLesson(id)!.contentVersion}`; // the "moved since" gate only applies to the current content version
+    expect(() => checkLearningAuthoring(learningContent, {...REVIEWED_CHALLENGES, [live]: REVIEWED_CHALLENGES[`${id}@2`]!})).toThrow("moved since contentVersion");
     expect(() => checkLearningAuthoring(learningContent, {...REVIEWED_CHALLENGES, [key]: {...REVIEWED_CHALLENGES[key]!, hash: "0".repeat(64)}})).toThrow("reviewed challenge identity is unavailable or changed");
     for (const label of latest.experiment!.evidenceToInspect!.flatMap(evidenceLabels)) {
       const measurement = learningMeasurement(label)!;

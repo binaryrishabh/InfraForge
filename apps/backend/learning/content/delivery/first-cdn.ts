@@ -1,5 +1,5 @@
 import type { LearningModule } from "@infraforge/contracts/learning";
-import { keepAnAssetCached } from "./lessons/keep-an-asset-cached";
+import { keepAnAssetCachedV2 as keepAnAssetCached } from "./lessons/keep-an-asset-cached-v2";
 
 export const lessons = [keepAnAssetCached];
 export const firstCdn: LearningModule = {id: "first-cdn", title: "A first CDN run", availability: "available",

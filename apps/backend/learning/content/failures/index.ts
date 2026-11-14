@@ -6,4 +6,6 @@ import { failureReasoningLessons } from "./failure-reasoning";
 export const lessons = [...firstFailureLessons, ...incidentEvidenceLessons, ...failureReasoningLessons, ...dnsPublicationLessons];
 
 import { dnsCacheLifetime as originalDnsCacheLifetime } from "./lessons/dns-cache-lifetime";
-export const archivedLessons = [originalDnsCacheLifetime];
+import { leaveRoomForFirewallFlows as originalLeaveRoomForFirewallFlows } from "./lessons/leave-room-for-firewall-flows";
+import { chooseARetryMitigation as originalChooseARetryMitigation } from "./lessons/choose-a-retry-mitigation";
+export const archivedLessons = [originalDnsCacheLifetime, originalLeaveRoomForFirewallFlows, originalChooseARetryMitigation];
