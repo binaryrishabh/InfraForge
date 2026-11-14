@@ -28,6 +28,7 @@ const workload = z.object({
   targetThroughput: z.number().int().positive().max(100_000_000), throughputUnit: z.enum(["per-minute", "per-hour"]),
   trafficShape: z.enum(["steady", "peak"]), peakMultiplier: z.number().min(1).max(10), readWriteRatio: z.number().min(0).max(1),
   payloadSize: z.enum(["light", "medium", "heavy"]),
+  workloadDynamics: z.object({ version: z.literal(1), arrivalProcess: z.enum(["even", "poisson"]), applicationCpuCv: z.number().finite().min(0).max(1) }).strict().optional(),
 }).strict();
 const resource = z.object({ id: z.string().min(1).max(64), type: z.enum(types), x: z.number(), y: z.number() }).passthrough();
 const line = z.object({ id: z.string().min(1), sourceId: z.string().min(1), targetId: z.string().min(1), sourceType: z.enum(types), targetType: z.enum(types), port: z.number().int().min(0).max(65535) }).strict();

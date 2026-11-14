@@ -48,7 +48,7 @@ test("order-the-row-locks: ordering the locks by key removes the deadlocks; a bi
   for (const input of inputs) { expect(input.adapterProfiles).toContain("row-lock-order/1"); expect(JSON.stringify(buildContractFromRunInputs(input, 30))).toContain("product-arrivals/2"); } // both values marked, Poisson arrivals captured
   const r = designs.map(x => run(x));
   expect(r.map(x => x.status)).toEqual(["not-met", "met", "not-met", "not-met", "not-met"]);
-  expect(r.map(x => x.criteria)).toEqual([["met", "met", "not-met"], ["met", "met", "met"], ["met", "met", "not-met"], ["met", "met", "not-met"], ["met", "met", "not-met"]]);
+  expect(r.map(x => x.criteria)).toEqual([["met", "not-met", "not-met"], ["met", "met", "met"], ["met", "not-met", "not-met"], ["met", "not-met", "not-met"], ["met", "not-met", "not-met"]]);
   // [status, completed, failed callers, deadlocks, lock waits]; the requirements are 14000 completed, no unsuccessful caller and no deadlock.
   expect(r.map(line)).toEqual(EXPECT.calibration);
   for (const x of r) { expect(x.victims).toBe(x.deadlocks); expect(x.failed).toBe(x.deadlocks as number); } // every failed caller is exactly one deadlock victim, counted once

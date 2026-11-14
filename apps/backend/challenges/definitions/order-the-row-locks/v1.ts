@@ -10,7 +10,7 @@ export const orderTheRowLocksV1: ChallengeDefinition = {
     "The app and the database are each about three-quarters busy, not out of CPU, yet a few of every hundred transfers fail. Compare the failed callers with the deadlocks the database detected."],
   objective: "Through second 30, complete at least 14000 transfers with none unsuccessful and have no deadlocks. Test one database setting.",
   workload: {targetThroughput: 30000, throughputUnit: "per-minute", trafficShape: "steady", peakMultiplier: 1, readWriteRatio: 0, payloadSize: "light", workloadDynamics: {version: 1, arrivalProcess: "poisson", applicationCpuCv: 0}},
-  workloadNote: "500 transfers/s, every request a two-row write, spread uniformly over 10 modeled rows, with random (Poisson) arrival times. Each transfer is one transaction; the database starts idle.",
+  workloadNote: "500 transfers/s at random (Poisson) times, every one a two-row write over 10 modeled rows. Each transfer is one transaction.",
   evaluationSeconds: 30, evaluationNote: "Cumulative caller outcomes and database lock counters through second 30.",
   criteria: [{id: "checks", kind: "deployment-checks", label: "Complete deployment checks"},
     {id: "callers", kind: "caller-outcomes", label: "Complete 14000 transfers with none unsuccessful through second 30", minCompleted: 14000, maxUnsuccessful: 0},
