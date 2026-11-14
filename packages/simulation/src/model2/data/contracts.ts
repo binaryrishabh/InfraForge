@@ -14,6 +14,8 @@ export interface RelationalConfig {
   replication?: import("@infraforge/domain/resource").DatabaseReplication;
   // Opt-in selection for canvas requests without a recorded key; supplied keys always win.
   access?: "keyed-uniform" | "keyed-hot";
+  /** Marked databases only: each write touches two rows in two statements ($key then $key2); "by-key" takes the two locks in the keyspace's fixed order. */
+  rowLocking?: { order: "as-requested" | "by-key" };
   id: string; kind: "relational"; semantics: "read-committed-keyed/1" | "postgresql-keyed/1" | "postgresql-keyed/2";
   execution: ComputeResource; maxSessions: Quantity<"count">; activeTransactions: Quantity<"count">; pendingQueries: Quantity<"count">;
   keys: string[]; initial: Row[]; plans: Record<string, TransactionPlan>;

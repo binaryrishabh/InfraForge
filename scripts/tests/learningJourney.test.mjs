@@ -18,6 +18,7 @@ test("the lab table has unique journey ids, explicit controls and recorded-verdi
     "scale-on-delivered-samples",
     "serve-stale-on-error",
     "refresh-after-a-write",
+    "order-the-row-locks",
     "isolate-route-credits",
     "redrive-after-the-fix",
     "keep-failed-events",
@@ -841,6 +842,19 @@ test("refresh journey turns the invalidate-on-write switch on and refuses missin
   await expect(applyJourneyImprovement(make(false,false,true).page,edit)).rejects.toThrow("did not retain");
   expect(lab.reportRequirements[0].test("Serve at least 4000 cache hits with at most 100 hits behind the database")).toBe(true);
   expect(lab.reportRequirements[0].test("Serve at least 4000 cache hits with at most 300 hits behind the database")).toBe(false);
+});
+
+test("row lock journey selects only the by-key order and refuses missing or unretained controls",async()=>{
+  const lab=journeyLab("order-the-row-locks"),edit=lab.improvement,fake=fakePage();
+  expect([edit.resourceId,edit.setting,edit.role,edit.from,edit.to]).toEqual(["db","rowLocking.order","combobox","as-requested","by-key"]);
+  expect(edit.name.test("Row lock order")).toBe(true);expect(edit.name.test("Other row lock order")).toBe(false);
+  expect(await applyJourneyImprovement(fake.page,edit)).toEqual([{resourceId:"db",setting:"rowLocking.order",value:"by-key"}]);
+  expect(fake.calls).toEqual(['[data-resource-id="db"]',["combobox","^Row lock order$"],["selected","by-key"]]);
+  await expect(applyJourneyImprovement(fakePage({controlMissing:true}).page,edit)).rejects.toThrow("requested control is missing");
+  await expect(applyJourneyImprovement(fakePage({storedValue:"as-requested"}).page,edit)).rejects.toThrow("did not retain");
+  expect(lab.reportRequirements[0].test("Have no deadlocks through second 30")).toBe(true);
+  expect(lab.reportRequirements[0].test("Have no deadlocks through second 60")).toBe(false);
+  expect(lab.runWaitMs).toBeUndefined(); // a 30 second run at 1x fits the default wait
 });
 
 test("stale journey sets the stale bound and refuses missing or unretained values", async () => {

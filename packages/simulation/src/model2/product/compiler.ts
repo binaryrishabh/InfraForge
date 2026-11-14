@@ -9,7 +9,7 @@ import { checkClientRetry } from "./clientRetry";
 import { checkObjective } from "./objective";
 import { databaseRecoveryPlanError } from "@infraforge/domain/resource";
 import { checkCpuDynamics } from "./workloadDynamics";
-import { RESOURCE_PORTS, dbPoolError, vmMemoryError, lbRateLimitError, firewallStateError, firewallCapacityError, artifactCachePolicyError, objectStoragePolicyError, monitoringPolicyError, dnsCachePolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, dbPoolError, vmMemoryError, lbRateLimitError, firewallStateError, firewallCapacityError, artifactCachePolicyError, objectStoragePolicyError, monitoringPolicyError, dnsCachePolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, rowLockingError, securitySettingsError, applicationFlowError, asyncSettingsError, circuitBreakerSettingsError, retrySettingsError } from "@infraforge/domain/resource";
 import { requireKnown } from "../../reality/quantity";
 import { validateSystems } from "../systems/validate";
 import type { SystemsInput } from "../systems/contracts";
@@ -45,6 +45,7 @@ import { CACHE_POLICY_PROFILE, cachePolicyChanges, validateCachePolicyBindings }
 import { CACHE_CAPACITY_PROFILE, cacheCapacityChanges, validateCacheCapacityBindings } from "./cacheCapacity";
 import { WORKER_WAIT_PROFILE, workerWaitChanges, validateWorkerWaitBindings } from "./workerWait";
 import { CACHE_INVALIDATION_PROFILE, cacheInvalidationChanges, validateCacheInvalidationBindings } from "./cacheInvalidation";
+import { ROW_LOCK_ORDER_PROFILE, rowLockingChanges, validateRowLockingBindings } from "./rowLocking";
 import { CACHE_STALE_PROFILE, cacheStaleChanges, validateCacheStaleBindings } from "./cacheStale";
 import { QUEUE_REDRIVE_PROFILE, queueRedriveChanges, validateQueueRedriveBindings } from "./queueRedrive";
 import { QUEUE_ACK_DELAY_PROFILE, queueAckDelayChanges, validateQueueAckDelayBindings } from "./queueAckDelay";
@@ -100,6 +101,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (workerWaitChanges(design.resources) !== contract.version.includes(`/${WORKER_WAIT_PROFILE}`)) error("WORKER_WAIT_VERSION", "version", "External worker wait requires worker-wait/1 and matching saved intent");
     if (cacheStaleChanges(design.resources) !== contract.version.includes(`/${CACHE_STALE_PROFILE}`)) error("CACHE_STALE_VERSION", "version", "A saved stale age bound requires cache-stale/1 and matching saved intent");
     if (cacheInvalidationChanges(design.resources) !== contract.version.includes(`/${CACHE_INVALIDATION_PROFILE}`)) error("CACHE_INVALIDATION_VERSION", "version", "A saved cache write policy requires cache-invalidation/1 and matching saved intent");
+    if (rowLockingChanges(design.resources) !== contract.version.includes(`/${ROW_LOCK_ORDER_PROFILE}`)) error("ROW_LOCK_ORDER_VERSION", "version", "A saved row lock order requires row-lock-order/1 and matching saved intent");
     if (queueRedriveChanges(design.resources) !== contract.version.includes(`/${QUEUE_REDRIVE_PROFILE}`)) error("QUEUE_REDRIVE_VERSION", "version", "Queue redrive or worker repair requires queue-redrive/1 and matching saved intent");
     if (queueAckDelayChanges(design.resources) !== contract.version.includes(`/${QUEUE_ACK_DELAY_PROFILE}`)) error("QUEUE_ACK_DELAY_VERSION", "version", "Acknowledgement delay requires queue-ack-delay/1 and matching saved intent");
     if (queueIdempotencyChanges(design.resources) !== contract.version.includes(`/${QUEUE_IDEMPOTENCY_PROFILE}`)) error("QUEUE_IDEMPOTENCY_VERSION", "version", "Idempotent result writes require the explicit queue-idempotency/1 contract version and matching saved intent");
@@ -179,6 +181,8 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (cacheError) error("INVALID_CACHE_POLICY", `resources.${r.id}.cachePolicy`, cacheError);
       const keyspaceError = dataKeyspaceError(r.type, r.dataKeyspace);
       if (keyspaceError) error("INVALID_KEYSPACE", `resources.${r.id}.dataKeyspace`, keyspaceError);
+      const rowLockError = rowLockingError(r.type, r.rowLocking, r.dataKeyspace);
+      if (rowLockError) error("INVALID_ROW_LOCKING", `resources.${r.id}.rowLocking`, rowLockError);
       const securityError = securitySettingsError(r.type, r.listenerSettings, r.firewallSettings, design.resources);
       if (securityError) error("INVALID_SECURITY", `resources.${r.id}.security`, securityError);
       const flowError = applicationFlowError(r.type, r.applicationFlow);
@@ -191,7 +195,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (breakerError) error("INVALID_CIRCUIT_BREAKER", `resources.${r.id}.circuitBreaker`, breakerError);
       const retryError = retrySettingsError(r.type, r.retry);
       if (retryError) error("INVALID_RETRY", `resources.${r.id}.retry`, retryError);
-      const allowed = new Set(["gatewayQuota", "databaseRecoveryPlan", "serverless", "scheduler", "apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "cachePolicy", "dnsPublication", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "artifactCachePolicy", "firewallState", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbPoolMaxConnections", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
+      const allowed = new Set(["gatewayQuota", "databaseRecoveryPlan", "serverless", "scheduler", "apiGateway", "eventBus", "id", "type", "x", "y", "skuId", "dataKeyspace", "rowLocking", "cachePolicy", "dnsPublication", "dnsCachePolicy", "cdnCachePolicy", "monitoringPolicy", "objectStoragePolicy", "artifactCachePolicy", "firewallState", "firewallCapacity", "databaseReadRouting", "databaseReplication", "dbPoolMaxConnections", "dbConcurrency", "vmExecution", "vmMemory", "vmCpuQuota", "lbRateLimit", "lbAdmission", "lbHealth", "lbSelection", "autoscaling", "asyncQueue", "asyncWorker", "applicationFlow", "listenerSettings", "firewallSettings", "retry", "circuitBreaker", "public", "encryption", "openPorts", "size", "region", "name"]);
       for (const key of Object.keys(r)) if (!allowed.has(key)) error("UNSUPPORTED_RESOURCE_SETTING", `resources.${r.id}.${key}`, "Unrecognized saved setting needs an explicit compiler-version owner");
       const spec = contract.nodes[r.id];
       if (!(r.type in TRANSLATION_OWNERS)) { error("UNSUPPORTED_RESOURCE", `resources.${r.id}`, `No translation owner for ${r.type}`); continue; }
@@ -252,7 +256,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
       if (spec.firewall) runtime.systems.firewalls.push({ ...spec.firewall, ...(r.firewallSettings ? { rules: expandFirewallRules(spec.firewall.rules, roleIds) } : {}), id: r.id });
       for (const instance of expansion.get(r.id)!) for (const resource of [...spec.resources].sort((a, b) => a.role < b.role ? -1 : 1)) {
         const id = roleIds.get(`${instance}/${resource.role}`)!;
-        const material = { ...rewriteReferences(resource.config, (value) => resource.config.kind === "relational" && value === "$key" ? value : ref(value, instance)), id } as SystemsInput["resources"][number];
+        const material = { ...rewriteReferences(resource.config, (value) => resource.config.kind === "relational" && (value === "$key" || value === "$key2") ? value : ref(value, instance)), id } as SystemsInput["resources"][number];
         if (material.kind === "compute" && material.applicationFlow) throw Error("Application flows must be compiled from saved per-operation edge references");
         if ("execution" in material) material.execution.id = id;
         runtime.resources.push(material); runtime.endpoints[id] = { alive: true, ready: true };
@@ -435,6 +439,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateQueueRedriveBindings(design.resources, runtime);
     validateCacheStaleBindings(design.resources, runtime);
     validateCacheInvalidationBindings(design.resources, runtime);
+    validateRowLockingBindings(design.resources, runtime);
     validateMonitoringCadenceBindings(design.resources, runtime);
     validateMonitoringBufferBindings(design.resources, runtime);
     validateCdnCoalescingBindings(design.resources, runtime);

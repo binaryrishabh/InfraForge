@@ -9,6 +9,24 @@ import { validateNetwork, computeAdapter } from "../network/validate";
 import { validateComputeInput } from "../compute/run";
 export const isData = (r: DataInput["resources"][number]): r is DataResource => ["relational", "cache", "cache-aside"].includes(r.kind);
 export const networkAdapter = (input: DataInput): NetworkInput => ({ ...input, workloadVersion: "m2d/1", resources: input.resources.map((r) => isData(r) ? { ...r.execution, id: r.id, downstream: undefined } : r) });
+/** A saved row order means every write is exactly two row updates, $key then $key2; no cache, flow, replica or router may sit in front of that database. */
+function validateRowLocking(input: DataInput, r: Extract<DataResource, { kind: "relational" }>) {
+  const second = (p: { statements: Array<{ keys: string[] }> }) => p.statements.some(s => s.keys.includes("$key2"));
+  if (r.rowLocking === undefined) return; // a second row without a saved order is already refused as a key outside the dataset
+  if (!["as-requested", "by-key"].includes(r.rowLocking.order) || Object.keys(r.rowLocking).length !== 1 || r.access === undefined || r.keys.length < 2 || r.replication || r.readRouting) throw Error("Invalid row lock order: needs two or more keyed rows, one unreplicated database");
+  for (const op of input.operations) {
+    const p = r.plans[op.id]!, writes = p.statements.some(s => s.kind === "write" || s.kind === "insert");
+    if (writes ? p.statements.length !== 2 || p.statements.some((s, i) => s.kind !== "write" || s.keys.length !== 1 || s.keys[0] !== (i ? "$key2" : "$key")) : second(p)) throw Error("A saved row lock order needs each write to be two row updates, $key then $key2");
+  }
+  const resources = new Map(input.resources.map(x => [x.id, x]));
+  for (const other of input.resources) {
+    if (other.kind === "cache-aside" && other.database === r.id) throw Error("A saved row lock order is not supported behind a cache");
+    if (other.kind === "compute" && other.applicationFlow) for (const flow of Object.values(other.applicationFlow.operations)) for (const step of flow.steps) if (step.kind === "data") {
+      const target = resources.get(step.target);
+      if (step.target === r.id || (target?.kind === "cache-aside" && target.database === r.id)) throw Error("A saved row lock order is not supported through typed application flows");
+    }
+  }
+}
 export function validateData(input: DataInput) {
   validateDataFlowEffects(input);
   const adapter = networkAdapter(input); validateNetwork(adapter); validateComputeInput(computeAdapter(adapter));
@@ -65,11 +83,12 @@ export function validateData(input: DataInput) {
           for (const s of p.statements) {
             if (!["snapshot-read", "write", "insert", "lock-read"].includes(s.kind) || !s.keys.length || s.keys.length > caps.keysPerStatement || s.keys.some((k) => !validKey(k)) || new Set(s.keys).size !== s.keys.length) throw new Error("Invalid keyed statement");
             const demand = num(s.cpu, "cpu-us", Number.MIN_VALUE, false); num(s.parallelism, "cores", Number.MIN_VALUE, false); num(s.blockingWait, "us"); num(s.logBytes, "bytes");
-            if (s.keys.some((k) => k !== "$key" && !dataset.has(k))) throw new Error("Statement outside logical dataset");
+            if (s.keys.some((k) => k !== "$key" && !(k === "$key2" && r.rowLocking) && !dataset.has(k))) throw new Error("Statement outside logical dataset");
             if (s.kind === "insert") { if (!s.insertBytes) throw new Error("Insert needs authored row size"); num(s.insertBytes, "bytes"); }
             micros(horizon + Math.ceil(demand / requireKnown(r.execution.cores, "cores")) + requireKnown(s.blockingWait, "us"));
           }
         }
+        validateRowLocking(input, r);
         for (const path of input.paths.filter((p) => p.target === r.id)) if (requireKnown(path.pool.streams, "count") !== 1) throw new Error("Relational session has one transaction at a time; multiplexing requires a future session policy");
       }
     }

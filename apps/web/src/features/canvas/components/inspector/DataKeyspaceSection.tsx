@@ -20,5 +20,13 @@ export function DataKeyspaceSection({ resource, disabled }: { resource: Resource
         <option value="hot-key">Hot-key</option>
       </Select>}
     </Field>}
+    {count > 1 && <Field label="Row lock order" hint="Models the order in which a two-row write takes its row locks, not any specific database product. As requested keeps the order each write names; by key always takes the lower-numbered row first.">
+      {({ id, describedBy }) => <Select id={id} aria-describedby={describedBy} value={resource.rowLocking?.order ?? ""} disabled={disabled}
+        onChange={event => updateResource(resource.id, { rowLocking: event.target.value === "as-requested" || event.target.value === "by-key" ? { version: 1, rowsPerWrite: 2, order: event.target.value } : undefined })}>
+        <option value="">One row per write (not modeled)</option>
+        <option value="as-requested">Two rows, as requested</option>
+        <option value="by-key">Two rows, by key</option>
+      </Select>}
+    </Field>}
   </InspectorSection>;
 }
