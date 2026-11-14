@@ -62,6 +62,19 @@ const NEAR_MISS: Record<string, { what: string; cue: RegExp; edit: Edit }> = {
   "trace-a-burst-backlog": { what: "worker size medium", cue: /faster worker|bigger worker|larger worker|worker size/i, edit: (s) => { res(s, "worker").size = "medium"; } },
   "trace-a-scaling-stall": { what: "autoscaling maximum 6", cue: /higher maximum|Raising the maximum/i, edit: (s) => { res(s, "app").autoscaling!.maxReplicas = 6; } },
   "trace-a-slowdown-cascade": { what: "cache capacity 12 (needs 16)", cue: /12|short of|just under|capacity/i, edit: (s) => { const c = res(s, "cache"); c.cachePolicy = { ...c.cachePolicy!, version: 2, capacityEntries: 12 } as typeof c.cachePolicy; } },
+  "cache-an-empty-answer": { what: "ordinary TTL 3600", cue: /ordinary TTL/i, edit: (s) => { (res(s, "cache").cachePolicy as { ttlSeconds?: number }).ttlSeconds = 3600; } },
+  "find-the-denying-rule": { what: "firewall max flows 1000 (capacity)", cue: /Increasing capacity/i, edit: (s) => { res(s, "fw").firewallCapacity!.maxFlows = 1000; } },
+  "keep-waiting-work": { what: "queue capacity 1000 messages", cue: /More queue space/i, edit: (s) => { res(s, "queue").asyncQueue!.capacityMessages = 1000; } },
+  "leave-time-to-acknowledge": { what: "queue max receives 5", cue: /delivery limit|extra delivery attempts/i, edit: (s) => { res(s, "queue").asyncQueue!.maxReceives = 5; } },
+  "limit-or-capacity": { what: "readApp workers 2", cue: /Two workers are a plausible near miss/i, edit: (s) => { res(s, "readApp").vmExecution!.workers = 2; } },
+  "move-reads-off-the-writer": { what: "waiting-query queue 512", cue: /larger waiting-query queue/i, edit: (s) => { res(s, "db").dbConcurrency = { version: 1, queuedQueries: 512 }; } },
+  "parallel-jobs-for-a-burst": { what: "prefetch credit 64", cue: /Prefetch credit.*from 8 to 64/i, edit: (s) => { res(s, "worker").asyncWorker!.prefetch = 64; } },
+  "protect-one-api-route": { what: "write route burst 1 (wrong route)", cue: /write route's tokens|Leave writes/i, edit: (s) => { res(s, "gateway").apiGateway!.routes![1]!.burstRequests = 1; } },
+  "queue-overlapping-jobs": { what: "timer overlap skip", cue: /Skip avoids overlap|Skip is a plausible/i, edit: (s) => { res(s, "timer").scheduler!.overlap = "skip"; } },
+  "retrying-a-full-pool": { what: "retry maximum attempts 4", cue: /Four total attempts/i, edit: (s) => { res(s, "lb").retry!.maxAttempts = 4; } },
+  "route-around-a-slow-vm": { what: "fast VM SKU c5.xlarge", cue: /bigger fast VM/i, edit: (s) => { res(s, "fast").skuId = "c5.xlarge"; } },
+  "share-a-cache-fill": { what: "cache capacity 32 entries", cue: /More logical cache capacity|capacity-only near miss/i, edit: (s) => { const c = res(s, "cache"); c.cachePolicy = { ...c.cachePolicy!, version: 2, capacityEntries: 32 } as typeof c.cachePolicy; } },
+  "test-a-circuit-again": { what: "circuit cooldown 5000 ms", cue: /5000 ms cooldown/i, edit: (s) => { res(s, "lb").circuitBreaker!.cooldownMs = 5000; } },
 };
 
 // ---- lab list: from the tree, not from a hard-coded list
@@ -154,7 +167,8 @@ const testsDir = resolve(backend, "tests");
 const testFiles = readdirSync(testsDir).filter((f) => /\.(test|fixture)\.ts$/.test(f));
 const text = new Map(testFiles.map((f) => [f, readFileSync(resolve(testsDir, f), "utf8")]));
 function citations(id: string) {
-  const direct = testFiles.filter((f) => text.get(f)!.includes(`"${id}"`) || text.get(f)!.includes(`'${id}'`));
+  // a test also cites the lab when it imports the lab's own definition module (definitions/<id>/vN) and replays its starter
+  const direct = testFiles.filter((f) => text.get(f)!.includes(`"${id}"`) || text.get(f)!.includes(`'${id}'`) || text.get(f)!.includes(`/definitions/${id}/v`));
   const viaFixture = testFiles.filter((f) => f.endsWith(".test.ts") && [...text.get(f)!.matchAll(/from "\.\/([A-Za-z0-9.]+\.fixture)"/g)].some((m) => direct.includes(`${m[1]}.ts`)));
   const files = [...new Set([...direct, ...viaFixture])].filter((f) => f.endsWith(".test.ts"));
   const parity = files.filter((f) => /parity|replay/i.test(f) || /browser-target bundle|server replay|round-trip|round trip/i.test(text.get(f)!));
@@ -228,13 +242,31 @@ async function closure(id: string) {
   const cite = citations(id);
   const thin: string[] = [], ceiling: string[] = [], guards: string[] = [];
   const bindingOf = (n: string) => failing(n).map((c) => `${c.id}: ${fmtMargin(c)}`);
+  /* A reference margin is capped by the offered load when the reference already completes (almost) everything that was offered: whole-run
+     completed + failed + deadline exceeded + abandoned + in flight, or every original message / due timer job. Such a margin cannot grow by
+     tuning the reference or the threshold, so it is a NOTE with the measured numbers, not a thin-margin FLAG. */
+  const wr = runs.reference?.report.terminal?.traffic?.wholeRun;
+  const offered = wr ? wr.completed + wr.failed + wr.deadlineExceeded + wr.abandoned + wr.inFlight : null;
+  const capOf = (c: Criterion, p: Pair | null) => {
+    const o = /(\d+) originals, .*?(\d+) acknowledged \(minimum (\d+)/.exec(c.detail);
+    if (o && o[1] === o[2]) return `${c.id}: load-capped, reference acknowledges all ${o[1]} originals against a minimum of ${o[3]}; the margin cannot grow`;
+    const due = /(\d+) due, (\d+) completed \(minimum (\d+)/.exec(c.detail);
+    if (due && due[1] === due[2]) return `${c.id}: load-capped, reference completes all ${due[1]} due jobs against a minimum of ${due[3]}; the margin cannot grow`;
+    if (p && offered !== null && p.dir === "min" && p.actual >= 0.99 * offered) return `${c.id}: load-capped, reference completes ${p.actual} of ${offered} offered callers against a minimum of ${p.bound} (${p.pct!.toFixed(1)}% over); the margin cannot grow`;
+    return null;
+  };
   // Thin reference margins. Bounds below 10 are discrete counts (one replica, two admissions): a structural condition, not a tunable margin.
   // A guard is a criterion the starter already meets; only a binding criterion (the starter fails it) can make a thin reference margin a problem.
-  for (const c of crit("reference")) for (const p of pairs(c)) if (p.pct !== null && p.pct < 3 && Math.abs(p.bound) >= 10 && c.status === "met") {
-    const binding = failing("starter").some((f) => f.id === c.id);
-    (binding ? thin : guards).push(`reference ${c.id} ${p.label} passes by only ${p.pct.toFixed(1)}% (${p.actual} vs ${p.bound})${binding ? "" : " [guard: the starter already meets it]"}`);
+  for (const c of crit("reference")) {
+    const cap = capOf(c, null);
+    if (cap) ceiling.push(cap);
+    for (const p of pairs(c)) if (p.pct !== null && p.pct < 3 && Math.abs(p.bound) >= 10 && c.status === "met") {
+      const capped = cap ?? capOf(c, p);
+      if (capped) { if (!ceiling.includes(capped)) ceiling.push(capped); continue; }
+      const binding = failing("starter").some((f) => f.id === c.id);
+      (binding ? thin : guards).push(`reference ${c.id} ${p.label} passes by only ${p.pct.toFixed(1)}% (${p.actual} vs ${p.bound})${binding ? "" : " [guard: the starter already meets it]"}`);
+    }
   }
-  for (const c of crit("reference")) { const o = /(\d+) originals, .*?(\d+) acknowledged \(minimum (\d+)/.exec(c.detail); if (o && o[1] === o[2]) ceiling.push(`${c.id}: reference acknowledges all ${o[1]} originals, so its margin over the ${o[3]} minimum cannot grow`); }
   for (const n of ["starter", "nearMiss"]) for (const c of failing(n)) for (const p of pairs(c)) if (p.pct !== null && p.pct < 0 && p.pct > -3) thin.push(`${n} ${c.id} ${p.label} fails by only ${Math.abs(p.pct).toFixed(1)}% (${p.actual} vs ${p.bound})`);
   void start0;
   Object.assign(out, {
@@ -272,11 +304,12 @@ console.log("\nCITED EXISTING TESTS (replay parity and evidence refusal)");
 for (const r of results) { const c = r.cite as { parity: string[]; refusal: string[] } | undefined; if (c) console.log(`- ${r.id}: parity/replay [${c.parity.join(", ") || "none found"}]; evidence refusal [${c.refusal.join(", ") || "none found"}]`); }
 console.log("\nFLAGS (real problems only)");
 let flags = 0;
-const guardNotes: string[] = [];
+const guardNotes: string[] = [], capNotes: string[] = [];
 for (const r of results) {
   const s = r.status as Record<string, string> | undefined;
   for (const g of (r.guards as string[] | undefined) ?? []) guardNotes.push(`${r.id}: ${g}`);
-  const problems = [...((r.errors as string[]) ?? []), ...((r.probeProblems as string[]) ?? []), ...((r.thin as string[]) ?? []), ...((r.ceiling as string[]) ?? []).map((x) => `ceiling-capped: ${x}`)];
+  for (const g of (r.ceiling as string[] | undefined) ?? []) capNotes.push(`${r.id}: ${g}`);
+  const problems = [...((r.errors as string[]) ?? []), ...((r.probeProblems as string[]) ?? []), ...((r.thin as string[]) ?? [])];
   if (s) {
     if (s.starter !== "not-met") problems.push(`starter is ${s.starter}`);
     if (s.reference !== "met") problems.push(`reference is ${s.reference}`);
@@ -291,4 +324,6 @@ for (const r of results) {
 console.log(flags === 0 ? "none" : `${flags} flag(s)`);
 console.log("\nNOTES (not problems): thin margins on guard criteria that the starter already meets");
 for (const g of guardNotes) console.log(`- ${g}`);
+console.log("\nNOTES (not problems): references capped by the offered load (measured, known and accepted)");
+for (const g of capNotes) console.log(`- ${g}`);
 void basename;
