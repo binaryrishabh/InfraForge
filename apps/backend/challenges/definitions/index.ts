@@ -1,3 +1,6 @@
+import { protectOneApiRouteV2 } from "./protect-one-api-route/v2";
+import { limitOrCapacityV2 } from "./limit-or-capacity/v2";
+import { retryingAFullPoolV2 } from "./retrying-a-full-pool/v2";
 import { cacheAnEmptyAnswerV1 } from "./cache-an-empty-answer/v1";
 import { chooseARetryMitigationV2 } from "./choose-a-retry-mitigation/v2";
 import { restoreADatabaseWriterV2 } from "./restore-a-database-writer/v2";
@@ -172,7 +175,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   oneBiggerOrTwoSmallerV1,
   routeAroundASlowVmV1,
   leaveRoomForABurstV1,
-  retryingAFullPoolV1,
+  retryingAFullPoolV1, retryingAFullPoolV2,
   moveReadsOffTheWriterV1,
   budgetAppDatabaseSessionsV1,
   replicasDoNotTakeWritesV1,
@@ -186,7 +189,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   catalogueLinkFlashV1,
   catalogueLinkFlashV2,
   flashSaleOrderBacklogV1,
-  protectOneApiRouteV1,
+  protectOneApiRouteV1, protectOneApiRouteV2,
   queueOverlappingJobsV1,
   boundFunctionPoolPressureV1,
   writesCostMoreThanReadsV1,
@@ -201,7 +204,7 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   cacheOrDatabaseV1,
   cacheOrDatabaseV2,
   oneVmOrAPoolV1,
-  limitOrCapacityV1,
+  limitOrCapacityV1, limitOrCapacityV2,
   splitTheCapacityBudgetV1,
   splitTheCapacityBudgetV2,
   openAndSizeAnApiV1,

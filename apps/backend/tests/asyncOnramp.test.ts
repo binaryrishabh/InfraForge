@@ -43,9 +43,10 @@ test("async depth has canonical reviewed practice at all three levels and honest
     expect((table as Record<string, Record<string, number>>)[level]![kind]!).toBeGreaterThanOrEqual(n);
   }
   const lab = lessons.find(l => l.id === "parallel-jobs-for-a-burst")!;
-  expect(lab).toMatchObject({kind: "executable-lab", level: "advanced", contentVersion: 1, moduleId: "burst-workers", check: null});
+  expect(lab.contentVersion).toBeGreaterThanOrEqual(1);
+  expect(lab).toMatchObject({kind: "executable-lab", level: "advanced", moduleId: "burst-workers", check: null});
   const entry = latestChallenge(lab.experiment!.challengeId)!;
-  expect(REVIEWED_CHALLENGES[`${lab.id}@1`]).toEqual({challengeId: entry.definition.id, version: 1, hash: entry.hash});
+  expect(REVIEWED_CHALLENGES[`${lab.id}@${lab.contentVersion}`]).toEqual({challengeId: entry.definition.id, version: entry.definition.version, hash: entry.hash});
   expect(lab.prerequisites.every(id => learningContent.lessons.some(l => l.id === id))).toBe(true);
   expect(entry.definition.hints).toHaveLength(3); expect(entry.definition.hints[2]).toContain("Jobs in parallel");
   console.info(JSON.stringify({async: table}));

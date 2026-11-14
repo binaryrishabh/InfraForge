@@ -19,7 +19,8 @@ test("scaling registers three executable labs with real challenges, limitations 
   expect(new Set(registeredLessons.map(l => l.id)).size).toBe(registeredLessons.length);
   expect(new Set(tracks.map(t => t.id)).size).toBe(tracks.length);
   for (const lesson of labs) {
-    expect(lesson).toMatchObject({trackId: "scaling", moduleId: "serving-under-load", kind: "executable-lab", contentVersion: 1, availability: "available"});
+    expect(lesson.contentVersion).toBeGreaterThanOrEqual(1);
+    expect(lesson).toMatchObject({trackId: "scaling", moduleId: "serving-under-load", kind: "executable-lab", availability: "available"});
     expect(lesson.prerequisites.every(id => registeredLessons.some(l => l.id === id))).toBe(true);
     expect(lesson.limitations.length).toBeGreaterThan(0);
     expect(lesson.limitations.every(text => text.trim().length > 0)).toBe(true);

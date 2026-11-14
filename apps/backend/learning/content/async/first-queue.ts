@@ -1,5 +1,5 @@
 import type { LearningModule } from "@infraforge/contracts/learning";
-import { keepWaitingWork } from "./lessons/keep-waiting-work";
+import { keepWaitingWorkV2 as keepWaitingWork } from "./lessons/keep-waiting-work-v2";
 import { whyWorkWaits } from "./lessons/why-work-waits";
 import { countWaitingJobs } from "./lessons/count-waiting-jobs";
 

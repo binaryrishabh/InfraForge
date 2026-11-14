@@ -450,10 +450,81 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     reason: "6 is the first controlled promotion-second input that misses the caller requirement, measured by apps/backend/tests/olderLabLessonCorrections.test.ts (100 completed, 40 unsuccessful); it names the near miss and is not a result claim.",
   },
   {
+    lesson: "share-a-cache-fill@4", field: "limitations.3",
+    text: "With Single-flight still off, a TTL of 2 to 5 seconds also meets these requirements. That reuses completed fills for longer; this lesson isolates sharing an unfinished fill.",
+    values: ["2", "5"],
+    reason: "Measured through attemptRow + buildRunReport in apps/backend/tests/closureLearningCorrections.test.ts: TTL 2, 3, 4 and 5 with Single-flight off each produce p95 3.754 ms, 1000 completed and no unsuccessful callers; starter p95 is 142.648 ms.",
+  },
+  {
+    lesson: "keep-waiting-work@2", field: "limitations.3",
+    text: "A faster worker using 100 ms of CPU work per job also meets these requirements with the original retention. This lesson keeps worker speed fixed to isolate message lifetime.",
+    values: ["100"],
+    reason: "Measured through attemptRow + buildRunReport in apps/backend/tests/closureLearningCorrections.test.ts: CPU work 100 ms with retention still 1 second acknowledges 230 and expires none, compared with 151 acknowledged and 79 expired in the starter.",
+  },
+  {
+    lesson: "queue-overlapping-jobs@2", field: "limitations.3",
+    text: "Retries are disabled here. Idempotency, duplicate effects, exactly-once guarantees, physical clock accuracy and production availability remain unverified. A Healthy terminal sample cannot reconstruct earlier successful work. Raising only function concurrency to 32 also meets the job requirements with overlap still allowed. That admits overlapping work rather than serializing it; this lesson isolates queued overlap.",
+    values: ["32"],
+    reason: "Measured through attemptRow + buildRunReport in apps/backend/tests/closureLearningCorrections.test.ts: Function concurrency 32 with overlap still allow completes all 20 jobs with none missed or outstanding and no queued starts; starter completes 15 and misses 5.",
+  },
+  {
+    lesson: "find-the-denying-rule@2", field: "explanation.2",
+    text: "Only after diagnosis, change quarantine-db priority from 0 to 20 on fw. Run again and compare admissions and caller outcomes. Try increasing only fw flow capacity as a separate near miss.",
+    values: ["20"],
+    reason: "Priority 20 is the tested quarantine-rule reference input, not an admission measurement. Sources: apps/backend/tests/failureLabsCalibration.test.ts.",
+  },
+  {
+    lesson: "route-around-a-slow-vm@2", field: "limitations.3",
+    text: "Raising only the slow VM's CPU quota to 50% also meets the latency requirement under round robin. This lesson keeps both quotas fixed to isolate backend selection.",
+    values: ["50"],
+    reason: "Measured through attemptRow + buildRunReport in apps/backend/tests/closureLearningCorrections.test.ts: Raising only slow.limitPercent from 25 to 50 under round robin lowers final-second p95 from 962.894 to 3.436 ms and meets the unchanged latency criterion.",
+  },
+  {
+    lesson: "parallel-jobs-for-a-burst@2", field: "limitations.3",
+    text: "Faster jobs using 125 ms of CPU work per job also meet these requirements with the original parallel-job setting. This lesson keeps job work fixed to isolate parallel slots.",
+    values: ["125"],
+    reason: "Measured through attemptRow + buildRunReport in apps/backend/tests/closureLearningCorrections.test.ts: CPU work 125 ms with concurrency still 1 acknowledges all 360 messages with none outstanding; starter acknowledges 319 with 41 outstanding.",
+  },
+  {
+    lesson: "leave-time-to-acknowledge@2", field: "problem.0",
+    text: "The result can be written before the message is acknowledged. A one-second lease expires during the worker's two-second acknowledgement delay.",
+    values: ["2"],
+    reason: "Two seconds is the unit conversion of the pinned 2000 ms ack delay, not another timing assumption. Source: pinned starter asyncWorker.acknowledgementDelayMs.",
+  },
+  {
+    lesson: "leave-time-to-acknowledge@2", field: "explanation.1",
+    text: "Select queue. Change only Visibility timeout from one to five seconds. Keep the 250 CPU milliseconds per job, 2000 millisecond acknowledgement delay, delivery limit and prefetch credit unchanged. Run again.",
+    values: ["5"],
+    reason: "Five seconds is the tested visibility reference input; all other settings are fixed. Sources: apps/backend/tests/asyncLabsCalibration.test.ts.",
+  },
+  {
+    lesson: "leave-time-to-acknowledge@2", field: "limitations.3",
+    text: "Reducing only acknowledgement delay to 0 ms also meets these requirements with the original visibility. This lesson keeps the delay fixed to isolate the message lease.",
+    values: ["0"],
+    reason: "Measured through attemptRow + buildRunReport in apps/backend/tests/closureLearningCorrections.test.ts: Acknowledgement delay 0 ms with visibility still 1 second acknowledges all 3 messages with no outstanding work or redeliveries; starter acknowledges none and redelivers 4 times.",
+  },
+  {
+    lesson: "retrying-a-full-pool@2", field: "limitations.3",
+    text: "The retry budget can also be met by absorbing retries in a deeper queue: using 64 queue places with five attempts passes. This is not the lesson; keep the queue fixed to isolate retry pressure, and inspect useful completions separately.",
+    values: ["64"],
+    reason: "Measured through attemptRow + buildRunReport in apps/backend/tests/closureLearningCorrections.test.ts: Queue capacity 64 with maximum attempts still 5 yields 529 backend admission attempts / 1200 offered callers = 0.441, meeting the unchanged budget. Both challenge versions are measured.",
+  },
+  {
+    lesson: "limit-or-capacity@2", field: "limitations.3",
+    text: "With the other settings fixed, one credit is the only accepted read burst value: it completes exactly the required two reads with no upstream failures; two credits already cause one upstream failure. The capacity alternative with three workers still fails; this protection requirement has no spare read-completion margin.",
+    values: ["2"],
+    reason: "Measured through attemptRow + buildRunReport in apps/backend/tests/closureLearningCorrections.test.ts: Burst 1 yields exactly 2 read completions and no upstream failures; burst 2 yields 2 read completions and 1 upstream failure. Three workers with starter credits still leave 7 upstream failures.",
+  },
+  {
+    lesson: "protect-one-api-route@2", field: "limitations.3",
+    text: "Protection refuses more offered work. Passing requirements do not establish availability, authentication, provider quotas, real prices or a whole-run latency SLO. With the other settings fixed, one credit is the only accepted read burst value: it completes exactly the required two reads with no upstream failures; two credits already cause one upstream failure. This protection requirement has no spare read-completion margin.",
+    values: ["2"],
+    reason: "Measured through attemptRow + buildRunReport in apps/backend/tests/closureLearningCorrections.test.ts: Burst 1 yields exactly 2 read completions and no upstream failures; burst 2 yields 2 read completions and 1 upstream failure. Write-route completions remain 299 in these runs.",
+  },
+  {
     lesson: "shed-load-at-the-edge@1", field: "limitations.2",
     text: "The final-second p95 excludes refused and unfinished callers, and a fixed-second sample proves no continuous behaviour. At the tested admission limits in this fixed workload, final-second p95 is about 3 ms times the Active requests limit; this is a measured model result, not a general sizing rule.",
     values: ["3"],
     reason: "apps/backend/tests/closureWindowTextPolish.test.ts measures attemptRow + buildRunReport p95 at active limits 8, 16 and 32: 24.070, 48.070 and 96.070 ms, approximately 3 ms per active request in this fixed workload.",
   },
-
 ];

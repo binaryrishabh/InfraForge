@@ -1,3 +1,4 @@
+import { closureCorrectionArchives } from "./closure-correction-archives";
 import { chooseARetryMitigationV2 } from "./lessons/choose-a-retry-mitigation-v2";
 import { dnsPublicationLessons } from "./dns-publication";
 export { track } from "./track";
@@ -9,4 +10,4 @@ export const lessons = [...firstFailureLessons, ...incidentEvidenceLessons, ...f
 import { dnsCacheLifetime as originalDnsCacheLifetime } from "./lessons/dns-cache-lifetime";
 import { leaveRoomForFirewallFlows as originalLeaveRoomForFirewallFlows } from "./lessons/leave-room-for-firewall-flows";
 import { chooseARetryMitigation as originalChooseARetryMitigation } from "./lessons/choose-a-retry-mitigation";
-export const archivedLessons = [chooseARetryMitigationV2, originalDnsCacheLifetime, originalLeaveRoomForFirewallFlows, originalChooseARetryMitigation];
+export const archivedLessons = [...closureCorrectionArchives, chooseARetryMitigationV2, originalDnsCacheLifetime, originalLeaveRoomForFirewallFlows, originalChooseARetryMitigation];

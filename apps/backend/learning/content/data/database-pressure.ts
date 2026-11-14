@@ -2,7 +2,7 @@ import type { LearningModule } from "@infraforge/contracts/learning";
 import { cacheHitsAndMisses } from "./lessons/cache-hits-and-misses";
 import { connectionPoolBudgetsV2 as connectionPoolBudgets } from "./lessons/connection-pool-budgets-v2";
 import { replicaReadsAndWriterWork } from "./lessons/replica-reads-and-writer-work";
-import { moveReadsOffTheWriter } from "./lessons/move-reads-off-the-writer";
+import { moveReadsOffTheWriterV2 as moveReadsOffTheWriter } from "./lessons/move-reads-off-the-writer-v2";
 import { budgetAppDatabaseSessions } from "./lessons/budget-app-database-sessions";
 import { replicasDoNotTakeWrites } from "./lessons/replicas-do-not-take-writes";
 
