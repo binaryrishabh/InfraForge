@@ -26,7 +26,9 @@ test("multi-key databases expose a tiny uniform/hot-key control with historical 
   expect(html).toContain("Access pattern"); expect(html).toContain('value="uniform" selected'); expect(html).toContain("Hot-key");
   expect(html).toContain("Hot-key sends about 80% of accesses to one stable key; the rest use the remaining keys.");
   const hot = renderToStaticMarkup(<DataKeyspaceSection resource={{ ...multi, dataKeyspace: { ...multi.dataKeyspace!, accessPattern: "hot-key" } }} disabled />);
-  expect(hot).toContain('value="hot-key" selected'); expect(hot.match(/disabled=""/g)).toHaveLength(2);
+  expect(hot).toContain('value="hot-key" selected'); 
+  const controls = hot.match(/<(?:select|input|button)\b[^>]*>/g) ?? [];
+  expect(controls.length).toBeGreaterThanOrEqual(3); for (const control of controls) expect(control).toContain('disabled=""'); // locked means every control is locked, however many the section grows
   expect(renderToStaticMarkup(<DataKeyspaceSection resource={db} disabled={false} />)).not.toContain("Access pattern");
 });
 
@@ -73,4 +75,18 @@ for (const accessPattern of [undefined, "uniform", "hot-key"] as const) test(`sa
     updateResource("db", { dataKeyspace: { version: 1, count: 10 } }); undo();
     expect(useCanvasStore.getState().resources[0]!.dataKeyspace?.count).toBe(100);
   } finally { saved.mockRestore(); }
+});
+
+test("multi-key databases expose a row lock order control that saves a strict value and clears back to one row per write", () => {
+  const multi: Resource = { ...db, dataKeyspace: { version: 1, count: 10 } };
+  const html = renderToStaticMarkup(<DataKeyspaceSection resource={multi} disabled={false} />);
+  expect(html).toContain("Row lock order"); expect(html).toContain('value="" selected'); expect(html).toContain("not any specific database product");
+  expect(renderToStaticMarkup(<DataKeyspaceSection resource={db} disabled={false} />)).not.toContain("Row lock order");
+  expect(renderToStaticMarkup(<DataKeyspaceSection resource={{ ...multi, rowLocking: { version: 1, rowsPerWrite: 2, order: "by-key" } }} disabled />)).toContain('value="by-key" selected');
+  useCanvasStore.getState().loadLayout([multi], [], "layout", "Data");
+  const saved = { version: 1 as const, rowsPerWrite: 2 as const, order: "as-requested" as const };
+  updateResource("db", { rowLocking: saved }); expect(useCanvasStore.getState().resources[0]!.rowLocking).toEqual(saved);
+  undo(); expect(useCanvasStore.getState().resources[0]!.rowLocking).toBeUndefined();
+  redo(); expect(useCanvasStore.getState().resources[0]!.rowLocking).toEqual(saved);
+  updateResource("db", { rowLocking: undefined }); expect(useCanvasStore.getState().resources[0]!.rowLocking).toBeUndefined();
 });

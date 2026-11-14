@@ -13,7 +13,9 @@ export function dataDeliveryLive(resource: CompiledProduct["input"]["resources"]
     const db = source.inspectData.database(resource.id);
     const state = current as { serving?: number; waiting?: number; queued?: number; rejected?: number; sessionRefused?: number } | undefined;
     return { ...(resource.replication ? { databaseReplication: databaseReplicationLive(db?.databaseReplication) } : {}), database: { ...(db?.databaseReadRouting ? { readRouting: db.databaseReadRouting } : {}), version: 1, serving: state?.serving ?? null, waiting: state?.waiting ?? null, queued: state?.queued ?? null,
-      rejected: state?.rejected ?? null, sessionRefused: state?.sessionRefused ?? null, "query-queue-full": db?.reasons["query-queue-full"] ?? null } };
+      rejected: state?.rejected ?? null, sessionRefused: state?.sessionRefused ?? null, "query-queue-full": db?.reasons["query-queue-full"] ?? null,
+      // Present only with a saved row lock order. A database that has not reported its lock manager is Unknown (null); a reported none is 0.
+      ...(resource.rowLocking ? { deadlocks: db?.locks ? db.locks.deadlocks : null, lockWaits: db?.locks ? db.locks.waits : null, deadlockVictims: db?.reasons ? db.reasons["deadlock-requester-victim"] ?? 0 : null } : {}) } };
   }
   if (resource.kind === "cache") {
     const cache = source.inspectData.cache(resource.id);

@@ -28,5 +28,5 @@ export function databaseKeyspace(database: Resource, bytes: Quantity<"bytes">): 
 export function validateDatabaseKeyspace(database: Resource, node: NodeContract) {
   if ((database.dataKeyspace?.count ?? 1) === 1) return;
   const keys = dataKeys(database), config = node.resources.find(r => r.role === node.primary)?.config;
-  if (config?.kind !== "relational" || config.access !== access(database) || JSON.stringify(config.keys) !== JSON.stringify(keys) || JSON.stringify(config.initial.map(r => r.key)) !== JSON.stringify(keys) || config.initial.some(r => r.version !== 1) || Object.values(config.plans).some(p => p.statements.some(s => s.keys.length !== 1 || s.keys[0] !== "$key"))) throw Error("Database profile must model its saved keyspace and access pattern with initial rows and selected-key plans");
+  if (config?.kind !== "relational" || config.access !== access(database) || JSON.stringify(config.keys) !== JSON.stringify(keys) || JSON.stringify(config.initial.map(r => r.key)) !== JSON.stringify(keys) || config.initial.some(r => r.version !== 1) || Object.values(config.plans).some(p => p.statements.some(s => s.keys.length !== 1 || (s.keys[0] !== "$key" && !(config.rowLocking && s.keys[0] === "$key2"))))) throw Error("Database profile must model its saved keyspace and access pattern with initial rows and selected-key plans");
 }

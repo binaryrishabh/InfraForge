@@ -1,7 +1,7 @@
 import { readRoutingAccounting, type DatabaseMember } from "./readRouting";
 import { databaseReplica } from "./replication";
 import { requireKnown } from "../../reality/quantity";
-import { selectDataKey } from "./selectKey";
+import { selectDataKey, orderedRowPair } from "./selectKey";
 import { cpuScheduler } from "../compute/scheduler";
 import type { EventClock } from "../time";
 import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
@@ -10,11 +10,12 @@ import { lockManager } from "./locks";
 import type { CausalObserver } from "../workload/causal";
 import type { DatabaseIo } from "./io";
 
-interface Tx { writerEpoch?: number; readSource?: "primary" | "replica"; orphaned?: boolean; work: Invocation; plan: TransactionPlan; step: number; phase: "queued" | "lock" | "cpu" | "io" | "wait" | "commit"; terminal: boolean; phaseAt: number; writes: Map<string, { version: number; bytes: number }>; rows: DataReply["rows"]; cancelTx?: () => boolean; cancelStatement?: () => boolean; cancelLock?: () => boolean; cancelWait?: () => boolean; cancelIo?: () => void; done(outcome: RemoteOutcome): void; session: string }
+interface Tx { writerEpoch?: number; readSource?: "primary" | "replica"; orphaned?: boolean; work: Invocation; plan: TransactionPlan; step: number; phase: "queued" | "lock" | "cpu" | "io" | "wait" | "commit"; terminal: boolean; phaseAt: number; writes: Map<string, { version: number; bytes: number }>; rows: DataReply["rows"]; cancelTx?: () => boolean; cancelStatement?: () => boolean; cancelLock?: () => boolean; cancelWait?: () => boolean; cancelIo?: () => void; done(outcome: RemoteOutcome): void; session: string; pair?: { first: string; second: string } }
 export function relationalDatabase(config: RelationalConfig, kernel: EventClock, causal?: CausalObserver, ownedCpu?: ReturnType<typeof cpuScheduler>, io?: DatabaseIo, seed = "") {
   const pg2 = config.semantics === "postgresql-keyed/2", pg = pg2 || config.semantics === "postgresql-keyed/1";
   if (config.readRouting && (!config.replication || ownedCpu || io)) throw Error("Read routing models independent member CPU and logical data only; host CPU bindings and finite IO are unsupported");
   if (io && !pg) throw Error("Finite IO requires PostgreSQL session semantics");
+  if (config.rowLocking && (io || config.replication || config.readRouting)) throw Error("A saved row-lock order models one unreplicated database without finite IO");
   const cpu = ownedCpu ?? cpuScheduler(config.id, requireKnown(config.execution.cores, "cores"), kernel), locks = lockManager();
   let rows = new Map(config.initial.map((r) => [r.key, { version: r.version, bytes: requireKnown(r.bytes, "bytes") }]));
   const routing = config.readRouting ? readRoutingAccounting(config.readRouting) : undefined;
@@ -105,7 +106,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
       if (!routing) t.readSource = replication.readSource(t.plan.statements.every(statement => statement.kind === "snapshot-read" || statement.kind === "lock-read"));
       if (!replication.sourceAvailable(t.readSource!)) { finish(t, false, routing && t.readSource === "replica" ? "database-replica-unavailable" : "database-primary-unavailable"); return; }
     }
-    const keys = s.keys.map((k) => k === "$key" ? key! : k);
+    const keys = s.keys.map((k) => k === "$key" ? t.pair?.first ?? key! : k === "$key2" ? t.pair?.second ?? k : k);
     if (keys.some((k) => !keyspace.has(k))) { finish(t, false, "key-outside-dataset"); return; }
     const observe = () => keys.flatMap((k) => { const row = t.writes.get(k) ?? (replication && t.readSource ? replication.read(k, t.readSource) : rows.get(k)); return row ? [{ key: k, ...row }] : s.kind === "insert" ? [{ key: k, version: 0, bytes: requireKnown(s.insertBytes!, "bytes") }] : []; });
     const snapshot = observe();
@@ -211,6 +212,8 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
       io?.resolve(work);
       received++; const session = work.sessionId ?? work.callId;
       const plan = config.plans[work.operation]!;
+      const requestedKey = (work.message?.request as DataRequest | undefined)?.key;
+      const pair = config.rowLocking && requestedKey !== undefined && plan.statements.some(s => s.keys.includes("$key2")) ? orderedRowPair(config.keys, requestedKey, config.rowLocking.order, seed, config.id, work.rootId) : undefined;
       const writes = plan.statements.some(s => s.kind === "write" || s.kind === "insert");
       const source = replication?.readSource(routing ? plan.statements.every(s => s.kind === "snapshot-read") : !writes);
       const fullSession = routing ? source !== undefined && sessionMembers.get(session) !== source && memberSessions(source, session) >= sessionLimit : !sessions.has(session) && sessions.size >= sessionLimit;
@@ -229,7 +232,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
       sessions.set(session, undefined); admitted++;
       causal?.({ atUs: kernel.now, kind: "db-admitted", resource: config.id, work, detail: { session } });
       const counts = byClass.get(work.operation) ?? { admitted: 0, committed: 0, aborted: 0, cancelled: 0 }; counts.admitted++; byClass.set(work.operation, counts);
-      const t: Tx = { writerEpoch: sessionEpochs.get(session) ?? replication?.epoch(), work, done, plan: config.plans[work.operation]!, step: 0, phase: "queued", phaseAt: kernel.now, terminal: false, writes: new Map(), rows: [], session };
+      const t: Tx = { writerEpoch: sessionEpochs.get(session) ?? replication?.epoch(), work, done, plan: config.plans[work.operation]!, step: 0, phase: "queued", phaseAt: kernel.now, terminal: false, writes: new Map(), rows: [], session, ...(pair ? { pair } : {}) };
       if (replication) t.readSource = routing ? source : replication.readSource(t.plan.statements.every(s => s.kind === "snapshot-read" || s.kind === "lock-read"));
       if (routing) routing.members[source!].admitted++;
       if (io) phaseEntries.queued++;
@@ -241,7 +244,7 @@ export function relationalDatabase(config: RelationalConfig, kernel: EventClock,
     pause(value: boolean) { paused = value; replication?.wholeAvailability(!value); cpu.pause(value); replicaCpu?.pause(value); if (value) { for (const t of [...active.values(), ...queue.values()]) if (!(pg && t.phase === "commit")) finish(t, false, "database-unavailable"); if (pg2) { for (const id of [...sessions.keys()]) closeSlot(id); } else { if (pg) sessionEvents.closed += sessions.size; for (const id of [...sessionTrace.keys()]) { sessionTrace.get(id)!("db-session-closed"); sessionTrace.delete(id); } sessions.clear(); } } else pump(); },
     capacity(value: number) { cpu.capacity(value); replicaCpu?.capacity(value); }, sessionCapacity(value: number) { sessionLimit = value; },
     measure: () => ({ id: config.id, ...(pg2 ? { sessions: sessions.size, sessionLimit: sessionLimit * (routing ? 2 : 1), sessionRefused: sessionEvents.refused, orphaned: [...sessions.values()].filter(t => t?.orphaned).length } : {}), paused, received, admitted, rejected, completed: committed, failed: aborted, cancelled, queued: queue.size, serving: [...active.values()].filter((t) => t.phase !== "lock").length, waiting: [...active.values()].filter((t) => t.phase === "lock").length, consumedCoreUs: cpu.measure().appCoreUs + (replicaCpu?.measure().appCoreUs ?? 0), busySlotUs: activeArea + active.size * (kernel.now - activeAnchor) }),
-    evidence: () => ({ id: config.id, ...(routing ? { databaseReadRouting: { ...routing.evidence(), members: { primary: memberEvidence("primary"), replica: memberEvidence("replica") }, unboundSessions: sessions.size - sessionMembers.size } } : {}), ...(replication ? { databaseReplication: { ...replication.evidence(), sessionInvalidations, connectionInvalidations, failedWritesWithoutWriter } } : {}), ...(io ? { ioProfile: "postgresql-keyed-io/1", ioPhases: {
+    evidence: () => ({ id: config.id, ...(config.rowLocking ? { rowLocking: { order: config.rowLocking.order, rowsPerWrite: 2 } } : {}), ...(routing ? { databaseReadRouting: { ...routing.evidence(), members: { primary: memberEvidence("primary"), replica: memberEvidence("replica") }, unboundSessions: sessions.size - sessionMembers.size } } : {}), ...(replication ? { databaseReplication: { ...replication.evidence(), sessionInvalidations, connectionInvalidations, failedWritesWithoutWriter } } : {}), ...(io ? { ioProfile: "postgresql-keyed-io/1", ioPhases: {
       elapsedUs: Object.fromEntries(Object.entries(phaseUs).map(([name, elapsed]) => [name, elapsed + [...active.values(), ...queue.values()].filter(t => t.phase === name).reduce((n, t) => n + kernel.now - t.phaseAt, 0)])),
       entries: { ...phaseEntries }, note: "Transaction phase durations/populations; CPU phase includes scheduler contention, IO phase includes coalesced waiting. Device queue/service receipts remain separate; pool wait belongs to transport." } } : {}), ...(pg ? { profile: config.semantics, sessionEvents: { ...sessionEvents }, timing: "assumption-only", queryAdmission: "authored gate; not a PostgreSQL server setting" } : {}), sessions: { ...(pg2 ? { orphaned: [...sessions.values()].filter(t => t?.orphaned).length } : {}), total: sessions.size, active: [...sessions.values()].filter(Boolean).length, idle: [...sessions.values()].filter((s) => !s).length, limit: sessionLimit * (routing ? 2 : 1) }, transactions: { admitted, committed, aborted, cancelled, live: active.size + queue.size }, statements, logicalReads, logicalWrites, generatedLogBytes: logBytes, durableAcknowledgedCommits: durableCommits,
       rows: [...rows].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, value]) => ({ key, ...value })), locks: locks.measure(), waiters: locks.waiters(), cpu: cpu.measure(), reasons: { ...reasons }, queryClasses: Object.fromEntries([...byClass].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)), queries: { executingCpu: [...active.values()].filter((t) => t.phase === "cpu").length, lockWaiting: [...active.values()].filter((t) => t.phase === "lock").length, blockingWait: [...active.values()].filter((t) => t.phase === "wait").length, committing: [...active.values()].filter((t) => t.phase === "commit").length }, active: [...active.values()].map((t) => ({ id: t.work.callId, session: t.session, operation: t.work.operation, step: t.step, phase: t.phase, pendingWrites: t.writes.size })), queued: queue.size, physicalBufferHits: "Unknown", storageDeviceLatency: "Unknown" }),

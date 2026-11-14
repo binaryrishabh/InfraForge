@@ -31,6 +31,7 @@ export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeRevie
   "trace-a-burst-backlog@1": {challengeId: "trace-a-burst-backlog", version: 1, hash: "1b1b09412ae80259df0267e08ab819e2975de012729d157e5ca457404784d5fe"},
   "serve-stale-on-error@1": {challengeId: "serve-stale-on-error", version: 1, hash: "b6d4e2a48bd2af5b98b154609f2cf0983fa6474c33047aea167379a1abeed62e"},
   "refresh-after-a-write@1": {challengeId: "refresh-after-a-write", version: 1, hash: "ccb974c894fd10ef74dd99558b5796ab586a3317c90db39ed147e842e53893ad"},
+  "order-the-row-locks@1": {challengeId: "order-the-row-locks", version: 1, hash: "025d8237c11bfc2e5c72e211b9c4ac49bbcc7d5a9d589eb99e43f18409cdcc2b"},
   "keep-failed-events@1": {challengeId: "keep-failed-events", version: 1, hash: "f41d021a161a10f7a78c4b94ba3252d0039e152a5022c7f4b6c5afa544f829f7"},
   "redrive-after-the-fix@1": {challengeId: "redrive-after-the-fix", version: 1, hash: "d25775340b5d367a9ed3610e7e56ee92a861587ea169ce27d31a7c2627dbe044"},
   "scale-on-delivered-samples@1": {challengeId: "scale-on-delivered-samples", version: 1, hash: "4d183d5703292cd68d074287b8a9b35f12caf893ec74c8f4f1fbc09cd644a9ba"},
