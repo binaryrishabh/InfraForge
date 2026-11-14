@@ -13,9 +13,10 @@ export function DataKeyspaceSection({ resource, disabled }: { resource: Resource
         {choices.map(value => <option key={value} value={value}>{value.toLocaleString("en-US")}</option>)}
       </Select>}
     </Field>
+    {resource.dataKeyspace?.absentCount !== undefined && <p className="text-xs text-ink-3">Initially absent keys: {resource.dataKeyspace.absentCount}. This read-only dataset has no inserts.</p>}
     {count > 1 && <Field label="Access pattern" hint="Hot-key sends about 80% of accesses to one stable key; the rest use the remaining keys.">
       {({ id, describedBy }) => <Select id={id} aria-describedby={describedBy} value={resource.dataKeyspace?.accessPattern ?? "uniform"} disabled={disabled}
-        onChange={event => updateResource(resource.id, { dataKeyspace: { version: 1, count, accessPattern: event.target.value === "hot-key" ? "hot-key" : "uniform" } })}>
+        onChange={event => updateResource(resource.id, { dataKeyspace: { ...resource.dataKeyspace, version: 1, count, accessPattern: event.target.value === "hot-key" ? "hot-key" : "uniform" } })}>
         <option value="uniform">Uniform</option>
         <option value="hot-key">Hot-key</option>
       </Select>}

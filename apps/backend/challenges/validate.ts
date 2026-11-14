@@ -46,7 +46,7 @@ const definition = z.object({
   scenario: z.unknown().optional(),
 }).strict();
 
-const CRITERIA = ["stale-reads", "function-reuse", "startup-capacity", "database-redundancy", "monitoring-delivery", "pool-in-service", "bus-dead-letters", "cdn-origin-load", "cache-stale-answers", "cache-fresh-reads", "database-deadlocks", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
+const CRITERIA = ["stale-reads", "function-reuse", "startup-capacity", "database-redundancy", "monitoring-delivery", "pool-in-service", "bus-dead-letters", "cdn-origin-load", "cache-stale-answers", "cache-fresh-reads", "cache-negative-load", "database-deadlocks", "deployment-checks", "min-app-servers", "catalog-sizes", "security-clean", "monthly-budget", "overall-health",
   "no-saturation", "database-healthy", "database-connections", "survivors-unsaturated", "terminal-p95", "backend-admission-budget", "queue-work", "queue-ready-age", "firewall-admission-budget", "gateway-route-work", "scheduler-work", "function-work", "caller-outcomes"];
 const PREDICTIONS = ["overall-health", "database-health", "busiest-type", "busiest-resource", "security-clean", "scale-out", "baseline-health", "survivor-health", "target-health", "database-admission"];
 const NEEDS_EXPERIMENT = new Set(["survivors-unsaturated", "baseline-health", "survivor-health", "target-health"]);
@@ -102,6 +102,7 @@ function checkDefinition(d: ChallengeDefinition): string[] {
     }
     if (c.kind === "cache-stale-answers" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || ![c.minStaleServed, c.maxStaleAgeSeconds, c.maxTtlSeconds].every(n => Number.isSafeInteger(n) && n >= 1) ||
       !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.Cache && r.cachePolicy?.ttlSeconds !== undefined))) problems.push(`${where}: cache-stale-answers needs Model 2, its named starter cache with a saved TTL and positive limits`);
+    if (c.kind === "cache-negative-load" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isFinite(c.maxSourceReadsPerAnswer) || c.maxSourceReadsPerAnswer <= 0 || c.maxSourceReadsPerAnswer >= 1 || !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.Cache && r.cachePolicy?.negativeTtlSeconds !== undefined))) problems.push(`${where}: cache-negative-load needs Model 2, a marked starter cache and a ratio strictly between zero and one`);
     if (c.kind === "cache-fresh-reads" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isSafeInteger(c.maxOutdatedHits) || c.maxOutdatedHits < 0 || !Number.isSafeInteger(c.minHits) || c.minHits < 1 ||
       !d.starter?.resources.some(r => r.id === c.resourceId && r.type === RESOURCE_TYPES.Cache && typeof r.cachePolicy?.invalidateOnWrite === "boolean"))) problems.push(`${where}: cache-fresh-reads needs Model 2, its named starter cache with a saved write policy and nonnegative or positive limits`);
     if (c.kind === "database-deadlocks" && (d.engine !== "2" || !id.safeParse(c.resourceId).success || !Number.isSafeInteger(c.maxDeadlocks) || c.maxDeadlocks < 0 ||

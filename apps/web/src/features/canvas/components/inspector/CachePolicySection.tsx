@@ -5,10 +5,10 @@ import { updateResource } from "../../actions";
 import { InspectorSection } from "./InspectorSection";
 
 export function CachePolicySection({ resource, disabled }: { resource: Resource; disabled: boolean }) {
-  const commit = (patch: Partial<Pick<CachePolicy, "ttlSeconds" | "singleFlight" | "staleSeconds" | "invalidateOnWrite">>) => updateResource(resource.id, { cachePolicy: { version: 1, ...resource.cachePolicy, ...patch } });
+  const commit = (patch: Partial<Pick<CachePolicy, "ttlSeconds" | "singleFlight" | "staleSeconds" | "invalidateOnWrite" | "negativeTtlSeconds">>) => updateResource(resource.id, { cachePolicy: { version: 1, ...resource.cachePolicy, ...patch } });
   const capacity = (value: string) => {
-    const { ttlSeconds, singleFlight, staleSeconds, invalidateOnWrite } = resource.cachePolicy ?? {};
-    const policy: CachePolicy = value === "" ? { version: 1, ttlSeconds, singleFlight, staleSeconds, invalidateOnWrite } : { version: 2, capacityEntries: Number(value), ttlSeconds, singleFlight, staleSeconds, invalidateOnWrite };
+    const { ttlSeconds, singleFlight, staleSeconds, invalidateOnWrite, negativeTtlSeconds } = resource.cachePolicy ?? {};
+    const policy: CachePolicy = value === "" ? { version: 1, ttlSeconds, singleFlight, staleSeconds, invalidateOnWrite, negativeTtlSeconds } : { version: 2, capacityEntries: Number(value), ttlSeconds, singleFlight, staleSeconds, invalidateOnWrite, negativeTtlSeconds };
     updateResource(resource.id, { cachePolicy: policy });
   };
   return <InspectorSection title="Cache behavior">
@@ -27,6 +27,11 @@ export function CachePolicySection({ resource, disabled }: { resource: Resource;
         {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} type="number" min={1} max={CACHE_TTL_MAX_SECONDS} step={1} placeholder="Off"
           value={resource.cachePolicy?.staleSeconds ?? ""} disabled={disabled}
           onChange={event => commit({ staleSeconds: event.target.value === "" ? undefined : Number(event.target.value) })} />}
+      </Field>
+      <Field label="Negative cache TTL" hint="Seconds to reuse a successful empty query result. Zero disables it. Errors are never cached as absence. Supports static read-only data; inserts and mutable absence visibility are outside this model.">
+        {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} type="number" min={0} max={CACHE_TTL_MAX_SECONDS} step={1}
+          value={resource.cachePolicy?.negativeTtlSeconds ?? 0} disabled={disabled}
+          onChange={event => commit({ negativeTtlSeconds: event.target.value === "" ? undefined : Number(event.target.value) })} />}
       </Field>
       <Switch label="Single-flight" checked={resource.cachePolicy?.singleFlight === true} disabled={disabled}
         onChange={singleFlight => commit({ singleFlight })}

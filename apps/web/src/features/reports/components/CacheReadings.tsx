@@ -4,9 +4,10 @@ type Resource = ReportCheckpoint["resources"][number];
 const cacheRows = [["hits", "Cache: Hits"], ["misses", "Cache: Misses"], ["expirations", "Cache: Expirations"],
   ["evictions", "Cache: Evictions"], ["coalescedWaiters", "Cache: Targeting-helper coalesced waiters"],
   ["staleServed", "Cache: Stale answers served"], ["maxStaleAgeUs", "Cache: Oldest stale answer past expiry (us)"],
+  ["absentAnswers", "Cache: Absent answers"], ["negativeHits", "Cache: Negative hits"], ["absentSourceReads", "Cache: Empty source queries"],
   ["outdatedHits", "Cache: Hits behind the database"], ["maxVersionsBehind", "Cache: Most versions behind"]] as const;
 // Rows that appear only when the saved setting that records them was present.
-const conditional = { staleServed: "staleServed", maxStaleAgeUs: "staleServed", outdatedHits: "outdatedHits", maxVersionsBehind: "outdatedHits" } as const;
+const conditional = { absentAnswers: "absentAnswers", negativeHits: "absentAnswers", absentSourceReads: "absentAnswers", staleServed: "staleServed", maxStaleAgeUs: "staleServed", outdatedHits: "outdatedHits", maxVersionsBehind: "outdatedHits" } as const;
 const helperRows = [["received", "Application helper: Received"], ["completed", "Application helper: Completed"],
   ["failed", "Application helper: Failed"], ["live", "Application helper: Live requests"],
   ["databaseFetches", "Application helper: Database fetches"], ["cacheFailures", "Application helper: Cache failures"],

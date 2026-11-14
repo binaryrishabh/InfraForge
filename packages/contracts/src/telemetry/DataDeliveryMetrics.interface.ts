@@ -27,6 +27,10 @@ export interface CacheMetrics {
   /** Present only with a saved write policy: hits whose body was older than the database committed version at that moment, and the largest gap in versions (0 when none was behind; null is Unknown). */
   outdatedHits?: number | null;
   maxVersionsBehind?: number | null;
+  /** Marked static read-only datasets only. Successful empty answers, those served from absence entries, and successful empty source queries (one per coalesced fill). Failures are excluded. */
+  absentAnswers?: number | null;
+  negativeHits?: number | null;
+  absentSourceReads?: number | null;
 }
 
 export interface CdnMetrics {

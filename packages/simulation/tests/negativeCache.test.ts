@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { createDataModel2 } from "../src/model2/data/run";
 import { dataFixture } from "./dataFixture";
 import { quantities } from "./workloadFixture";
+import { createHash } from "node:crypto";
 import { EventKernel } from "../src/model2/time";
 import { keyedCache } from "../src/model2/data/cache";
 import { cacheAside } from "../src/model2/data/aside";
@@ -74,4 +75,10 @@ test("failures, missing rows and malformed success replies are never cached as a
 });
 test("observation and batching do not alter negative-cache evidence",()=>{
   expect(run(true)).toEqual(run(true));
+});
+test("unmarked empty-result path keeps its baseline evidence bytes",()=>{
+  const input=dataFixture({keys:4,count:80,interval:500,horizon:60000,timeout:20000,ttl:100000,coalesce:true,slots:64,dbCpu:500});
+  const db=input.resources.find(r=>r.kind==="relational")!;if(db.kind==="relational")db.initial=[];
+  const m=createDataModel2(input);m.advanceTo(m.horizon);
+  expect(createHash("sha256").update(JSON.stringify(m.evidence())).digest("hex").slice(0,16)).toBe("eb6af165af49a45f");
 });

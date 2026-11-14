@@ -1,3 +1,4 @@
+import { cacheAnEmptyAnswerV1 } from "../challenges/definitions/cache-an-empty-answer/v1";
 import { openTheForwardingGateV1 } from "../challenges/definitions/open-the-forwarding-gate/v1";
 import { keepAFunctionWarmV1 } from "../challenges/definitions/keep-a-function-warm/v1";
 import { isolateRouteCreditsV1 } from "../challenges/definitions/isolate-route-credits/v1";
@@ -108,6 +109,7 @@ export function tier(n: number, opts: { vmSku?: string; dbSku?: string; cache?: 
 
 // Passing designs found during calibration; every one stays inside its challenge's budget.
 export const REFERENCE: Record<string, ChallengeStarter> = {
+  "cache-an-empty-answer": {...cacheAnEmptyAnswerV1.starter!, resources: cacheAnEmptyAnswerV1.starter!.resources.map(r => r.id === "cache" ? {...r, cachePolicy: {...r.cachePolicy!, negativeTtlSeconds: 30}} : r)},
   "release-the-cpu-budget": {...releaseTheCpuBudgetV1.starter!, resources: releaseTheCpuBudgetV1.starter!.resources.map(r => r.id === "app" ? {...r, vmCpuQuota: {...r.vmCpuQuota!, limitPercent: 100}} : r)},
   "open-the-forwarding-gate": {...openTheForwardingGateV1.starter!, resources: openTheForwardingGateV1.starter!.resources.map(r => r.id === "lb" ? {...r, lbAdmission: {...r.lbAdmission!, maxActive: 16}} : r)},
   "keep-a-function-warm": {...keepAFunctionWarmV1.starter!, resources: keepAFunctionWarmV1.starter!.resources.map(r => r.id === "fn" ? {...r, serverless: {...r.serverless!, idleExpiryMs: 5000}} : r)},

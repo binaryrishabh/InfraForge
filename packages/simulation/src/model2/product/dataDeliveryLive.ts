@@ -25,7 +25,11 @@ export function dataDeliveryLive(resource: CompiledProduct["input"]["resources"]
     // Freshness counters exist only for marked helpers; a helper that did not record them, or could not compare a hit, leaves the cache's counters Unknown (null).
     const fresh = resources.filter(r => r.kind === "cache-aside" && r.cache === resource.id).map(r => source.inspectData.application(r.id)?.freshness);
     const marked = fresh.some(f => f !== undefined), known = marked && fresh.every(f => f !== undefined && f.unobserved === 0);
+    const negative = resources.filter(r => r.kind === "cache-aside" && r.cache === resource.id).map(r => source.inspectData.application(r.id)?.negative);
+    const negativeKnown = negative.length > 0 && negative.every(n => n !== undefined);
+    const sumNegative = (key: "absentAnswers" | "negativeHits" | "absentSourceReads") => negativeKnown ? negative.reduce((sum, n) => sum + n![key], 0) : null;
     return { cache: { version: 1, hits: cache?.hits ?? null, misses: cache?.misses ?? null, expirations: cache?.expirations ?? null, evictions: cache?.evictions ?? null, coalescedWaiters,
+      ...(resource.negativeTtl !== undefined ? { absentAnswers: sumNegative("absentAnswers"), negativeHits: sumNegative("negativeHits"), absentSourceReads: sumNegative("absentSourceReads") } : {}),
       ...(marked ? { outdatedHits: known ? fresh.reduce((sum, f) => sum + f!.outdatedHits, 0) : null, maxVersionsBehind: known ? fresh.reduce((max, f) => Math.max(max, f!.maxVersionsBehind), 0) : null } : {}),
       ...(cache && "staleServed" in cache ? { staleServed: (cache as { staleServed: number }).staleServed, maxStaleAgeUs: (cache as { maxStaleAgeUs: number | null }).maxStaleAgeUs } : {}) } };
   }
