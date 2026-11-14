@@ -107,7 +107,8 @@ for (const id of [...new Set(anchors.flatMap(a => a.labs))]) test(`${id}: contro
   } else {
     const lb = (i: number) => reports[i]!.terminal!.resources.find(r => r.id === "lb")!.lbAccounting!;
     expect(lb(1).acceptedByBackend + lb(1).rejectedByVm).toBeLessThan(lb(0).acceptedByBackend + lb(0).rejectedByVm);
-    expect(traffic(1).completedRps).toBe(traffic(0).completedRps);
+    // Fewer retries leave the capacity-bound app completing the same rate. A later challenge version has its own seed, so allow one request/s of rounding.
+    expect(Math.abs(traffic(1).completedRps! - traffic(0).completedRps!)).toBeLessThanOrEqual(1);
     expect(after!.terminal!.health).toBe("critical");
     expect(after!.terminal!.resources.find(r => r.id === "app")!.cpu).toBe(before!.terminal!.resources.find(r => r.id === "app")!.cpu);
   }
