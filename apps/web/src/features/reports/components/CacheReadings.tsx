@@ -4,9 +4,10 @@ type Resource = ReportCheckpoint["resources"][number];
 const cacheRows = [["hits", "Cache: Hits"], ["misses", "Cache: Misses"], ["expirations", "Cache: Expirations"],
   ["evictions", "Cache: Evictions"], ["coalescedWaiters", "Cache: Targeting-helper coalesced waiters"],
   ["staleServed", "Cache: Stale answers served"], ["maxStaleAgeUs", "Cache: Oldest stale answer past expiry (us)"],
+  ["absentAnswers", "Cache: Absent answers"], ["negativeHits", "Cache: Negative hits"], ["absentSourceReads", "Cache: Empty source queries"],
   ["outdatedHits", "Cache: Hits behind the database"], ["maxVersionsBehind", "Cache: Most versions behind"]] as const;
 // Rows that appear only when the saved setting that records them was present.
-const conditional = { staleServed: "staleServed", maxStaleAgeUs: "staleServed", outdatedHits: "outdatedHits", maxVersionsBehind: "outdatedHits" } as const;
+const conditional = { absentAnswers: "absentAnswers", negativeHits: "absentAnswers", absentSourceReads: "absentAnswers", staleServed: "staleServed", maxStaleAgeUs: "staleServed", outdatedHits: "outdatedHits", maxVersionsBehind: "outdatedHits" } as const;
 const helperRows = [["received", "Application helper: Received"], ["completed", "Application helper: Completed"],
   ["failed", "Application helper: Failed"], ["live", "Application helper: Live requests"],
   ["databaseFetches", "Application helper: Database fetches"], ["cacheFailures", "Application helper: Cache failures"],
@@ -21,6 +22,7 @@ export function CacheReadings({ resource, cache }: { resource: Resource; cache: 
     <p className="text-xs text-ink-3">Counters are cumulative counts from run start through this snapshot, including modeled internal work; they are separate from original callers and final-second requests/s. Live requests and fills in progress are current counts.</p>
     {cache && <dl>{cacheRows.filter(([key]) => !(key in conditional) || (resource.cache?.version === 1 && resource.cache[conditional[key as keyof typeof conditional]] !== undefined)).map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{value(resource.cache?.version === 1 ? resource.cache[key] : undefined)}</dd></div>)}</dl>}
     {cache && <p className="text-xs text-ink-3">Targeting-helper coalesced waiters sums helpers explicitly targeting this cache. It is not a cache command count; the same waiters appear under their helper owners.</p>}
+    {cache && resource.cache?.absentAnswers !== undefined && <p className="text-xs text-ink-3">Absent answers include successful empty replies to coalesced waiters. Empty source queries count successful empty replies returned to targeting helpers; failed and pending source work is excluded. Negative hits reuse cached absence.</p>}
     {(helpers?.length || !cache) && (helpers?.length ? helpers.map(helper => <div key={helper.id}>
       <h4 className="font-medium">Helper {helper.id}</h4><p>Cache {helper.cacheId}; database {helper.databaseId}</p>
       <dl>{helperRows.map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{value(helper[key])}</dd></div>)}</dl>

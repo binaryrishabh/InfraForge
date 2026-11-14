@@ -1,3 +1,4 @@
+import { cacheAnEmptyAnswerV1 } from "./cache-an-empty-answer/v1";
 import { chooseARetryMitigationV2 } from "./choose-a-retry-mitigation/v2";
 import { restoreADatabaseWriterV2 } from "./restore-a-database-writer/v2";
 import { notificationRetryStormV2 } from "./notification-retry-storm/v2";
@@ -206,5 +207,6 @@ export const CHALLENGE_VERSIONS: readonly ChallengeDefinition[] = [
   openAndSizeAnApiV1,
   testACircuitAgainV1,
   releaseTheCpuBudgetV1,
+  cacheAnEmptyAnswerV1,
 ];
 import { releaseTheCpuBudgetV1 } from "./release-the-cpu-budget/v1";

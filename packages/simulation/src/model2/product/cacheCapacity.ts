@@ -20,7 +20,9 @@ export function validateCacheCapacityBindings(resources: readonly Resource[], in
     for (const aside of asides) {
       if (aside.kind !== "cache-aside") continue;
       const database = input.resources.find(d => d.id === aside.database);
-      if (database?.kind !== "relational" || !database.initial.length || database.initial.some(row => capacity !== entries * (requireKnown(row.bytes, "bytes") + overhead))) throw Error("Logical capacity must equal saved entries times modeled row bytes plus per-entry overhead");
+      const saved = resources.find(d => d.id === aside.database)?.dataKeyspace;
+      const emptyDataset = saved?.absentCount === saved?.count && saved?.absentCount !== undefined;
+      if (database?.kind !== "relational" || (!database.initial.length && (!emptyDataset || capacity !== entries * (MODELED_ROW_BYTES + overhead))) || database.initial.some(row => capacity !== entries * (requireKnown(row.bytes, "bytes") + overhead))) throw Error("Logical capacity must equal saved entries times modeled row bytes plus per-entry overhead");
     }
   }
 }

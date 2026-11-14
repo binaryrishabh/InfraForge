@@ -19,6 +19,7 @@ export type ChallengeCriterion =
   | { id: string; kind: "database-redundancy"; label: string; resourceId: string }
   | { id: string; kind: "monitoring-delivery"; label: string; resourceId: string; backendId: string; targetIds: string[]; minGenerated: number; minReceived: number; maxBackendAgeUs: number }
   | { id: string; kind: "cache-stale-answers"; label: string; resourceId: string; minStaleServed: number; maxStaleAgeSeconds: number; maxTtlSeconds: number }
+  | { id: string; kind: "cache-negative-load"; label: string; resourceId: string; maxSourceReadsPerAnswer: number }
   | { id: string; kind: "cache-fresh-reads"; label: string; resourceId: string; maxOutdatedHits: number; minHits: number }
   | { id: string; kind: "database-deadlocks"; label: string; resourceId: string; maxDeadlocks: number }
   | { id: string; kind: "cdn-origin-load"; label: string; resourceId: string; maxOriginRequests: number; maxTtlSeconds: number }

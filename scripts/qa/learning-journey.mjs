@@ -346,6 +346,20 @@ export const JOURNEY_LABS = [
   },
 ];
 
+JOURNEY_LABS.push({
+  lessonId: "cache-an-empty-answer", title: /Cache an empty answer/,
+  prediction: "The database repeats successful empty queries, saturates and callers fail; an empty result is different from a failed query.",
+  hypothesis: "Diagnosis: Single-flight is already on, but a finished empty query is never retained. Raising only Negative cache TTL should reuse proven absence and reduce empty source queries without changing the dataset.",
+  runWaitMs: 420_000,
+  improvement: {
+    stepName: "cache's Negative cache TTL is changed from zero to 30 seconds",
+    nodeSelector: '[data-resource-id="cache"]', nodeText: /Cache/, fallbackText: "cache",
+    role: "spinbutton", name: /^Negative cache TTL$/, resourceId: "cache", setting: "cachePolicy.negativeTtlSeconds", from: 0, to: 30,
+  },
+  reportRequirements: [/^Complete 19000 callers with at most 100 unsuccessful$/, /^At most 0.1 empty source queries per successful absent answer$/],
+  expected: { starter: "Not met", improved: "Met" },
+});
+
 // Scaling stall capstone: JOURNEY_LAB=trace-a-scaling-stall JOURNEY_SHOTS=/tmp/scaling-stall node ../InfraForge/scripts/qa/learning-journey.mjs
 JOURNEY_LABS.push({
   lessonId: "trace-a-scaling-stall", title: /Trace a scaling stall/,

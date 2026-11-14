@@ -19,6 +19,7 @@ import { WholeRunSchema } from "../reports/wholeRunSchema";
 import { SecurityMetricsSchema } from "../reports/securitySchema";
 import { evaluateStaleAnswers } from "./staleCriterion";
 import { evaluateCdnOriginLoad } from "./cdnCriterion";
+import { evaluateNegativeCache } from "./negativeCriterion";
 import { evaluateFreshReads } from "./freshCriterion";
 import { evaluateDeadlocks } from "./deadlockCriterion";
 import { evaluateBusDeadLetters } from "./busCriterion";
@@ -168,6 +169,7 @@ class Judge {
       case "bus-dead-letters":
       case "cdn-origin-load":
       case "cache-stale-answers":
+      case "cache-negative-load":
       case "cache-fresh-reads":
       case "database-deadlocks":
       case "backend-admission-budget":
@@ -209,6 +211,11 @@ class Judge {
         return {...base, status: "not-evaluated", detail: "An unchanged captured topology and matching terminal revision are required.", sources: ["runInputs", "liveTopology", "topologyRevision", "terminalSnapshot.topologyRevision"]};
       }
       const result = evaluateStaleAnswers(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds, this.active);
+      return {...base, status: result.met === undefined ? "not-evaluated" : result.met ? "met" : "not-met", detail: result.detail, sources: result.sources};
+    }
+    if (c.kind === "cache-negative-load") {
+      if (this.evidence.topologyUnchanged !== true || this.atEvaluation?.topologyRevision !== this.evidence.topologyRevision) return {...base, status: "not-evaluated", detail: "An unchanged captured topology and matching terminal revision are required.", sources: ["runInputs", "liveTopology", "topologyRevision", "terminalSnapshot.topologyRevision"]};
+      const result = evaluateNegativeCache(c, this.evidence.input, this.atEvaluation, this.definition.evaluationSeconds, this.active, this.evidence.runInputs?.adapterProfiles);
       return {...base, status: result.met === undefined ? "not-evaluated" : result.met ? "met" : "not-met", detail: result.detail, sources: result.sources};
     }
     if (c.kind === "cache-fresh-reads") {

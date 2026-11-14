@@ -55,6 +55,9 @@ export function validateData(input: DataInput) {
       if (!r.keys.length || r.keys.length > caps.keys || r.keys.some((k) => !validKey(k)) || new Set(r.keys).size !== r.keys.length || !["cycle", "keyed-uniform", "keyed-hot"].includes(r.access) || !["fail", "database"].includes(r.onCacheFailure) || typeof r.coalesce !== "boolean" || typeof r.invalidateWrites !== "boolean") throw new Error("Invalid cache-aside key/policy");
       if (resources.get(r.cache)?.kind !== "cache" || resources.get(r.database)?.kind !== "relational" || !pairs.has(JSON.stringify([r.id, r.cache])) || !pairs.has(JSON.stringify([r.id, r.database]))) throw new Error("Missing cache-aside resource/path");
       const database = resources.get(r.database);
+      const cache = resources.get(r.cache);
+      if (r.negativeCaching !== undefined && (typeof r.negativeCaching !== "boolean" || cache?.kind !== "cache" || cache.negativeTtl === undefined || r.negativeCaching !== (num(cache.negativeTtl, "us") > 0) || r.trackFreshness || r.staleOnError || database?.kind !== "relational" || database.replication || database.readRouting)) throw Error("Negative cache evidence requires matching cache lifetime and a plain unreplicated source");
+      if (cache?.kind === "cache" && cache.negativeTtl !== undefined && r.negativeCaching === undefined) throw Error("Every helper targeting a negative cache must capture the policy");
       if (r.trackFreshness !== undefined && (r.trackFreshness !== true || database?.kind !== "relational" || database.replication || database.readRouting)) throw Error("Freshness evidence needs one unreplicated database as its committed-version source");
       if (database?.kind === "relational" && database.access !== undefined && (r.access !== database.access || JSON.stringify(r.keys) !== JSON.stringify(database.keys))) throw Error("Keyed cache-aside must share its database keyspace and access pattern");
       for (const op of input.operations) if (!["read", "write"].includes(r.operations[op.id]!)) throw new Error("Missing authored cache-aside operation");
@@ -66,6 +69,7 @@ export function validateData(input: DataInput) {
         const size = num(r.capacity, "bytes"), overhead = num(r.entryOverhead, "bytes");
         if (r.semantics !== "keyed-cache/1" || !["lru", "no-eviction"].includes(r.policy) || r.initial.reduce((n, x) => n + num(x.bytes, "bytes") + overhead, 0) > size) throw new Error("Invalid initial cache budget/policy");
         micros(horizon + num(r.ttl, "us", 1)); num(r.commandCpu, "cpu-us", Number.MIN_VALUE, false);
+        if (r.negativeTtl !== undefined) { micros(horizon + num(r.negativeTtl, "us")); if (r.staleFor) throw Error("Negative cache entries do not support stale fallback"); }
       } else {
         const routingError = databaseReadRoutingError("Database", r.readRouting, r.replication);
         if (routingError) throw Error(routingError);
