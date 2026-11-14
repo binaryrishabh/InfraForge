@@ -13,7 +13,7 @@ import { cacheLifetimeLessons } from "./cache-lifetime";
 import { writerFailureLessons } from "./writer-failure";
 import { dataTradeoffLessons } from "./data-tradeoffs";
 import { objectOwnershipLessons } from "./object-ownership";
-export const lessons = [...cacheAbsenceLessons, ...databasePressureLessons, ...cacheLifetimeLessons, ...writerFailureLessons, ...dataTradeoffLessons, ...objectOwnershipLessons, ...databaseIncidentLessons, ...objectCapacityLessons, ...databaseRedundancyLessons, ...cacheWorkingSetLessons, ...replicaFreshnessLessons, ...cacheFreshnessLessons, ...transactionLockingLessons];
+export const lessons = [...databasePressureLessons, ...cacheLifetimeLessons, ...writerFailureLessons, ...dataTradeoffLessons, ...objectOwnershipLessons, ...databaseIncidentLessons, ...objectCapacityLessons, ...databaseRedundancyLessons, ...cacheWorkingSetLessons, ...replicaFreshnessLessons, ...cacheFreshnessLessons, ...transactionLockingLessons, ...cacheAbsenceLessons];
 
 import { cacheEvidenceArchivedLessons } from "./cache-evidence-archives";
 import { connectionPoolBudgets } from "./lessons/connection-pool-budgets";

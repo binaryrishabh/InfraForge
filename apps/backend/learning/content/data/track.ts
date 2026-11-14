@@ -15,5 +15,5 @@ import { objectOwnership } from "./object-ownership";
 
 export const track: LearningTrack = {
   id: "data", availability: "available", title: "Databases and caching",
-  summary: "Follow read and write execution, budget database sessions and inspect delayed replica reads.", modules: [cacheAbsence, databasePressure, cacheLifetime, writerFailure, dataTradeoffs, objectOwnership, databaseIncident, objectCapacity, databaseRedundancy, cacheWorkingSet, replicaFreshness, cacheFreshness, transactionLocking],
+  summary: "Follow read and write execution, budget database sessions and inspect delayed replica reads.", modules: [databasePressure, cacheLifetime, writerFailure, dataTradeoffs, objectOwnership, databaseIncident, objectCapacity, databaseRedundancy, cacheWorkingSet, replicaFreshness, cacheFreshness, transactionLocking, cacheAbsence],
 };

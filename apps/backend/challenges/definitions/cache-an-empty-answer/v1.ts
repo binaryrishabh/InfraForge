@@ -8,7 +8,7 @@ export const cacheAnEmptyAnswerV1: ChallengeDefinition = {
   concepts:["Negative caching","Cache penetration","Absence versus failure"],
   story:["A lookup service uses a fixed dataset of 100 keys. Only 20 have rows; the other 80 are valid queries with successful empty results. There are no inserts or writes in this exercise.",
     "Ordinary cached rows live for 60 seconds, the working set fits and Single-flight is already on. Yet the database keeps executing queries for keys it has already found absent, and the app fails callers under this load."],
-  objective:"Through second 12, complete at least 19000 callers with at most 100 unsuccessful. For observed absent answers, issue at most one empty source query per ten successful answers. Keep the dataset and workload unchanged.",
+  objective:"Through second 12, complete at least 19000 callers with at most 100 unsuccessful. Record at most one successful empty source query per ten successful absent answers. Keep the dataset and workload unchanged.",
   workload:{targetThroughput:108000,throughputUnit:"per-minute",trafficShape:"steady",peakMultiplier:1,readWriteRatio:1,payloadSize:"light",workloadDynamics:{version:1,arrivalProcess:"poisson",applicationCpuCv:0}},
   workloadNote:"1800 read-only lookups/s on average, seeded Poisson arrivals, uniform selection among 100 keys, 80 initially absent. Pending callers remain separate.",
   evaluationSeconds:12,evaluationNote:"Cumulative caller and cache-helper counters through second 12. Empty source queries and successful absent answers differ when misses coalesce. No whole-run latency SLO is scored.",

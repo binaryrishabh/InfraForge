@@ -29,7 +29,7 @@ const resultFor=(design:ChallengeStarter)=>{if(!measured.has(design))measured.se
 const results=()=>[STARTER,REF,near,big].map(resultFor);
 
 test("cache-an-empty-answer: a stored absence avoids repeated real queries, with caller harm, a TTL near miss and a separate capacity improvement",()=>{
- expect(validateInfrastructureName(d.title)).toBeNull();expect(specHash(d)).toBe(new RegExp(`"${ID}@1": "([a-f0-9]{64})"`).exec(readFileSync(new URL("./challengeAuthoring.test.ts",import.meta.url),"utf8"))![1]);
+ expect(validateInfrastructureName(d.title)).toBeNull();expect(specHash(d)).toBe(new RegExp(`"${ID}@1": "([a-f0-9]{64})"`).exec(readFileSync(new URL("./challengeAuthoring.test.ts",import.meta.url),"utf8"))![1]!);
  const designs=[STARTER,REF,near,big],inputs=designs.map(s=>captureRunInputs(s,d.workload,challengeSeed(d)));
  for(const s of designs)expect(preflight(d,s).errors).toEqual([]);
  for(const i of inputs)expect(i.adapterProfiles).toContain("cache-negative/1");
@@ -37,6 +37,8 @@ test("cache-an-empty-answer: a stored absence avoids repeated real queries, with
  for(const i of inputs.slice(1))expect(i.adapterProfiles).toEqual(inputs[0]!.adapterProfiles);
  for(const i of inputs.slice(1))expect(reviewDesignChanges(inputs[0]!,i)).toMatchObject({classification:"one-change",count:1});
  const r=results();expect(r.map(x=>x.status)).toEqual(["not-met","met","not-met","not-met"]);
+ expect(r[0]!.report.challenge!.predictions[0]).toMatchObject({actual:"saturated",outcome:"matched"});
+ expect(r[1]!.report.challenge!.predictions[0]).toMatchObject({actual:"healthy",outcome:"different"});
  expect(r.map(x=>[x.completed,x.failed,x.cache.absentAnswers,x.cache.negativeHits,x.cache.absentSourceReads])).toEqual([
   [20074,1399,16155,0,11970],[21743,0,17492,17386,80],[20074,1399,16155,0,11970],[21739,0,17488,0,17127],
  ]);
@@ -71,6 +73,11 @@ test("cache-an-empty-answer: missing, malformed, zero-demand and contradictory s
  expect(evalDirect().met).toBe(true);expect(evalDirect(terminal,input,true).met).toBeUndefined();expect(evalDirect(terminal,null).met).toBeUndefined();
  expect(evalDirect({...terminal,simulatedSeconds:11}).met).toBeUndefined();expect(evalDirect({...terminal,measurementFreshness:"stale-revision" as never}).met).toBeUndefined();
  expect(evalDirect(terminal,input,false,[]).met).toBeUndefined();
+ expect(evaluateNegativeCache(criterion,input,null,12,false,input.adapterProfiles).met).toBeUndefined();
+ const stale={...structuredClone(x.row.terminalSnapshot) as object,metricsTopologyRevision:1};
+ expect(buildRunReport({...x.row,terminalSnapshot:stale}).challenge!.criteria[2]!.status).toBe("not-evaluated");
+ const changed=structuredClone(input);changed.resources.find(r=>r.id==="cache")!.cachePolicy!.negativeTtlSeconds=0;
+ expect(buildRunReport({...x.row,liveTopology:{resources:changed.resources,connectionLines:changed.connectionLines}}).challenge!.criteria[2]!.status).toBe("not-evaluated");
  const unmarked=structuredClone(input);delete unmarked.resources.find(r=>r.id==="cache")!.cachePolicy!.negativeTtlSeconds;expect(evalDirect(terminal,unmarked).met).toBeUndefined();
  const dropped=structuredClone(input);dropped.resources=dropped.resources.filter(r=>r.id!=="cache");expect(evalDirect(terminal,dropped).met).toBeUndefined();
 },T);

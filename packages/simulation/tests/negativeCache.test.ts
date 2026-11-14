@@ -62,6 +62,14 @@ test("flush and invalidation refuse an absence fill whose generation is old; con
     expect(w.cache.evidence().entries).toEqual([]);
   }
 });
+test("an absence hit is valid just before expiry and is a miss exactly at expiry",()=>{
+ for(const delta of [-1,0,1]){
+  const w=cacheWorld(1000);w.call({kind:"set",key:"absent",absent:true});
+  const expires=w.cache.evidence().entries[0]!.expires;
+  w.kernel.advanceTo(expires-10+delta); // the real cache command owns ten CPU microseconds in this fixture
+  expect(w.call({kind:"get",key:"absent"}).hit).toBe(delta<0);
+ }
+});
 test("failures, missing rows and malformed success replies are never cached as absence",()=>{
   for(const reply of [undefined,{ok:false,rows:[]},{ok:true},{ok:true,rows:[],reason:"not-proven"}] as Array<DataReply|undefined>) {
     const w=cacheWorld(),f=dataFixture(),config=f.resources.find(r=>r.kind==="cache-aside") as AsideConfig;

@@ -7,7 +7,8 @@ import {DataKeyspaceSection} from "../src/features/canvas/components/inspector/D
 import {CacheReadings} from "../src/features/reports/components/CacheReadings";
 import {useCanvasStore} from "../src/features/canvas/store/canvasStore";
 import {undo,redo} from "../src/features/canvas/history";
-const cache:Resource={id:"cache",type:"Cache",x:0,y:0,cachePolicy:{version:2,capacityEntries:256,ttlSeconds:60,singleFlight:true,negativeTtlSeconds:0}};
+const policy={version:2 as const,capacityEntries:256,ttlSeconds:60,singleFlight:true,negativeTtlSeconds:0};
+const cache:Resource={id:"cache",type:"Cache",x:0,y:0,cachePolicy:policy};
 afterEach(()=>useCanvasStore.getState().clearCanvas());
 type Control=ReactElement<{onChange:(event:{target:{value:string}})=>void}>;
 type Field=ReactElement<{label?:string;children?:(p:{id:string;describedBy:string})=>Control}>;
@@ -22,10 +23,10 @@ test("negative TTL is the only new cache control, bounded, explicit, locked and 
  expect(html.match(/disabled=""/g)).toHaveLength(html.match(/<(input|button|select)/g)!.length);
  useCanvasStore.getState().loadLayout([cache],[],"layout","Cache");
  field("Negative cache TTL").props.onChange({target:{value:"30"}});
- expect(useCanvasStore.getState().resources[0]!.cachePolicy).toEqual({...cache.cachePolicy,negativeTtlSeconds:30});
+ expect(useCanvasStore.getState().resources[0]!.cachePolicy).toEqual({...policy,negativeTtlSeconds:30});
  undo();expect(useCanvasStore.getState().resources[0]!.cachePolicy!.negativeTtlSeconds).toBe(0);redo();
  field("Logical cache capacity").props.onChange({target:{value:"128"}});
- expect(useCanvasStore.getState().resources[0]!.cachePolicy).toEqual({...cache.cachePolicy,capacityEntries:128,negativeTtlSeconds:30});
+ expect(useCanvasStore.getState().resources[0]!.cachePolicy).toEqual({...policy,capacityEntries:128,negativeTtlSeconds:30});
  field("Negative cache TTL").props.onChange({target:{value:"-1"}});expect(useCanvasStore.getState().resources[0]!.cachePolicy!.negativeTtlSeconds).toBe(30);
 });
 test("the static absent dataset is visible without adding a second editable control",()=>{

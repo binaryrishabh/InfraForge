@@ -22,6 +22,7 @@ export function CacheReadings({ resource, cache }: { resource: Resource; cache: 
     <p className="text-xs text-ink-3">Counters are cumulative counts from run start through this snapshot, including modeled internal work; they are separate from original callers and final-second requests/s. Live requests and fills in progress are current counts.</p>
     {cache && <dl>{cacheRows.filter(([key]) => !(key in conditional) || (resource.cache?.version === 1 && resource.cache[conditional[key as keyof typeof conditional]] !== undefined)).map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{value(resource.cache?.version === 1 ? resource.cache[key] : undefined)}</dd></div>)}</dl>}
     {cache && <p className="text-xs text-ink-3">Targeting-helper coalesced waiters sums helpers explicitly targeting this cache. It is not a cache command count; the same waiters appear under their helper owners.</p>}
+    {cache && resource.cache?.absentAnswers !== undefined && <p className="text-xs text-ink-3">Absent answers include successful empty replies to coalesced waiters. Empty source queries count successful empty replies returned to targeting helpers; failed and pending source work is excluded. Negative hits reuse cached absence.</p>}
     {(helpers?.length || !cache) && (helpers?.length ? helpers.map(helper => <div key={helper.id}>
       <h4 className="font-medium">Helper {helper.id}</h4><p>Cache {helper.cacheId}; database {helper.databaseId}</p>
       <dl>{helperRows.map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{value(helper[key])}</dd></div>)}</dl>
