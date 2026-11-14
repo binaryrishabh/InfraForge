@@ -1,6 +1,6 @@
 # Saved capabilities added in the next-lane window
 
-Each capability below is an optional saved setting captured as a named adapter profile. Omitting it keeps the earlier compiled bytes, published hashes and recorded output. Every value is an educational authored input, never a measured provider behavior, and missing evidence stays Unknown rather than zero.
+These notes cover optional saved settings captured as named adapter profiles, plus predictions and diagnosis labs using existing evidence. Omitting an optional setting keeps the earlier compiled bytes, published hashes and recorded output. Every setting is an educational authored input, never a measured provider behavior, and missing evidence stays Unknown rather than zero.
 
 ## DNS single-name publication (`dns-publication/1`)
 Saved DNS setting `dnsPublication {version 1, initialRecord "absent"}`. The one modeled name starts without a record; a scripted publish makes the first answer possible, and resolver negative caching then decides when callers can resolve it. Evidence is the authority and resolver summaries and the first successful answer time. Limits: one name, no delegation hierarchy, CNAME, DNSSEC, failover or health routing. A first successful answer is not first admitted traffic, continuous health or a propagation benchmark. Established connections keep their binding.
@@ -29,9 +29,6 @@ Saved Database setting `rowLocking {version 1, rowsPerWrite 2, order "as-request
 ## Load balancer admission in use (`lb-admission/1`, existing)
 `lbAdmission {maxActive, maxQueued, queueWaitMs}` already compiled; two labs now use it. Lowering Active requests sheds excess demand and bounds the tail of admitted requests; raising it opens a forwarding gate that was serializing spare backend capacity. Limits: admission chooses who waits and adds no capacity; clients that back off are not modeled.
 
-## What these notes do not claim
-No capability here implies cloud-provider fidelity, an availability guarantee, a whole-run latency target or cost accuracy. Each lab reads fixed-second samples and states its own limitations in its lesson.
-
 ## Replica staleness evidence (`stale-reads` criterion, existing saved delay)
 The saved `databaseReplication.replicationDelayMs` (1 to 60000) already set how long a replica applies each writer commit after it. Read routing records `staleReads` and `maxStaleReadAgeMs`. The `stale-reads` challenge criterion compares the cumulative stale read count at one exact second with a bounded limit and is not evaluated when the named replicated database, the exact second or the counters are missing or malformed. Limits: counters are cumulative, include health probes and describe modeled row versions only; the delay is an authored constant, so a real replica's varying lag is not modeled; nothing here shows application consistency or read-your-writes.
 
@@ -51,7 +48,7 @@ The saved `databaseReplication.replicationDelayMs` (1 to 60000) already set how 
 `monitoringPolicy {version 2, collectionIntervalSeconds, exportIntervalSeconds, bufferSamples, batchSamples, exportAttempts}`. A sample cannot be newer than the last collection, so exporting more often does not freshen it. `sample-often-enough` changes only the collection interval. Limits: one agent and backend, authored cadences, no provider metric resolution, no alert evaluation; delivery of one sample is not continuous coverage.
 
 ## Multi-cause cascade tracing (`trace-a-slowdown-cascade`)
-A reading and diagnosis lab over existing evidence: a scripted three-second database slowdown, retries, cache and pool effects recorded separately. It adds no saved setting. Limits: one scripted incident, a fixed-second sample, no root-cause automation and no claim that the cut chosen generalizes to other designs.
+An executable diagnosis lab over existing evidence: Single-flight already shares same-key fills, but a one-entry cache evicts values across sixteen keys before their TTL ends. A scripted database CPU cut makes those source reads contend, causing downstream timeouts and caller loss. Increasing cache capacity retains warm keys during the cut. The unchanged no-slowdown control passes; retries mitigate loss here rather than cause it. It adds no saved setting. Limits: fixed data demand and one scripted incident; cumulative caller outcomes and retained samples do not establish continuous recovery, root-cause automation or a general remedy. Narrowing demand to one key also passes, as the lesson discloses.
 
 ## Reuse successful empty queries (`cache-negative/1`)
 `cachePolicy.negativeTtlSeconds` is optional on both cache-policy versions: 0 explicitly disables absence caching, and 1 to 3600 seconds retains successful empty query results. Both values capture the profile. `dataKeyspace.absentCount` optionally leaves that many keys, at the end of the bounded key list, without initial rows; valid empty queries already existed in the database engine. These inputs support a static read-only dataset. Writes, typed flows, replication, read routing and row locking are refused; negative caching with stale fallback or write-freshness tracking is refused too. Inserts and mutable absence visibility are not modeled.
@@ -60,3 +57,21 @@ Absence entries carry no invented row version or body. They own real modeled ent
 
 ## Load balancer rate limit in use (`lb-rate-limit/1`, existing)
 `lbRateLimit {version 1, burstRequests, sustainedRequestsPerSecond}` is a token bucket at the balancer: the burst is spent first, then admission follows the sustained refill. `set-the-limit-above-the-peak` uses a scripted legitimate peak above the sustained rate; refusals appear as failed callers while app CPU stays low. Limits: one bucket for all callers, no per client identity, fairness or abuse model; a rate limit is a policy, not capacity, and no availability guarantee follows from one run.
+
+## Retained cache answers after expiry (`cache-stale/1`)
+Saved `cachePolicy.staleSeconds` bounds how long a retained body may answer after expiry when its database refill fails. `serve-stale-on-error` keeps the normal TTL fixed and scores caller outcomes plus stale answers and maximum age past expiry. Answers are counted per waiting helper request, not per unique caller; failed fills include successful database replies without a row, so a deleted row can still fall back to an older body. Limits: age is measured past expiry, not since the body was fetched; no application correctness or real cache guarantee follows. Missing stale evidence stays Unknown.
+
+## Application CPU budget in use (`vm-cpu-quota/1`, existing)
+Saved `vmCpuQuota {version 1, limitPercent}` gives VM work a percentage of total modeled core capacity in fixed CPU-budget windows. `release-the-cpu-budget` compares releasing that budget with adding worker slots that still share it. Reports retain the saved percentage, CPU and cumulative caller outcomes; scheduler throttled time is not retained. Limits: an authored model budget, not an operating-system or provider quota; a larger instance also passes this fixed workload, and raising a quota is not a universal instruction to remove isolation.
+
+## Busiest-resource prediction (`busiest-resource`)
+This prediction chooses a captured resource id by its highest terminal CPU measurement, accepting any tied id. It requires current-revision evidence and finite CPU for every offered resource. Load balancers and firewalls are excluded from Model 2 choices; another offered resource without measured CPU leaves the answer Unknown because an unseen higher value cannot be ruled out. It adds no saved setting and does not identify the first bottleneck, highest latency, or a causal root cause.
+
+## Trace a burst backlog (`trace-a-burst-backlog`)
+An executable diagnosis lab follows failed uploads back to refused queue publishes during a burst. Increasing saved queue capacity retains more events for the unchanged worker to drain; a refused publish never creates an event to recover later. Saved cumulative caller outcomes and queue acknowledgements are scored together. A modest worker increase still fails, while a much faster worker or cheaper jobs can prevent the queue filling and also pass. Limits: existing queue and worker settings, no new engine mechanism, producer retries, physical durability or exact drain-time guarantee.
+
+## Trace a scaling stall (`trace-a-scaling-stall`)
+An executable diagnosis lab follows caller failures through app CPU, desired pool size, controller evaluations and delivered-sample age back to the monitor's export interval. Shortening only that interval supplies fresh measurements to the existing observed-core-time controller; the lab scores in-service replicas and cumulative callers. Raising the replica ceiling or artifact capacity does not repair the missing signal. Limits: fixed collection and export cadences, freshness bound and roomy artifact cache; loosening freshness can also permit scale-out but still misses this lab's caller requirement. No real autoscaler timing or continuous availability is established.
+
+## What these notes do not claim
+No capability here implies cloud-provider fidelity, an availability guarantee, a whole-run latency target or cost accuracy. Each lab reads fixed-second samples and states its own limitations in its lesson.
