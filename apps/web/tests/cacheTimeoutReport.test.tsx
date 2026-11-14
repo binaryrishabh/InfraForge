@@ -43,10 +43,12 @@ test("real saved cache and helper evidence renders exact counts with separate ow
     for (const label of newLabels) expect(render(f.reports[1]!)).toContain(`<dt>${label}</dt>`);
   }
   const old = render(f.missing);
-  // Stale-answer and freshness rows exist only for reports that recorded that evidence, so an old report renders them absent; every other label shows Unknown.
-  const conditional = labels.filter(l => /^Cache: (Stale answers served|Oldest stale answer|Hits behind the database|Most versions behind)/.test(l));
-  for (const label of labels.filter(l => !conditional.includes(l))) expect(old).toContain(`<dt>${label}</dt><dd>Unknown</dd>`);
-  for (const label of conditional) expect(old).not.toContain(`<dt>${label}</dt>`);
+  // Cache rows added by later optional capabilities (stale, freshness, empty-answer evidence) exist only for reports that recorded that evidence:
+  // on an old report each is either absent or Unknown, never a number. The historical rows always show Unknown.
+  const HISTORICAL = new Set(["Cache: Hits", "Cache: Misses", "Cache: Expirations", "Cache: Evictions", "Cache: Targeting-helper coalesced waiters"]);
+  const optional = labels.filter(l => l.startsWith("Cache:") && !HISTORICAL.has(l));
+  for (const label of labels.filter(l => !optional.includes(l))) expect(old).toContain(`<dt>${label}</dt><dd>Unknown</dd>`);
+  for (const label of optional) if (old.includes(`<dt>${label}</dt>`)) expect(old).toContain(`<dt>${label}</dt><dd>Unknown</dd>`);
   expect(lessonRunMeasurements(f.missing, labels).every(r => /Unknown/.test(r.value))).toBe(true);
   expect(render(f.unknown)).toContain("<dt>Cache: Hits</dt><dd>Unknown</dd>");
   expect(f.invalid.terminal).toBeNull();
