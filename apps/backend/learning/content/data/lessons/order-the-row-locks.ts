@@ -19,5 +19,5 @@ export const orderTheRowLocks: LearningLesson = {
     "Lock order is an application convention. The saved setting names the convention the application follows; it is not a database feature that sorts rows for you, and every code path that touches several rows must follow the same order.",
     "A replicated or read-routed database, a cache in front of the database and typed application flows are refused with this setting, not guessed. A run of this length with one random seed shows that a design failed or did not fail, not that it can never deadlock."],
   check: null,
-  followUp: "Cite the starter, the by-key run and the bigger-database near miss. Explain why one fixed order makes a cycle impossible while more rows or a bigger database only lower its odds, and name one thing this model does not capture.",
+  followUp: "Cite the starter, the run that takes locks in key order and the near miss with a bigger database. Explain why one fixed order makes a cycle impossible while more rows or a bigger database only lower its odds, and name one thing this model does not capture.",
 };
