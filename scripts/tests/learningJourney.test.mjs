@@ -67,6 +67,18 @@ test("omitting JOURNEY_LAB preserves the original first lab's choices", () => {
   expect(lab.improvement.stepName).toBe("the app's instance size is changed to c5.large in the designer");
 });
 
+test("cascade journey changes capacity while single-flight stays on and refuses a missing or unretained edit", async () => {
+  const lab = journeyLab("trace-a-slowdown-cascade"), edit = lab.improvement, fake = fakePage();
+  expect([edit.resourceId, edit.setting, edit.from, edit.to]).toEqual(["cache", "cachePolicy.capacityEntries", 1, 16]);
+  expect(edit.name.test("Logical cache capacity")).toBe(true); expect(edit.name.test("Single-flight")).toBe(false);
+  expect(lab.hypothesis).toContain("Single-flight is already on");
+  expect(await applyJourneyImprovement(fake.page, edit)).toEqual([{resourceId: "cache", setting: "cachePolicy.capacityEntries", value: "16"}]);
+  expect(fake.calls).toEqual(['[data-resource-id="cache"]', ["spinbutton", "^Logical cache capacity$"], ["filled", "16"]]);
+  await expect(applyJourneyImprovement(fakePage({controlMissing: true}).page, edit)).rejects.toThrow("requested control is missing");
+  await expect(applyJourneyImprovement(fakePage({storedValue: "1"}).page, edit)).rejects.toThrow("did not retain");
+  expect(lab.reportRequirements[0].test("Complete 1920 callers with at most 80 unsuccessful through second 10")).toBe(true);
+});
+
 test("quota journey selects only the saved scope and refuses missing or unretained controls",async()=>{
   const lab=journeyLab("isolate-route-credits"),edit=lab.improvement,fake=fakePage();
   expect([edit.resourceId,edit.setting,edit.from,edit.to]).toEqual(["gateway","gatewayQuota.scope","shared","per-route"]);
