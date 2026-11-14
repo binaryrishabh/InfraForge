@@ -1,0 +1,23 @@
+import type { LearningLesson } from "@infraforge/contracts/learning";
+
+export const orderTheRowLocks: LearningLesson = {
+  id: "order-the-row-locks", contentVersion: 1, trackId: "data", moduleId: "transaction-locking",
+  title: "Order the row locks", kind: "executable-lab", level: "advanced", availability: "available",
+  summary: "Tell a busy database from a deadlocked one: two writes that take the same two rows in opposite order can wait for each other, and one fixed order makes that impossible.",
+  prerequisites: ["database-read-and-write", "writes-cost-more-than-reads", "diagnose-query-admission"],
+  problem: ["A ledger service moves a balance between two accounts in one request: update the first row, then the second. Ten account rows take a steady stream of transfers at random moments. The app and the database are not out of CPU, yet a few of every hundred transfers fail."],
+  explanation: [
+    "Predict overall health, run unchanged and read the failed callers beside the database's deadlocks, row-lock waits and deadlock victims. A transfer keeps its first row's lock until it commits. A second transfer that names the same two rows in the opposite order can hold the row the first one needs while waiting for the row the first one holds. Neither can move, so the database ends one of them as the deadlock victim and that caller sees a failure.",
+    "Record a diagnosis. Select db and set Row lock order to Two rows, by key. Keep the rows, the app, the workload and the connections unchanged. The design review must count one change. By key makes every transfer take the lower-numbered row first, so a transfer can never wait for a row held by one that is waiting for it. Transfers still wait for each other, and the lock-wait count stays high, but never in a circle. Run again: no deadlocks, no failed transfers, with about the same CPU as before.",
+    "As near misses, restore the starter and change only the database size, or only the app size. CPU was not the limit, so the failures remain. A bigger database roughly halves them, because transfers finish sooner and hold their locks for less time, but it does not remove them. Spreading the same transfers over more rows lowers the odds a lot: with forty rows about twenty still fail in this run, and with four hundred rows one or none do.",
+    "Valid alternatives exist. Many more rows, a lower write rate, fewer transactions running at once and shorter transactions all make a cycle rarer, and a run with no deadlocks only shows that none happened to form. Allowing only one transaction at a time removes the deadlocks too, but then the queue fails callers instead. Taking the locks in one fixed order is the change that makes a cycle impossible whatever the traffic. This lab fixes the write rate and the transaction length."],
+  experiment: {challengeId: "order-the-row-locks", prediction: "What overall health will the starter record at second 30? Only the health choice is scored; explain whether CPU accounts for the failed transfers.",
+    evidenceToInspect: ["Deadlocks detected", "Row-lock waits", "Transactions ended as deadlock victims", "Whole run: Failed"]},
+  limitations: [
+    "Results are educational model outputs with an authored workload, row count and CPU per row update, not provider benchmarks. This models the order in which a transaction touches two rows and holds their exclusive locks until commit. It makes no claim about any specific database product's lock manager, its deadlock timeout or how it picks a victim: here a cycle is found immediately and the transaction that closes it is the victim.",
+    "One request is one transaction of exactly two row updates. There is no retry after a deadlock, no other lock mode or isolation level, and no table or index locking. A real service would also retry a victim and keep transactions short; neither is modeled as a control here.",
+    "Lock order is an application convention. The saved setting names the convention the application follows; it is not a database feature that sorts rows for you, and every code path that touches several rows must follow the same order.",
+    "A replicated or read-routed database, a cache in front of the database and typed application flows are refused with this setting, not guessed. A run of this length with one random seed shows that a design failed or did not fail, not that it can never deadlock."],
+  check: null,
+  followUp: "Cite the starter, the by-key run and the bigger-database near miss. Explain why one fixed order makes a cycle impossible while more rows or a bigger database only lower its odds, and name one thing this model does not capture.",
+};

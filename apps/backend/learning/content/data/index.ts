@@ -5,12 +5,13 @@ export { track } from "./track";
 import { databasePressureLessons } from "./database-pressure";
 import { replicaFreshnessLessons } from "./replica-freshness";
 import { cacheFreshnessLessons } from "./cache-freshness";
+import { transactionLockingLessons } from "./transaction-locking";
 import { cacheWorkingSetLessons } from "./cache-working-set";
 import { cacheLifetimeLessons } from "./cache-lifetime";
 import { writerFailureLessons } from "./writer-failure";
 import { dataTradeoffLessons } from "./data-tradeoffs";
 import { objectOwnershipLessons } from "./object-ownership";
-export const lessons = [...databasePressureLessons, ...cacheLifetimeLessons, ...writerFailureLessons, ...dataTradeoffLessons, ...objectOwnershipLessons, ...databaseIncidentLessons, ...objectCapacityLessons, ...databaseRedundancyLessons, ...cacheWorkingSetLessons, ...replicaFreshnessLessons, ...cacheFreshnessLessons];
+export const lessons = [...databasePressureLessons, ...cacheLifetimeLessons, ...writerFailureLessons, ...dataTradeoffLessons, ...objectOwnershipLessons, ...databaseIncidentLessons, ...objectCapacityLessons, ...databaseRedundancyLessons, ...cacheWorkingSetLessons, ...replicaFreshnessLessons, ...cacheFreshnessLessons, ...transactionLockingLessons];
 
 import { cacheEvidenceArchivedLessons } from "./cache-evidence-archives";
 import { connectionPoolBudgets } from "./lessons/connection-pool-budgets";
