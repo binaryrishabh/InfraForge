@@ -1,5 +1,5 @@
 /** Optional saved workload intent, owned by its database. */
-export interface DataKeyspace { version: 1; count: number; accessPattern?: "uniform" | "hot-key" }
+export interface DataKeyspace { version: 1; count: number; absentCount?: number; accessPattern?: "uniform" | "hot-key" }
 
 // A learner working-set bound, below the engine's 100,000-key safety budget.
 export const DATA_KEYSPACE_MAX = 1000;
@@ -8,6 +8,7 @@ export function dataKeyspaceError(type: string, value: unknown): string | undefi
   if (type !== "Database") return "Data keyspace belongs to a Database.";
   if (!value || typeof value !== "object" || Array.isArray(value)) return "Data keyspace requires version 1 and a bounded count.";
   const v = value as Record<string, unknown>;
-  if (Object.keys(v).some(k => !["version", "count", "accessPattern"].includes(k)) || v.version !== 1 || typeof v.count !== "number" || !Number.isSafeInteger(v.count) || v.count < 1 || v.count > DATA_KEYSPACE_MAX) return `Data keyspace requires version 1 and an integer count from 1 to ${DATA_KEYSPACE_MAX}.`;
+  if (Object.keys(v).some(k => !["version", "count", "accessPattern", "absentCount"].includes(k)) || v.version !== 1 || typeof v.count !== "number" || !Number.isSafeInteger(v.count) || v.count < 1 || v.count > DATA_KEYSPACE_MAX) return `Data keyspace requires version 1 and an integer count from 1 to ${DATA_KEYSPACE_MAX}.`;
+  if (v.absentCount !== undefined && (typeof v.absentCount !== "number" || !Number.isSafeInteger(v.absentCount) || v.absentCount < 0 || v.absentCount > v.count)) return "Initially absent keys must be an integer from zero through the keyspace count.";
   if (v.accessPattern !== undefined && v.accessPattern !== "uniform" && v.accessPattern !== "hot-key") return "Data access pattern must be uniform or hot-key.";
 }

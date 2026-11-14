@@ -24,6 +24,8 @@ export interface CacheConfig {
   id: string; kind: "cache"; semantics: "keyed-cache/1"; execution: ComputeResource;
   capacity: Quantity<"bytes">; entryOverhead: Quantity<"bytes">; policy: "lru" | "no-eviction";
   ttl: Quantity<"us">; initial: Row[]; commandCpu: Quantity<"cpu-us">; staleFor?: Quantity<"us">;
+  /** Explicit absence entries have their own lifetime; zero marks the policy off. */
+  negativeTtl?: Quantity<"us">;
 }
 export interface AsideConfig {
   recordedKeysOnly?: true;
@@ -31,6 +33,7 @@ export interface AsideConfig {
   keys: string[]; access: "cycle" | "keyed-uniform" | "keyed-hot"; coalesce: boolean; onCacheFailure: "fail" | "database"; staleOnError?: true;
   /** Marked designs only: count hits whose body is older than the database committed version (replicated databases are refused). */
   trackFreshness?: true;
+  negativeCaching?: boolean;
   invalidateWrites: boolean; operations: Record<string, "read" | "write">;
 }
 export type DataResource = RelationalConfig | CacheConfig | AsideConfig;
@@ -43,5 +46,5 @@ export interface DataInput extends Omit<NetworkInput, "workloadVersion" | "resou
   resources: Array<NetworkInput["resources"][number] | DataResource>;
   dataInterventions: DataIntervention[];
 }
-export interface DataRequest { writerEpoch?: number; kind: "get" | "get-stale" | "set" | "invalidate" | "query"; key: string; row?: { version: number; bytes: number }; token?: string }
-export interface DataReply { readSource?: "primary" | "replica"; ok: boolean; hit?: boolean; stale?: boolean; ageUs?: number; key?: string; version?: number; bytes?: number; token?: string; rows?: Array<{ key: string; version: number; bytes: number }>; reason?: string; durable?: boolean }
+export interface DataRequest { absent?: true; writerEpoch?: number; kind: "get" | "get-stale" | "set" | "invalidate" | "query"; key: string; row?: { version: number; bytes: number }; token?: string }
+export interface DataReply { absent?: true; readSource?: "primary" | "replica"; ok: boolean; hit?: boolean; stale?: boolean; ageUs?: number; key?: string; version?: number; bytes?: number; token?: string; rows?: Array<{ key: string; version: number; bytes: number }>; reason?: string; durable?: boolean }

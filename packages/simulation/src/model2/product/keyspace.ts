@@ -22,11 +22,11 @@ export function asideKeyspace(database: Resource): Pick<AsideConfig, "keys" | "a
 }
 export function databaseKeyspace(database: Resource, bytes: Quantity<"bytes">): Pick<RelationalConfig, "keys" | "initial" | "access"> {
   const keys = dataKeys(database);
-  return { keys, initial: keys.map(key => ({ key, version: 1, bytes })), ...(keys.length > 1 ? { access: access(database) } : {}) };
+  return { keys, initial: keys.slice(0, keys.length - (database.dataKeyspace?.absentCount ?? 0)).map(key => ({ key, version: 1, bytes })), ...(keys.length > 1 ? { access: access(database) } : {}) };
 }
 
 export function validateDatabaseKeyspace(database: Resource, node: NodeContract) {
-  if ((database.dataKeyspace?.count ?? 1) === 1) return;
+  if ((database.dataKeyspace?.count ?? 1) === 1 && database.dataKeyspace?.absentCount === undefined) return;
   const keys = dataKeys(database), config = node.resources.find(r => r.role === node.primary)?.config;
-  if (config?.kind !== "relational" || config.access !== access(database) || JSON.stringify(config.keys) !== JSON.stringify(keys) || JSON.stringify(config.initial.map(r => r.key)) !== JSON.stringify(keys) || config.initial.some(r => r.version !== 1) || Object.values(config.plans).some(p => p.statements.some(s => s.keys.length !== 1 || (s.keys[0] !== "$key" && !(config.rowLocking && s.keys[0] === "$key2"))))) throw Error("Database profile must model its saved keyspace and access pattern with initial rows and selected-key plans");
+  if (config?.kind !== "relational" || (keys.length > 1 && config.access !== access(database)) || JSON.stringify(config.keys) !== JSON.stringify(keys) || JSON.stringify(config.initial.map(r => r.key)) !== JSON.stringify(keys.slice(0, keys.length - (database.dataKeyspace?.absentCount ?? 0))) || config.initial.some(r => r.version !== 1) || Object.values(config.plans).some(p => p.statements.some(s => s.keys.length !== 1 || (s.keys[0] !== (keys.length > 1 ? "$key" : "key") && !(config.rowLocking && s.keys[0] === "$key2"))))) throw Error("Database profile must model its saved keyspace and access pattern with initial rows and selected-key plans");
 }

@@ -14,6 +14,7 @@ export function cacheAside(config: AsideConfig, kernel: EventClock, send: Delive
   let received = 0, completed = 0, failed = 0, cacheFailures = 0, fetches = 0, coalesced = 0, invalidations = 0;
   // Freshness: a hit is outdated when its body is older than the version the database has committed for the key at that moment.
   let freshHits = 0, outdatedHits = 0, maxVersionsBehind = 0, unobserved = 0;
+  let absentAnswers = 0, negativeHits = 0, absentSourceReads = 0;
   const results: Array<{ root: string; key: string; at: number; version?: number; source: string; ok: boolean }> = []; let omitted = 0;
   return {
     accept(work: Invocation, done: (outcome: RemoteOutcome, cause?: Cause) => void): Receipt {
@@ -25,6 +26,7 @@ export function cacheAside(config: AsideConfig, kernel: EventClock, send: Delive
       const finish = (reply: DataReply | undefined, source: string, cause?: Cause) => {
         if (owner.terminal) return; owner.terminal = true; live.delete(work.callId); const ok = !!reply?.ok;
         if (ok) completed++; else failed++;
+        if (config.negativeCaching !== undefined && ok && reply?.reason === undefined && config.operations[work.operation] === "read" && Array.isArray(reply?.rows) && reply.rows.length === 0) absentAnswers++;
         if (work.message) work.message.response = reply;
         if (results.length < DATA_LIMITS.terminalRows) results.push({ root: work.rootId, key, at: kernel.now, version: reply?.version ?? reply?.rows?.[0]?.version, source, ok }); else omitted++;
         done(ok ? "completed" : "rejected", !ok && cause ? carryCause(cause) : undefined);
@@ -43,6 +45,7 @@ export function cacheAside(config: AsideConfig, kernel: EventClock, send: Delive
       } else request(config.cache, { kind: "get", key }, (cached, cacheCause) => {
         if (cached?.hit) {
           hits++;
+          if (config.negativeCaching !== undefined && cached.absent) negativeHits++;
           if (config.trackFreshness) { freshHits++; const committed = committedVersion!(key); if (committed === undefined || cached.version === undefined) unobserved++; else if (committed > cached.version) { outdatedHits++; maxVersionsBehind = Math.max(maxVersionsBehind, committed - cached.version); } }
           finish(cached, "cache-hit"); return;
         }
@@ -60,6 +63,12 @@ export function cacheAside(config: AsideConfig, kernel: EventClock, send: Delive
         };
         fetches++; request(config.database, { kind: "query", key }, (reply, cause) => {
           const row = reply?.rows?.find((r) => r.key === key);
+          // Only an explicit successful empty query result proves absence. Failures and missing bodies never do.
+          const absent = reply?.ok === true && reply.reason === undefined && Array.isArray(reply.rows) && reply.rows.length === 0;
+          if (config.negativeCaching !== undefined && absent) absentSourceReads++;
+          if (config.negativeCaching && absent && cached?.ok) {
+            fillAttempts++; request(config.cache, { kind: "set", key, absent: true, token: cached.token }, (filled) => { if (filled?.ok) fillAcknowledged++; else fillRejected++; complete(reply); }); return;
+          }
           if (!reply?.ok || !row) { complete(reply, cause); return; }
           if (!cached?.ok) { complete(reply, cause); return; } // Failure fallback never fabricates a cache acknowledgement.
           fillAttempts++; request(config.cache, { kind: "set", key, row, token: cached.token }, (filled) => { if (filled?.ok) fillAcknowledged++; else fillRejected++; complete(reply); });
@@ -72,6 +81,7 @@ export function cacheAside(config: AsideConfig, kernel: EventClock, send: Delive
     measure: () => ({ id: config.id, paused: false, received, admitted: received, rejected: 0, completed, failed, cancelled: 0, queued: 0, serving: 0, waiting: live.size, consumedCoreUs: 0, busySlotUs: 0 }),
     evidence: () => ({ id: config.id, received, completed, failed, live: live.size, databaseFetches: fetches, cacheFailures, coalescedWaiters: coalesced, fillsInProgress: fills.size, invalidations, results, omitted,
       ...(config.trackFreshness ? { freshness: { hits: freshHits, outdatedHits, maxVersionsBehind, unobserved } } : {}),
+      ...(config.negativeCaching !== undefined ? { negative: { absentAnswers, negativeHits, absentSourceReads } } : {}),
       ...(config.recordedKeysOnly ? { recordedKeys: { hits, misses, fillAttempts, fillAcknowledged, fillRejected, savedDatabaseReads: hits + coalesced, policyCpu: "Charged only through explicit app demand; this role owns no second CPU" } } : {}) }),
   };
 }

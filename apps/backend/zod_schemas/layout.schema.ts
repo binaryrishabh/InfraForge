@@ -25,7 +25,7 @@ const FlowStepsSchema = z.object({ steps: z.array(z.union([
 const ApplicationFlowSchema = z.object({ schema: z.enum(["application-flow/1", "application-flow/2", "application-flow/3"]), operations: z.object({
   read: FlowStepsSchema.optional(), write: FlowStepsSchema.optional(),
 }).strict() }).strict();
-const CachePolicyV1Schema = z.object({ version: z.literal(1), ttlSeconds: z.number().int().min(1).max(CACHE_TTL_MAX_SECONDS).optional(), singleFlight: z.boolean().optional(), staleSeconds: z.number().int().min(1).max(CACHE_TTL_MAX_SECONDS).optional(), invalidateOnWrite: z.boolean().optional() }).strict();
+const CachePolicyV1Schema = z.object({ version: z.literal(1), ttlSeconds: z.number().int().min(1).max(CACHE_TTL_MAX_SECONDS).optional(), singleFlight: z.boolean().optional(), staleSeconds: z.number().int().min(1).max(CACHE_TTL_MAX_SECONDS).optional(), invalidateOnWrite: z.boolean().optional(), negativeTtlSeconds: z.number().int().min(0).max(CACHE_TTL_MAX_SECONDS).optional() }).strict();
 const CachePolicySchema = z.discriminatedUnion("version", [CachePolicyV1Schema, CachePolicyV1Schema.extend({
   version: z.literal(2), capacityEntries: z.number().int().min(1).max(CACHE_CAPACITY_MAX_ENTRIES),
 }).strict()]);
@@ -68,7 +68,7 @@ const ResourceSchema = z.object({
   databaseReplication: z.object({ version: z.literal(1), enabled: z.literal(true), replicationDelayMs: z.number().int().min(1).max(60000), readPolicy: z.enum(["primary", "replica-preferred"]), rejoin: z.literal("snapshot-replay/1").optional() }).strict().optional(),
   dbPoolMaxConnections: z.number().int().min(1).max(512).optional(),
   dbConcurrency: z.object({ version: z.literal(1), activeQueries: z.number().int().min(1).max(DB_ACTIVE_QUERIES_MAX).optional(), queuedQueries: z.number().int().min(0).max(DB_QUEUED_QUERIES_MAX).optional() }).strict().optional(),
-  dataKeyspace: z.object({ version: z.literal(1), count: z.number().int().min(1).max(DATA_KEYSPACE_MAX), accessPattern: z.enum(["uniform", "hot-key"]).optional() }).strict().optional(),
+  dataKeyspace: z.object({ version: z.literal(1), count: z.number().int().min(1).max(DATA_KEYSPACE_MAX), absentCount: z.number().int().min(0).max(DATA_KEYSPACE_MAX).optional(), accessPattern: z.enum(["uniform", "hot-key"]).optional() }).strict().optional(),
   rowLocking: z.object({ version: z.literal(1), rowsPerWrite: z.literal(2), order: z.enum(["as-requested", "by-key"]) }).strict().optional(),
   autoscaling: z.object({
     enabled: z.boolean().optional(),

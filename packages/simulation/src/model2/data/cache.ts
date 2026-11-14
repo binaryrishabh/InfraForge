@@ -5,7 +5,7 @@ import type { Invocation, Receipt, RemoteOutcome } from "../workload/contracts";
 import type { CacheConfig, DataReply, DataRequest } from "./contracts";
 import { DATA_LIMITS } from "./policy";
 import { expireOwned, evictOwned } from "./cache-state";
-interface Entry { version: number; bytes: number; expires: number; sequence: number }
+interface Entry { version?: number; absent?: true; bytes: number; expires: number; sequence: number }
 interface Command { work: Invocation; done(outcome: RemoteOutcome): void; terminal: boolean }
 export function keyedCache(config: CacheConfig, kernel: EventClock, ownedCpu?: ReturnType<typeof cpuScheduler>) {
   const entries = new Map<string, Entry>(), generations = new Map<string, number>(), queue = new Map<string, Command>(), active = new Map<string, Command>();
@@ -17,6 +17,7 @@ export function keyedCache(config: CacheConfig, kernel: EventClock, ownedCpu?: R
   const remove = (key: string) => { const e = entries.get(key); if (e) { used -= e.bytes + overhead; entries.delete(key); } };
   // With a saved stale bound, an expired body is retained (and still owns its bytes) until the bound passes; it is never a hit.
   const staleBound = config.staleFor ? requireKnown(config.staleFor, "us") : 0;
+  const negativeTtl = config.negativeTtl ? requireKnown(config.negativeTtl, "us") : 0;
   let staleServed = 0, maxStaleAgeUs = 0;
   const expire = (key: string) => { const e = entries.get(key); if (staleBound && e && e.expires <= kernel.now && kernel.now - e.expires < staleBound) return; if (expireOwned(entries, key, kernel.now, remove)) expirations++; };
   const finish = (c: Command, reply: DataReply, cancel = false) => {
@@ -30,19 +31,21 @@ export function keyedCache(config: CacheConfig, kernel: EventClock, ownedCpu?: R
   const apply = (request: DataRequest): DataReply => {
     if (!request || typeof request.key !== "string" || !request.key.length || request.key.length > DATA_LIMITS.keyCharacters) return { ok: false, reason: "invalid-cache-key" };
     expire(request.key);
-    if (request.kind === "get") { lookups++; const e = entries.get(request.key); if (e && e.expires > kernel.now) { hits++; e.sequence = sequence++; entries.delete(request.key); entries.set(request.key, e); return { ok: true, hit: true, key: request.key, version: e.version, bytes: e.bytes, token: token(request.key) }; } misses++; return { ok: true, hit: false, key: request.key, token: token(request.key) }; }
-    if (request.kind === "get-stale") { const e = entries.get(request.key); if (!staleBound || !e || e.expires > kernel.now) return { ok: true, hit: false, key: request.key }; const ageUs = kernel.now - e.expires; staleServed++; maxStaleAgeUs = Math.max(maxStaleAgeUs, ageUs); return { ok: true, hit: true, stale: true, ageUs, key: request.key, version: e.version, bytes: e.bytes }; }
+    if (request.kind === "get") { lookups++; const e = entries.get(request.key); if (e && e.expires > kernel.now) { hits++; e.sequence = sequence++; entries.delete(request.key); entries.set(request.key, e); return e.absent ? { ok: true, hit: true, absent: true, rows: [], key: request.key, token: token(request.key) } : { ok: true, hit: true, key: request.key, version: e.version, bytes: e.bytes, token: token(request.key) }; } misses++; return { ok: true, hit: false, key: request.key, token: token(request.key) }; }
+    if (request.kind === "get-stale") { const e = entries.get(request.key); if (!staleBound || !e || e.absent || e.expires > kernel.now) return { ok: true, hit: false, key: request.key }; const ageUs = kernel.now - e.expires; staleServed++; maxStaleAgeUs = Math.max(maxStaleAgeUs, ageUs); return { ok: true, hit: true, stale: true, ageUs, key: request.key, version: e.version, bytes: e.bytes }; }
     if (request.kind === "invalidate") { if (!generations.has(request.key) && generations.size >= DATA_LIMITS.keys) return { ok: false, reason: "key-budget" }; remove(request.key); generations.set(request.key, (generations.get(request.key) ?? 0) + 1); invalidations++; return { ok: true }; }
-    if (request.kind !== "set" || !request.row) return { ok: false, reason: "unsupported-cache-command" };
-    if (!Number.isSafeInteger(request.row.bytes) || request.row.bytes < 0 || !Number.isSafeInteger(request.row.version) || request.row.version < 1) return { ok: false, reason: "invalid-cache-row" };
+    const negative = request.absent === true;
+    if (request.kind !== "set" || (negative ? !negativeTtl || request.row !== undefined : !request.row)) return { ok: false, reason: "unsupported-cache-command" };
+    const body = negative ? { absent: true as const, bytes: 0 } : request.row!;
+    if (!negative && (!Number.isSafeInteger(request.row!.bytes) || request.row!.bytes < 0 || !Number.isSafeInteger(request.row!.version) || request.row!.version < 1)) return { ok: false, reason: "invalid-cache-row" };
     if (request.token !== undefined && request.token !== token(request.key)) { staleFillRefused++; return { ok: false, reason: "invalidated-fill" }; }
     // Lazy removal is an execution policy. Observation never expires/mutates entries.
     for (let i = 0; i < DATA_LIMITS.expirationScan; i++) { const next = expirationCursor.next(); if (next.done) { expirationCursor = entries.keys(); break; } expire(next.value); }
-    const bytes = request.row.bytes + overhead, existing = entries.get(request.key), required = used - (existing ? existing.bytes + overhead : 0) + bytes;
+    const bytes = body.bytes + overhead, existing = entries.get(request.key), required = used - (existing ? existing.bytes + overhead : 0) + bytes;
     if (bytes > capacity || (!existing && entries.size >= DATA_LIMITS.keys) || (required > capacity && config.policy === "no-eviction")) { allocationRefused++; return { ok: false, reason: "cache-capacity" }; }
     remove(request.key);
     evictOwned(entries, () => used + bytes <= capacity, (key, entry) => { const expired = entry.expires <= kernel.now; remove(key); if (expired) expirations++; else evictions++; });
-    entries.set(request.key, { ...request.row, expires: kernel.now + requireKnown(config.ttl, "us"), sequence: sequence++ }); used += bytes; fills++; return { ok: true };
+    entries.set(request.key, { ...body, expires: kernel.now + (negative ? negativeTtl : requireKnown(config.ttl, "us")), sequence: sequence++ }); used += bytes; fills++; return { ok: true };
   };
   const pump = () => {
     if (paused || active.size || !queue.size) return;

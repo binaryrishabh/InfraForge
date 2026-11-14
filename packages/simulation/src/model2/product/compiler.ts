@@ -44,6 +44,7 @@ import { CDN_TTL_PROFILE, cdnTtlChanges, validateCdnTtlBindings } from "./cdnTtl
 import { CACHE_POLICY_PROFILE, cachePolicyChanges, validateCachePolicyBindings } from "./cachePolicy";
 import { CACHE_CAPACITY_PROFILE, cacheCapacityChanges, validateCacheCapacityBindings } from "./cacheCapacity";
 import { WORKER_WAIT_PROFILE, workerWaitChanges, validateWorkerWaitBindings } from "./workerWait";
+import { CACHE_NEGATIVE_PROFILE, cacheNegativeChanges, cacheNegativeRefusal, validateCacheNegativeBindings } from "./cacheNegative";
 import { CACHE_INVALIDATION_PROFILE, cacheInvalidationChanges, validateCacheInvalidationBindings } from "./cacheInvalidation";
 import { ROW_LOCK_ORDER_PROFILE, rowLockingChanges, validateRowLockingBindings } from "./rowLocking";
 import { CACHE_STALE_PROFILE, cacheStaleChanges, validateCacheStaleBindings } from "./cacheStale";
@@ -101,6 +102,9 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     if (workerWaitChanges(design.resources) !== contract.version.includes(`/${WORKER_WAIT_PROFILE}`)) error("WORKER_WAIT_VERSION", "version", "External worker wait requires worker-wait/1 and matching saved intent");
     if (cacheStaleChanges(design.resources) !== contract.version.includes(`/${CACHE_STALE_PROFILE}`)) error("CACHE_STALE_VERSION", "version", "A saved stale age bound requires cache-stale/1 and matching saved intent");
     if (cacheInvalidationChanges(design.resources) !== contract.version.includes(`/${CACHE_INVALIDATION_PROFILE}`)) error("CACHE_INVALIDATION_VERSION", "version", "A saved cache write policy requires cache-invalidation/1 and matching saved intent");
+    if (cacheNegativeChanges(design.resources) !== contract.version.includes(`/${CACHE_NEGATIVE_PROFILE}`)) error("CACHE_NEGATIVE_VERSION", "version", "Negative caching requires cache-negative/1 and matching saved intent");
+    const negativeRefusal = cacheNegativeRefusal(design.resources, design.workload.readWriteRatio);
+    if (negativeRefusal) error("CACHE_NEGATIVE_SCOPE", "resources", negativeRefusal);
     if (rowLockingChanges(design.resources) !== contract.version.includes(`/${ROW_LOCK_ORDER_PROFILE}`)) error("ROW_LOCK_ORDER_VERSION", "version", "A saved row lock order requires row-lock-order/1 and matching saved intent");
     if (queueRedriveChanges(design.resources) !== contract.version.includes(`/${QUEUE_REDRIVE_PROFILE}`)) error("QUEUE_REDRIVE_VERSION", "version", "Queue redrive or worker repair requires queue-redrive/1 and matching saved intent");
     if (queueAckDelayChanges(design.resources) !== contract.version.includes(`/${QUEUE_ACK_DELAY_PROFILE}`)) error("QUEUE_ACK_DELAY_VERSION", "version", "Acknowledgement delay requires queue-ack-delay/1 and matching saved intent");
@@ -438,6 +442,7 @@ export function compileProduct(design: SavedProductDesign, contract: ProductCont
     validateAutoscalingSignalBindings(design.resources, contract, pools, runtime);
     validateQueueRedriveBindings(design.resources, runtime);
     validateCacheStaleBindings(design.resources, runtime);
+    validateCacheNegativeBindings(design.resources, runtime);
     validateCacheInvalidationBindings(design.resources, runtime);
     validateRowLockingBindings(design.resources, runtime);
     validateMonitoringCadenceBindings(design.resources, runtime);
