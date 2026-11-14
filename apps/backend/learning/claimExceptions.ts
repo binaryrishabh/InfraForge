@@ -430,4 +430,23 @@ export const CLAIM_EXCEPTIONS: readonly ClaimException[] = [
     values: ["6"],
     reason: "6 is the first controlled promotion-second input that misses the caller requirement, measured by apps/backend/tests/olderLabLessonCorrections.test.ts (100 completed, 40 unsuccessful); it names the near miss and is not a result claim.",
   },
+
+  {
+    lesson: "choose-a-retry-mitigation@3", field: "explanation.1",
+    text: "Change only lb Maximum attempts to 2 and run again. Restore the starter, change only Maximum attempts to 5 and run a third comparison. All three use the same authored partition and workload.",
+    values: ["5"],
+    reason: "Five attempts is the controlled near-miss retry input (the four-attempt starter is the baseline), not a measured result. Carried over unchanged from choose-a-retry-mitigation@1. Source: apps/backend/tests/olderLabLessonCorrections.test.ts measures attempts 1 to 5 on the real engine.",
+  },
+  {
+    lesson: "restore-a-database-writer@3", field: "explanation.1",
+    text: "Improve the attempt with a hypothesis. Select db and change only Promote at simulated second to an early second in the approved recovery window shown in the challenge. Run again with the same topology and workload. In the calibrated runs promotion at second 3, 4 or 5 meets the caller requirement, with second 5 exactly on both limits; second 6 and later miss it.",
+    values: ["3","4","5","6"],
+    reason: "The numbers are controlled promotion-second inputs, each run on the real engine: apps/backend/tests/olderLabLessonCorrections.test.ts shows promotion at 3, 4 and 5 meets the caller requirement (5 exactly on both limits) and 6 misses it.",
+  },
+  {
+    lesson: "restore-a-database-writer@3", field: "explanation.3",
+    text: "Inspect the promoted writer's commits and the returning primary's fenced role. Final health cannot erase earlier caller failures; try promotion at second 6 or later as a near miss. Read lost operations and regressed keys beside pending replication: clearing pending work does not prove preservation or create a replacement replica.",
+    values: ["6"],
+    reason: "6 is the first controlled promotion-second input that misses the caller requirement, measured by apps/backend/tests/olderLabLessonCorrections.test.ts (100 completed, 40 unsuccessful); it names the near miss and is not a result claim.",
+  },
 ];

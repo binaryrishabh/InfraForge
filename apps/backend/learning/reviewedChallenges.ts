@@ -2,6 +2,9 @@
  * Keep old records. A changed challenge needs a new reviewed contentVersion. */
 export interface LearningChallengeReview { challengeId: string; version: number; hash: string }
 export const REVIEWED_CHALLENGES: Readonly<Record<string, LearningChallengeReview>> = {
+  "notification-retry-storm@3": {challengeId: "notification-retry-storm", version: 2, hash: "abeddc5a66094145e2a3ee8e0748654dd8f08066e84b461f0c24ba2320aa6edd"},
+  "restore-a-database-writer@3": {challengeId: "restore-a-database-writer", version: 2, hash: "b842d08e3e2c81caa76de14668bdf2abb7b3fdc9c0eedf9163e773f4a4b8cbb9"},
+  "choose-a-retry-mitigation@3": {challengeId: "choose-a-retry-mitigation", version: 2, hash: "7aef8a84ccfe8b452d1a47a949fb7316c9535ce6249db54879d30fcecfb56875"},
   "choose-a-retry-mitigation@2": {challengeId: "choose-a-retry-mitigation", version: 1, hash: "6ca83f5bd42df0ea1f6ad09bb15d139a7b3b15abb3083a93b0e4d7e8b65ef46e"},
   "keep-an-asset-cached@2": {challengeId: "keep-an-asset-cached", version: 1, hash: "3f6328645b2f62cf07f9071f08e7a4b0d8956936a684ae55166f580fd6e7db71"},
   "leave-room-for-firewall-flows@2": {challengeId: "leave-room-for-firewall-flows", version: 1, hash: "492dca0578609884ed0729140e110de02cfd689831faecaa172f43eca803c705"},
