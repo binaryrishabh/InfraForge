@@ -90,3 +90,13 @@ test("multi-key databases expose a row lock order control that saves a strict va
   redo(); expect(useCanvasStore.getState().resources[0]!.rowLocking).toEqual(saved);
   updateResource("db", { rowLocking: undefined }); expect(useCanvasStore.getState().resources[0]!.rowLocking).toBeUndefined();
 });
+
+test("a saved row lock order blocks shrinking the keyspace to one row, which the saved layout and the compiler refuse", () => {
+  const locked: Resource = { ...db, dataKeyspace: { version: 1, count: 10 }, rowLocking: { version: 1, rowsPerWrite: 2, order: "by-key" } };
+  useCanvasStore.getState().loadLayout([locked], [], "layout", "Data");
+  updateResource("db", { dataKeyspace: { version: 1, count: 1 } });
+  expect(useCanvasStore.getState().resources[0]!.dataKeyspace?.count).toBe(10);
+  expect(useCanvasStore.getState().undoStack).toEqual([]);
+  updateResource("db", { rowLocking: undefined }); updateResource("db", { dataKeyspace: { version: 1, count: 1 } });
+  expect(useCanvasStore.getState().resources[0]!.dataKeyspace?.count).toBe(1);
+});
