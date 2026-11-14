@@ -5,7 +5,7 @@ import { apiGatewayError } from "@infraforge/domain/resource";
 import { eventBusError } from "@infraforge/domain/resource";
 import { toast } from "sonner";
 import { validateConnection } from "@infraforge/domain/validation";
-import { RESOURCE_PORTS, dbPoolError, vmMemoryError, lbRateLimitError, firewallStateError, firewallCapacityError, artifactCachePolicyError, objectStoragePolicyError, monitoringPolicyError, dnsCachePolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, securitySettingsError, type Resource, type ResourceType } from "@infraforge/domain/resource";
+import { RESOURCE_PORTS, dbPoolError, vmMemoryError, lbRateLimitError, firewallStateError, firewallCapacityError, artifactCachePolicyError, objectStoragePolicyError, monitoringPolicyError, dnsCachePolicyError, cdnCachePolicyError, vmCpuQuotaError, vmExecutionError, lbSelectionError, lbHealthError, lbAdmissionError, databaseReadRoutingError, databaseReplicationError, dbConcurrencyError, cachePolicyError, dataKeyspaceError, rowLockingError, securitySettingsError, type Resource, type ResourceType } from "@infraforge/domain/resource";
 import { useCanvasStore } from "./store/canvasStore";
 import { positionIsOccupied } from "./utils/cardFootprint";
 import { NODE_CARD_WIDTH, DESIGN_CARD_HEIGHT, GRID_SIZE } from "./utils/nodeGeometry";
@@ -152,6 +152,7 @@ export function updateResource(resourceId: string, patch: Partial<Resource>) {
   if (cdnCachePolicyError(candidate.type, candidate.cdnCachePolicy)) return;
   if (cachePolicyError(candidate.type, candidate.cachePolicy)) return;
   if (dataKeyspaceError(candidate.type, candidate.dataKeyspace)) return;
+  if (rowLockingError(candidate.type, candidate.rowLocking, candidate.dataKeyspace)) return;
   if (securitySettingsError(candidate.type, candidate.listenerSettings, candidate.firewallSettings, store.resources)) return;
   const before: Partial<Resource> = {}, after: Partial<Resource> = {};
   for (const key of TRACKED) if (key in patch) { Object.assign(before, { [key]: resource[key] }); Object.assign(after, { [key]: patch[key] }); }
