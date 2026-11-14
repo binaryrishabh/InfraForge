@@ -1,3 +1,4 @@
+import { closureCorrectionArchives } from "./closure-correction-archives";
 import { lbForwardingLessons } from "./lb-forwarding";
 import { boundedStalenessLessons } from "./bounded-staleness";
 import { functionRetentionLessons } from "./function-retention";
@@ -9,5 +10,5 @@ export { track } from "./track";
 import { resourcePressureLessons } from "./resource-pressure";
 import { failureControlLessons } from "./failure-controls";
 export const lessons = [...resourcePressureLessons, ...failureControlLessons, ...retryAndCircuitEvidenceLessons, ...quotaOwnershipLessons, ...functionRetentionLessons, ...lbForwardingLessons, ...cpuBudgetLessons, ...boundedStalenessLessons];
-export const archivedLessons = [...failureControlArchivedLessons, ...cacheEvidenceArchivedLessons];
+export const archivedLessons = [...closureCorrectionArchives, ...failureControlArchivedLessons, ...cacheEvidenceArchivedLessons];
 import { cpuBudgetLessons } from "./cpu-budget";

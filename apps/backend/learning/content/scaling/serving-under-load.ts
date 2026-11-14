@@ -2,9 +2,9 @@ import type { LearningModule } from "@infraforge/contracts/learning";
 import { loadBalancerPolicies } from "./lessons/load-balancer-policies";
 import { percentilesAndPopulations } from "./lessons/percentiles-and-populations";
 import { retriesAddWork } from "./lessons/retries-add-work";
-import { routeAroundASlowVm } from "./lessons/route-around-a-slow-vm";
+import { routeAroundASlowVmV2 as routeAroundASlowVm } from "./lessons/route-around-a-slow-vm-v2";
 import { leaveRoomForABurst } from "./lessons/leave-room-for-a-burst";
-import { retryingAFullPool } from "./lessons/retrying-a-full-pool";
+import { retryingAFullPoolV2 as retryingAFullPool } from "./lessons/retrying-a-full-pool-v2";
 
 export const servingUnderLoadLessons = [loadBalancerPolicies, percentilesAndPopulations, retriesAddWork,
   routeAroundASlowVm, leaveRoomForABurst, retryingAFullPool];

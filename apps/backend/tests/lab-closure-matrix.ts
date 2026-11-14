@@ -1,5 +1,5 @@
 /* Read-only lab completeness matrix for the labs added or changed since a base commit.
-   bun --no-env-file apps/backend/scripts/lab-closure-matrix.ts [--base 46f8a9f] [--labs id,id | --list] [--json]
+   bun --no-env-file apps/backend/tests/lab-closure-matrix.ts [--base 46f8a9f] [--labs id,id | --list] [--json]
    The lab list is derived from the tree: every challenge definition file and every lesson file under learning/content/<track>/lessons
    that differs between <base> and the working tree (git diff + untracked), mapped through the registries to challenge ids.
    Every verdict comes from the real product path used by the calibration tests: harness attemptRow (Model 2 engine, captured inputs,

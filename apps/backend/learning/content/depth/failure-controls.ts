@@ -2,7 +2,7 @@ import { retryLimitsAndBudgetsV2 } from "./lessons/retry-limits-and-budgets-v2";
 import { circuitBreakerBoundariesV2 } from "./lessons/circuit-breaker-boundaries-v2";
 import type { LearningModule } from "@infraforge/contracts/learning";
 import { concurrentCacheMisses } from "./lessons/concurrent-cache-misses";
-import { shareACacheFillV3 as shareACacheFill } from "./lessons/share-a-cache-fill-v3";
+import { shareACacheFillV4 as shareACacheFill } from "./lessons/share-a-cache-fill-v4";
 import { circuitBreakerBoundaries } from "./lessons/circuit-breaker-boundaries";
 import { poolIsolationBoundaries } from "./lessons/pool-isolation-boundaries";
 import { timeoutOwnershipV2 as timeoutOwnership } from "./lessons/timeout-ownership-v2";

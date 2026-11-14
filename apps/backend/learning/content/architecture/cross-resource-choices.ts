@@ -1,7 +1,7 @@
 import type { LearningModule } from "@infraforge/contracts/learning";
 import { cacheOrDatabaseV3 as cacheOrDatabase } from "./lessons/cache-or-database-v3";
 import { oneVmOrAPool } from "./lessons/one-vm-or-a-pool";
-import { limitOrCapacity } from "./lessons/limit-or-capacity";
+import { limitOrCapacityV2 as limitOrCapacity } from "./lessons/limit-or-capacity-v2";
 
 export const crossResourceChoicesLessons = [cacheOrDatabase, oneVmOrAPool, limitOrCapacity];
 export const crossResourceChoices: LearningModule = {

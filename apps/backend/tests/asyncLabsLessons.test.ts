@@ -18,13 +18,14 @@ test("async queued-work module retains three executable lessons with calibrated 
   expect(new Set(registeredLessons.map(l => l.id)).size).toBe(registeredLessons.length);
   expect(new Set(tracks.map(t => t.id)).size).toBe(tracks.length);
   for (const lesson of labs) {
-    expect(lesson).toMatchObject({trackId: "async", moduleId: "queued-work", kind: "executable-lab", contentVersion: 1, availability: "available"});
+    expect(lesson.contentVersion).toBeGreaterThanOrEqual(1);
+    expect(lesson).toMatchObject({trackId: "async", moduleId: "queued-work", kind: "executable-lab", availability: "available"});
     expect(lesson.prerequisites.every(id => registeredLessons.some(l => l.id === id))).toBe(true);
     expect(lesson.limitations.length).toBeGreaterThan(0); expect(lesson.limitations.every(text => text.trim().length > 0)).toBe(true);
     expect((lesson.followUp?.trim().length ?? 0)).toBeGreaterThan(0); expect((lesson.experiment?.prediction?.trim().length ?? 0)).toBeGreaterThan(0);
     expect((lesson.experiment?.evidenceToInspect?.length ?? 0)).toBeGreaterThan(1);
     const challenge = latestChallenge(lesson.experiment!.challengeId)!.definition;
-    expect(challenge.engine).toBe("2"); expect(challenge.version).toBe(1); expect(challenge.starter).not.toBeNull(); expect(REFERENCE[challenge.id]).toBeDefined();
+    expect(challenge.engine).toBe("2"); expect(challenge.version).toBeGreaterThanOrEqual(1); expect(challenge.starter).not.toBeNull(); expect(REFERENCE[challenge.id]).toBeDefined();
     expect(challenge.hints).toHaveLength(3); expect(challenge.predictions.length).toBeGreaterThan(0);
     expect(challenge.criteria.some(c => c.kind === "queue-work")).toBe(true);
     if (lesson.check) expect(lesson.check.choices.some(c => c.id === lesson.check!.correctChoiceId)).toBe(true);

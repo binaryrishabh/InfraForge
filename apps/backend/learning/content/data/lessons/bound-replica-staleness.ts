@@ -15,7 +15,7 @@ export const boundReplicaStaleness: LearningLesson = {
     evidenceToInspect: ["Stale reads; p95", "CPU; Whole run: Completed; Whole run: Failed; Whole run: In-flight"]},
   limitations: [
     "Results are educational model outputs, not cloud benchmarks. The replication delay is an authored fixed number; a real replica's lag varies with load and is not a dial you simply set.",
-    "Stale-read counters are cumulative, include health probes and describe modeled row versions. They establish no application consistency, read-your-writes or availability guarantee.",
+    "Stale-read counters are cumulative, include health probes and describe modeled row versions. They establish no application consistency, read-your-writes or availability guarantee. A real application may route a user's reads to the writer after a write or wait for its replica to apply that write to support read-your-writes; neither strategy is modeled here.",
     "A final-second p95 and a fixed-second sample prove no whole-run latency target or continuous behaviour."],
   check: null,
   followUp: "Cite the starter, the improved run and the near miss that reads from the writer. Explain why the near miss fixed freshness but not capacity. Then compare move-reads-off-the-writer, where moving reads was the whole fix.",

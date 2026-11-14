@@ -43,7 +43,7 @@ test("notification hint names the measured one-or-two delivery band, not an unsp
   expect(rows.slice(3).map(r => status(r, "work"))).toEqual(Array(7).fill("not-met"));
   expect(d.hints[2]).toContain("one or two");
   expect(d.hints[2]).not.toContain("a small number");
-  expect(d.version).toBe(2);
+  expect(d.version).toBeGreaterThanOrEqual(2);
 }, 240000);
 
 test("writer story and hint distinguish passing seconds 3 through 5 from allowed but failing seconds 6 through 9", () => {
@@ -55,7 +55,7 @@ test("writer story and hint distinguish passing seconds 3 through 5 from allowed
   expect(d.story[1]).toContain("3 through 5");
   expect(d.hints[1]).toContain("3 through 5");
   expect(d.hints[1]).toContain("6 through 9");
-  expect(d.version).toBe(2);
+  expect(d.version).toBeGreaterThanOrEqual(2);
 }, 120000);
 
 test("retry story treats five attempts as a failing near miss, with the measured p95 for attempts one through five", () => {
@@ -70,7 +70,7 @@ test("retry story treats five attempts as a failing near miss, with the measured
   expect(rows.map(r => r.challenge!.status)).toEqual(["met", "met", "not-met", "not-met", "not-met"]);
   expect(d.story[1]).toContain("near miss");
   expect(d.story[1]).not.toContain("two plausible mitigations");
-  expect(d.version).toBe(2);
+  expect(d.version).toBeGreaterThanOrEqual(2);
 }, 120000);
 
 for (const {id, hash, changes} of families) {
@@ -78,8 +78,9 @@ for (const {id, hash, changes} of families) {
     const old = findChallenge(id, 1)!, current = findChallenge(id, 2)!;
     expect(old.hash).toBe(hash);
     expect(differences(old.definition, current.definition)).toEqual(changes);
-    expect(latestChallenge(id)).toBe(current);
-    const lesson = LEARNING_REGISTRY.findLesson(id)!;
+    expect(latestChallenge(id)!.definition.version).toBeGreaterThanOrEqual(current.definition.version);
+    const lesson = LEARNING_REGISTRY.findLesson(id, 3)!;
+    expect(LEARNING_REGISTRY.findLesson(id)!.contentVersion).toBeGreaterThanOrEqual(3);
     expect(lesson.contentVersion).toBe(3);
     expect(differences(LEARNING_REGISTRY.findLesson(id, 2), lesson)).toEqual(["contentVersion"]);
     for (const version of [1, 2]) {
@@ -115,7 +116,8 @@ for (const {id, hash, changes} of families) {
       expect(row.challengeSpecHash).toBe(hash);
       expect(improvementSource(row, id).definition).toBe(old);
       expect(improvementSource(row, id).hash).toBe(hash);
-      expect(learningAttempt(row)).toMatchObject({version: 1, latestVersion: 2});
+      expect(learningAttempt(row)).toMatchObject({version: 1});
+      expect(learningAttempt(row)!.latestVersion).toBeGreaterThanOrEqual(2);
       expect(row).toEqual(snapshot);
     }
     for (const change of [{terminalSnapshot: null}, {challengeSpecHash: hash}, {challengeVersion: 99}]) {

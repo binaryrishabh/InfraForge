@@ -1,4 +1,5 @@
-import { cacheAbsenceLessons } from "./cache-absence";
+import { closureCorrectionArchives } from "./closure-correction-archives";
+import { cacheAbsenceLessons, cacheAbsenceArchivedLessons } from "./cache-absence";
 import { restoreADatabaseWriterV2 } from "./lessons/restore-a-database-writer-v2";
 import { databaseRedundancyLessons } from "./database-redundancy";
 import { objectCapacityLessons } from "./object-capacity";
@@ -19,4 +20,4 @@ import { cacheEvidenceArchivedLessons } from "./cache-evidence-archives";
 import { connectionPoolBudgets } from "./lessons/connection-pool-budgets";
 import { promotingAReplica } from "./lessons/promoting-a-replica";
 import { restoreADatabaseWriter as originalRestoreADatabaseWriter } from "./lessons/restore-a-database-writer";
-export const archivedLessons = [restoreADatabaseWriterV2, ...cacheEvidenceArchivedLessons, connectionPoolBudgets, promotingAReplica, originalRestoreADatabaseWriter];
+export const archivedLessons = [...cacheAbsenceArchivedLessons, ...closureCorrectionArchives, restoreADatabaseWriterV2, ...cacheEvidenceArchivedLessons, connectionPoolBudgets, promotingAReplica, originalRestoreADatabaseWriter];

@@ -1,5 +1,5 @@
 import type { LearningModule } from "@infraforge/contracts/learning";
-import { parallelJobsForABurst } from "./lessons/parallel-jobs-for-a-burst";
+import { parallelJobsForABurstV2 as parallelJobsForABurst } from "./lessons/parallel-jobs-for-a-burst-v2";
 
 export const burstWorkerLessons = [parallelJobsForABurst];
 export const burstWorkers: LearningModule = {

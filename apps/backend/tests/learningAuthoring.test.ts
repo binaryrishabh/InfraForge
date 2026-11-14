@@ -66,7 +66,9 @@ test("a newly reviewed version can coexist with its immutable archived content",
   const content = structuredClone(learningContent);
   // This lab needs no out-of-definition numeric exceptions. A new version of
   // prose that does need them must get separately reviewed exception entries.
-  const lab = content.lessons.find((l) => l.id === "route-around-a-slow-vm")!;
+  const lab = content.lessons.find(l => l.kind === "executable-lab" &&
+    !CLAIM_EXCEPTIONS.some(e => e.lesson === `${l.id}@${l.contentVersion}`))!;
+  expect(lab).toBeTruthy();
   const oldLesson = structuredClone(lab);
   lab.contentVersion++;
   const old = REGISTRY.latest(lab.experiment!.challengeId)!.definition;

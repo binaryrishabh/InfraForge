@@ -1,3 +1,4 @@
+import { closureCorrectionArchives } from "./closure-correction-archives";
 export { track } from "./track";
 import { servingUnderLoadLessons } from "./serving-under-load";
 import { firstScalingChoicesLessons } from "./first-scaling-choices";
@@ -6,3 +7,4 @@ import { startupReadinessLessons } from "./startup-readiness";
 import { edgeAdmissionLessons } from "./edge-admission";
 import { artifactAdmissionLessons } from "./artifact-admission";
 export const lessons = [...firstScalingChoicesLessons, ...servingUnderLoadLessons, ...scalingReasoningLessons, ...startupReadinessLessons, ...artifactAdmissionLessons, ...edgeAdmissionLessons];
+export const archivedLessons = [...closureCorrectionArchives];

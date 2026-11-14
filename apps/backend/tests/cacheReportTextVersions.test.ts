@@ -110,10 +110,11 @@ for (const family of baseline.families) {
     // reuse-before-expiry moved on to content v4 (olderLabLessonCorrections.test.ts); v3 stays retrievable and archived.
     const latest = LEARNING_REGISTRY.findLesson(id, 3)!, prior = LEARNING_REGISTRY.findLesson(id, 2)!;
     expect(latest.contentVersion).toBe(3);
+    expect(LEARNING_REGISTRY.findLesson(id)!.contentVersion).toBeGreaterThanOrEqual(3);
     expect(differences(prior, latest)).toEqual(["contentVersion"]);
     expect(learningContent.archivedLessons).toContainEqual(prior);
     expect(LEARNING_REGISTRY.listLessons({challengeId: id})).toEqual([LEARNING_REGISTRY.findLesson(id)!]);
-    expect(LEARNING_REGISTRY.findLesson(id, id === "reuse-before-expiry" ? 5 : 4)).toBeNull();
+    expect(LEARNING_REGISTRY.findLesson(id, LEARNING_REGISTRY.findLesson(id)!.contentVersion + 1)).toBeNull();
     for (const version of [1, 2]) expect(REVIEWED_CHALLENGES[`${id}@${version}`]).toEqual({challengeId: id, version: 1, hash: old.hash});
     expect(REVIEWED_CHALLENGES[`${id}@3`]).toEqual({challengeId: id, version: 2, hash: current.hash});
     const key = `${id}@3`, missing = {...REVIEWED_CHALLENGES}; delete missing[key];

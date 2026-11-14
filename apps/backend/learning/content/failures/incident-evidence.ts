@@ -3,7 +3,7 @@ import { firewallRuleMatching } from "./lessons/firewall-rule-matching";
 import { dnsCacheLifetime } from "./lessons/dns-cache-lifetime-v2";
 import { missingFailureObservations } from "./lessons/missing-failure-observations";
 import { mitigationTradeoffs } from "./lessons/mitigation-tradeoffs";
-import { findTheDenyingRule } from "./lessons/find-the-denying-rule";
+import { findTheDenyingRuleV2 as findTheDenyingRule } from "./lessons/find-the-denying-rule-v2";
 import { leaveRoomForFirewallFlowsV2 as leaveRoomForFirewallFlows } from "./lessons/leave-room-for-firewall-flows-v2";
 import { chooseARetryMitigationV3 as chooseARetryMitigation } from "./lessons/choose-a-retry-mitigation-v3";
 

@@ -16,7 +16,7 @@ export const shedLoadAtTheEdge: LearningLesson = {
   limitations: [
     "Results are educational model outputs, not cloud benchmarks. Admission limits are authored inputs, not provider defaults.",
     "Refusing excess demand chooses who waits; it adds no capacity and no availability guarantee. Clients that retry or back off are not modeled here.",
-    "The final-second p95 excludes refused and unfinished callers, and a fixed-second sample proves no continuous behaviour."],
+    "The final-second p95 excludes refused and unfinished callers, and a fixed-second sample proves no continuous behaviour. At the tested admission limits in this fixed workload, final-second p95 is about 3 ms times the Active requests limit; this is a measured model result, not a general sizing rule."],
   check: null,
   followUp: "Cite the starter, improved and larger app near miss reports. Explain what the refused callers cost, and when a larger app would be the better answer. Then compare open-the-forwarding-gate, where the same Active requests setting is too low and spare backend capacity sits idle.",
 };

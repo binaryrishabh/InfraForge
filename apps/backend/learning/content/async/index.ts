@@ -1,3 +1,4 @@
+import { closureCorrectionArchives } from "./closure-correction-archives";
 export { track } from "./track";
 import { queuedWorkLessons } from "./queued-work";
 import { firstQueueLessons } from "./first-queue";
@@ -6,3 +7,4 @@ import { heldCapacityLessons } from "./held-capacity";
 import { asyncReasoningLessons } from "./async-reasoning";
 import { deadLetterRecoveryLessons } from "./dead-letter-recovery";
 export const lessons = [...firstQueueLessons, ...queuedWorkLessons, ...burstWorkerLessons, ...asyncReasoningLessons, ...heldCapacityLessons, ...deadLetterRecoveryLessons];
+export const archivedLessons = [...closureCorrectionArchives];

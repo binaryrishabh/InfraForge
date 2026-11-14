@@ -1,5 +1,5 @@
 import type { LearningModule } from "@infraforge/contracts/learning";
-import { testACircuitAgain } from "./lessons/test-a-circuit-again";
+import { testACircuitAgainV2 as testACircuitAgain } from "./lessons/test-a-circuit-again-v2";
 
 export const retryAndCircuitEvidenceLessons = [testACircuitAgain];
 export const retryAndCircuitEvidence: LearningModule = {
