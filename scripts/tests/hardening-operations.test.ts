@@ -22,6 +22,7 @@ test("rendered Compose services bound resources and logs without evicting queue 
   const command = compose.services.redis!.command!;
   expect(command[command.indexOf("--maxmemory-policy") + 1]).toBe("noeviction");
   expect(command[command.indexOf("--maxmemory") + 1]).toBe("96mb");
+  expect(command[command.indexOf("--appendonly") + 1]).toBe("no");
 });
 
 

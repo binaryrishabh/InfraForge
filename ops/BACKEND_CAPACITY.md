@@ -12,7 +12,7 @@ instance sizes are not evidence of the production host.
 | API | 768 MiB | 1.50 | Request handling and auth; bounded pool, request sizes and limiter state. Larger than WS because it handles HTTP/auth bodies. Raised from 384 MiB / 0.35 CPU on 2026-10-29 after an AWS rehearsal: at 0.35 CPU concurrent sign-ups failed with Prisma P2028 (API CPU-starved, database idle); at 1.5 CPU there were none (peak 246 MiB). |
 | Worker | 1536 MiB | 2.00 | Largest allowance for execution, reports and queue processing; one worker only. A run exceeding it must fail rather than exhaust the host. Raised from 768 MiB / 0.50 CPU on 2026-10-29 after an AWS rehearsal: at 0.5 CPU, 9 of 25 simultaneous users completed (CPU pinned at its cap, memory peak 745 MiB); at 2 CPU / 1.5 GB, 25 of 25 completed (memory peak 512 MiB). A typical run costs about 50 CPU-seconds (measured replay profile). |
 | WS | 256 MiB | 0.25 | 128 sockets including authentication, heartbeat and bounded outbound buffers; no simulation execution. |
-| Redis | 256 MiB | 0.15 | 96 MiB key budget with noeviction; 160 MiB remains inside the cap for process overhead, AOF buffers and rewrite copy-on-write. This is bounded headroom, not a guarantee under every write pattern. |
+| Redis | 256 MiB | 0.15 | 96 MiB key budget with noeviction; 160 MiB remains inside the cap for process overhead and RDB snapshot copy-on-write. This is bounded headroom, not a guarantee under every write pattern. |
 | PostgreSQL | 768 MiB | 0.50 | Private persistent PostgreSQL 18; shared_buffers=192MB, work_mem=2MB, maintenance_work_mem=32MB, max_connections=80. |
 | Steady total | **3584 MiB** | **4.40** | Sum of five independent cgroup ceilings. |
 | Release BuildKit, including its build steps | **768 MiB**, swap disabled | **0.20** | Separate docker-container builder; loading the image still uses the host Docker daemon. Failure blocks release before maintenance or service shutdown. |
@@ -40,7 +40,7 @@ build while the stack carries representative load and verify no OOM kills,
 memory pressure, queue starvation or health deadlines. If the build exceeds its
 cap it should fail safely; adjust only after measurement or build off-host. Do
 not consume the host reserve to make an unmeasured build pass. Also verify disk
-space for old/new images and Redis AOF. No production sizing, limits or deployment
+space for old/new images and Redis snapshots. No production sizing, limits or deployment
 was changed by writing this policy.
 
 ## Run admission and lifetime

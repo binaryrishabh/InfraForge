@@ -104,8 +104,10 @@ services:
         max-size: "10m"
         max-file: "3"
     # Queue keys must never be evicted silently. Capacity errors fail delivery
-    # explicitly; leave headroom above maxmemory for AOF buffers and rewrites.
-    command: [redis-server, --appendonly, "yes", --maxmemory, "96mb", --maxmemory-policy, noeviction]
+    # explicitly; leave headroom above maxmemory for RDB snapshot copy-on-write.
+    # No append-only file: a torn AOF after a hard reset stops Redis from starting.
+    # Default RDB snapshots are written atomically; Postgres stays the source of truth.
+    command: [redis-server, --appendonly, "no", --maxmemory, "96mb", --maxmemory-policy, noeviction]
     networks: [application]
     healthcheck:
       test: [CMD, redis-cli, ping]
